@@ -4,16 +4,16 @@
  * ------------------------------------------------
  * Name: TokenController
  * Script: TokenController.js
- * Version: 5.0.0
- * Built: 2026-10-30T04:41:48.220Z
+ * Version: 5.0.1
+ * Built: 2026-11-01T00:25:45.548Z
  */
 const TokenControllerMod = (() => {
   'use strict';
 
   // Build-time placeholders replaced by rollup.config.js inject-build-metadata plugin.
   const SCRIPT_NAME = 'TokenController';
-  const SCRIPT_VERSION = '5.0.0';
-  const SCRIPT_LAST_UPDATED = '2026-10-30T04:41:48.220Z';
+  const SCRIPT_VERSION = '5.0.1';
+  const SCRIPT_LAST_UPDATED = '2026-11-01T00:25:45.548Z';
 
   const DEFAULT_LOCALE$1 = 'en-US';
 
@@ -24,6 +24,9 @@ const TokenControllerMod = (() => {
   // v4 command prefixes. Both accept the v4 subcommands as well as the v5 ones,
   // so existing macros and the T-Cntrl_ macros keep working.
   const LEGACY_PREFIXES = ['!tc', '!token-control'];
+
+  // The player ID Roll20 gives chat messages sent by Mods with sendChat.
+  const API_PLAYER_ID = 'API';
 
   const HANDOUT_HELP_NAME = 'TokenController - Help';
   const HANDOUT_DECK_NAME = 'TokenController - Command Deck';
@@ -56,9 +59,11 @@ const TokenControllerMod = (() => {
   // Roll20 pages measure width and height in 70 px units.
   const PAGE_UNIT_PX = 70;
 
-  // Route kinds: a step code ("U2R2D2L2") or a list of waypoints.
+  // Route kinds: a step code ("U2R2D2L2"), a list of waypoints, or an area to
+  // bounce around inside.
   const ROUTE_KIND_CODE = 'code';
   const ROUTE_KIND_WAYPOINTS = 'waypoints';
+  const ROUTE_KIND_AREA = 'area';
 
   // Waypoint anchors: fixed to a page (drawn routes) or relative to where the
   // token starts (recorded routes).
@@ -74,6 +79,10 @@ const TokenControllerMod = (() => {
   const LOCK_MODE_OPTIONS = ['native', 'revert', 'freeze'];
   const FOLLOW_MODE_OPTIONS = ['trail', 'formation'];
   const MANUAL_MOVE_OPTIONS = ['continue', 'stop'];
+  const MARKER_ACTION_OPTIONS = ['stop', 'reset'];
+  const WALL_MODE_OPTIONS = ['ignore', 'hold', 'turn'];
+  const WALL_CHECK_OPTIONS = ['centre', 'width'];
+  const WALL_PASS_OPTIONS = ['block', 'pass'];
 
   // Default configuration for new installs. Upgraded v4 games keep their own values.
   const DEFAULT_CONFIG = {
@@ -87,6 +96,12 @@ const TokenControllerMod = (() => {
     lockMarker: 'none',
     followMode: 'trail',
     manualMove: 'continue',
+    stopMarkers: 'none',
+    markerAction: 'stop',
+    wallMode: 'ignore',
+    wallCheck: 'centre',
+    oneWayWalls: 'block',
+    transparentWalls: 'block',
     buttonStep: 1,
   };
 
@@ -136,12 +151,14 @@ const TokenControllerMod = (() => {
     ['add <name> <code>', 'add'],
     ['edit <route> <code>', 'edit'],
     ['draw <name>', 'draw'],
+    ['bounce <name>', 'bounce'],
     ['record <name>', 'record'],
     ['route <route> <option> <value>', 'route'],
     ['show <route>', 'show'],
     ['rename <route> <new name>', 'rename'],
     ['copy <route> <new name>', 'copy'],
     ['remove <route>', 'remove'],
+    ['start | stop | reset | lock | unlock | remove --ids <id;id;…>', 'ids'],
     ['list [routes|tokens]', 'list'],
     ['examples', 'examples'],
     ['export [<route>]', 'export'],
@@ -367,6 +384,68 @@ const TokenControllerMod = (() => {
       markers.push(marker);
     }
     token.set('statusmarkers', markers.join(','));
+  }
+
+  /**
+   * Reads the properties of a drawing (Legacy `path` or Jumpgate `pathv2`)
+   * that the drawing geometry needs.
+   *
+   * @param {object} drawing Roll20 path or pathv2.
+   * @returns {object} Plain properties.
+   */
+  function drawingProps(drawing) {
+    return {
+      type: drawing.get('_type'),
+      _path: drawing.get('_path') ?? drawing.get('path'),
+      points: drawing.get('points'),
+      shape: drawing.get('shape'),
+      x: drawing.get('x'),
+      y: drawing.get('y'),
+      left: drawing.get('left'),
+      top: drawing.get('top'),
+      width: drawing.get('width'),
+      height: drawing.get('height'),
+      scaleX: drawing.get('scaleX'),
+      scaleY: drawing.get('scaleY'),
+      rotation: drawing.get('rotation'),
+    };
+  }
+
+  /**
+   * Parses a list of status marker names separated by semicolons, commas or
+   * spaces ("dead;red"). `none`, `off` and `-` mean an empty list.
+   *
+   * @param {*} raw Raw input.
+   * @returns {string[]|null} Marker names, or null when one is not a valid name.
+   */
+  function parseMarkerList(raw) {
+    const text = toText(raw);
+    if (!text || ['none', 'off', '-'].includes(text.toLowerCase())) {
+      return [];
+    }
+    const names = text.split(/[;,\s]+/).filter(Boolean);
+    return names.every((name) => /^[\w:-]{1,60}$/.test(name)) ? [...new Set(names)] : null;
+  }
+
+  /**
+   * Returns the first of the given marker names that a token shows. Number
+   * badges (`red@2`) are ignored, and a custom marker (`Poisoned::1234`) matches
+   * by its whole tag or by its name. Names match whatever their case.
+   *
+   * @param {object} token Roll20 graphic.
+   * @param {string[]} names Marker names to look for.
+   * @returns {string|null} The matching name, or null.
+   */
+  function findMarker(token, names) {
+    const shown = new Set();
+    for (const tag of toText(token.get('statusmarkers')).split(',')) {
+      const base = tag.split('@')[0].trim().toLowerCase();
+      if (base) {
+        shown.add(base);
+        shown.add(base.split('::')[0]);
+      }
+    }
+    return names.find((name) => shown.has(name.toLowerCase())) || null;
   }
 
   /**
@@ -1097,7 +1176,7 @@ const TokenControllerMod = (() => {
         "Opgegradeer vanaf weergawe 4. Roetes gehou: {routes}. Patrolleertekens gehou: {patrols}. Jou ou makro's en !tc-opdragte werk steeds.",
       removedGuide:
         'Die ou "TokenController Usage Guide"-uitdeelstuk, wat spelers kon sien, is vervang deur die GM-enigste Help-uitdeelstuk.',
-      pruned: 'Patrollies vergeet omdat hul tokens nie meer bestaan ​​nie: {count}.',
+      pruned: 'Patrollies vergeet omdat hul tokens nie meer bestaan nie: {count}.',
       readyHint:
         'Tik !tokencontroller vir die spyskaart, of maak die Command Deck-uitdeelstuk oop.',
       combatStarted: {
@@ -1133,6 +1212,8 @@ const TokenControllerMod = (() => {
       paused: 'Alle patrollies het stilgestaan.',
       resumed: 'Patrollies is hervat.',
       journalRebuilt: 'Uitdeelstukke herbou: {help} en {deck}.',
+      markerStopped: "Gestop deur 'n stopmerker: {tokens}.",
+      markerReset: "Teruggestuur na waar hulle begin het deur 'n stopmerker: {tokens}.",
     },
     errors: {
       noTokens: 'Geen tokens gekies nie.',
@@ -1141,7 +1222,7 @@ const TokenControllerMod = (() => {
       routeExists: 'Daar is reeds \'n roete genaamd "{name}".',
       code: {
         empty: 'Die stapkode is leeg.',
-        badToken: 'Die stapkode "{code}" het iets wat dit nie verstaan ​​nie by "{at}".',
+        badToken: 'Die stapkode "{code}" het iets wat dit nie verstaan nie by "{at}".',
         tooFar: 'Die stap "{at}" is te lank.',
       },
       routeInvalid: 'Daardie roete kon nie gestoor word nie.',
@@ -1158,6 +1239,12 @@ const TokenControllerMod = (() => {
       usageCopy: "Gee 'n roete en 'n naam vir die kopie.",
       badJson: 'Dit is nie roete-uitvoerteks nie.',
       tokenLocked: '{tokens} kan nie begin nie: gesluit.',
+      tokenMarked: "{tokens} kan nie begin nie: hulle het 'n stopmerker.",
+      outsideArea: '{tokens} kan nie begin nie: hulle is buite "{name}".',
+      selectOneArea:
+        "Kies presies een geslote tekening ('n veelhoek, reghoek, ellips of vryhandlus).",
+      areaTooSmall: "Die geselekteerde tekening benodig ten minste drie hoeke om 'n area te maak.",
+      idsNotFound: "Geen tokens het hierdie ID's nie: {ids}.",
       routeOnOtherPage: '{tokens} kan nie begin nie: "{name}" is op \'n ander bladsy geteken.',
       startOnOtherPage:
         '{tokens} kan nie begin nie: die vaste begin van "{name}" is op \'n ander bladsy.',
@@ -1168,7 +1255,7 @@ const TokenControllerMod = (() => {
       noLeader: 'Daar is nog geen leier nie.',
       followLoop: "{tokens} kan nie 'n teken volg wat hulle volg nie.",
       alreadyRecording: '{token} word reeds opgeneem.',
-      recordingTokenGone: 'Die teken vir die opname van "{name}" bestaan ​​nie meer nie.',
+      recordingTokenGone: 'Die teken vir die opname van "{name}" bestaan nie meer nie.',
       recordingEmpty: 'Niks is nog aangeteken nie.',
       unknownSetting: 'Daar is geen instelling genaamd "{key}" nie.',
       badSettingValue: '"{value}" is nie \'n geldige waarde vir {key} nie.',
@@ -1191,7 +1278,7 @@ const TokenControllerMod = (() => {
       },
       selectOneDrawing:
         "Teken die roete met 'n tekengereedskap, kies dit (sleep 'n blokkie om 'n dun buitelyn as jy dit mis deur te klik), probeer dan weer.",
-      usageRoute: 'Opsies: modus, interval, maksimum, ewekansig, begin.',
+      usageRoute: 'Opsies: modus, interval, maksimum, ewekansig, mure, begin.',
       routeOnOtherPage: 'Getekende roetes werk net op die bladsy waarop hulle geteken is.',
       startOnOtherPage: 'Maak die vaste begin skoon, of skuif eers die teken na daardie bladsy.',
       noLeader: 'Kies die leier en klik Leier, of gee sy naam: !tokencontroller follow Name',
@@ -1204,8 +1291,15 @@ const TokenControllerMod = (() => {
         'Maak seker dat die tokens in naburige selle van dieselfde ry is (kolom op Hex (H) bladsye).',
       unknownCommand: 'Tik !tokencontroller-hulp vir die lys opdragte.',
       tokenLocked: 'Ontsluit eers die teken.',
+      tokenMarked: 'Verwyder die merker, of verander die Stop Merkers instelling.',
+      outsideArea:
+        'Beweeg eers die tekens binne die area, of skakel Willekeurige begin vir die roete aan.',
+      selectOneArea:
+        "Teken die area met 'n tekengereedskap, kies dit (sleep 'n blokkie om 'n dun buitelyn as jy dit mis deur te klik), probeer dan weer.",
+      idsNotFound: "Gee teken-ID's na --ids, geskei deur kommapunte.",
     },
     warnings: {
+      idsNotFound: "Geen tokens het hierdie ID's nie, so hulle is oorgeslaan: {ids}.",
       offPage:
         "'n Deel van die roete loop van die bladsy af (stappe: {count}). Daardie stappe word oorgeslaan.",
       combatTrackerOnly:
@@ -1268,6 +1362,27 @@ const TokenControllerMod = (() => {
         continue: 'Gaan voort van daar af',
         stop: 'Stop die patrollie',
       },
+      markerAction: {
+        stop: 'Stop waar dit is',
+        reset: 'Gaan terug na die begin',
+      },
+      wallMode: {
+        ignore: 'Loop deur mure',
+        hold: 'Wag by mure',
+        turn: 'Draai terug by mure',
+      },
+      wallCheck: {
+        centre: 'Middel van die teken',
+        width: 'Hele teken',
+      },
+      oneWayWalls: {
+        block: 'Blok',
+        pass: 'Laat deur',
+      },
+      transparentWalls: {
+        block: 'Blok',
+        pass: 'Laat deur',
+      },
     },
     menu: {
       statusRunning: 'Patrolleertekens: {patrols}. Roetes: {routes}.',
@@ -1290,6 +1405,7 @@ const TokenControllerMod = (() => {
       stop: 'Stop',
       add: 'Stap Kode',
       draw: 'Van Tekening',
+      bounce: 'Weerkaatsarea',
       record: 'Rekord',
       examples: 'Voorbeelde',
       reset: 'Stel terug',
@@ -1336,11 +1452,13 @@ const TokenControllerMod = (() => {
     route: {
       drawn: 'Getekende roete, {points} punte',
       recorded: 'Opgeneemde roete, {points} punte',
+      area: 'Weiering area, {points} hoeke',
       path: 'Pad',
       mode: 'Modus',
       interval: 'Interval',
       maxTokens: 'Die meeste tekens',
       randomStart: 'Willekeurige begin',
+      walls: 'Mure',
       start: 'Vaste begin',
       tokens: 'Tekens',
     },
@@ -1386,6 +1504,30 @@ const TokenControllerMod = (() => {
         label: "Sleep 'n patrollie",
         desc: "Wanneer jy 'n patrollieteken sleep: gaan voort (die roete gaan voort van waar jy dit laat val het) of stop (die patrollie eindig).",
       },
+      stopMarkers: {
+        label: 'Stop Merkers',
+        desc: "Statusmerkers wat 'n teken van sy roete afhaal en keer dat dit volg, geskei deur kommapunte (byvoorbeeld dood;rooi), of geen. Volgers van 'n leier met een van hierdie merkers stop ook.",
+      },
+      markerAction: {
+        label: 'Stop Merker Aksie',
+        desc: "Wat 'n patrollieteken doen wanneer dit 'n stopmerker kry: stop (dit bly waar dit is) of herstel (dit gaan terug na waar dit begin het).",
+      },
+      wallMode: {
+        label: 'Mure',
+        desc: "Wat patrollies en volgelinge doen by dinamiese beligtingsmure en toe deure en vensters: ignoreer (loop deur), hou vas (wag totdat die pad oop is, byvoorbeeld totdat 'n deur oopgaan) of draai (patrollies draai terug). Elke roete kan sy eie kies, so spoke kan steeds deur mure loop.",
+      },
+      wallCheck: {
+        label: 'Muurtjek',
+        desc: "middel: slegs die middel van 'n teken moet wegbly van mure. breedte: die hele teken doen dit, so 'n groot teken kan nie deur 'n nou gaping druk nie.",
+      },
+      oneWayWalls: {
+        label: 'Eenrigtingmure',
+        desc: 'Of eenrigtingmure stoptekens (blok) of nie (slaag).',
+      },
+      transparentWalls: {
+        label: 'Sien-Deur Mure',
+        desc: 'Of deursigtige mure, wat lig deurlaat, tekens stop (blok) of nie (slaag).',
+      },
       buttonStep: {
         label: 'Selle per klik',
         desc: "Hoe ver beweeg die opnamepyle 'n teken.",
@@ -1422,13 +1564,16 @@ const TokenControllerMod = (() => {
       add: "Skep 'n roete vanaf 'n stapkode, soos U2R2D2L2.",
       edit: "Verander 'n roete se stapkode.",
       draw: "Skep 'n roete wat die geselekteerde tekening op hierdie bladsy volg.",
+      bounce:
+        "Skep 'n roete waarop tokens binne die geselekteerde geslote tekening dwaal en van sy rande af bons.",
       record:
         "Teken 'n roete op deur die geselekteerde teken met knoppies te skuif of deur dit te sleep.",
-      route: "Verander 'n roete-opsie: modus, interval, maksimum, ewekansig of begin.",
+      route: "Verander 'n roete-opsie: modus, interval, maksimum, ewekansig, mure of begin.",
       show: "Wys 'n roete se besonderhede en knoppies.",
       rename: "Hernoem 'n roete.",
       copy: "Kopieer 'n roete onder 'n nuwe naam.",
       remove: "Verwyder 'n roete (vra eers).",
+      ids: "Reageer op die tokens met hierdie ID's in plaas van die geselekteerdes, sodat ander Mods soos ScriptCards tokens kan beheer. verwyder --ids neem die tekens van hul roetes af; dit verwyder nooit 'n roete nie.",
       list: 'Lys die roetes, of die tekens wat beheer word.',
       examples: 'Voeg die voorbeeldroetes by.',
       export: "Wys roetes as teks om na 'n ander speletjie te kopieer.",
@@ -1466,6 +1611,7 @@ const TokenControllerMod = (() => {
           "Van tekening: teken 'n lyn, veelhoek, vryhandvorm, reghoek of ellips met die tekengereedskap, kies dit en klik vanaf tekening. Tekens loop daarlangs, slegs op daardie bladsy. Jy kan die tekening daarna uitvee.",
           "Rekord: kies 'n teken en klik Rekord. Beweeg dit met die pyltjieknoppies of sleep dit op die kaart (Roll20-wegpunte word gevolg), klik dan Stoor. Op vierkantige roosters word die opname 'n stapkode wat jy kan wysig.",
           'Lusroetes begin weer van voor af; heen-en-weer roetes stap terug soos hulle gekom het; sodra roetes aan die einde stop. Nuwe roetes wat eindig waar hulle begin lus; ander gaan heen en weer.',
+          "Weerkaatsarea: teken 'n geslote vorm om die area, kies dit en klik op Weieringgebied. Tekens wat daarop begin, beweeg in reguit lyne en bons van sy rande af (en van mure af, tensy die roete dit ignoreer), en draai elke keer 'n bietjie lukraak. Ewekansige begin plaas elke teken in 'n ewekansige sel van die area.",
         ],
       },
       codes: {
@@ -1487,6 +1633,8 @@ const TokenControllerMod = (() => {
         interval: 'Millisekondes per stap vir hierdie roete, of 0 vir die globale interval.',
         max: 'Die meeste tekens wat gelyktydig op die roete kan wees, of 0 vir geen limiet nie.',
         random: "aan: elke teken begin by 'n ewekansige punt langs die roete.",
+        walls:
+          'ignoreer (loop deur mure), hou (wag by mure en toe deure), draai (draai terug) of verstek (gebruik die Mure-instelling).',
         start:
           'stel: tokens spring na die geselekteerde token se posisie wanneer hulle begin. duidelik: hulle begin waar hulle staan.',
       },
@@ -1499,13 +1647,15 @@ const TokenControllerMod = (() => {
           'Volg: kies die leier en klik Leier, kies dan die volgers en klik Volg. Jy kan ook die leier se naam tik: !tokencontroller volg Goblin Boss. Volgers volg tekens wat patrolleer, tekens wat jy sleep en tekens wat deur TokenMod geskuif word.',
           "Volgers kan ander volgelinge volg, 'n ketting of 'n kolom maak.",
           "Deur 'n patrollieteken te sleep, dra die patrollie voort van waar jy dit laat val, tensy Sleep 'n patrollie gestel is om te stop.",
+          "Mure: met die Mure aan, loop patrollies en volgelinge nie deur dinamiese beligtingsmure of toe deure en vensters nie; oop deure en vensters laat hulle deur. Gee 'n roete sy eie mure opsie (byvoorbeeld ignoreer vir 'n spook).",
+          "Stopmerkers: 'n teken wat een van hierdie statusmerkers kry (byvoorbeeld dood) verlaat sy roete en hou op om te volg, en die volgelinge van 'n leier wat een stop kry ook. Stel hulle met !tokenbeheerder stel stopMerkers dood;rooi. Dit werk ook wanneer 'n ander Mod die merker byvoeg.",
         ],
       },
       grids: {
         heading: 'Roosters',
         points: [
           'Die selgrootte en roostertipe word vanaf elke bladsy gelees, so verskillende bladsye kan verskillende roosters gebruik.',
-          'U en D beteken altyd op en af ​​op die skerm. Op hex-roosters, beweeg met geen bypassende buur-sigsag nie; op isometriese en dimetriese roosters kruis diagonale een diamant.',
+          'U en D beteken altyd op en af op die skerm. Op hex-roosters, beweeg met geen bypassende buur-sigsag nie; op isometriese en dimetriese roosters kruis diagonale een diamant.',
           "Bladsye met knip afgeskakel beweeg in 70-pixel stappe sonder om in lyn te wees met 'n rooster.",
           "As tekens van die rooster af dryf, snap 'n teken na 'n selsentrum, kies dit en klik Kalibreer. Kies twee tekens in naburige selle van 'n ry om ook die selgrootte reg te stel.",
         ],
@@ -1522,6 +1672,7 @@ const TokenControllerMod = (() => {
         heading: 'Opdragte',
         intro:
           'Slegs GM\'e kan hierdie opdragte gebruik. Roetes kan genoem word, of na verwys word deur hul #id vanaf die kieslysknoppies. Plaas name met spasies in "aanhalingstekens" wanneer \'n opdrag twee name neem.',
+        mods: "Ander Mods kan ook hierdie opdragte stuur, byvoorbeeld vanaf ScriptCards. Hulle kan nie tekens kies nie, daarom noem hulle hulle met --ids gevolg deur teken-ID's geskei deur kommapunte: !tc stop --ids ID1;ID2. Antwoorde gaan na die GM.",
         colCommand: 'Bevel',
         colDesc: 'Wat dit doen',
       },
@@ -1631,6 +1782,8 @@ const TokenControllerMod = (() => {
       paused: 'Totes les patrulles es van aturar.',
       resumed: 'Es van reprendre les patrulles.',
       journalRebuilt: 'Fullets reconstruïts: {help} i {deck}.',
+      markerStopped: "Aturat per un marcador d'aturada: {tokens}.",
+      markerReset: 'Un marcador de parada els ha enviat de tornada a on van començar: {tokens}.',
     },
     errors: {
       noTokens: "No s'han seleccionat fitxes.",
@@ -1656,6 +1809,12 @@ const TokenControllerMod = (() => {
       usageCopy: 'Doneu una ruta i un nom per a la còpia.',
       badJson: "Això no és text d'exportació de ruta.",
       tokenLocked: '{tokens} no pot començar: bloquejat.',
+      tokenMarked: "{tokens} no pot començar: tenen un marcador d'aturada.",
+      outsideArea: '{tokens} no pot començar: són fora de "{name}".',
+      selectOneArea:
+        'Seleccioneu exactament un dibuix tancat (un polígon, rectangle, el·lipse o bucle a mà alçada).',
+      areaTooSmall: 'El dibuix seleccionat necessita almenys tres cantonades per fer una àrea.',
+      idsNotFound: 'Cap testimoni no té aquests identificadors: {ids}.',
       routeOnOtherPage: '{tokens} no pot començar: "{name}" s\'ha dibuixat en una altra pàgina.',
       startOnOtherPage:
         '{tokens} no pot començar: l\'inici fix de "{name}" es troba en una altra pàgina.',
@@ -1689,7 +1848,7 @@ const TokenControllerMod = (() => {
       },
       selectOneDrawing:
         "Dibuixa la ruta amb una eina de dibuix, selecciona-la (arrossegueu un quadre al voltant d'un contorn prim si no hi feu clic) i torneu-ho a provar.",
-      usageRoute: 'Opcions: mode, interval, màxim, aleatori, inici.',
+      usageRoute: 'Opcions: mode, interval, màxim, aleatori, parets, inici.',
       routeOnOtherPage: "Les rutes dibuixades només funcionen a la pàgina on s'han dibuixat.",
       startOnOtherPage: "Esborra l'inici fix o mou primer el testimoni a aquesta pàgina.",
       noLeader:
@@ -1704,8 +1863,14 @@ const TokenControllerMod = (() => {
         'Assegureu-vos que les fitxes estiguin a les cel·les veïnes de la mateixa fila (columna a les pàgines Hex (H)).',
       unknownCommand: "Escriviu !tokencontroller help per a la llista d'ordres.",
       tokenLocked: 'Desbloquegeu primer el testimoni.',
+      tokenMarked: 'Traieu el marcador o canvieu la configuració de Stop Markers.',
+      outsideArea: "Primer moveu les fitxes dins de l'àrea o activeu Inici aleatori per a la ruta.",
+      selectOneArea:
+        "Dibuixa l'àrea amb una eina de dibuix, selecciona-la (arrossegueu un quadre al voltant d'un contorn prim si no hi feu clic) i torneu-ho a provar.",
+      idsNotFound: 'Doneu els ID de testimoni després de --ids, separats per punt i coma.',
     },
     warnings: {
+      idsNotFound: "Cap testimoni no té aquests identificadors, de manera que s'han omès: {ids}.",
       offPage: 'Part de la ruta surt de la pàgina (passos: {count}). Es salten aquests passos.',
       combatTrackerOnly:
         'La detecció de combat està configurada per al rastrejador de torns, de manera que aquest interruptor no té cap efecte fins que el canvieu.',
@@ -1767,6 +1932,27 @@ const TokenControllerMod = (() => {
         continue: "Seguiu des d'allà",
         stop: 'Atureu la patrulla',
       },
+      markerAction: {
+        stop: 'Atureu-vos on és',
+        reset: "Torna a l'inici",
+      },
+      wallMode: {
+        ignore: 'Caminar per les parets',
+        hold: 'Espereu a les parets',
+        turn: 'Gireu enrere a les parets',
+      },
+      wallCheck: {
+        centre: 'Centre de la fitxa',
+        width: 'Fitxa sencera',
+      },
+      oneWayWalls: {
+        block: 'Bloc',
+        pass: 'Deixa passar',
+      },
+      transparentWalls: {
+        block: 'Bloc',
+        pass: 'Deixa passar',
+      },
     },
     menu: {
       statusRunning: 'Fitxes de patrulla: {patrols}. Rutes: {routes}.',
@@ -1789,6 +1975,7 @@ const TokenControllerMod = (() => {
       stop: 'Atureu-vos',
       add: 'Codi de pas',
       draw: 'Del Dibuix',
+      bounce: 'Àrea de rebot',
       record: 'Registre',
       examples: 'Exemples',
       reset: 'Restableix',
@@ -1835,11 +2022,13 @@ const TokenControllerMod = (() => {
     route: {
       drawn: 'Ruta dibuixada, {points} punts',
       recorded: 'Ruta registrada, {points} punts',
+      area: 'Àrea de rebot, {points} cantonades',
       path: 'Camí',
       mode: 'Mode',
       interval: 'Interval',
       maxTokens: 'La majoria de fitxes',
       randomStart: 'Inici aleatori',
+      walls: 'Murs',
       start: 'Inici fix',
       tokens: 'Fitxes',
     },
@@ -1885,6 +2074,30 @@ const TokenControllerMod = (() => {
         label: 'Arrossegant una patrulla',
         desc: "Quan arrossegueu una fitxa de patrulla: continueu (la ruta continua des d'on l'heu deixat) o atureu-vos (la patrulla acaba).",
       },
+      stopMarkers: {
+        label: "Marcadors d'aturada",
+        desc: "Marcadors d'estat que treuen un indicador de la seva ruta i deixen de seguir-lo, separats per punt i coma (per exemple, mort; vermell) o cap. Els seguidors d'un líder amb un d'aquests marcadors també s'aturen.",
+      },
+      markerAction: {
+        label: "Aturar l'acció del marcador",
+        desc: "Què fa un testimoni de patrulla quan rep un marcador d'aturada: aturar-se (es queda on està) o reiniciar (torna a on va començar).",
+      },
+      wallMode: {
+        label: 'Murs',
+        desc: "Què fan les patrulles i els seguidors a les parets d'il·luminació dinàmica i a portes i finestres tancades: ignorar (passar per), aguantar (esperar fins que el camí estigui lliure, per exemple fins que s'obri una porta) o girar (les patrulles tornen enrere). Cada ruta pot triar la seva, de manera que els fantasmes encara poden travessar les parets.",
+      },
+      wallCheck: {
+        label: 'Revisió de paret',
+        desc: "centre: només la meitat d'una fitxa ha d'estar allunyada de les parets. amplada: tota la fitxa ho fa, de manera que una fitxa gran no pot passar per un buit estret.",
+      },
+      oneWayWalls: {
+        label: 'Murs unidireccionals',
+        desc: 'Si les parets unidireccionals detenen fitxes (bloquejar) o no (passar).',
+      },
+      transparentWalls: {
+        label: 'Murs Transparents',
+        desc: 'Ja siguin parets transparents, que deixen passar la llum, aturar fitxes (bloquejar) o no (passar).',
+      },
       buttonStep: {
         label: 'Cel·les per clic',
         desc: "Fins a quina distància mouen les fletxes d'enregistrament una fitxa.",
@@ -1921,12 +2134,15 @@ const TokenControllerMod = (() => {
       add: "Creeu una ruta a partir d'un codi de pas, com ara U2R2D2L2.",
       edit: "Canviar el codi de pas d'una ruta.",
       draw: 'Crea una ruta que segueixi el dibuix seleccionat en aquesta pàgina.',
+      bounce:
+        'Crea una ruta on les fitxes vagin dins del dibuix tancat seleccionat, rebotant a les vores.',
       record: 'Enregistreu una ruta movent el testimoni seleccionat amb botons o arrossegant-lo.',
-      route: 'Canviar una opció de ruta: mode, interval, màxim, aleatori o inici.',
+      route: "Canvia l'opció d'una ruta: mode, interval, màxim, aleatori, parets o inici.",
       show: "Mostra els detalls i els botons d'una ruta.",
       rename: "Canvia el nom d'una ruta.",
       copy: 'Copia una ruta amb un nom nou.',
       remove: 'Eliminar una ruta (demana primer).',
+      ids: 'Actueu sobre les fitxes amb aquestes identificacions en comptes de les seleccionades, de manera que altres mods com ara ScriptCards poden controlar fitxes. eliminar --ids treu les fitxes de les seves rutes; mai elimina una ruta.',
       list: 'Enumereu les rutes o les fitxes que es controlen.',
       examples: 'Afegiu els exemples de rutes.',
       export: 'Mostra les rutes com a text per copiar-les a un altre joc.',
@@ -1964,6 +2180,7 @@ const TokenControllerMod = (() => {
           'Des del dibuix: dibuixeu una línia, polígon, forma a mà alçada, rectangle o el·lipse amb les eines de dibuix, seleccioneu-lo i feu clic a Des del dibuix. Hi passen fitxes, només en aquesta pàgina. Podeu esborrar el dibuix després.',
           'Enregistrament: seleccioneu un testimoni i feu clic a Enregistrar. Moveu-lo amb els botons de fletxa o arrossegueu-lo al mapa (se segueixen els waypoints Roll20) i feu clic a Desa. A les quadrícules quadrades, la gravació es converteix en un codi de pas que podeu editar.',
           "Les rutes de bucle comencen de nou des del principi; les rutes d'anada i tornada recorren pel camí que van arribar; un cop les rutes s'aturin al final. Noves rutes que acaben on comencen bucle; altres van i torna.",
+          "Àrea de rebot: dibuixa una forma tancada al voltant de l'àrea, selecciona-la i fes clic a Àrea de rebot. Les fitxes que s'hi han començat viatgen en línia recta i reboten a les vores (i a les parets, tret que la ruta les ignori), girant una mica a l'atzar cada vegada. L'inici aleatori posa cada fitxa en una cel·la aleatòria de l'àrea.",
         ],
       },
       codes: {
@@ -1985,6 +2202,8 @@ const TokenControllerMod = (() => {
         interval: "Mil·lisegons per pas per a aquesta ruta, o 0 per a l'interval global.",
         max: 'La majoria de fitxes que es poden trobar a la ruta alhora, o 0 sense límit.',
         random: 'on: cada fitxa comença en un punt aleatori de la ruta.',
+        walls:
+          'ignorar (caminar per les parets), mantenir premut (esperar a les parets i les portes tancades), girar (tornar enrere) o predeterminar (utilitzar la configuració Murs).',
         start:
           'set: les fitxes salten a la posició de la fitxa seleccionada quan comencen. clar: comencen on estan.',
       },
@@ -1997,6 +2216,8 @@ const TokenControllerMod = (() => {
           'Seguiu: seleccioneu el líder i feu clic a Líder, després seleccioneu els seguidors i feu clic a Segueix. També pots escriure el nom del líder: !tokencontroller segueix Goblin Boss. Els seguidors segueixen fitxes que patrullen, fitxes que arrossegueu i fitxes mogudes per TokenMod.',
           'Els seguidors poden seguir a altres seguidors, fent una cadena o una columna.',
           "Si arrossegueu una fitxa de patrulla, la patrulla continua des d'on la deixeu anar, tret que Arrossegar una patrulla estigui configurada per aturar-se.",
+          "Murs: amb la configuració de Murs activada, les patrulles i els seguidors no passen per parets d'il·luminació dinàmica o portes i finestres tancades; portes i finestres obertes els deixen passar. Doneu una opció de parets a una ruta (per exemple, ignorar per a un fantasma).",
+          "Marcadors d'aturada: una fitxa que obté un d'aquests marcadors d'estat (per exemple, mort) deixa la seva ruta i deixa de seguir, i els seguidors d'un líder que aconsegueixen també una parada. Estableix-los amb !tokencontroller set stopMarkers dead;red. Això també funciona quan un altre mod afegeix el marcador.",
         ],
       },
       grids: {
@@ -2020,6 +2241,7 @@ const TokenControllerMod = (() => {
         heading: 'Ordres',
         intro:
           'Només els GM poden utilitzar aquestes ordres. Les rutes es poden anomenar o fer referència amb el seu #id als botons del menú. Posa noms amb espais entre "cometes" quan una ordre pren dos noms.',
+        mods: "Altres mods també poden enviar aquestes ordres, per exemple des de ScriptCards. No poden seleccionar fitxes, de manera que els anomenen amb --ids seguit d'ID de testimoni separats per punt i coma: !tc stop --ids ID1;ID2. Les respostes van al GM.",
         colCommand: 'Comandament',
         colDesc: 'Què fa',
       },
@@ -2128,6 +2350,8 @@ const TokenControllerMod = (() => {
       paused: '所有巡邏隊都暫停了。',
       resumed: '巡邏恢復了。',
       journalRebuilt: '重建講義：{help} 和 {deck}。',
+      markerStopped: '由停止標記停止：{tokens}。',
+      markerReset: '由停止標記發送回他們開始的位置：{tokens}。',
     },
     errors: {
       noTokens: '未選擇任何標記。',
@@ -2152,6 +2376,11 @@ const TokenControllerMod = (() => {
       usageCopy: '指定副本的路線和名稱。',
       badJson: '這不是路由導出文字。',
       tokenLocked: '{tokens} 無法啟動：已鎖定。',
+      tokenMarked: '{tokens} 無法啟動：它們有一個停止標記。',
+      outsideArea: '{tokens} 無法啟動：它們位於「{name}」之外。',
+      selectOneArea: '精確選擇一幅閉合圖形（多邊形、矩形、橢圓形或手繪環）。',
+      areaTooSmall: '所選圖形至少需要三個角落才能形成一個區域。',
+      idsNotFound: '沒有令牌具有以下 ID：{ids}。',
       routeOnOtherPage: '{tokens} 無法啟動：「{name}」繪製在另一頁。',
       startOnOtherPage: '{tokens} 無法啟動：「{name}」的固定開頭位於另一頁。',
       routeFull: '{tokens} 無法啟動：「{name}」已具有 {max} 令牌。',
@@ -2182,7 +2411,7 @@ const TokenControllerMod = (() => {
       },
       selectOneDrawing:
         '使用繪圖工具繪製路線，選擇它（如果單擊錯過了，則在細輪廓周圍拖曳一個框），然後重試。',
-      usageRoute: '選項：模式、間隔、最大、隨機、開始。',
+      usageRoute: '選項：模式、間隔、最大、隨機、牆壁、開始。',
       routeOnOtherPage: '繪製的路線僅在繪製它們的頁面上有效。',
       startOnOtherPage: '清除固定開始，或先將令牌移到該頁面。',
       noLeader: '選擇領導者並點擊領導者，或給出其名稱： !tokencontroller follow Name',
@@ -2194,8 +2423,14 @@ const TokenControllerMod = (() => {
       calibrateFailed: '確保標記位於同一行（十六進位 (H) 頁上的列）的相鄰儲存格中。',
       unknownCommand: '鍵入 !tokencontroller help 以取得命令清單。',
       tokenLocked: '先解鎖令牌。',
+      tokenMarked: '刪除標記，或變更停止標記設定。',
+      outsideArea: '首先將標記移動到區域內，或開啟路線的「隨機開始」。',
+      selectOneArea:
+        '使用繪圖工具繪製該區域，選擇它（如果單擊錯過了，則在細輪廓周圍拖曳一個框），然後重試。',
+      idsNotFound: '在 --ids 之後給予令牌 ID，以分號分隔。',
     },
     warnings: {
+      idsNotFound: '沒有令牌具有這些 ID，因此它們被跳過：{ids}。',
       offPage: '部分路線超出頁面（步驟：{count}）。這些步驟將會被跳過。',
       combatTrackerOnly: '戰鬥偵測設定為回合追蹤器，因此在您更改它之前此開關無效。',
       unitPx:
@@ -2256,6 +2491,27 @@ const TokenControllerMod = (() => {
         continue: '從那裡繼續',
         stop: '停止巡邏',
       },
+      markerAction: {
+        stop: '停在原處',
+        reset: '回到起點',
+      },
+      wallMode: {
+        ignore: '穿牆而行',
+        hold: '靠牆等候',
+        turn: '靠牆回頭',
+      },
+      wallCheck: {
+        centre: '令牌的中心',
+        width: '整個代幣',
+      },
+      oneWayWalls: {
+        block: '堵塞',
+        pass: '讓透過',
+      },
+      transparentWalls: {
+        block: '堵塞',
+        pass: '讓透過',
+      },
     },
     menu: {
       statusRunning: '巡邏令牌：{patrols}。路線：{routes}。',
@@ -2277,6 +2533,7 @@ const TokenControllerMod = (() => {
       stop: '停止',
       add: '步驟程式碼',
       draw: '從繪圖',
+      bounce: '彈跳區',
       record: '記錄',
       examples: '範例',
       reset: '重置',
@@ -2323,11 +2580,13 @@ const TokenControllerMod = (() => {
     route: {
       drawn: '繪製路線，{points} 點',
       recorded: '已記錄路線，{points} 點',
+      area: '彈跳區域，{points} 角',
       path: '小路',
       mode: '模式',
       interval: '間隔',
       maxTokens: '大多數代幣',
       randomStart: '隨機開始',
+      walls: '牆壁',
       start: '固定啟動',
       tokens: '代幣',
     },
@@ -2373,6 +2632,30 @@ const TokenControllerMod = (() => {
         label: '拖曳巡邏隊',
         desc: '當您拖曳巡邏標記時：繼續（路線從您放置它的位置繼續）或停止（巡邏結束）。',
       },
+      stopMarkers: {
+        label: '停止標記',
+        desc: '狀態標記，將令牌從其路線上取下並停止其跟隨，用分號分隔（例如死亡；紅色），或無。具有這些標記之一的領導者的追隨者也會停下來。',
+      },
+      markerAction: {
+        label: '停止標記動作',
+        desc: '當巡邏令牌獲得停止標記時，它會做什麼：停止（它停留在原來的位置）或重置（它回到開始的位置）。',
+      },
+      wallMode: {
+        label: '牆壁',
+        desc: '巡邏隊和追隨者在動態照明牆和關閉的門窗處做什麼：忽略（走過）、等待（等到道路暢通，例如直到門打開）或轉身（巡邏隊返回）。每條路線都可以選擇自己的路線，所以鬼魂仍然可以穿牆而過。',
+      },
+      wallCheck: {
+        label: '牆壁檢查',
+        desc: '中心：只有令牌的中間必須遠離牆壁。寬度：整個令牌都是如此，因此大令牌無法擠過狹窄的間隙。',
+      },
+      oneWayWalls: {
+        label: '單向牆',
+        desc: '單向牆是否阻止代幣（阻止）或不阻止（通過）。',
+      },
+      transparentWalls: {
+        label: '透明牆',
+        desc: '讓光線通過的透明牆是否會阻止令牌（阻擋）或不阻止（通過）。',
+      },
       buttonStep: {
         label: '每次點擊的單元數',
         desc: '記錄箭頭將令牌移動多遠。',
@@ -2408,12 +2691,14 @@ const TokenControllerMod = (() => {
       add: '從步驟代碼建立路線，例如 U2R2D2L2。',
       edit: '更改路線的步驟代碼。',
       draw: '建立遵循此頁面上所選圖形的路線。',
+      bounce: '建立一條路線，讓標記在選定的封閉圖形內徘徊，並從其邊緣反彈。',
       record: '透過使用按鈕移動選定的標記或拖曳它來記錄路線。',
-      route: '變更路線選項：模式、間隔、最大、隨機或開始。',
+      route: '變更路線選項：模式、間隔、最大、隨機、牆壁或起點。',
       show: '顯示路線的詳細資訊和按鈕。',
       rename: '重命名路線。',
       copy: '以新名稱複製路線。',
       remove: '刪除一條路線（首先詢問）。',
+      ids: '對具有這些 ID（而不是選定的 ID）的令牌進行操作，因此其他 Mod（例如 ScriptCard）可以控制令牌。 remove --ids 將令牌從其路線上移除；它永遠不會刪除路線。',
       list: '列出路由或受控制的令牌。',
       examples: '新增範例路線。',
       export: '將路線顯示為文字以複製到另一個遊戲中。',
@@ -2447,8 +2732,9 @@ const TokenControllerMod = (() => {
         points: [
           '步驟代碼：鍵入動作，例如U2R2D2L2。程式碼不與地圖上的位置綁定，因此相同的路線在任何地方都適用。',
           '從繪圖：使用繪圖工具繪製直線、多邊形、手繪形狀、矩形或橢圓形，選擇它並按一下從繪圖。令牌僅在該頁面上沿著它行走。之後您可以刪除該繪圖。',
-          '錄製：選擇一個token，點選錄製。使用箭頭按鈕移動它或將其拖曳到地圖上（跟隨 Roll20 航點​​），然後按一下「儲存」。在方形網格上，錄音變成可以編輯的步驟代碼。',
+          '錄製：選擇一個token，點選錄製。使用箭頭按鈕移動它或將其拖曳到地圖上（跟隨 Roll20 航點），然後按一下「儲存」。在方形網格上，錄音變成可以編輯的步驟代碼。',
           '循環路線從頭開始；來迴路線 沿著來時的路走回去；一旦路線停在終點。新路線從起點開始循環；其他人則來回走動。',
+          '彈跳區域：圍繞該區域繪製一個閉合形狀，選擇它並點擊彈跳區域。令牌開始沿直線行進，並從其邊緣（以及牆壁，除非路線忽略它們）反彈，每次都會隨機轉動一點。隨機開始將每個令牌放入該區域的隨機儲存格中。',
         ],
       },
       codes: {
@@ -2469,6 +2755,8 @@ const TokenControllerMod = (() => {
         interval: '此路線每步的毫秒數，或全域間隔的 0 毫秒。',
         max: '一次可以在路線上的代幣數量最多，或 0 表示沒有限制。',
         random: 'on：每個標記從沿路線的隨機點開始。',
+        walls:
+          '忽略（穿過牆壁）、保持（在牆壁和關閉的門處等待）、轉身（返回）或預設（使用牆壁設定）。',
         start: 'set：標記在開始時跳到所選標記的位置。明確：他們從他們所處的位置開始。',
       },
       tokens: {
@@ -2480,6 +2768,8 @@ const TokenControllerMod = (() => {
           '关注：选择领导者并单击领导者，然后选择关注者并单击关注。您也可以輸入領導者的名字：!tokencontroller follow Goblin Boss。追隨者跟隨巡邏的令牌、您拖曳的令牌以及 TokenMod 移動的令牌。',
           '追隨者可以追隨其他追隨者，形成一條鍊或一列。',
           '拖曳巡邏標記會從放置它的位置開始巡邏，除非拖曳巡邏設定為停止。',
+          '牆壁：啟用牆壁後，巡邏人員和追隨者不會穿過動態照明牆或關閉的門窗；打開門窗讓他們通過。為路線提供自己的牆壁選項（例如忽略幽靈）。',
+          '停止標記：獲得這些狀態標記之一（例如死亡）的令牌離開其路線並停止跟隨，領導者的追隨者也獲得一站。使用 !tokencontroller set stopMarkers dead;red 設定它們。當另一個 Mod 添加標記時，這也適用。',
         ],
       },
       grids: {
@@ -2503,6 +2793,7 @@ const TokenControllerMod = (() => {
         heading: '命令',
         intro:
           '只有 GM 可以使用這些指令。可以命名路線，或透過選單按鈕中的 #id 來引用路線。當指令採用兩個名稱時，請將帶空格的名稱放在「引號」中。',
+        mods: '其他 Mod 也可以發送這些命令，例如從 ScriptCard。他們無法選擇令牌，因此使用 --ids 命名，後面跟著以分號分隔的令牌 ID：!tc stop --ids ID1;ID2。回覆將發送至 GM。',
         colCommand: '命令',
         colDesc: '它的作用',
       },
@@ -2612,6 +2903,8 @@ const TokenControllerMod = (() => {
       paused: 'Všechny hlídky se zastavily.',
       resumed: 'Hlídky byly obnoveny.',
       journalRebuilt: 'Přepracované podklady: {help} a {deck}.',
+      markerStopped: 'Zastaveno značkou zastávky: {tokens}.',
+      markerReset: 'Posláno zpět tam, kde začali, značkou zastávky: {tokens}.',
     },
     errors: {
       noTokens: 'Nejsou vybrány žádné tokeny.',
@@ -2637,6 +2930,12 @@ const TokenControllerMod = (() => {
       usageCopy: 'Uveďte trasu a název kopie.',
       badJson: 'Toto není text exportu trasy.',
       tokenLocked: '{tokens} nelze spustit: uzamčeno.',
+      tokenMarked: '{tokens} nelze spustit: mají značku zastavení.',
+      outsideArea: '{tokens} nelze spustit: jsou mimo „{name}“.',
+      selectOneArea:
+        'Vyberte přesně jeden uzavřený výkres (mnohoúhelník, obdélník, elipsa nebo smyčka od ruky).',
+      areaTooSmall: 'Vybraný výkres potřebuje k vytvoření oblasti alespoň tři rohy.',
+      idsNotFound: 'Žádné tokeny nemají tato ID: {ids}.',
       routeOnOtherPage: '{tokens} nelze spustit: „{name}“ bylo nakresleno na jiné stránce.',
       startOnOtherPage: '{tokens} nelze spustit: pevný začátek „{name}“ je na jiné stránce.',
       routeFull: '{tokens} nelze spustit: „{name}“ již má {max} tokenů.',
@@ -2668,7 +2967,7 @@ const TokenControllerMod = (() => {
       },
       selectOneDrawing:
         'Nakreslete trasu pomocí kreslicího nástroje, vyberte ji (přetáhněte rámeček kolem tenkého obrysu, pokud jej kliknutím minete), a zkuste to znovu.',
-      usageRoute: 'Možnosti: režim, interval, max, náhodný, start.',
+      usageRoute: 'Možnosti: režim, interval, max, náhodný, stěny, start.',
       routeOnOtherPage: 'Nakreslené trasy fungují pouze na stránce, na které byly nakresleny.',
       startOnOtherPage: 'Vymažte pevný začátek nebo nejprve přesuňte token na tuto stránku.',
       noLeader:
@@ -2683,8 +2982,14 @@ const TokenControllerMod = (() => {
         'Ujistěte se, že žetony jsou v sousedních buňkách stejného řádku (sloupec na Hex (H) stránkách).',
       unknownCommand: 'Pro seznam příkazů napište !tokencontroller help.',
       tokenLocked: 'Nejprve odemkněte token.',
+      tokenMarked: 'Odstraňte značku nebo změňte nastavení Stop Markers.',
+      outsideArea: 'Nejprve přesuňte žetony uvnitř oblasti nebo zapněte pro trasu Náhodný start.',
+      selectOneArea:
+        'Nakreslete oblast pomocí kreslicího nástroje, vyberte ji (přetáhněte rámeček kolem tenkého obrysu, pokud jej kliknutím minete), a zkuste to znovu.',
+      idsNotFound: 'ID tokenů uveďte za --ids oddělené středníky.',
     },
     warnings: {
+      idsNotFound: 'Žádné tokeny nemají tato ID, takže byly přeskočeny: {ids}.',
       offPage: 'Část trasy vede mimo stránku (kroky: {count}). Tyto kroky jsou přeskočeny.',
       combatTrackerOnly:
         'Detekce boje je nastavena na sledování zatáček, takže tento přepínač nemá žádný účinek, dokud jej nezměníte.',
@@ -2746,6 +3051,27 @@ const TokenControllerMod = (() => {
         continue: 'Pokračujte odtud',
         stop: 'Zastavte hlídku',
       },
+      markerAction: {
+        stop: 'Zastavte se, kde to je',
+        reset: 'Vraťte se na začátek',
+      },
+      wallMode: {
+        ignore: 'Procházet zdmi',
+        hold: 'Čekej u zdí',
+        turn: 'Otočte se zpět ke stěnám',
+      },
+      wallCheck: {
+        centre: 'Střed tokenu',
+        width: 'Celý token',
+      },
+      oneWayWalls: {
+        block: 'Blok',
+        pass: 'Nechat projít',
+      },
+      transparentWalls: {
+        block: 'Blok',
+        pass: 'Nechat projít',
+      },
     },
     menu: {
       statusRunning: 'Hlídací tokeny: {patrols}. Trasy: {routes}.',
@@ -2768,6 +3094,7 @@ const TokenControllerMod = (() => {
       stop: 'Zastávka',
       add: 'Krokový kód',
       draw: 'Z Kreslení',
+      bounce: 'Oblast odrážení',
       record: 'Záznam',
       examples: 'Příklady',
       reset: 'Resetovat',
@@ -2814,11 +3141,13 @@ const TokenControllerMod = (() => {
     route: {
       drawn: 'Nakreslená trasa, {points} bodů',
       recorded: 'Zaznamenaná trasa, {points} bodů',
+      area: 'Oblast odrazu, {points} rohy',
       path: 'Cesta',
       mode: 'Režim',
       interval: 'Interval',
       maxTokens: 'Většina tokenů',
       randomStart: 'Náhodný start',
+      walls: 'Stěny',
       start: 'Pevný start',
       tokens: 'Tokeny',
     },
@@ -2864,6 +3193,30 @@ const TokenControllerMod = (() => {
         label: 'Tažení hlídky',
         desc: 'Když přetáhnete žeton hlídky: pokračujte (trasa pokračuje od místa, kde jste ji upustili) nebo zastavte (hlídka končí).',
       },
+      stopMarkers: {
+        label: 'Značky zastavení',
+        desc: 'Značky stavu, které oddělují token z jeho trasy a zabraňují mu následovat, oddělené středníky (například mrtvý;červený) nebo žádné. Následovníci vůdce s jedním z těchto značek se také zastaví.',
+      },
+      markerAction: {
+        label: 'Zastavit akci značky',
+        desc: 'Co udělá žeton hlídky, když dostane značku zastavení: zastavit (zůstane tam, kde je) nebo resetovat (vrátit se tam, kde začal).',
+      },
+      wallMode: {
+        label: 'Stěny',
+        desc: 'Co dělají hlídky a následovníci u dynamických osvětlovacích stěn a zavřených dveří a oken: ignorovat (procházet), držet (čekat, dokud se cesta neuvolní, například dokud se neotevřou dveře) nebo se otočit (hlídky se otočí zpět). Každá trasa si může vybrat svou, takže duchové mohou stále procházet zdmi.',
+      },
+      wallCheck: {
+        label: 'Kontrola stěny',
+        desc: 'střed: pouze střed žetonu musí zůstat mimo zdi. šířka: celý žeton ano, takže velký žeton se nemůže protlačit úzkou mezerou.',
+      },
+      oneWayWalls: {
+        label: 'Jednosměrné stěny',
+        desc: 'Zda jednosměrné zdi zastaví žetony (blok) nebo ne (průchod).',
+      },
+      transparentWalls: {
+        label: 'Průhledné stěny',
+        desc: 'Zda průhledné stěny, které propouštějí světlo, zastavují žetony (blok) nebo ne (průchod).',
+      },
       buttonStep: {
         label: 'Počet buněk na kliknutí',
         desc: 'Jak daleko posunou šipky záznamu token.',
@@ -2899,12 +3252,15 @@ const TokenControllerMod = (() => {
       add: 'Vytvořte trasu z kódu kroku, například U2R2D2L2.',
       edit: 'Změňte kód kroku trasy.',
       draw: 'Vytvořte trasu, která sleduje vybraný výkres na této stránce.',
+      bounce:
+        'Vytvořte trasu, na které žetony putují uvnitř vybraného uzavřeného výkresu a odrážejí se od jeho okrajů.',
       record: 'Zaznamenejte trasu přesunutím vybraného tokenu pomocí tlačítek nebo přetažením.',
-      route: 'Změňte možnost trasy: režim, interval, maximální, náhodná nebo začátek.',
+      route: 'Změňte možnost trasy: režim, interval, maximální, náhodná, stěny nebo začátek.',
       show: 'Zobrazit podrobnosti o trase a tlačítka.',
       rename: 'Přejmenujte trasu.',
       copy: 'Zkopírujte trasu pod novým názvem.',
       remove: 'Odebrat trasu (nejprve se zeptá).',
+      ids: 'Jednejte s tokeny s těmito ID namísto s vybranými, takže jiné mody, jako jsou ScriptCards, mohou ovládat tokeny. odstranit --ids odebere tokeny z jejich tras; nikdy neodstraní trasu.',
       list: 'Seznam tras nebo žetonů, které jsou ovládány.',
       examples: 'Přidejte ukázkové trasy.',
       export: 'Zobrazit trasy jako text ke zkopírování do jiné hry.',
@@ -2942,6 +3298,7 @@ const TokenControllerMod = (() => {
           'Z kreslení: nakreslete pomocí nástrojů kreslení čáru, mnohoúhelník, tvar od ruky, obdélník nebo elipsu, vyberte je a klikněte na Z kresby. Tokeny po ní chodí, pouze na této stránce. Nákres můžete poté smazat.',
           'Záznam: vyberte token a klikněte na Záznam. Přesuňte jej pomocí tlačítek se šipkami nebo jej přetáhněte na mapu (sledují se trasové body Roll20) a poté klikněte na Uložit. Na čtvercové mřížce se záznam stane kódem kroku, který můžete upravit.',
           'Smyčkové trasy začínají znovu od začátku; trasy tam a zpět jdou zpět tak, jak přišli; jakmile se trasy zastaví na konci. Nové trasy, které končí tam, kde začínají, smyčka; ostatní jdou tam a zpět.',
+          'Oblast odrazu: nakreslete kolem oblasti uzavřený tvar, vyberte jej a klikněte na Oblast odrazu. Žetony, které na něm začaly, cestují v přímých liniích a odrážejí se od jeho okrajů (a od zdí, pokud je trasa ignoruje), přičemž se pokaždé trochu náhodně otočí. Náhodný start umístí každý žeton do náhodné buňky oblasti.',
         ],
       },
       codes: {
@@ -2962,6 +3319,8 @@ const TokenControllerMod = (() => {
         interval: 'Milisekundy na krok pro tuto trasu nebo 0 pro globální interval.',
         max: 'Nejvíce žetonů, které mohou být na trase najednou, nebo 0 bez omezení.',
         random: 'zapnuto: každý žeton začíná v náhodném bodě na trase.',
+        walls:
+          'ignorovat (procházet zdmi), držet (čekat u zdí a zavřených dveří), otáčet se (vrátit se zpět) nebo výchozí (použít nastavení Zdi).',
         start:
           'sada: žetony na začátku přeskočí na pozici vybraného žetonu. jasné: začínají tam, kde stojí.',
       },
@@ -2974,6 +3333,8 @@ const TokenControllerMod = (() => {
           'Následovat: vyberte vůdce a klikněte na vůdce, poté vyberte následovníky a klikněte na Následovat. Můžete také napsat jméno vůdce: !tokencontroller follow Goblin Boss. Následovníci sledují žetony, které hlídkují, žetony, které přetáhnete, a žetony přesunuté TokenModem.',
           'Následovníci mohou následovat ostatní příznivce a vytvořit tak řetěz nebo sloupec.',
           'Přetažení žetonu hlídky přenese hlídku z místa, kde ji upustíte, pokud není přetažení hlídky nastaveno na zastavení.',
+          'Zdi: při zapnutém Zdi hlídky a následovníci neprocházejí dynamickými osvětlovacími stěnami nebo zavřenými dveřmi a okny; otevřené dveře a okna je propustí. Dejte trase možnost vlastní zdi (například ignorovat pro ducha).',
+          'Stop Markers: Token, který získá jeden z těchto ukazatelů stavu (například mrtvý), opustí svou trasu a přestane ho následovat a následovníci vůdce, který dostane jednu zastávku také. Nastavte je pomocí !tokencontroller set stopMarkers dead;red. To také funguje, když jiný Mod přidá značku.',
         ],
       },
       grids: {
@@ -2997,6 +3358,7 @@ const TokenControllerMod = (() => {
         heading: 'Příkazy',
         intro:
           'Tyto příkazy mohou používat pouze GM. Trasy lze pojmenovat nebo na ně odkazovat pomocí #id z tlačítek nabídky. Pokud má příkaz dvě jména, vložte jména s mezerami do "uvozovek".',
+        mods: 'Tyto příkazy mohou odesílat i jiné mody, například ze ScriptCards. Nemohou vybrat tokeny, takže je pojmenují --ids následované ID tokenu oddělenými středníky: !tc stop --ids ID1;ID2. Odpovědi jdou GM.',
         colCommand: 'Příkaz',
         colDesc: 'Co to dělá',
       },
@@ -3106,6 +3468,8 @@ const TokenControllerMod = (() => {
       paused: 'Alle patruljer holdt pause.',
       resumed: 'Patruljer blev genoptaget.',
       journalRebuilt: 'Handouts genopbygget: {help} og {deck}.',
+      markerStopped: 'Stoppet af en stopmarkør: {tokens}.',
+      markerReset: 'Sendt tilbage til det sted, hvor de startede af en stopmarkør: {tokens}.',
     },
     errors: {
       noTokens: 'Ingen tokens valgt.',
@@ -3131,6 +3495,12 @@ const TokenControllerMod = (() => {
       usageCopy: 'Giv en rute og et navn til kopien.',
       badJson: 'Det er ikke ruteeksporttekst.',
       tokenLocked: '{tokens} kan ikke starte: låst.',
+      tokenMarked: '{tokens} kan ikke starte: de har en stopmarkør.',
+      outsideArea: '{tokens} kan ikke starte: de er uden for "{name}".',
+      selectOneArea:
+        'Vælg præcis én lukket tegning (en polygon, rektangel, ellipse eller frihåndsløkke).',
+      areaTooSmall: 'Den valgte tegning skal have mindst tre hjørner for at lave et område.',
+      idsNotFound: "Ingen tokens har disse id'er: {ids}.",
       routeOnOtherPage: '{tokens} kan ikke starte: "{name}" blev tegnet på en anden side.',
       startOnOtherPage:
         '{tokens} kan ikke starte: den faste start på "{name}" er på en anden side.',
@@ -3163,7 +3533,7 @@ const TokenControllerMod = (() => {
       },
       selectOneDrawing:
         'Tegn ruten med et tegneværktøj, vælg den (træk en boks rundt om en tynd kontur, hvis du klikker forbi den), prøv derefter igen.',
-      usageRoute: 'Indstillinger: tilstand, interval, max, tilfældig, start.',
+      usageRoute: 'Indstillinger: tilstand, interval, max, tilfældig, vægge, start.',
       routeOnOtherPage: 'Tegnede ruter virker kun på den side, de er tegnet på.',
       startOnOtherPage: 'Ryd den faste start, eller flyt tokenet til den side først.',
       noLeader: 'Vælg lederen og klik Leder, eller giv dens navn: !tokencontroller følg Navn',
@@ -3176,8 +3546,14 @@ const TokenControllerMod = (() => {
         'Sørg for, at tokens er i tilstødende celler i samme række (kolonne på Hex (H) sider).',
       unknownCommand: 'Skriv !tokencontroller help for listen over kommandoer.',
       tokenLocked: 'Lås først tokenet op.',
+      tokenMarked: 'Fjern markøren, eller skift indstillingen Stop Markers.',
+      outsideArea: 'Flyt tokens inden for området først, eller slå tilfældig start til for ruten.',
+      selectOneArea:
+        'Tegn området med et tegneværktøj, vælg det (træk en boks rundt om et tyndt omrids, hvis du klikker forbi det), prøv derefter igen.',
+      idsNotFound: "Giv token-id'er efter --ids, adskilt af semikolon.",
     },
     warnings: {
+      idsNotFound: "Ingen tokens har disse id'er, så de blev sprunget over: {ids}.",
       offPage: 'En del af ruten løber væk fra siden (trin: {count}). Disse trin springes over.',
       combatTrackerOnly:
         'Combat Detection er indstillet til turn tracker, så denne kontakt har ingen effekt, før du ændrer den.',
@@ -3239,6 +3615,27 @@ const TokenControllerMod = (() => {
         continue: 'Fortsæt derfra',
         stop: 'Stop patruljen',
       },
+      markerAction: {
+        stop: 'Stop hvor det er',
+        reset: 'Gå tilbage til starten',
+      },
+      wallMode: {
+        ignore: 'Gå gennem vægge',
+        hold: 'Vent ved vægge',
+        turn: 'Vend tilbage ved vægge',
+      },
+      wallCheck: {
+        centre: 'Midten af tokenet',
+        width: 'Hel token',
+      },
+      oneWayWalls: {
+        block: 'Blok',
+        pass: 'Slip igennem',
+      },
+      transparentWalls: {
+        block: 'Blok',
+        pass: 'Slip igennem',
+      },
     },
     menu: {
       statusRunning: 'Patruljerende tokens: {patrols}. Ruter: {routes}.',
@@ -3260,6 +3657,7 @@ const TokenControllerMod = (() => {
       stop: 'Stop',
       add: 'Trin kode',
       draw: 'Fra Tegning',
+      bounce: 'Bounce område',
       record: 'Optage',
       examples: 'Eksempler',
       reset: 'Nulstil',
@@ -3306,11 +3704,13 @@ const TokenControllerMod = (() => {
     route: {
       drawn: 'Tegnet rute, {points} point',
       recorded: 'Registreret rute, {points} point',
+      area: 'Afvisningsområde, {points} hjørner',
       path: 'Sti',
       mode: 'Tilstand',
       interval: 'Interval',
       maxTokens: 'De fleste tokens',
       randomStart: 'Tilfældig start',
+      walls: 'Vægge',
       start: 'Fast start',
       tokens: 'Poletter',
     },
@@ -3356,6 +3756,30 @@ const TokenControllerMod = (() => {
         label: 'Trækker en patrulje',
         desc: 'Når du trækker et patruljerende token: fortsæt (ruten fortsætter fra det sted, hvor du tabte den) eller stop (patruljen slutter).',
       },
+      stopMarkers: {
+        label: 'Stopmarkører',
+        desc: 'Statusmarkører, der fjerner et token fra ruten og stopper det med at følge, adskilt af semikolon (f.eks. død;rød) eller ingen. Tilhængere af en leder med en af disse markører stopper også.',
+      },
+      markerAction: {
+        label: 'Stop markør handling',
+        desc: 'Hvad et patruljerende token gør, når det får en stopmarkør: stop (det bliver, hvor det er) eller nulstil (det går tilbage til, hvor det startede).',
+      },
+      wallMode: {
+        label: 'Vægge',
+        desc: 'Hvad patruljer og følgere gør ved dynamiske belysningsvægge og lukkede døre og vinduer: ignorere (gå igennem), holde (vente indtil vejen er fri, for eksempel indtil en dør åbner) eller dreje (patruljer vender tilbage). Hver rute kan vælge sin egen, så spøgelser kan stadig gå gennem vægge.',
+      },
+      wallCheck: {
+        label: 'Vægtjek',
+        desc: 'i midten: kun midten af en token skal holde sig fri af vægge. bredde: hele token gør det, så en stor token kan ikke presse sig gennem et smalt mellemrum.',
+      },
+      oneWayWalls: {
+        label: 'Envejsvægge',
+        desc: 'Hvorvidt envejsvægge stopper tokens (blok) eller ej (pas).',
+      },
+      transparentWalls: {
+        label: 'Gennemsigtige vægge',
+        desc: 'Om gennemsigtige vægge, som slipper lys igennem, stopper tokens (blokerer) eller ej (passerer).',
+      },
       buttonStep: {
         label: 'Celler pr. klik',
         desc: 'Hvor langt optagelsespilene flytter et token.',
@@ -3391,12 +3815,15 @@ const TokenControllerMod = (() => {
       add: 'Opret en rute fra en trinkode, såsom U2R2D2L2.',
       edit: 'Skift en rutes trinkode.',
       draw: 'Opret en rute, der følger den valgte tegning på denne side.',
+      bounce:
+        'Opret en rute, hvor tokens vandrer inde i den valgte lukkede tegning og hopper af dens kanter.',
       record: 'Optag en rute ved at flytte det valgte token med knapper eller ved at trække det.',
-      route: 'Skift en ruteindstilling: tilstand, interval, maks., tilfældig eller start.',
+      route: 'Skift en ruteindstilling: tilstand, interval, maks., tilfældig, vægge eller start.',
       show: 'Vis en rutes detaljer og knapper.',
       rename: 'Omdøb en rute.',
       copy: 'Kopier en rute under et nyt navn.',
       remove: 'Fjern en rute (spørger først).',
+      ids: "Handl på tokens med disse ID'er i stedet for de valgte, så andre Mods såsom ScriptCards kan styre tokens. fjern --ids fjerner tokens fra deres ruter; det fjerner aldrig en rute.",
       list: 'Liste over ruterne eller de tokens, der kontrolleres.',
       examples: 'Tilføj eksempler på ruter.',
       export: 'Vis ruter som tekst, der skal kopieres til et andet spil.',
@@ -3434,6 +3861,7 @@ const TokenControllerMod = (() => {
           'Fra tegning: Tegn en linje, polygon, frihåndsform, rektangel eller ellipse med tegneværktøjerne, vælg den og klik på Fra tegning. Poletter går langs den, kun på den side. Du kan slette tegningen efterfølgende.',
           'Optag: Vælg et token, og klik på Optag. Flyt den med pileknapperne eller træk den på kortet (Roll20 waypoints følges), og klik derefter på Gem. På firkantede gitter bliver optagelsen en trinkode, du kan redigere.',
           'Loop-ruter starter igen fra begyndelsen; frem og tilbage ruter går tilbage på den måde, de kom; når ruterne stopper for enden. Nye ruter, der slutter, hvor de starter, loop; andre går frem og tilbage.',
+          'Bounce-område: Tegn en lukket form rundt om området, vælg det, og klik på Bounce-område. Tokens, der startes på den, rejser i lige linjer og hopper af dens kanter (og fra vægge, medmindre ruten ignorerer dem), og drejer lidt tilfældigt hver gang. Tilfældig start placerer hver token i en tilfældig celle i området.',
         ],
       },
       codes: {
@@ -3455,6 +3883,8 @@ const TokenControllerMod = (() => {
         interval: 'Millisekunder pr. trin for denne rute, eller 0 for det globale interval.',
         max: 'De fleste tokens, der kan være på ruten på én gang, eller 0 uden grænse.',
         random: 'tændt: hvert token starter på et tilfældigt punkt langs ruten.',
+        walls:
+          'ignorere (gå gennem vægge), hold (vent ved vægge og lukkede døre), vend (vend tilbage) eller standard (brug indstillingen Vægge).',
         start:
           'sæt: tokens hopper til det valgte tokens position, når de starter. klart: de starter, hvor de står.',
       },
@@ -3467,6 +3897,8 @@ const TokenControllerMod = (() => {
           'Følg: vælg lederen, og klik på Leder, vælg derefter følgerne, og klik på Følg. Du kan også skrive lederens navn: !tokencontroller follow Goblin Boss. Følgere følger tokens, der patruljerer, tokens, du trækker, og tokens, der flyttes af TokenMod.',
           'Følgere kan følge andre følgere, lave en kæde eller en kolonne.',
           'At trække et patruljerende token fører patruljen videre fra det sted, hvor du taber det, medmindre at trække en patrulje er indstillet til at stoppe.',
+          'Vægge: med vægge aktiveret, går patruljer og følgere ikke gennem dynamiske lysvægge eller lukkede døre og vinduer; åbne døre og vinduer slipper dem igennem. Giv en rute sin egen væg mulighed (for eksempel ignorer for et spøgelse).',
+          'Stopmarkører: et token, der får en af disse statusmarkører (for eksempel død) forlader sin rute og stopper med at følge, og følgerne af en leder, der får et stop også. Indstil dem med !tokencontroller sæt stopMarkers dead;red. Dette virker også, når en anden Mod tilføjer markøren.',
         ],
       },
       grids: {
@@ -3490,6 +3922,7 @@ const TokenControllerMod = (() => {
         heading: 'Kommandoer',
         intro:
           'Kun GM\'er kan bruge disse kommandoer. Ruter kan navngives eller henvises til med deres #id fra menuknapperne. Sæt navne med mellemrum i "anførselstegn", når en kommando tager to navne.',
+        mods: "Andre Mods kan også sende disse kommandoer, for eksempel fra ScriptCards. De kan ikke vælge tokens, så de navngiver dem med --ids efterfulgt af token-id'er adskilt af semikolon: !tc stop --ids ID1;ID2. Svar går til GM.",
         colCommand: 'Kommando',
         colDesc: 'Hvad den gør',
       },
@@ -3517,7 +3950,7 @@ const TokenControllerMod = (() => {
       troubleshooting: {
         heading: 'Fejlfinding',
         points: [
-          'Tokens flytter sig ikke: Tjek Status. Patruljer venter, mens de er på pause, mens de er låst, og i kamp, ​​når kampadfærd er pause.',
+          'Tokens flytter sig ikke: Tjek Status. Patruljer venter, mens de er på pause, mens de er låst, og i kamp, når kampadfærd er pause.',
           'Tokens flytter sig den forkerte afstand: sidens gitterstørrelse eller snapping kan have ændret sig; prøv Kalibrer.',
           'En tegnet rute starter ikke: Tegnede ruter fungerer kun på den side, de er tegnet på.',
           'Følgere flytter sig ikke, når en anden Mod flytter lederen: kun TokenMod rapporterer sine træk. Andre Mods kan kalde TokenController.ObserveTokenChange.',
@@ -3587,7 +4020,7 @@ const TokenControllerMod = (() => {
       unlocked: 'Ontgrendeld: {tokens}.',
       leaderSet: '{token} is de leider. Selecteer de volgers en klik op Volgen.',
       following: 'Volgt nu {leader} ({mode}): {tokens}.',
-      unfollowed: 'Tokens volgen niet meer: ​​{count}.',
+      unfollowed: 'Tokens volgen niet meer: {count}.',
       noRecordings: 'Er wordt niets opgenomen.',
       recordingCancelled: 'Opname "{name}" geannuleerd.',
       languages: 'Ondersteunde talen: {list}',
@@ -3599,6 +4032,8 @@ const TokenControllerMod = (() => {
       paused: 'Alle patrouilles stopten.',
       resumed: 'De patrouilles werden hervat.',
       journalRebuilt: 'Hand-outs herbouwd: {help} en {deck}.',
+      markerStopped: 'Gestopt door een stopmarkering: {tokens}.',
+      markerReset: 'Teruggestuurd naar waar ze begonnen door een stopmarkering: {tokens}.',
     },
     errors: {
       noTokens: 'Geen tokens geselecteerd.',
@@ -3624,6 +4059,13 @@ const TokenControllerMod = (() => {
       usageCopy: 'Geef een route en een naam voor de kopie.',
       badJson: 'Dat is geen route-exporttekst.',
       tokenLocked: '{tokens} kan niet starten: vergrendeld.',
+      tokenMarked: '{tokens} kan niet starten: ze hebben een stopmarkering.',
+      outsideArea: '{tokens} kan niet starten: ze bevinden zich buiten "{name}".',
+      selectOneArea:
+        'Selecteer precies één gesloten tekening (een veelhoek, rechthoek, ellips of lus uit de vrije hand).',
+      areaTooSmall:
+        'De geselecteerde tekening heeft minimaal drie hoeken nodig om een gebied te vormen.',
+      idsNotFound: "Er zijn geen tokens met deze ID's: {ids}.",
       routeOnOtherPage: '{tokens} kan niet starten: "{name}" is op een andere pagina getekend.',
       startOnOtherPage:
         '{tokens} kan niet starten: het vaste begin van "{name}" bevindt zich op een andere pagina.',
@@ -3643,7 +4085,7 @@ const TokenControllerMod = (() => {
         'De geselecteerde tokens konden niet worden gebruikt om het raster te kalibreren.',
       unknownCommand: 'Onbekend commando "{command}".',
       gmOnly: 'Alleen de GM kan TokenController gebruiken.',
-      internal: 'Er is iets misgegaan. Details staan ​​in de API-console.',
+      internal: 'Er is iets misgegaan. Details staan in de API-console.',
     },
     hints: {
       noTokens: 'Selecteer eerst de tokens op de kaart.',
@@ -3657,7 +4099,7 @@ const TokenControllerMod = (() => {
       },
       selectOneDrawing:
         'Teken de route met een tekengereedschap, selecteer deze (sleep een kader rond een dunne omtrek als u deze mist door te klikken) en probeer het opnieuw.',
-      usageRoute: 'Opties: modus, interval, max, willekeurig, start.',
+      usageRoute: 'Opties: modus, interval, max, willekeurig, muren, start.',
       routeOnOtherPage: 'Getekende routes werken alleen op de pagina waarop ze getekend zijn.',
       startOnOtherPage: 'Wis de vaste start of verplaats het token eerst naar die pagina.',
       noLeader:
@@ -3671,8 +4113,15 @@ const TokenControllerMod = (() => {
         "Zorg ervoor dat de tokens zich in aangrenzende cellen van dezelfde rij bevinden (kolom op Hex (H)-pagina's).",
       unknownCommand: 'Typ !tokencontroller help voor de lijst met opdrachten.',
       tokenLocked: 'Ontgrendel eerst het token.',
+      tokenMarked: 'Verwijder de markering of wijzig de instelling Stopmarkeringen.',
+      outsideArea:
+        'Verplaats de tokens eerst binnen het gebied of schakel Willekeurige start in voor de route.',
+      selectOneArea:
+        'Teken het gebied met een tekengereedschap, selecteer het (sleep een kader rond een dunne omtrek als u er niet op klikt) en probeer het opnieuw.',
+      idsNotFound: "Geef token-ID's op na --ids, gescheiden door puntkomma's.",
     },
     warnings: {
+      idsNotFound: "Er zijn geen tokens met deze ID's, dus deze zijn overgeslagen: {ids}.",
       offPage:
         'Een deel van de route loopt buiten de pagina (stappen: {count}). Die stappen worden overgeslagen.',
       combatTrackerOnly:
@@ -3735,6 +4184,27 @@ const TokenControllerMod = (() => {
         continue: 'Ga vanaf daar verder',
         stop: 'Stop de patrouille',
       },
+      markerAction: {
+        stop: 'Stop waar het is',
+        reset: 'Ga terug naar het begin',
+      },
+      wallMode: {
+        ignore: 'Loop door muren',
+        hold: 'Wacht bij muren',
+        turn: 'Keer terug bij muren',
+      },
+      wallCheck: {
+        centre: 'Midden van het token',
+        width: 'Hele teken',
+      },
+      oneWayWalls: {
+        block: 'Blok',
+        pass: 'Doorlaten',
+      },
+      transparentWalls: {
+        block: 'Blok',
+        pass: 'Doorlaten',
+      },
     },
     menu: {
       statusRunning: 'Patrouillerende tokens: {patrols}. Routes: {routes}.',
@@ -3757,6 +4227,7 @@ const TokenControllerMod = (() => {
       stop: 'Stop',
       add: 'Stapcode',
       draw: 'Van tekening',
+      bounce: 'Stuitergebied',
       record: 'Dossier',
       examples: 'Voorbeelden',
       reset: 'Opnieuw instellen',
@@ -3803,11 +4274,13 @@ const TokenControllerMod = (() => {
     route: {
       drawn: 'Getekende route, {points} punten',
       recorded: 'Opgenomen route, {points} punten',
+      area: 'Stuiteergebied, {points} hoeken',
       path: 'Pad',
       mode: 'Modus',
       interval: 'Interval',
       maxTokens: 'De meeste tokens',
       randomStart: 'Willekeurig begin',
+      walls: 'Muren',
       start: 'Vast begin',
       tokens: 'Tokens',
     },
@@ -3853,6 +4326,30 @@ const TokenControllerMod = (() => {
         label: 'Een patrouille slepen',
         desc: 'Als je een patrouillefiche versleept: ga verder (de route gaat verder vanaf het punt waar je hem hebt laten vallen) of stop (de patrouille eindigt).',
       },
+      stopMarkers: {
+        label: 'Stopmarkeringen',
+        desc: "Statusmarkeringen die een fiche van zijn route halen en hem ervan weerhouden deze te volgen, gescheiden door puntkomma's (bijvoorbeeld dood;rood), of geen. Volgers van een leider met een van deze markeringen stoppen ook.",
+      },
+      markerAction: {
+        label: 'Markeractie stoppen',
+        desc: 'Wat een patrouillefiche doet als het een stopmarkering krijgt: stoppen (het blijft waar het is) of resetten (het gaat terug naar waar het begon).',
+      },
+      wallMode: {
+        label: 'Muren',
+        desc: 'Wat patrouilles en volgers doen bij dynamische lichtmuren en gesloten deuren en ramen: negeren (doorlopen), vasthouden (wachten tot de weg vrij is, bijvoorbeeld tot een deur opengaat) of draaien (patrouilles keren terug). Elke route kan zijn eigen route kiezen, zodat geesten nog steeds door muren kunnen lopen.',
+      },
+      wallCheck: {
+        label: 'Muurcontrole',
+        desc: 'midden: alleen het midden van een fiche mag vrij blijven van muren. breedte: het hele token doet dat, dus een groot token kan niet door een nauwe opening wurmen.',
+      },
+      oneWayWalls: {
+        label: 'Eenrichtingsmuren',
+        desc: 'Of eenrichtingsmuren tokens tegenhouden (blokkeren) of niet (passeren).',
+      },
+      transparentWalls: {
+        label: 'Doorzichtige muren',
+        desc: 'Of het nu gaat om transparante muren, die licht doorlaten, tokens tegenhouden (blokkeren) of niet (passeren).',
+      },
       buttonStep: {
         label: 'Cellen per klik',
         desc: 'Hoe ver de opnamepijlen een fiche verplaatsen.',
@@ -3888,13 +4385,16 @@ const TokenControllerMod = (() => {
       add: 'Maak een route op basis van een stapcode, zoals U2R2D2L2.',
       edit: 'Wijzig de stapcode van een route.',
       draw: 'Maak een route die de geselecteerde tekening op deze pagina volgt.',
+      bounce:
+        'Creëer een route waarop tokens binnen de geselecteerde gesloten tekening dwalen en tegen de randen stuiteren.',
       record:
         'Leg een route vast door het geselecteerde token met knoppen te verplaatsen of door het te slepen.',
-      route: 'Wijzig een routeoptie: modus, interval, max, willekeurig of start.',
+      route: 'Wijzig een routeoptie: modus, interval, max, willekeurig, muren of start.',
       show: 'Toon de details en knoppen van een route.',
       rename: 'De naam van een route wijzigen.',
       copy: 'Kopieer een route onder een nieuwe naam.',
       remove: 'Verwijder een route (vraag eerst).',
+      ids: "Handel op de tokens met deze ID's in plaats van op de geselecteerde, zodat andere Mods zoals ScriptCards tokens kunnen controleren. verwijder --ids haalt de tokens van hun routes; het verwijdert nooit een route.",
       list: 'Maak een lijst van de routes of de tokens die worden gecontroleerd.',
       examples: 'Voeg de voorbeeldroutes toe.',
       export: 'Toon routes als tekst om naar een ander spel te kopiëren.',
@@ -3932,6 +4432,7 @@ const TokenControllerMod = (() => {
           'Uit tekening: teken een lijn, veelhoek, vorm uit de vrije hand, rechthoek of ellips met de tekengereedschappen, selecteer deze en klik op Uit tekening. Tokens lopen erlangs, alleen op die pagina. Je kunt de tekening achteraf verwijderen.',
           'Opnemen: selecteer een token en klik op Opnemen. Verplaats het met de pijlknoppen of sleep het over de kaart (Roll20-waypoints worden gevolgd) en klik vervolgens op Opslaan. Op vierkante rasters wordt de opname een stapcode die u kunt bewerken.',
           'Lusroutes beginnen opnieuw vanaf het begin; heen en weer routes lopen terug zoals ze gekomen zijn; zodra routes aan het einde stoppen. Nieuwe routes die eindigen waar ze beginnen, lus; anderen gaan heen en weer.',
+          'Stuiteringsgebied: teken een gesloten vorm rond het gebied, selecteer deze en klik op Stuiteringsgebied. Tokens die erop zijn begonnen, reizen in rechte lijnen en stuiteren tegen de randen (en tegen muren, tenzij de route ze negeert), waarbij ze elke keer een beetje willekeurig draaien. Willekeurige start plaatst elk token in een willekeurige cel van het gebied.',
         ],
       },
       codes: {
@@ -3953,6 +4454,8 @@ const TokenControllerMod = (() => {
         interval: 'Milliseconden per stap voor deze route, of 0 voor het globale interval.',
         max: 'De meeste tokens die tegelijk op de route kunnen liggen, of 0 voor geen limiet.',
         random: 'op: elk token begint op een willekeurig punt langs de route.',
+        walls:
+          'negeren (door muren lopen), vasthouden (wachten bij muren en gesloten deuren), draaien (terugdraaien) of standaard (gebruik de instelling Muren).',
         start:
           'set: tokens springen naar de positie van het geselecteerde token wanneer ze starten. duidelijk: ze beginnen waar ze staan.',
       },
@@ -3965,6 +4468,8 @@ const TokenControllerMod = (() => {
           'Volgen: selecteer de leider en klik op Leider, selecteer vervolgens de volgers en klik op Volgen. Je kunt ook de naam van de leider typen: !tokencontroller volg Goblin Boss. Volgers volgen tokens die patrouilleren, tokens die je sleept en tokens die door TokenMod worden verplaatst.',
           'Volgers kunnen andere volgers volgen, waardoor een ketting of een kolom ontstaat.',
           'Door een patrouillefiche te slepen, gaat de patrouille verder vanaf het punt waar je hem neerzet, tenzij het slepen van een patrouille stopt.',
+          'Muren: als de Muren zijn ingeschakeld, lopen patrouilles en volgers niet door dynamische verlichtingsmuren of gesloten deuren en ramen; open deuren en ramen laten ze door. Geef een route een eigen muuroptie (bijvoorbeeld negeren vanwege een geest).',
+          'Stopmarkeringen: een fiche die één van deze statusmarkeringen krijgt (bijvoorbeeld dood), verlaat zijn route en stopt met volgen, en de volgers van een leider die één stop krijgen ook. Stel ze in met !tokencontroller set stopMarkers dead;red. Dit werkt ook als een andere Mod de markering toevoegt.',
         ],
       },
       grids: {
@@ -3988,6 +4493,7 @@ const TokenControllerMod = (() => {
         heading: "Commando's",
         intro:
           'Alleen GM\'s kunnen deze commando\'s gebruiken. Routes kunnen een naam krijgen of er kan naar worden verwezen met hun #id via de menuknoppen. Plaats namen met spaties tussen "aanhalingstekens" als een commando twee namen heeft.',
+        mods: "Andere Mods kunnen deze commando's ook verzenden, bijvoorbeeld vanuit ScriptCards. Ze kunnen geen tokens selecteren, dus geven ze ze de naam --ids gevolgd door token-ID's gescheiden door puntkomma's: !tc stop --ids ID1;ID2. De antwoorden gaan naar de GM.",
         colCommand: 'Commando',
         colDesc: 'Wat het doet',
       },
@@ -4035,7 +4541,7 @@ const TokenControllerMod = (() => {
         maintainer: 'Versie 5 onderhouden door',
         support: 'Rapporteer bugs en ideeën op het Roll20 Mod-forum of op GitHub.',
       },
-      footer: 'Knoppen voor elke actie staan ​​in de uitreikblad "{deck}".',
+      footer: 'Knoppen voor elke actie staan in de uitreikblad "{deck}".',
     },
     deck: {
       subtitle: 'Commandodek',
@@ -4097,6 +4603,8 @@ const TokenControllerMod = (() => {
       paused: 'All patrols paused.',
       resumed: 'Patrols resumed.',
       journalRebuilt: 'Handouts rebuilt: {help} and {deck}.',
+      markerStopped: 'Stopped by a Stop Marker: {tokens}.',
+      markerReset: 'Sent back to where they started by a Stop Marker: {tokens}.',
     },
     errors: {
       noTokens: 'No tokens selected.',
@@ -4122,6 +4630,12 @@ const TokenControllerMod = (() => {
       usageCopy: 'Give a route and a name for the copy.',
       badJson: 'That is not route export text.',
       tokenLocked: '{tokens} cannot start: locked.',
+      tokenMarked: '{tokens} cannot start: they have a Stop Marker.',
+      outsideArea: '{tokens} cannot start: they are outside "{name}".',
+      selectOneArea:
+        'Select exactly one closed drawing (a polygon, rectangle, ellipse or freehand loop).',
+      areaTooSmall: 'The selected drawing needs at least three corners to make an area.',
+      idsNotFound: 'No tokens have these IDs: {ids}.',
       routeOnOtherPage: '{tokens} cannot start: "{name}" was drawn on another page.',
       startOnOtherPage: '{tokens} cannot start: the fixed start of "{name}" is on another page.',
       routeFull: '{tokens} cannot start: "{name}" already has {max} tokens.',
@@ -4153,7 +4667,7 @@ const TokenControllerMod = (() => {
       },
       selectOneDrawing:
         'Draw the route with a drawing tool, select it (drag a box around a thin outline if clicking misses it), then try again.',
-      usageRoute: 'Options: mode, interval, max, random, start.',
+      usageRoute: 'Options: mode, interval, max, random, walls, start.',
       routeOnOtherPage: 'Drawn routes only work on the page they were drawn on.',
       startOnOtherPage: 'Clear the fixed start, or move the token to that page first.',
       noLeader:
@@ -4167,8 +4681,14 @@ const TokenControllerMod = (() => {
         'Make sure the tokens are in neighbouring cells of the same row (column on Hex (H) pages).',
       unknownCommand: 'Type !tokencontroller help for the list of commands.',
       tokenLocked: 'Unlock the token first.',
+      tokenMarked: 'Remove the marker, or change the Stop Markers setting.',
+      outsideArea: 'Move the tokens inside the area first, or turn on Random start for the route.',
+      selectOneArea:
+        'Draw the area with a drawing tool, select it (drag a box around a thin outline if clicking misses it), then try again.',
+      idsNotFound: 'Give token IDs after --ids, separated by semicolons.',
     },
     warnings: {
+      idsNotFound: 'No tokens have these IDs, so they were skipped: {ids}.',
       offPage: 'Part of the route runs off the page (steps: {count}). Those steps are skipped.',
       combatTrackerOnly:
         'Combat Detection is set to the turn tracker, so this switch has no effect until you change it.',
@@ -4230,6 +4750,27 @@ const TokenControllerMod = (() => {
         continue: 'Carry on from there',
         stop: 'Stop the patrol',
       },
+      markerAction: {
+        stop: 'Stop where it is',
+        reset: 'Go back to the start',
+      },
+      wallMode: {
+        ignore: 'Walk through walls',
+        hold: 'Wait at walls',
+        turn: 'Turn back at walls',
+      },
+      wallCheck: {
+        centre: 'Centre of the token',
+        width: 'Whole token',
+      },
+      oneWayWalls: {
+        block: 'Block',
+        pass: 'Let through',
+      },
+      transparentWalls: {
+        block: 'Block',
+        pass: 'Let through',
+      },
     },
     menu: {
       statusRunning: 'Patrolling tokens: {patrols}. Routes: {routes}.',
@@ -4251,6 +4792,7 @@ const TokenControllerMod = (() => {
       stop: 'Stop',
       add: 'Step Code',
       draw: 'From Drawing',
+      bounce: 'Bounce Area',
       record: 'Record',
       examples: 'Examples',
       reset: 'Reset',
@@ -4297,11 +4839,13 @@ const TokenControllerMod = (() => {
     route: {
       drawn: 'Drawn route, {points} points',
       recorded: 'Recorded route, {points} points',
+      area: 'Bounce area, {points} corners',
       path: 'Path',
       mode: 'Mode',
       interval: 'Interval',
       maxTokens: 'Most tokens',
       randomStart: 'Random start',
+      walls: 'Walls',
       start: 'Fixed start',
       tokens: 'Tokens',
     },
@@ -4347,6 +4891,30 @@ const TokenControllerMod = (() => {
         label: 'Dragging a Patrol',
         desc: 'When you drag a patrolling token: continue (the route carries on from where you dropped it) or stop (the patrol ends).',
       },
+      stopMarkers: {
+        label: 'Stop Markers',
+        desc: 'Status markers that take a token off its route and stop it following, separated by semicolons (for example dead;red), or none. Followers of a leader with one of these markers stop too.',
+      },
+      markerAction: {
+        label: 'Stop Marker Action',
+        desc: 'What a patrolling token does when it gets a Stop Marker: stop (it stays where it is) or reset (it goes back to where it started).',
+      },
+      wallMode: {
+        label: 'Walls',
+        desc: 'What patrols and followers do at dynamic lighting walls and closed doors and windows: ignore (walk through), hold (wait until the way is clear, for example until a door opens) or turn (patrols turn back). Each route can choose its own, so ghosts can still walk through walls.',
+      },
+      wallCheck: {
+        label: 'Wall Check',
+        desc: 'centre: only the middle of a token has to stay clear of walls. width: the whole token does, so a large token cannot squeeze through a narrow gap.',
+      },
+      oneWayWalls: {
+        label: 'One-Way Walls',
+        desc: 'Whether one-way walls stop tokens (block) or not (pass).',
+      },
+      transparentWalls: {
+        label: 'See-Through Walls',
+        desc: 'Whether transparent walls, which let light through, stop tokens (block) or not (pass).',
+      },
       buttonStep: {
         label: 'Cells per Click',
         desc: 'How far the recording arrows move a token.',
@@ -4382,12 +4950,15 @@ const TokenControllerMod = (() => {
       add: 'Create a route from a step code, such as U2R2D2L2.',
       edit: "Change a route's step code.",
       draw: 'Create a route that follows the selected drawing on this page.',
+      bounce:
+        'Create a route on which tokens wander inside the selected closed drawing, bouncing off its edges.',
       record: 'Record a route by moving the selected token with buttons or by dragging it.',
-      route: 'Change a route option: mode, interval, max, random or start.',
+      route: 'Change a route option: mode, interval, max, random, walls or start.',
       show: "Show a route's details and buttons.",
       rename: 'Rename a route.',
       copy: 'Copy a route under a new name.',
       remove: 'Remove a route (asks first).',
+      ids: 'Act on the tokens with these IDs instead of the selected ones, so other Mods such as ScriptCards can control tokens. remove --ids takes the tokens off their routes; it never removes a route.',
       list: 'List the routes, or the tokens being controlled.',
       examples: 'Add the example routes.',
       export: 'Show routes as text to copy into another game.',
@@ -4424,6 +4995,7 @@ const TokenControllerMod = (() => {
           'From Drawing: draw a line, polygon, freehand shape, rectangle or ellipse with the drawing tools, select it and click From Drawing. Tokens walk along it, on that page only. You can delete the drawing afterwards.',
           'Record: select a token and click Record. Move it with the arrow buttons or drag it on the map (Roll20 waypoints are followed), then click Save. On square grids the recording becomes a step code you can edit.',
           'Loop routes start again from the beginning; back-and-forth routes walk back the way they came; once routes stop at the end. New routes that end where they start loop; others go back and forth.',
+          'Bounce Area: draw a closed shape around the area, select it and click Bounce Area. Tokens started on it travel in straight lines and bounce off its edges (and off walls, unless the route ignores them), turning a little at random each time. Random start puts each token in a random cell of the area.',
         ],
       },
       codes: {
@@ -4445,6 +5017,8 @@ const TokenControllerMod = (() => {
         interval: 'Milliseconds per step for this route, or 0 for the global interval.',
         max: 'The most tokens that can be on the route at once, or 0 for no limit.',
         random: 'on: each token starts at a random point along the route.',
+        walls:
+          'ignore (walk through walls), hold (wait at walls and closed doors), turn (turn back) or default (use the Walls setting).',
         start:
           "set: tokens jump to the selected token's position when they start. clear: they start where they stand.",
       },
@@ -4457,6 +5031,8 @@ const TokenControllerMod = (() => {
           "Follow: select the leader and click Leader, then select the followers and click Follow. You can also type the leader's name: !tokencontroller follow Goblin Boss. Followers follow tokens that patrol, tokens you drag and tokens moved by TokenMod.",
           'Followers can follow other followers, making a chain or a column.',
           'Dragging a patrolling token carries the patrol on from where you drop it, unless Dragging a Patrol is set to stop.',
+          'Walls: with the Walls setting on, patrols and followers do not walk through dynamic lighting walls or closed doors and windows; open doors and windows let them through. Give a route its own walls option (for example ignore for a ghost).',
+          'Stop Markers: a token that gets one of these status markers (for example dead) leaves its route and stops following, and the followers of a leader that gets one stop too. Set them with !tokencontroller set stopMarkers dead;red. This also works when another Mod adds the marker.',
         ],
       },
       grids: {
@@ -4480,6 +5056,7 @@ const TokenControllerMod = (() => {
         heading: 'Commands',
         intro:
           'Only GMs can use these commands. Routes can be named, or referred to by their #id from the menu buttons. Put names with spaces in "quotes" when a command takes two names.',
+        mods: 'Other Mods can send these commands too, for example from ScriptCards. They cannot select tokens, so they name them with --ids followed by token IDs separated by semicolons: !tc stop --ids ID1;ID2. Replies go to the GM.',
         colCommand: 'Command',
         colDesc: 'What it does',
       },
@@ -4589,6 +5166,8 @@ const TokenControllerMod = (() => {
       paused: 'Kaikki partiot pysähtyivät.',
       resumed: 'Partioita jatkettiin.',
       journalRebuilt: 'Uudelleen rakennetut monisteet: {help} ja {deck}.',
+      markerStopped: 'Pysäytysmerkin pysäyttämä: {tokens}.',
+      markerReset: 'Pysäytysmerkinnän lähettämä takaisin aloituspaikkaan: {tokens}.',
     },
     errors: {
       noTokens: 'Tunnuksia ei ole valittu.',
@@ -4614,6 +5193,13 @@ const TokenControllerMod = (() => {
       usageCopy: 'Anna kopiolle reitti ja nimi.',
       badJson: 'Se ei ole reitin vientiteksti.',
       tokenLocked: '{tokens} ei käynnisty: lukittu.',
+      tokenMarked: '{tokens} ei voi käynnistyä: niissä on pysäytysmerkki.',
+      outsideArea: '{tokens} ei voi alkaa: ne ovat kohteen "{name}" ulkopuolella.',
+      selectOneArea:
+        'Valitse täsmälleen yksi suljettu piirros (monikulmio, suorakulmio, ellipsi tai vapaakäden silmukka).',
+      areaTooSmall:
+        'Valitussa piirustuksessa tarvitaan vähintään kolme kulmaa alueen muodostamiseksi.',
+      idsNotFound: 'Millään tunnuksilla ei ole näitä tunnuksia: {ids}.',
       routeOnOtherPage: '{tokens} ei voi alkaa: "{name}" piirrettiin toiselle sivulle.',
       startOnOtherPage: '{tokens} ei voi alkaa: "{name}" -kohdan kiinteä alku on toisella sivulla.',
       routeFull: '{tokens} ei voi alkaa: "{name}" sisältää jo {max} tunnuksia.',
@@ -4644,7 +5230,7 @@ const TokenControllerMod = (() => {
       },
       selectOneDrawing:
         'Piirrä reitti piirtotyökalulla, valitse se (vetämällä laatikko ohuen ääriviivan ympärille, jos se ei napsauttakaan), yritä sitten uudelleen.',
-      usageRoute: 'Vaihtoehdot: tila, intervalli, maksimi, satunnainen, aloitus.',
+      usageRoute: 'Vaihtoehdot: tila, intervalli, maksimi, satunnainen, seinät, aloitus.',
       routeOnOtherPage: 'Piirretyt reitit toimivat vain sillä sivulla, jolle ne on piirretty.',
       startOnOtherPage: 'Tyhjennä kiinteä aloitus tai siirrä merkki tälle sivulle ensin.',
       noLeader:
@@ -4659,8 +5245,15 @@ const TokenControllerMod = (() => {
         'Varmista, että tunnukset ovat saman rivin viereisissä soluissa (sarake Hex (H) -sivuilla).',
       unknownCommand: 'Kirjoita komentoluetteloon !tokencontroller help.',
       tokenLocked: 'Avaa tunnuksen lukitus ensin.',
+      tokenMarked: 'Poista merkki tai muuta Stop Markers -asetusta.',
+      outsideArea:
+        'Siirrä ensin merkit alueen sisällä tai ota käyttöön reitin satunnainen aloitus.',
+      selectOneArea:
+        'Piirrä alue piirtotyökalulla, valitse se (vetämällä laatikko ohuen ääriviivan ympärille, jos napsauttaminen ei onnistu) ja yritä sitten uudelleen.',
+      idsNotFound: 'Anna tunnustunnukset --ids jälkeen puolipisteillä erotettuina.',
     },
     warnings: {
+      idsNotFound: 'Millään tunnuksilla ei ole näitä tunnuksia, joten ne ohitettiin: {ids}.',
       offPage: 'Osa reitistä kulkee sivulta (vaiheet: {count}). Ne vaiheet ohitetaan.',
       combatTrackerOnly:
         'Combat Detection on asetettu käännösseurantaan, joten tällä kytkimellä ei ole vaikutusta ennen kuin muutat sen.',
@@ -4722,6 +5315,27 @@ const TokenControllerMod = (() => {
         continue: 'Jatka sieltä',
         stop: 'Pysäytä partio',
       },
+      markerAction: {
+        stop: 'Pysähdy missä se on',
+        reset: 'Palaa alkuun',
+      },
+      wallMode: {
+        ignore: 'Kävele seinien läpi',
+        hold: 'Odota seinillä',
+        turn: 'Käänny takaisin seiniin',
+      },
+      wallCheck: {
+        centre: 'Tunnusmerkin keskusta',
+        width: 'Koko merkki',
+      },
+      oneWayWalls: {
+        block: 'Lohko',
+        pass: 'Päästä läpi',
+      },
+      transparentWalls: {
+        block: 'Lohko',
+        pass: 'Päästä läpi',
+      },
     },
     menu: {
       statusRunning: 'Partiomerkit: {patrols}. Reitit: {routes}.',
@@ -4743,6 +5357,7 @@ const TokenControllerMod = (() => {
       stop: 'Pysäytä',
       add: 'Vaihekoodi',
       draw: 'Piirtämisestä',
+      bounce: 'Pomppualue',
       record: 'Tallentaa',
       examples: 'Esimerkkejä',
       reset: 'Nollaa',
@@ -4789,11 +5404,13 @@ const TokenControllerMod = (() => {
     route: {
       drawn: 'Piirretty reitti, {points} pistettä',
       recorded: 'Reitti tallennettu, {points} pistettä',
+      area: 'Pomppualue, {points} kulmat',
       path: 'Polku',
       mode: 'tila',
       interval: 'Intervalli',
       maxTokens: 'Suurin osa tokeneista',
       randomStart: 'Satunnainen aloitus',
+      walls: 'Seinät',
       start: 'Kiinteä aloitus',
       tokens: 'Tokenit',
     },
@@ -4839,6 +5456,30 @@ const TokenControllerMod = (() => {
         label: 'Partion vetäminen',
         desc: 'Kun vedät partiomerkkiä: jatka (reitti jatkuu kohdasta, josta pudotit sen) tai pysähdy (partio päättyy).',
       },
+      stopMarkers: {
+        label: 'Pysäytysmerkit',
+        desc: 'Tilamerkit, jotka vievät tunnuksen pois reitiltä ja pysäyttävät sen seuraamisen puolipisteillä erotettuina (esimerkiksi kuollut;punainen) tai ei mitään. Myös johtajan seuraajat, joilla on yksi näistä merkeistä, pysähtyvät.',
+      },
+      markerAction: {
+        label: 'Lopeta merkkitoiminto',
+        desc: 'Mitä partiomerkki tekee, kun se saa Stop Markerin: pysäyttää (se pysyy paikallaan) tai nollaa (se palaa alkuun).',
+      },
+      wallMode: {
+        label: 'Seinät',
+        desc: 'Mitä partiot ja seuraajat tekevät dynaamisissa valaistusseinissä ja suljetuissa ovissa ja ikkunoissa: jätä huomiotta (kävele läpi), pidä kiinni (odota, kunnes tie on vapaa, esimerkiksi kunnes ovi avautuu) tai käänny (partiot kääntyvät takaisin). Jokainen reitti voi valita oman, joten haamut voivat silti kävellä seinien läpi.',
+      },
+      wallCheck: {
+        label: 'Seinätarkastus',
+        desc: 'keskus: vain merkin keskiosan on pysyttävä poissa seinistä. leveys: koko merkki riittää, joten suuri merkki ei voi puristaa kapeasta raosta.',
+      },
+      oneWayWalls: {
+        label: 'Yksisuuntaiset seinät',
+        desc: 'Pysäyttävätkö yksisuuntaiset seinät merkit (estää) vai eivät (läpäisevätkö).',
+      },
+      transparentWalls: {
+        label: 'Läpinäkyvät seinät',
+        desc: 'Olipa sitten läpinäkyvät seinät, jotka päästävät valoa läpi, pysäyttävät tokeneita (lohko) tai eivät (läpäisevät).',
+      },
       buttonStep: {
         label: 'Solut per napsautus',
         desc: 'Kuinka pitkälle tallennusnuolet siirtävät merkkiä.',
@@ -4874,12 +5515,15 @@ const TokenControllerMod = (() => {
       add: 'Luo reitti askelkoodista, kuten U2R2D2L2.',
       edit: 'Muuta reitin askelkoodia.',
       draw: 'Luo reitti, joka seuraa valittua piirustusta tällä sivulla.',
+      bounce:
+        'Luo reitti, jolla merkit vaeltavat valitun suljetun piirustuksen sisällä pomppien sen reunoista.',
       record: 'Tallenna reitti siirtämällä valittua merkkiä painikkeilla tai vetämällä sitä.',
-      route: 'Muuta reittivaihtoehtoa: tila, väli, maksimi, satunnainen tai aloitus.',
+      route: 'Muuta reittivaihtoehtoa: tila, väli, maksimi, satunnainen, seinät tai alku.',
       show: 'Näytä reitin tiedot ja painikkeet.',
       rename: 'Nimeä reitti uudelleen.',
       copy: 'Kopioi reitti uudella nimellä.',
       remove: 'Poista reitti (kysyy ensin).',
+      ids: 'Käytä tunnuksia näillä tunnuksilla valittujen tunnuksien sijaan, jotta muut modit, kuten ScriptCards, voivat hallita tokeneita. poista --ids poistaa tunnukset niiden reiteiltä; se ei koskaan poista reittiä.',
       list: 'Listaa reitit tai ohjattavat merkit.',
       examples: 'Lisää esimerkkireitit.',
       export: 'Näytä reitit tekstinä kopioitavaksi toiseen peliin.',
@@ -4917,6 +5561,7 @@ const TokenControllerMod = (() => {
           'Piirrosta: piirrä viiva, monikulmio, vapaalla kädellä oleva muoto, suorakulmio tai ellipsi piirtotyökaluilla, valitse se ja napsauta Piirustuksesta. Rahakkeet kulkevat sitä pitkin, vain sillä sivulla. Voit poistaa piirroksen jälkeenpäin.',
           'Tallenna: valitse tunnus ja napsauta Tallenna. Siirrä sitä nuolipainikkeilla tai vedä sitä kartalla (Roll20 reittipisteitä seurataan) ja napsauta sitten Tallenna. Neliöruudukoissa tallennuksesta tulee askelkoodi, jota voit muokata.',
           'Silmukkareitit alkavat uudelleen alusta; edestakaiset reitit kävelevät takaisin samaa tietä kuin tulivat; kun reitit pysähtyvät lopussa. Uudet reitit, jotka päättyvät silmukan alkuun; toiset menevät edestakaisin.',
+          'Poistumisalue: piirrä suljettu muoto alueen ympärille, valitse se ja napsauta Poistumisalue. Sillä alkavat merkit kulkevat suoria linjoja ja pomppaavat sen reunoista (ja seiniltä, ellei reitti jätä niitä huomiotta), kääntyen joka kerta hieman satunnaisesti. Satunnaisaloitus asettaa jokaisen merkin alueen satunnaiseen soluun.',
         ],
       },
       codes: {
@@ -4938,6 +5583,8 @@ const TokenControllerMod = (() => {
         interval: 'Millisekuntia askelta kohden tälle reitille tai 0 globaalille aikavälille.',
         max: 'Eniten tokeneita, jotka voivat olla reitillä kerralla, tai 0 ilman rajoitusta.',
         random: 'päällä: jokainen merkki alkaa satunnaisesta pisteestä reitin varrella.',
+        walls:
+          'ohita (kävele seinien läpi), pidä kiinni (odota seinillä ja suljetuilla ovilla), käännä (käänny taaksepäin) tai oletus (käytä Seinät-asetusta).',
         start:
           'set: Tokenit hyppäävät valitun merkin paikkaan alkaessaan. selvä: ne alkavat siitä, missä ovat.',
       },
@@ -4950,12 +5597,14 @@ const TokenControllerMod = (() => {
           'Seuraa: valitse johtaja ja napsauta Johtaja, valitse sitten seuraajat ja napsauta Seuraa. Voit myös kirjoittaa johtajan nimen: !tokencontroller follow Goblin Boss. Seuraajat seuraavat partioivia tunnuksia, vetämiäsi tokeneja ja TokenModin siirtämiä tokeneita.',
           'Seuraajat voivat seurata muita seuraajia muodostaen ketjun tai sarakkeen.',
           'Partiomerkin vetäminen kuljettaa partioa siitä kohdasta, josta sen pudotat, ellei Partion vetäminen ole asetettu pysähtymään.',
+          'Seinät: Seinät-asetuksen ollessa päällä partiot ja seuraajat eivät kulje dynaamisten valaistusseinien tai suljettujen ovien ja ikkunoiden läpi; avoimet ovet ja ikkunat päästävät ne läpi. Anna reitille omat seinänsä vaihtoehto (esimerkiksi ohita haamu).',
+          'Pysäytysmerkit: merkki, joka saa yhden näistä tilamerkeistä (esimerkiksi kuollut), poistuu reitiltä ja lakkaa seuraamasta, sekä johtajan seuraajat, joka saa yhden pysähdyksen. Aseta ne komennolla !tokencontroller set stopMarkers dead;red. Tämä toimii myös, kun toinen modi lisää merkin.',
         ],
       },
       grids: {
         heading: 'Ristikot',
         points: [
-          'Solun koko ja ruudukkotyyppi luetaan jokaiselta sivulta, joten eri sivuilla voidaan käyttää erilaisia ​​ruudukoita.',
+          'Solun koko ja ruudukkotyyppi luetaan jokaiselta sivulta, joten eri sivuilla voidaan käyttää erilaisia ruudukoita.',
           'U ja D tarkoittavat aina näyttöä ylös ja alas. Hex-ruudukoilla liikkuu ilman vastaavaa naapurin siksakia; isometrisissa ja dimetrisissä ruudukoissa lävistäjät ylittävät yhden vinoneliön.',
           'Sivut, joiden napsautus on poistettu käytöstä, liikkuvat 70 pikselin askelin ilman, että ne asettuvat ruudukkoon.',
           'Jos merkit ajautuvat ruudukosta, kiinnitä merkki solun keskelle, valitse se ja napsauta Kalibroi. Valitse kaksi merkkiä rivin viereisistä soluista myös solun koon korjaamiseksi.',
@@ -4973,6 +5622,7 @@ const TokenControllerMod = (() => {
         heading: 'komennot',
         intro:
           'Vain GM:t voivat käyttää näitä komentoja. Reittejä voidaan nimetä tai viitata niiden #id:llä valikkopainikkeista. Laita nimet välilyönneillä "lainausmerkkeihin", kun komennossa on kaksi nimeä.',
+        mods: 'Myös muut modit voivat lähettää näitä komentoja, esimerkiksi ScriptCardista. He eivät voi valita tunnuksia, joten he nimeävät ne tunnuksella --ids, jota seuraa tunnukset puolipisteillä erotettuina: !tc stop --ids ID1;ID2. Vastaukset menevät GM:lle.',
         colCommand: 'Komento',
         colDesc: 'Mitä se tekee',
       },
@@ -5084,6 +5734,8 @@ const TokenControllerMod = (() => {
       paused: 'Toutes les patrouilles se sont arrêtées.',
       resumed: 'Les patrouilles ont repris.',
       journalRebuilt: 'Documents reconstruits : {help} et {deck}.',
+      markerStopped: "Arrêté par un marqueur d'arrêt : {tokens}.",
+      markerReset: "Renvoyé à son point de départ par un marqueur d'arrêt : {tokens}.",
     },
     errors: {
       noTokens: 'Aucun jeton sélectionné.',
@@ -5110,6 +5762,12 @@ const TokenControllerMod = (() => {
       usageCopy: 'Donnez un itinéraire et un nom pour la copie.',
       badJson: "Ce n'est pas un texte d'exportation d'itinéraire.",
       tokenLocked: '{tokens} ne peut pas démarrer : verrouillé.',
+      tokenMarked: "{tokens} ne peut pas démarrer : il a un marqueur d'arrêt.",
+      outsideArea: '{tokens} ne peut pas démarrer : ils se trouvent en dehors de "{name}".',
+      selectOneArea:
+        'Sélectionnez exactement un dessin fermé (un polygone, un rectangle, une ellipse ou une boucle à main levée).',
+      areaTooSmall: "Le dessin sélectionné a besoin d'au moins trois coins pour créer une zone.",
+      idsNotFound: "Aucun jeton n'a ces identifiants : {ids}.",
       routeOnOtherPage:
         '{tokens} ne peut pas démarrer : "{name}" a été dessiné sur une autre page.',
       startOnOtherPage:
@@ -5145,7 +5803,7 @@ const TokenControllerMod = (() => {
       },
       selectOneDrawing:
         "Dessinez l'itinéraire avec un outil de dessin, sélectionnez-le (faites glisser un cadre autour d'un contour fin si le clic le manque), puis réessayez.",
-      usageRoute: 'Options : mode, intervalle, max, aléatoire, démarrage.',
+      usageRoute: 'Options : mode, intervalle, max, aléatoire, murs, démarrage.',
       routeOnOtherPage:
         'Les itinéraires dessinés ne fonctionnent que sur la page sur laquelle ils ont été dessinés.',
       startOnOtherPage: "Effacez le début fixe ou déplacez d'abord le jeton vers cette page.",
@@ -5161,8 +5819,15 @@ const TokenControllerMod = (() => {
         'Assurez-vous que les jetons se trouvent dans les cellules voisines de la même ligne (colonne des pages Hex (H)).',
       unknownCommand: 'Tapez !tokencontroller help pour la liste des commandes.',
       tokenLocked: "Débloquez d'abord le jeton.",
+      tokenMarked: 'Supprimez le marqueur ou modifiez le paramètre Stop Markers.',
+      outsideArea:
+        "Déplacez d'abord les jetons à l'intérieur de la zone ou activez le démarrage aléatoire pour l'itinéraire.",
+      selectOneArea:
+        "Dessinez la zone avec un outil de dessin, sélectionnez-la (faites glisser un cadre autour d'un contour fin si vous cliquez dessus), puis réessayez.",
+      idsNotFound: 'Donnez les ID de jeton après --ids, séparés par des points-virgules.',
     },
     warnings: {
+      idsNotFound: 'Aucun jeton ne possède ces identifiants, ils ont donc été ignorés : {ids}.',
       offPage:
         "Une partie de l'itinéraire s'effectue hors de la page (étapes : {count}). Ces étapes sont ignorées.",
       combatTrackerOnly:
@@ -5225,6 +5890,27 @@ const TokenControllerMod = (() => {
         continue: 'Continuez à partir de là',
         stop: 'Arrêtez la patrouille',
       },
+      markerAction: {
+        stop: "Arrêtez-vous là où c'est",
+        reset: 'Revenir au début',
+      },
+      wallMode: {
+        ignore: 'Traverser les murs',
+        hold: 'Attendez aux murs',
+        turn: 'Retournez aux murs',
+      },
+      wallCheck: {
+        centre: 'Centre du jeton',
+        width: 'Jeton entier',
+      },
+      oneWayWalls: {
+        block: 'Bloc',
+        pass: 'Laisser passer',
+      },
+      transparentWalls: {
+        block: 'Bloc',
+        pass: 'Laisser passer',
+      },
     },
     menu: {
       statusRunning: 'Jetons de patrouille : {patrols}. Itinéraires : {routes}.',
@@ -5247,6 +5933,7 @@ const TokenControllerMod = (() => {
       stop: 'Arrêt',
       add: "Code d'étape",
       draw: 'Du dessin',
+      bounce: 'Zone de rebond',
       record: 'Enregistrer',
       examples: 'Exemples',
       reset: 'Réinitialiser',
@@ -5293,11 +5980,13 @@ const TokenControllerMod = (() => {
     route: {
       drawn: 'Itinéraire tracé, {points} points',
       recorded: 'Itinéraire enregistré, {points} points',
+      area: 'Zone de rebond, {points} coins',
       path: 'Chemin',
       mode: 'Mode',
       interval: 'Intervalle',
       maxTokens: 'La plupart des jetons',
       randomStart: 'Démarrage aléatoire',
+      walls: 'Murs',
       start: 'Démarrage fixe',
       tokens: 'Jetons',
     },
@@ -5343,6 +6032,30 @@ const TokenControllerMod = (() => {
         label: 'Faire glisser une patrouille',
         desc: "Lorsque vous faites glisser un jeton de patrouille : continuez (l'itinéraire continue là où vous l'avez déposé) ou arrêtez (la patrouille se termine).",
       },
+      stopMarkers: {
+        label: "Marqueurs d'arrêt",
+        desc: "Marqueurs d'état qui retirent un jeton de son itinéraire et l'empêchent de suivre, séparés par des points-virgules (par exemple mort ; rouge) ou aucun. Les partisans d'un leader avec l'un de ces marqueurs s'arrêtent également.",
+      },
+      markerAction: {
+        label: "Arrêter l'action du marqueur",
+        desc: "Ce que fait un jeton de patrouille lorsqu'il reçoit un marqueur d'arrêt : s'arrêter (il reste là où il se trouve) ou se réinitialiser (il revient à son point de départ).",
+      },
+      wallMode: {
+        label: 'Murs',
+        desc: "Ce que font les patrouilles et les suiveurs face à des murs à éclairage dynamique et à des portes et fenêtres fermées : ignorer (traverser), attendre (attendre que la voie soit libre, par exemple jusqu'à ce qu'une porte s'ouvre) ou tourner (les patrouilles font demi-tour). Chaque itinéraire peut choisir le sien, afin que les fantômes puissent toujours traverser les murs.",
+      },
+      wallCheck: {
+        label: 'Vérification du mur',
+        desc: "centre : seul le milieu d'un jeton doit rester à l'écart des murs. width : le jeton entier le fait, donc un gros jeton ne peut pas se faufiler à travers un espace étroit.",
+      },
+      oneWayWalls: {
+        label: 'Murs à sens unique',
+        desc: 'Que les murs à sens unique arrêtent les jetons (bloquer) ou non (passer).',
+      },
+      transparentWalls: {
+        label: 'Murs transparents',
+        desc: "Qu'il s'agisse de murs transparents, qui laissent passer la lumière, arrêtent les jetons (bloquer) ou non (passer).",
+      },
       buttonStep: {
         label: 'Cellules par clic',
         desc: "Jusqu'où les flèches d'enregistrement déplacent un jeton.",
@@ -5379,13 +6092,17 @@ const TokenControllerMod = (() => {
       add: "Créez un itinéraire à partir d'un code d'étape, tel que U2R2D2L2.",
       edit: "Modifier le code d'étape d'un itinéraire.",
       draw: 'Créez un itinéraire qui suit le dessin sélectionné sur cette page.',
+      bounce:
+        "Créez un itinéraire sur lequel les jetons errent à l'intérieur du dessin fermé sélectionné, rebondissant sur ses bords.",
       record:
         'Enregistrez un itinéraire en déplaçant le jeton sélectionné avec les boutons ou en le faisant glisser.',
-      route: "Modifier une option d'itinéraire : mode, intervalle, maximum, aléatoire ou début.",
+      route:
+        "Modifiez une option d'itinéraire : mode, intervalle, maximum, aléatoire, murs ou début.",
       show: "Afficher les détails et les boutons d'un itinéraire.",
       rename: 'Renommer un itinéraire.',
       copy: 'Copiez un itinéraire sous un nouveau nom.',
       remove: 'Supprimer un itinéraire (demande en premier).',
+      ids: "Agissez sur les jetons avec ces identifiants au lieu de ceux sélectionnés, afin que d'autres mods tels que les ScriptCards puissent contrôler les jetons. Remove --ids retire les jetons de leurs itinéraires ; il ne supprime jamais un itinéraire.",
       list: 'Répertoriez les itinéraires ou les jetons contrôlés.',
       examples: "Ajoutez les exemples d'itinéraires.",
       export: 'Afficher les itinéraires sous forme de texte à copier dans un autre jeu.',
@@ -5423,6 +6140,7 @@ const TokenControllerMod = (() => {
           'Depuis le dessin : dessinez une ligne, un polygone, une forme à main levée, un rectangle ou une ellipse avec les outils de dessin, sélectionnez-le et cliquez sur Depuis le dessin. Les jetons le parcourent, sur cette page uniquement. Vous pourrez ensuite supprimer le dessin.',
           "Enregistrer : sélectionnez un jeton et cliquez sur Enregistrer. Déplacez-le avec les boutons fléchés ou faites-le glisser sur la carte (les waypoints Roll20 sont suivis), puis cliquez sur Enregistrer. Sur les grilles carrées, l'enregistrement devient un code d'étape que vous pouvez modifier.",
           "Les itinéraires en boucle recommencent depuis le début ; les itinéraires aller-retour reviennent par où ils sont venus ; une fois que les itinéraires s'arrêtent à la fin. De nouveaux itinéraires qui se terminent là où ils commencent la boucle ; d'autres vont et viennent.",
+          "Zone de rebond : dessinez une forme fermée autour de la zone, sélectionnez-la et cliquez sur Zone de rebond. Les jetons qui y sont lancés se déplacent en lignes droites et rebondissent sur ses bords (et sur les murs, à moins que l'itinéraire ne les ignore), tournant un peu au hasard à chaque fois. Le démarrage aléatoire place chaque jeton dans une cellule aléatoire de la zone.",
         ],
       },
       codes: {
@@ -5444,6 +6162,8 @@ const TokenControllerMod = (() => {
         interval: "Millisecondes par étape pour cet itinéraire, ou 0 pour l'intervalle global.",
         max: 'Le plus grand nombre de jetons pouvant être sur la route en même temps, ou 0 pour aucune limite.',
         random: 'activé : chaque jeton commence à un point aléatoire le long du parcours.',
+        walls:
+          'ignorer (traverser les murs), maintenir (attendre devant les murs et les portes fermées), tourner (faire demi-tour) ou par défaut (utiliser le paramètre Murs).',
         start:
           "set : les jetons sautent à la position du jeton sélectionné lorsqu'ils démarrent. clair : ils commencent là où ils en sont.",
       },
@@ -5456,6 +6176,8 @@ const TokenControllerMod = (() => {
           'Suivre : sélectionnez le leader et cliquez sur Leader, puis sélectionnez les suiveurs et cliquez sur Suivre. Vous pouvez également saisir le nom du leader : !tokencontroller follow Goblin Boss. Les abonnés suivent les jetons qui patrouillent, les jetons que vous faites glisser et les jetons déplacés par TokenMod.',
           'Les abonnés peuvent suivre d’autres abonnés en créant une chaîne ou une colonne.',
           "Faire glisser un jeton de patrouille permet à la patrouille de continuer là où vous l'avez déposé, à moins que le déplacement d'une patrouille ne soit réglé pour s'arrêter.",
+          "Murs : lorsque l'option Murs est activée, les patrouilles et les suiveurs ne traversent pas les murs à éclairage dynamique ou les portes et fenêtres fermées ; portes et fenêtres ouvertes les laissent passer. Donnez à un itinéraire ses propres options de murs (par exemple ignorer un fantôme).",
+          "Marqueurs d'arrêt : un jeton qui obtient l'un de ces marqueurs de statut (par exemple mort) quitte son itinéraire et arrête de le suivre, ainsi que les partisans d'un leader qui obtiennent un arrêt également. Définissez-les avec !tokencontroller set stopMarkers dead;red. Cela fonctionne également lorsqu'un autre Mod ajoute le marqueur.",
         ],
       },
       grids: {
@@ -5479,6 +6201,7 @@ const TokenControllerMod = (() => {
         heading: 'Commandes',
         intro:
           'Seuls les MJ peuvent utiliser ces commandes. Les itinéraires peuvent être nommés ou référencés par leur #id à partir des boutons de menu. Mettez les noms avec des espaces entre "guillemets" lorsqu\'une commande prend deux noms.',
+        mods: "D'autres Mods peuvent également envoyer ces commandes, par exemple depuis des ScriptCards. Ils ne peuvent pas sélectionner de jetons, ils les nomment donc avec --ids suivi d'ID de jeton séparés par des points-virgules : !tc stop --ids ID1;ID2. Les réponses vont au GM.",
         colCommand: 'Commande',
         colDesc: 'Ce que ça fait',
       },
@@ -5595,6 +6318,9 @@ const TokenControllerMod = (() => {
       paused: 'Alle Patrouillen pausierten.',
       resumed: 'Die Patrouillen wurden wieder aufgenommen.',
       journalRebuilt: 'Handouts neu erstellt: {help} und {deck}.',
+      markerStopped: 'Gestoppt durch einen Stoppmarker: {tokens}.',
+      markerReset:
+        'Durch einen Stoppmarker dorthin zurückgeschickt, wo sie begonnen haben: {tokens}.',
     },
     errors: {
       noTokens: 'Keine Token ausgewählt.',
@@ -5621,6 +6347,13 @@ const TokenControllerMod = (() => {
       usageCopy: 'Geben Sie eine Route und einen Namen für die Kopie ein.',
       badJson: 'Das ist kein Routenexporttext.',
       tokenLocked: '{tokens} kann nicht gestartet werden: gesperrt.',
+      tokenMarked: '{tokens} kann nicht starten: Sie haben eine Stoppmarkierung.',
+      outsideArea: '{tokens} kann nicht gestartet werden: Sie liegen außerhalb von „{name}“.',
+      selectOneArea:
+        'Wählen Sie genau eine geschlossene Zeichnung (ein Polygon, ein Rechteck, eine Ellipse oder eine Freihandschleife) aus.',
+      areaTooSmall:
+        'Die ausgewählte Zeichnung benötigt mindestens drei Ecken, um eine Fläche zu bilden.',
+      idsNotFound: 'Keine Token haben diese IDs: {ids}.',
       routeOnOtherPage:
         '{tokens} kann nicht gestartet werden: „{name}“ wurde auf einer anderen Seite gezeichnet.',
       startOnOtherPage:
@@ -5657,7 +6390,7 @@ const TokenControllerMod = (() => {
       },
       selectOneDrawing:
         'Zeichnen Sie die Route mit einem Zeichenwerkzeug, wählen Sie sie aus (ziehen Sie einen Rahmen um einen dünnen Umriss, wenn Sie darauf klicken, und versuchen Sie es erneut).',
-      usageRoute: 'Optionen: Modus, Intervall, Max, Zufall, Start.',
+      usageRoute: 'Optionen: Modus, Intervall, Max, Zufall, Wände, Start.',
       routeOnOtherPage:
         'Gezeichnete Routen funktionieren nur auf der Seite, auf der sie gezeichnet wurden.',
       startOnOtherPage:
@@ -5669,13 +6402,21 @@ const TokenControllerMod = (() => {
       badJson: 'Fügen Sie den Text aus !tokencontroller export (oder v4 exportpaths) genau ein.',
       unknownSetting: 'Geben Sie !tokencontroller set ein, um alle Einstellungen anzuzeigen.',
       calibrateNeedsTokens:
-        'Ein Spielstein richtet das Raster aus; Zwei Spielsteine ​​in benachbarten Zellen einer Zeile legen ebenfalls die Zellengröße fest.',
+        'Ein Spielstein richtet das Raster aus; Zwei Spielsteine in benachbarten Zellen einer Zeile legen ebenfalls die Zellengröße fest.',
       calibrateFailed:
         'Stellen Sie sicher, dass sich die Token in benachbarten Zellen derselben Zeile (Spalte auf Hex-Seiten (H)) befinden.',
       unknownCommand: 'Geben Sie !tokencontroller help für die Liste der Befehle ein.',
       tokenLocked: 'Entsperren Sie zuerst den Token.',
+      tokenMarked:
+        'Entfernen Sie die Markierung oder ändern Sie die Einstellung „Stoppmarkierungen“.',
+      outsideArea:
+        'Bewegen Sie die Spielsteine zuerst innerhalb des Bereichs oder aktivieren Sie „Zufälliger Start“ für die Route.',
+      selectOneArea:
+        'Zeichnen Sie den Bereich mit einem Zeichenwerkzeug, wählen Sie ihn aus (ziehen Sie einen Rahmen um einen dünnen Umriss, falls dieser beim Klicken übersehen wird), und versuchen Sie es erneut.',
+      idsNotFound: 'Geben Sie nach --ids Token-IDs an, getrennt durch Semikolons.',
     },
     warnings: {
+      idsNotFound: 'Keine Token haben diese IDs, daher wurden sie übersprungen: {ids}.',
       offPage:
         'Ein Teil der Route verläuft außerhalb der Seite (Schritte: {count}). Diese Schritte werden übersprungen.',
       combatTrackerOnly:
@@ -5738,6 +6479,27 @@ const TokenControllerMod = (() => {
         continue: 'Von dort aus weitermachen',
         stop: 'Stoppen Sie die Patrouille',
       },
+      markerAction: {
+        stop: 'Stehen bleiben',
+        reset: 'Zurück zum Start',
+      },
+      wallMode: {
+        ignore: 'Durch Wände gehen',
+        hold: 'An Wänden warten',
+        turn: 'An Wänden umkehren',
+      },
+      wallCheck: {
+        centre: 'Mittelpunkt des Tokens',
+        width: 'Ganzes Token',
+      },
+      oneWayWalls: {
+        block: 'Blockieren',
+        pass: 'Durchlassen',
+      },
+      transparentWalls: {
+        block: 'Blockieren',
+        pass: 'Durchlassen',
+      },
     },
     menu: {
       statusRunning: 'Patrouillentoken: {patrols}. Routen: {routes}.',
@@ -5760,6 +6522,7 @@ const TokenControllerMod = (() => {
       stop: 'Stoppen',
       add: 'Schrittcode',
       draw: 'Aus der Zeichnung',
+      bounce: 'Bounce-Bereich',
       record: 'Aufzeichnen',
       examples: 'Beispiele',
       reset: 'Zurücksetzen',
@@ -5806,11 +6569,13 @@ const TokenControllerMod = (() => {
     route: {
       drawn: 'Gezeichnete Route, {points} Punkte',
       recorded: 'Aufgezeichnete Route, {points} Punkte',
+      area: 'Absprungbereich, {points} Ecken',
       path: 'Weg',
       mode: 'Modus',
       interval: 'Intervall',
       maxTokens: 'Die meisten Token',
       randomStart: 'Zufälliger Start',
+      walls: 'Wände',
       start: 'Fester Start',
       tokens: 'Token',
     },
@@ -5829,8 +6594,8 @@ const TokenControllerMod = (() => {
         desc: 'Zelle bewegt sich eine Zelle pro Schritt; Das Segment bewegt einen ganzen Schritt (z. B. U3) auf einmal, wie es in Version 4 der Fall war.',
       },
       facing: {
-        label: 'Spielsteine ​​umdrehen',
-        desc: 'Drehen Sie die Spielsteine ​​so, dass sie dorthin zeigen, wo sie hingehören: weg, oder in die Richtung, in die das Spielsteinbild zeigt (nach oben, unten, links oder rechts).',
+        label: 'Spielsteine umdrehen',
+        desc: 'Drehen Sie die Spielsteine so, dass sie dorthin zeigen, wo sie hingehören: weg, oder in die Richtung, in die das Spielsteinbild zeigt (nach oben, unten, links oder rechts).',
       },
       combatDetection: {
         label: 'Kampferkennung',
@@ -5855,6 +6620,30 @@ const TokenControllerMod = (() => {
       manualMove: {
         label: 'Eine Patrouille ziehen',
         desc: 'Wenn Sie einen Patrouillenmarker ziehen: Fahren Sie fort (die Route wird an der Stelle fortgesetzt, an der Sie sie abgelegt haben) oder stoppen Sie (die Patrouille endet).',
+      },
+      stopMarkers: {
+        label: 'Stoppmarkierungen',
+        desc: 'Statusmarkierungen, die einen Token von seiner Route abhalten und ihn daran hindern, ihm zu folgen, getrennt durch Semikolons (z. B. dead;red) oder keine. Anhänger eines Anführers mit einem dieser Marker bleiben ebenfalls stehen.',
+      },
+      markerAction: {
+        label: 'Markierungsaktion stoppen',
+        desc: 'Was ein Patrouillenmarker tut, wenn er einen Stoppmarker erhält: anhalten (er bleibt dort, wo er ist) oder zurücksetzen (er geht dorthin zurück, wo er begonnen hat).',
+      },
+      wallMode: {
+        label: 'Wände',
+        desc: 'Was Patrouillen und Verfolger bei dynamischen Beleuchtungswänden und geschlossenen Türen und Fenstern tun: ignorieren (durchgehen), halten (warten, bis der Weg frei ist, zum Beispiel bis sich eine Tür öffnet) oder umdrehen (Streifen umdrehen). Jeder Weg kann seinen eigenen wählen, sodass Geister immer noch durch Wände gehen können.',
+      },
+      wallCheck: {
+        label: 'Wandcheck',
+        desc: 'Mitte: Nur die Mitte eines Spielsteins darf von Wänden fern bleiben. Breite: Der gesamte Token reicht aus, daher kann sich ein großer Token nicht durch eine schmale Lücke quetschen.',
+      },
+      oneWayWalls: {
+        label: 'Einbahnstraßen',
+        desc: 'Ob Einwegwände Token stoppen (blockieren) oder nicht (passieren).',
+      },
+      transparentWalls: {
+        label: 'Durchsichtige Wände',
+        desc: 'Ob transparente Wände, die Licht durchlassen, Spielsteine stoppen (blockieren) oder nicht (passieren).',
       },
       buttonStep: {
         label: 'Zellen pro Klick',
@@ -5887,18 +6676,21 @@ const TokenControllerMod = (() => {
       lock: 'Halten Sie die ausgewählten Token fest oder lassen Sie sie los.',
       leader: 'Wählen Sie den ausgewählten Token als Anführer aus, dem Sie folgen möchten.',
       follow:
-        'Lassen Sie die ausgewählten Spielsteine ​​dem Anführer oder einem namentlich genannten Spielstein folgen.',
+        'Lassen Sie die ausgewählten Spielsteine dem Anführer oder einem namentlich genannten Spielstein folgen.',
       unfollow: 'Stoppen Sie die folgenden ausgewählten Token.',
       add: 'Erstellen Sie eine Route aus einem Schrittcode, z. B. U2R2D2L2.',
       edit: 'Ändern Sie den Schrittcode einer Route.',
       draw: 'Erstellen Sie eine Route, die der ausgewählten Zeichnung auf dieser Seite folgt.',
+      bounce:
+        'Erstellen Sie eine Route, auf der Spielsteine innerhalb der ausgewählten geschlossenen Zeichnung wandern und von deren Rändern abprallen.',
       record:
         'Zeichnen Sie eine Route auf, indem Sie das ausgewählte Token mit den Tasten verschieben oder ziehen.',
-      route: 'Ändern Sie eine Routenoption: Modus, Intervall, Maximum, Zufall oder Start.',
+      route: 'Ändern Sie eine Routenoption: Modus, Intervall, Maximum, Zufall, Wände oder Start.',
       show: 'Zeigt die Details und Schaltflächen einer Route an.',
       rename: 'Benennen Sie eine Route um.',
       copy: 'Kopieren Sie eine Route unter einem neuen Namen.',
       remove: 'Eine Route entfernen (fragt zuerst).',
+      ids: 'Handeln Sie auf die Token mit diesen IDs anstelle der ausgewählten, sodass andere Mods wie ScriptCards Token steuern können. Remove --ids entfernt die Token von ihren Routen; Es wird niemals eine Route entfernt.',
       list: 'Listen Sie die Routen oder die kontrollierten Token auf.',
       examples: 'Fügen Sie die Beispielrouten hinzu.',
       export: 'Routen als Text anzeigen, um sie in ein anderes Spiel zu kopieren.',
@@ -5936,6 +6728,7 @@ const TokenControllerMod = (() => {
           'Aus Zeichnung: Zeichnen Sie mit den Zeichenwerkzeugen eine Linie, ein Polygon, eine Freihandform, ein Rechteck oder eine Ellipse, wählen Sie sie aus und klicken Sie auf „Aus Zeichnung“. Token laufen daran entlang, nur auf dieser Seite. Sie können die Zeichnung anschließend löschen.',
           'Aufzeichnen: Wählen Sie ein Token aus und klicken Sie auf Aufzeichnen. Bewegen Sie es mit den Pfeiltasten oder ziehen Sie es auf der Karte (Roll20 Wegpunkte werden verfolgt) und klicken Sie dann auf Speichern. Auf quadratischen Rastern wird die Aufnahme zu einem Schrittcode, den Sie bearbeiten können.',
           'Rundrouten beginnen wieder von vorne; Hin- und Herrouten gehen den Weg zurück, den sie gekommen sind; Sobald Routen am Ende anhalten. Neue Routen, die dort enden, wo sie beginnen, Schleife; andere gehen hin und her.',
+          'Bounce-Bereich: Zeichnen Sie eine geschlossene Form um den Bereich, wählen Sie ihn aus und klicken Sie auf Bounce-Bereich. Darauf begonnene Spielsteine bewegen sich in geraden Linien und prallen von seinen Kanten (und von Wänden, es sei denn, die Route ignoriert sie) ab, wobei sie sich jedes Mal ein wenig zufällig drehen. Beim zufälligen Start wird jeder Spielstein in eine zufällige Zelle des Bereichs gelegt.',
         ],
       },
       codes: {
@@ -5957,6 +6750,8 @@ const TokenControllerMod = (() => {
         interval: 'Millisekunden pro Schritt für diese Route oder 0 für das globale Intervall.',
         max: 'Die meisten Token, die gleichzeitig auf der Route sein können, oder 0 für keine Begrenzung.',
         random: 'on: Jeder Token beginnt an einem zufälligen Punkt entlang der Route.',
+        walls:
+          'ignorieren (durch Wände gehen), halten (an Wänden und geschlossenen Türen warten), umdrehen (umdrehen) oder Standard (die Einstellung „Wände“ verwenden).',
         start:
           'Set: Token springen beim Start zur Position des ausgewählten Tokens. Klar: Sie fangen dort an, wo sie stehen.',
       },
@@ -5969,6 +6764,8 @@ const TokenControllerMod = (() => {
           'Folgen: Wählen Sie den Anführer aus und klicken Sie auf „Anführer“. Wählen Sie dann die Follower aus und klicken Sie auf „Folgen“. Sie können auch den Namen des Anführers eingeben: !tokencontroller follow Goblin Boss. Follower folgen Token, die patrouillieren, Token, die Sie ziehen, und Token, die von TokenMod verschoben werden.',
           'Follower können anderen Followern folgen und so eine Kette oder Spalte bilden.',
           'Durch Ziehen eines Patrouillenmarkers wird die Patrouille an der Stelle fortgesetzt, an der Sie sie abgelegt haben, es sei denn, das Ziehen einer Patrouille ist auf Stopp eingestellt.',
+          'Wände: Wenn die Einstellung „Wände“ aktiviert ist, gehen Patrouillen und Begleiter nicht durch dynamische Beleuchtungswände oder geschlossene Türen und Fenster; Offene Türen und Fenster lassen sie durch. Geben Sie einer Route die Option „eigene Wände“ (z. B. „Ignorieren“ für einen Geist).',
+          'Stoppmarkierungen: Ein Spielstein, der eine dieser Statusmarkierungen erhält (z. B. tot), verlässt seine Route und hört auf, ihm zu folgen, und die Anhänger eines Anführers, der einen Stopp erhält, ebenfalls. Setzen Sie sie mit !tokencontroller set stopMarkers dead;red. Dies funktioniert auch, wenn ein anderer Mod die Markierung hinzufügt.',
         ],
       },
       grids: {
@@ -5992,6 +6789,7 @@ const TokenControllerMod = (() => {
         heading: 'Befehle',
         intro:
           'Nur GMs können diese Befehle verwenden. Routen können über die Menüschaltflächen benannt oder mit ihrer #id bezeichnet werden. Setzen Sie Namen mit Leerzeichen in „Anführungszeichen“, wenn ein Befehl zwei Namen annimmt.',
+        mods: 'Auch andere Mods können diese Befehle senden, beispielsweise von ScriptCards. Sie können keine Token auswählen und benennen sie daher mit --ids, gefolgt von durch Semikolons getrennten Token-IDs: !tc stop --ids ID1;ID2. Antworten gehen an den GM.',
         colCommand: 'Befehl',
         colDesc: 'Was es bewirkt',
       },
@@ -6105,6 +6903,8 @@ const TokenControllerMod = (() => {
       paused: 'Όλες οι περιπολίες σταμάτησαν.',
       resumed: 'Οι περιπολίες ξεκίνησαν ξανά.',
       journalRebuilt: 'Ανακατασκευή φυλλαδίων: {help} και {deck}.',
+      markerStopped: 'Σταμάτησε από έναν δείκτη διακοπής: {tokens}.',
+      markerReset: 'Στάλθηκε πίσω στο σημείο όπου ξεκίνησαν με έναν δείκτη διακοπής: {tokens}.',
     },
     errors: {
       noTokens: 'Δεν επιλέχθηκαν διακριτικά.',
@@ -6130,6 +6930,13 @@ const TokenControllerMod = (() => {
       usageCopy: 'Δώστε μια διαδρομή και ένα όνομα για το αντίγραφο.',
       badJson: 'Αυτό δεν είναι κείμενο εξαγωγής διαδρομής.',
       tokenLocked: 'Το {tokens} δεν μπορεί να ξεκινήσει: κλειδωμένο.',
+      tokenMarked: 'Το {tokens} δεν μπορεί να ξεκινήσει: έχουν δείκτη διακοπής.',
+      outsideArea: 'Το {tokens} δεν μπορεί να ξεκινήσει: είναι εκτός του "{name}".',
+      selectOneArea:
+        'Επιλέξτε ακριβώς ένα κλειστό σχέδιο (ένα πολύγωνο, ορθογώνιο, έλλειψη ή βρόχο ελεύθερου χεριού).',
+      areaTooSmall:
+        'Το επιλεγμένο σχέδιο χρειάζεται τουλάχιστον τρεις γωνίες για να δημιουργήσει μια περιοχή.',
+      idsNotFound: 'Κανένα διακριτικό δεν έχει αυτά τα αναγνωριστικά: {ids}.',
       routeOnOtherPage:
         'Το {tokens} δεν μπορεί να ξεκινήσει: Το "{name}" σχεδιάστηκε σε άλλη σελίδα.',
       startOnOtherPage:
@@ -6164,7 +6971,7 @@ const TokenControllerMod = (() => {
       },
       selectOneDrawing:
         'Σχεδιάστε τη διαδρομή με ένα εργαλείο σχεδίασης, επιλέξτε την (σύρετε ένα πλαίσιο γύρω από ένα λεπτό περίγραμμα, εάν το χάσετε με κλικ) και δοκιμάστε ξανά.',
-      usageRoute: 'Επιλογές: λειτουργία, διάστημα, μέγιστο, τυχαίο, έναρξη.',
+      usageRoute: 'Επιλογές: λειτουργία, διάστημα, μέγιστο, τυχαίο, τοίχοι, έναρξη.',
       routeOnOtherPage:
         'Οι σχεδιασμένες διαδρομές λειτουργούν μόνο στη σελίδα στην οποία σχεδιάστηκαν.',
       startOnOtherPage:
@@ -6181,8 +6988,16 @@ const TokenControllerMod = (() => {
         'Βεβαιωθείτε ότι τα διακριτικά βρίσκονται σε γειτονικά κελιά της ίδιας σειράς (στήλη στις σελίδες Hex (H)).',
       unknownCommand: 'Πληκτρολογήστε !tokencontroller help για τη λίστα των εντολών.',
       tokenLocked: 'Ξεκλειδώστε πρώτα το διακριτικό.',
+      tokenMarked: 'Αφαιρέστε το δείκτη ή αλλάξτε τη ρύθμιση Stop Markers.',
+      outsideArea:
+        'Μετακινήστε πρώτα τα διακριτικά μέσα στην περιοχή ή ενεργοποιήστε την Τυχαία εκκίνηση για τη διαδρομή.',
+      selectOneArea:
+        'Σχεδιάστε την περιοχή με ένα εργαλείο σχεδίασης, επιλέξτε την (σύρετε ένα πλαίσιο γύρω από ένα λεπτό περίγραμμα, εάν το χάσετε με κλικ) και δοκιμάστε ξανά.',
+      idsNotFound: 'Δώστε αναγνωριστικά διακριτικών μετά το --ids, διαχωρισμένα με ερωτηματικά.',
     },
     warnings: {
+      idsNotFound:
+        'Κανένα διακριτικό δεν έχει αυτά τα αναγνωριστικά, επομένως παραλείφθηκαν: {ids}.',
       offPage:
         'Μέρος της διαδρομής τρέχει από τη σελίδα (βήματα: {count}). Αυτά τα βήματα παραλείπονται.',
       combatTrackerOnly:
@@ -6245,6 +7060,27 @@ const TokenControllerMod = (() => {
         continue: 'Συνεχίστε από εκεί',
         stop: 'Σταματήστε την περιπολία',
       },
+      markerAction: {
+        stop: 'Σταμάτα εκεί που είναι',
+        reset: 'Επιστρέψτε στην αρχή',
+      },
+      wallMode: {
+        ignore: 'Περπατήστε μέσα από τοίχους',
+        hold: 'Περιμένετε στους τοίχους',
+        turn: 'Γυρίστε πίσω στους τοίχους',
+      },
+      wallCheck: {
+        centre: 'Κέντρο του κουπονιού',
+        width: 'Ολόκληρο το σύμβολο',
+      },
+      oneWayWalls: {
+        block: 'Φραγμός',
+        pass: 'Αφήστε να περάσει',
+      },
+      transparentWalls: {
+        block: 'Φραγμός',
+        pass: 'Αφήστε να περάσει',
+      },
     },
     menu: {
       statusRunning: 'Διακριτικά περιπολίας: {patrols}. Διαδρομές: {routes}.',
@@ -6267,6 +7103,7 @@ const TokenControllerMod = (() => {
       stop: 'Στάση',
       add: 'Κωδικός βήματος',
       draw: 'Από το σχέδιο',
+      bounce: 'Περιοχή αναπήδησης',
       record: 'Ρεκόρ',
       examples: 'Παραδείγματα',
       reset: 'Επαναφορά',
@@ -6313,11 +7150,13 @@ const TokenControllerMod = (() => {
     route: {
       drawn: 'Τραβηγμένη διαδρομή, {points} βαθμοί',
       recorded: 'Καταγεγραμμένη διαδρομή, {points} βαθμοί',
+      area: 'Περιοχή αναπήδησης, {points} γωνίες',
       path: 'Μονοπάτι',
       mode: 'Τρόπος',
       interval: 'Διάστημα',
       maxTokens: 'Τα περισσότερα κουπόνια',
       randomStart: 'Τυχαία εκκίνηση',
+      walls: 'Τοίχοι',
       start: 'Διορθώθηκε η εκκίνηση',
       tokens: 'Μαρτυρίες',
     },
@@ -6363,6 +7202,30 @@ const TokenControllerMod = (() => {
         label: 'Σέρνοντας περιπολικό',
         desc: 'Όταν σύρετε ένα διακριτικό περιπολίας: συνεχίστε (η διαδρομή συνεχίζεται από εκεί που την ρίξατε) ή σταματήστε (η περιπολία τελειώνει).',
       },
+      stopMarkers: {
+        label: 'Σημάδια στάσης',
+        desc: 'Δείκτες κατάστασης που απομακρύνουν ένα διακριτικό από τη διαδρομή του και το σταματούν να ακολουθεί, χωρίζονται με ερωτηματικά (για παράδειγμα νεκρό, κόκκινο) ή κανένα. Οι ακόλουθοι ενός ηγέτη με έναν από αυτούς τους δείκτες σταματούν επίσης.',
+      },
+      markerAction: {
+        label: 'Ενέργεια δείκτη διακοπής',
+        desc: 'Τι κάνει ένα διακριτικό περιπολίας όταν λαμβάνει δείκτη διακοπής: σταματήσει (μένει εκεί που είναι) ή επαναφέρει (επιστρέφει στο σημείο που ξεκίνησε).',
+      },
+      wallMode: {
+        label: 'Τοίχοι',
+        desc: 'Τι κάνουν οι περίπολοι και οι ακόλουθοι σε τοίχους δυναμικού φωτισμού και κλειστές πόρτες και παράθυρα: αγνοήστε (περπατήστε), κρατήστε (περιμένετε μέχρι να ανοίξει ο δρόμος, για παράδειγμα μέχρι να ανοίξει μια πόρτα) ή στρίψτε (οι περίπολοι γυρίζουν πίσω). Κάθε διαδρομή μπορεί να επιλέξει τη δική της, έτσι τα φαντάσματα μπορούν ακόμα να περπατήσουν μέσα από τοίχους.',
+      },
+      wallCheck: {
+        label: 'Έλεγχος τοίχου',
+        desc: 'κέντρο: μόνο η μέση ενός κουπόνι πρέπει να μείνει μακριά από τοίχους. πλάτος: ολόκληρο το διακριτικό κάνει, επομένως ένα μεγάλο κουπόνι δεν μπορεί να πιέσει μέσα από ένα στενό κενό.',
+      },
+      oneWayWalls: {
+        label: 'Μονόδρομοι τοίχοι',
+        desc: 'Είτε οι τοίχοι μονής κατεύθυνσης σταματούν μάρκες (μπλοκ) είτε όχι (πάσο).',
+      },
+      transparentWalls: {
+        label: 'Διαφανείς τοίχοι',
+        desc: 'Είτε οι διαφανείς τοίχοι, που αφήνουν το φως να περάσει, σταματούν τα κουπόνια (μπλοκ) είτε όχι (περνούν).',
+      },
       buttonStep: {
         label: 'Κυψέλες ανά κλικ',
         desc: 'Πόσο μακριά μετακινούν τα βέλη εγγραφής ένα διακριτικό.',
@@ -6399,13 +7262,17 @@ const TokenControllerMod = (() => {
       add: 'Δημιουργήστε μια διαδρομή από έναν κωδικό βήματος, όπως το U2R2D2L2.',
       edit: 'Αλλάξτε τον κωδικό βήματος μιας διαδρομής.',
       draw: 'Δημιουργήστε μια διαδρομή που ακολουθεί το επιλεγμένο σχέδιο σε αυτήν τη σελίδα.',
+      bounce:
+        'Δημιουργήστε μια διαδρομή στην οποία τα διακριτικά περιπλανώνται μέσα στο επιλεγμένο κλειστό σχέδιο, αναπηδώντας από τις άκρες του.',
       record:
         'Καταγράψτε μια διαδρομή μετακινώντας το επιλεγμένο διακριτικό με κουμπιά ή σύροντάς το.',
-      route: 'Αλλάξτε μια επιλογή διαδρομής: λειτουργία, διάστημα, μέγιστο, τυχαίο ή εκκίνηση.',
+      route:
+        'Αλλάξτε μια επιλογή διαδρομής: λειτουργία, διάστημα, μέγιστο, τυχαίο, τοίχοι ή εκκίνηση.',
       show: 'Εμφάνιση των λεπτομερειών και των κουμπιών μιας διαδρομής.',
       rename: 'Μετονομάστε μια διαδρομή.',
       copy: 'Αντιγράψτε μια διαδρομή με νέο όνομα.',
       remove: 'Κατάργηση διαδρομής (ρωτά πρώτα).',
+      ids: 'Ενεργήστε στα διακριτικά με αυτά τα αναγνωριστικά αντί για τα επιλεγμένα, ώστε άλλα Mods όπως οι ScriptCards να μπορούν να ελέγχουν τα διακριτικά. αφαίρεση --ids αφαιρεί τα διακριτικά από τις διαδρομές τους. δεν αφαιρεί ποτέ μια διαδρομή.',
       list: 'Καταγράψτε τις διαδρομές ή τα διακριτικά που ελέγχονται.',
       examples: 'Προσθέστε τα παραδείγματα διαδρομών.',
       export: 'Εμφάνιση διαδρομών ως κείμενο για αντιγραφή σε άλλο παιχνίδι.',
@@ -6442,7 +7309,8 @@ const TokenControllerMod = (() => {
           'Κωδικός βήματος: πληκτρολογήστε κινήσεις όπως U2R2D2L2. Οι κωδικοί δεν συνδέονται με ένα μέρος στο χάρτη, επομένως η ίδια διαδρομή λειτουργεί οπουδήποτε.',
           'Από το σχέδιο: σχεδιάστε μια γραμμή, πολύγωνο, σχήμα ελεύθερου χεριού, ορθογώνιο ή έλλειψη με τα εργαλεία σχεδίασης, επιλέξτε το και κάντε κλικ στο Από το σχέδιο. Τα διακριτικά περπατούν κατά μήκος της, μόνο σε αυτήν τη σελίδα. Μπορείτε να διαγράψετε το σχέδιο μετά.',
           'Εγγραφή: επιλέξτε ένα διακριτικό και κάντε κλικ στην Εγγραφή. Μετακινήστε το με τα κουμπιά βέλους ή σύρετέ το στον χάρτη (ακολουθούνται τα σημεία αναφοράς Roll20) και μετά κάντε κλικ στην επιλογή Αποθήκευση. Σε τετράγωνα πλέγματα η εγγραφή γίνεται ένας κωδικός βήματος που μπορείτε να επεξεργαστείτε.',
-          'Οι διαδρομές βρόχου ξεκινούν ξανά από την αρχή. Οι διαδρομές πέρα ​​δώθε περπατούν πίσω από τον τρόπο που ήρθαν. μόλις οι διαδρομές σταματήσουν στο τέλος. Νέες διαδρομές που τελειώνουν εκεί που ξεκινούν. άλλοι πάνε πέρα ​​δώθε.',
+          'Οι διαδρομές βρόχου ξεκινούν ξανά από την αρχή. Οι διαδρομές πέρα δώθε περπατούν πίσω από τον τρόπο που ήρθαν. μόλις οι διαδρομές σταματήσουν στο τέλος. Νέες διαδρομές που τελειώνουν εκεί που ξεκινούν. άλλοι πάνε πέρα δώθε.',
+          'Περιοχή αναπήδησης: σχεδιάστε ένα κλειστό σχήμα γύρω από την περιοχή, επιλέξτε το και κάντε κλικ στην Περιοχή αναπήδησης. Τα διακριτικά που ξεκινούν σε αυτό ταξιδεύουν σε ευθείες γραμμές και αναπηδούν από τις άκρες του (και από τους τοίχους, εκτός αν η διαδρομή τα αγνοεί), γυρίζοντας λίγο τυχαία κάθε φορά. Η τυχαία εκκίνηση τοποθετεί κάθε διακριτικό σε ένα τυχαίο κελί της περιοχής.',
         ],
       },
       codes: {
@@ -6465,6 +7333,8 @@ const TokenControllerMod = (() => {
           'Χιλιοστά του δευτερολέπτου ανά βήμα για αυτήν τη διαδρομή ή 0 για το παγκόσμιο διάστημα.',
         max: 'Τα περισσότερα διακριτικά που μπορούν να βρίσκονται στη διαδρομή ταυτόχρονα ή 0 χωρίς όριο.',
         random: 'on: κάθε διακριτικό ξεκινά από ένα τυχαίο σημείο κατά μήκος της διαδρομής.',
+        walls:
+          'αγνοήστε (περπατήστε μέσα από τοίχους), κρατήστε πατημένο (περιμένετε σε τοίχους και κλειστές πόρτες), γυρίστε (γυρίστε πίσω) ή προεπιλογή (χρησιμοποιήστε τη ρύθμιση Τοίχοι).',
         start:
           'set: τα διακριτικά μεταπηδούν στη θέση του επιλεγμένου διακριτικού όταν ξεκινούν. ξεκάθαρα: ξεκινούν από εκεί που στέκονται.',
       },
@@ -6477,6 +7347,8 @@ const TokenControllerMod = (() => {
           'Ακολουθήστε: επιλέξτε τον ηγέτη και κάντε κλικ στο Leader, επιλέξτε τους ακόλουθους και κάντε κλικ στο Follow. Μπορείτε επίσης να πληκτρολογήσετε το όνομα του αρχηγού: !tokencontroller follow Goblin Boss. Οι ακόλουθοι ακολουθούν μάρκες που περιπολούν, μάρκες που σύρετε και μάρκες που μετακινούνται από το TokenMod.',
           'Οι ακόλουθοι μπορούν να ακολουθήσουν άλλους ακόλουθους, φτιάχνοντας μια αλυσίδα ή μια στήλη.',
           'Σύροντας ένα διακριτικό περιπολίας μεταφέρεται η περίπολος από το σημείο που το ρίχνετε, εκτός εάν το Σύρετε ένα Patrol έχει ρυθμιστεί να σταματήσει.',
+          'Τείχη: με τα Τείχη αναμμένα, οι περίπολοι και οι ακόλουθοι δεν περνούν μέσα από τοίχους δυναμικού φωτισμού ή κλειστές πόρτες και παράθυρα. ανοιχτές πόρτες και παράθυρα αφήστε τους να περάσουν. Δώστε σε μια διαδρομή τη δική της επιλογή τοίχους (για παράδειγμα αγνοήστε για ένα φάντασμα).',
+          'Σημάδια διακοπής: ένα διακριτικό που λαμβάνει έναν από αυτούς τους δείκτες κατάστασης (για παράδειγμα νεκρός) φεύγει από τη διαδρομή του και σταματά να ακολουθεί, και οι ακόλουθοι ενός ηγέτη που λαμβάνει επίσης μία στάση. Ρυθμίστε τα με το !tokencontroller set stopMarkers dead;red. Αυτό λειτουργεί επίσης όταν ένα άλλο Mod προσθέτει τον δείκτη.',
         ],
       },
       grids: {
@@ -6500,6 +7372,7 @@ const TokenControllerMod = (() => {
         heading: 'Εντολές',
         intro:
           'Μόνο οι GM μπορούν να χρησιμοποιήσουν αυτές τις εντολές. Οι διαδρομές μπορούν να ονομαστούν ή να αναφέρονται με το #id τους από τα κουμπιά μενού. Βάλτε ονόματα με κενά σε "εισαγωγικά" όταν μια εντολή παίρνει δύο ονόματα.',
+        mods: 'Άλλα Mods μπορούν επίσης να στείλουν αυτές τις εντολές, για παράδειγμα από ScriptCards. Δεν μπορούν να επιλέξουν διακριτικά, επομένως τα ονομάζουν με --ids ακολουθούμενα από αναγνωριστικά διακριτικών διαχωρισμένα με ερωτηματικά: !tc stop --ids ID1;ID2. Οι απαντήσεις πηγαίνουν στο GM.',
         colCommand: 'Εντολή',
         colDesc: 'Τι κάνει',
       },
@@ -6610,6 +7483,8 @@ const TokenControllerMod = (() => {
       paused: 'כל הסיורים עצרו.',
       resumed: 'התחדשו הסיורים.',
       journalRebuilt: 'דפי מידע שנבנו מחדש: {help} ו-{deck}.',
+      markerStopped: 'נעצר על ידי סמן עצור: {tokens}.',
+      markerReset: 'נשלח חזרה למקום שבו הם התחילו על ידי סמן עצור: {tokens}.',
     },
     errors: {
       noTokens: 'לא נבחרו אסימונים.',
@@ -6634,6 +7509,11 @@ const TokenControllerMod = (() => {
       usageCopy: 'תן מסלול ושם לעותק.',
       badJson: 'זה לא טקסט ייצוא נתיב.',
       tokenLocked: '{tokens} לא יכול להתחיל: נעול.',
+      tokenMarked: '{tokens} לא יכול להתחיל: יש להם סמן עצור.',
+      outsideArea: '{tokens} לא יכול להתחיל: הם נמצאים מחוץ ל-"{name}".',
+      selectOneArea: 'בחר בדיוק ציור סגור אחד (מצולע, מלבן, אליפסה או לולאה חופשית).',
+      areaTooSmall: 'הציור שנבחר צריך לפחות שלוש פינות כדי ליצור אזור.',
+      idsNotFound: 'לאף אסימונים יש את המזהים הבאים: {ids}.',
       routeOnOtherPage: '{tokens} לא יכול להתחיל: "{name}" צויר בדף אחר.',
       startOnOtherPage: '{tokens} לא יכול להתחיל: ההתחלה הקבועה של "{name}" נמצאת בדף אחר.',
       routeFull: '{tokens} לא יכול להתחיל: "{name}" כבר מכיל {max} אסימונים.',
@@ -6664,7 +7544,7 @@ const TokenControllerMod = (() => {
       },
       selectOneDrawing:
         'צייר את המסלול עם כלי ציור, בחר אותו (גרור תיבה סביב קו מתאר דק אם לחיצה מחמיצה אותו), ואז נסה שוב.',
-      usageRoute: 'אפשרויות: מצב, מרווח, מקסימום, אקראי, התחלה.',
+      usageRoute: 'אפשרויות: מצב, מרווח, מקסימום, אקראי, קירות, התחלה.',
       routeOnOtherPage: 'מסלולים מצוירים פועלים רק בדף שבו הם צוירו.',
       startOnOtherPage: 'נקה את ההתחלה הקבועה, או העבר תחילה את האסימון לדף זה.',
       noLeader: 'בחר את המנהיג ולחץ על Leader, או תן את שמו: !tokencontroller follow Name',
@@ -6676,8 +7556,14 @@ const TokenControllerMod = (() => {
       calibrateFailed: 'ודא שהאסימונים נמצאים בתאים שכנים של אותה שורה (עמודה בדפי Hex (H).',
       unknownCommand: 'הקלד !tokencontroller help עבור רשימת הפקודות.',
       tokenLocked: 'פתח תחילה את נעילת האסימון.',
+      tokenMarked: 'הסר את הסמן, או שנה את ההגדרה Stop Markers.',
+      outsideArea: 'הזיזו תחילה את האסימונים בתוך האזור, או הפעל התחלה אקראית עבור המסלול.',
+      selectOneArea:
+        'צייר את האזור עם כלי ציור, בחר אותו (גרור תיבה סביב קו מתאר דק אם לחיצה מחמיצה אותו), ואז נסה שוב.',
+      idsNotFound: 'תן מזהי אסימון אחרי --ids, מופרדים באמצעות נקודה-פסיק.',
     },
     warnings: {
+      idsNotFound: 'לאף אסימונים יש את המזהים האלה, ולכן דילגו עליהם: {ids}.',
       offPage: 'חלק מהמסלול עובר מחוץ לדף (שלבים: {count}). מדלגים על השלבים האלה.',
       combatTrackerOnly: 'זיהוי קרב מוגדר למעקב אחר פניות, כך למתג זה אין השפעה עד שתשנה אותו.',
       unitPx:
@@ -6738,6 +7624,27 @@ const TokenControllerMod = (() => {
         continue: 'המשיכו משם',
         stop: 'עצור את הסיור',
       },
+      markerAction: {
+        stop: 'תפסיק איפה זה',
+        reset: 'חזור להתחלה',
+      },
+      wallMode: {
+        ignore: 'ללכת דרך קירות',
+        hold: 'חכה ליד קירות',
+        turn: 'פנה בחזרה אל הקירות',
+      },
+      wallCheck: {
+        centre: 'מרכז האסימון',
+        width: 'אסימון שלם',
+      },
+      oneWayWalls: {
+        block: 'לַחסוֹם',
+        pass: 'תן לעבור',
+      },
+      transparentWalls: {
+        block: 'לַחסוֹם',
+        pass: 'תן לעבור',
+      },
     },
     menu: {
       statusRunning: 'אסימוני סיור: {patrols}. מסלולים: {routes}.',
@@ -6759,6 +7666,7 @@ const TokenControllerMod = (() => {
       stop: 'לְהַפְסִיק',
       add: 'קוד שלב',
       draw: 'מתוך ציור',
+      bounce: 'אזור הקפצה',
       record: 'רְשׁוּמָה',
       examples: 'דוגמאות',
       reset: 'אִתחוּל',
@@ -6805,11 +7713,13 @@ const TokenControllerMod = (() => {
     route: {
       drawn: 'מסלול מצויר, {points} נקודות',
       recorded: 'מסלול מתועד, {points} נקודות',
+      area: 'אזור הקפצה, {points} פינות',
       path: 'נָתִיב',
       mode: 'מצב',
       interval: 'הַפסָקָה',
       maxTokens: 'רוב האסימונים',
       randomStart: 'התחלה אקראית',
+      walls: 'קירות',
       start: 'התחלה קבועה',
       tokens: 'אסימונים',
     },
@@ -6855,6 +7765,30 @@ const TokenControllerMod = (() => {
         label: 'גרירת סיירת',
         desc: 'כאשר אתה גורר אסימון סיור: המשך (המסלול ממשיך מהמקום שבו הפלת אותו) או עצור (הסיור מסתיים).',
       },
+      stopMarkers: {
+        label: 'סמני סטופ',
+        desc: 'סמני סטטוס שמוציאים אסימון מהמסלול שלו ומפסיקים לעקוב אחריו, מופרדים על ידי נקודות פסיק (למשל מת; אדום), או אף אחד. עוקבים של מנהיג עם אחד מהסמנים האלה נעצרים גם הם.',
+      },
+      markerAction: {
+        label: 'פעולת סמן עצירה',
+        desc: 'מה שעושה אסימון סיור כשהוא מקבל סמן סטופ: עצור (הוא נשאר איפה שהוא) או איפוס (הוא חוזר למקום שבו הוא התחיל).',
+      },
+      wallMode: {
+        label: 'קירות',
+        desc: 'מה עושים סיורים וחסידים בקירות תאורה דינמיים ובדלתות וחלונות סגורים: מתעלמים (לעבור), מחזיקים (ממתינים עד שהדרך תהיה פנויה, למשל עד שדלת נפתחת) או פונים (הפטרולים מסתובבים לאחור). כל מסלול יכול לבחור משלו, כך שרוחות רפאים עדיין יכולות לעבור דרך קירות.',
+      },
+      wallCheck: {
+        label: 'בדיקת קיר',
+        desc: 'מרכז: רק האמצע של האסימון צריך להישאר רחוק מקירות. רוחב: כל האסימון עושה זאת, אז אסימון גדול לא יכול להידחק דרך מרווח צר.',
+      },
+      oneWayWalls: {
+        label: 'קירות חד כיוונים',
+        desc: 'בין אם קירות חד כיוונים עוצרים אסימונים (חסימה) או לא (עוברים).',
+      },
+      transparentWalls: {
+        label: 'קירות שקופים',
+        desc: 'בין אם קירות שקופים, שמכניסים אור, עוצרים אסימונים (חסימה) או לא (עוברים).',
+      },
       buttonStep: {
         label: 'תאים לכל קליק',
         desc: 'כמה רחוק מזיזים חיצי ההקלטה אסימון.',
@@ -6890,12 +7824,14 @@ const TokenControllerMod = (() => {
       add: 'צור מסלול מקוד צעד, כגון U2R2D2L2.',
       edit: 'שנה את קוד הצעד של מסלול.',
       draw: 'צור מסלול העוקב אחר הציור שנבחר בדף זה.',
+      bounce: 'צור מסלול שבו אסימונים מסתובבים בתוך הציור הסגור שנבחר, ומקפצים מהקצוות שלו.',
       record: 'הקלט מסלול על ידי הזזת האסימון שנבחר באמצעות לחצנים או על ידי גרירתו.',
-      route: 'שנה אפשרות מסלול: מצב, מרווח, מקסימום, אקראי או התחלה.',
+      route: 'שנה אפשרות מסלול: מצב, מרווח, מקסימום, אקראי, קירות או התחלה.',
       show: 'הצג את הפרטים והלחצנים של מסלול.',
       rename: 'שנה שם מסלול.',
       copy: 'העתק מסלול תחת שם חדש.',
       remove: 'הסר מסלול (שואל קודם).',
+      ids: 'פעל על האסימונים עם המזהים האלה במקום עם אלה שנבחרו, כך שמודים אחרים כגון ScriptCards יכולים לשלוט באסימונים. הסר --ids מסיר את האסימונים מהמסלולים שלהם; זה אף פעם לא מסיר מסלול.',
       list: 'רשום את המסלולים, או את האסימונים הנשלטים.',
       examples: 'הוסף את המסלולים לדוגמה.',
       export: 'הצג מסלולים כטקסט להעתקה למשחק אחר.',
@@ -6932,6 +7868,7 @@ const TokenControllerMod = (() => {
           'מתוך ציור: צייר קו, מצולע, צורה ביד חופשית, מלבן או אליפסה עם כלי הציור, בחר אותו ולחץ על מתוך ציור. אסימונים הולכים לאורכו, בדף זה בלבד. אתה יכול למחוק את הציור לאחר מכן.',
           'הקלט: בחר אסימון ולחץ על הקלט. הזז אותו עם לחצני החצים או גרור אותו על המפה (מעקב אחר נקודות ציון של Roll20), ולאחר מכן לחץ על שמור. ברשתות מרובעות ההקלטה הופכת לקוד צעד שניתן לערוך.',
           'מסלולי לולאה מתחילים שוב מההתחלה; מסלולים הלוך ושוב הולכים אחורה בדרך שבה הגיעו; ברגע שהמסלולים נעצרים בסוף. מסלולים חדשים שמסתיימים במקום בו הם מתחילים לולאה; אחרים הולכים הלוך ושוב.',
+          'אזור הקפצה: צייר צורה סגורה סביב האזור, בחר אותו ולחץ על אזור הקפצה. אסימונים שהתחילו בו נעים בקווים ישרים ומקפצים מהקצוות שלו (ומעבר לקירות, אלא אם כן המסלול מתעלם מהם), ומסתובבים קצת באקראי בכל פעם. התחלה אקראית מכניסה כל אסימון לתא אקראי של האזור.',
         ],
       },
       codes: {
@@ -6952,6 +7889,8 @@ const TokenControllerMod = (() => {
         interval: 'אלפיות שניות לכל שלב עבור מסלול זה, או 0 עבור המרווח הגלובלי.',
         max: 'הכי הרבה אסימונים שיכולים להיות במסלול בבת אחת, או 0 ללא הגבלה.',
         random: 'מופעל: כל אסימון מתחיל בנקודה אקראית לאורך המסלול.',
+        walls:
+          'להתעלם (לעבור דרך קירות), להחזיק (להמתין ליד קירות ודלתות סגורות), להסתובב (להסתובב אחורה) או ברירת מחדל (השתמש בהגדרת הקירות).',
         start:
           'קבע: אסימונים קופצים למיקום האסימון שנבחר כשהם מתחילים. ברור: הם מתחילים היכן שהם עומדים.',
       },
@@ -6964,6 +7903,8 @@ const TokenControllerMod = (() => {
           'עקוב: בחר את המנהיג ולחץ על מנהיג, ולאחר מכן בחר את העוקבים ולחץ על עקוב. אתה יכול גם להקליד את שם המנהיג: !tokencontroller follow Goblin Boss. עוקבים עוקבים אחר אסימונים שמפטרלים, אסימונים שאתה גורר ואסימונים המוזזים על ידי TokenMod.',
           'עוקבים יכולים לעקוב אחר עוקבים אחרים, ליצור שרשרת או עמודה.',
           'גרירת אסימון סיור מובילה את הסיור מהמקום שבו אתה מפיל אותו, אלא אם כן גרירת סיור מוגדרת לעצור.',
+          'קירות: עם הגדרת חומות, סיורים וחסידים אינם עוברים דרך קירות תאורה דינמיים או דלתות וחלונות סגורים; דלתות וחלונות פתוחים מכניסים אותם. תן למסלול אפשרות קירות משלו (לדוגמה התעלם עבור רוח רפאים).',
+          'סמני עצור: אסימון שמקבל אחד מסמני הסטטוס הללו (לדוגמה מת) עוזב את המסלול שלו ומפסיק לעקוב, וגם העוקבים של מנהיג שמקבל עצירה אחת. הגדר אותם עם !tokencontroller set stopMarkers dead;red. זה עובד גם כאשר Mod אחר מוסיף את הסמן.',
         ],
       },
       grids: {
@@ -6987,6 +7928,7 @@ const TokenControllerMod = (() => {
         heading: 'פקודות',
         intro:
           'רק GMs יכולים להשתמש בפקודות אלה. ניתן לתת שם למסלולים, או להתייחס אליהם לפי #id שלהם מכפתורי התפריט. שים שמות עם רווחים ב"מרכאות" כאשר פקודה לוקחת שני שמות.',
+        mods: 'גם מודים אחרים יכולים לשלוח פקודות אלה, למשל מ-ScriptCards. הם לא יכולים לבחור אסימונים, אז הם נותנים להם שם --ids ואחריו מזהי אסימון מופרדים בנקודה-פסיק: !tc stop --ids ID1;ID2. התשובות מגיעות ל-GM.',
         colCommand: 'פְּקוּדָה',
         colDesc: 'מה זה עושה',
       },
@@ -7099,6 +8041,8 @@ const TokenControllerMod = (() => {
       paused: 'Minden járőr megállt.',
       resumed: 'A járőrözés újraindult.',
       journalRebuilt: 'Átépített tájékoztatók: {help} és {deck}.',
+      markerStopped: 'Megálló jelzővel megállítva: {tokens}.',
+      markerReset: 'Stop Marker visszaküldte oda, ahonnan indultak: {tokens}.',
     },
     errors: {
       noTokens: 'Nincs kiválasztva token.',
@@ -7124,6 +8068,13 @@ const TokenControllerMod = (() => {
       usageCopy: 'Adjon útvonalat és nevet a másolatnak.',
       badJson: 'Ez nem útvonalexportálási szöveg.',
       tokenLocked: '{tokens} nem indítható: zárolva.',
+      tokenMarked: '{tokens} nem tud elindulni: Stop Markerrel rendelkeznek.',
+      outsideArea: 'A {tokens} nem tud elindulni: a következőn kívül vannak: "{name}".',
+      selectOneArea:
+        'Válasszon ki pontosan egy zárt rajzot (sokszög, téglalap, ellipszis vagy szabadkézi hurok).',
+      areaTooSmall:
+        'A kiválasztott rajznak legalább három sarokra van szüksége egy terület létrehozásához.',
+      idsNotFound: 'Egyik tokenek sem rendelkeznek a következő azonosítókkal: {ids}.',
       routeOnOtherPage: 'A {tokens} nem indulhat el: a „{name}” egy másik oldalra került.',
       startOnOtherPage:
         'A {tokens} nem indulhat el: a „{name}” rögzített kezdete egy másik oldalon található.',
@@ -7157,7 +8108,7 @@ const TokenControllerMod = (() => {
       },
       selectOneDrawing:
         'Rajzolja meg az útvonalat egy rajzeszközzel, jelölje ki (ha a kattintás elmulasztja, húzzon egy négyzetet egy vékony körvonal köré), majd próbálkozzon újra.',
-      usageRoute: 'Opciók: mód, intervallum, max, véletlenszerű, start.',
+      usageRoute: 'Opciók: mód, intervallum, max, véletlenszerű, falak, indítás.',
       routeOnOtherPage:
         'A megrajzolt útvonalak csak azon az oldalon működnek, amelyre megrajzolták őket.',
       startOnOtherPage:
@@ -7175,8 +8126,16 @@ const TokenControllerMod = (() => {
         'Győződjön meg arról, hogy a tokenek ugyanannak a sornak a szomszédos celláiban vannak (a hexadecimális (H) oldalak oszlopa).',
       unknownCommand: 'Írja be a !tokencontroller help parancsot a parancsok listájához.',
       tokenLocked: 'Először oldja fel a tokent.',
+      tokenMarked: 'Távolítsa el a jelölőt, vagy módosítsa a Stop Markers beállítást.',
+      outsideArea:
+        'Először mozgassa a tokeneket a területen belül, vagy kapcsolja be a Véletlenszerű indítást az útvonalon.',
+      selectOneArea:
+        'Rajzolja meg a területet egy rajzeszközzel, jelölje ki (ha rákattintva kihagyja, húzzon egy négyzetet egy vékony körvonal köré), majd próbálja újra.',
+      idsNotFound: 'Adja meg a tokenazonosítókat a --ids után, pontosvesszővel elválasztva.',
     },
     warnings: {
+      idsNotFound:
+        'Egyik tokenek sem rendelkeznek ezekkel az azonosítókkal, ezért kimaradtak: {ids}.',
       offPage:
         'Az útvonal egy része lefut az oldalról (lépések: {count}). Ezek a lépések kimaradnak.',
       combatTrackerOnly:
@@ -7239,6 +8198,27 @@ const TokenControllerMod = (() => {
         continue: 'Folytasd onnan',
         stop: 'Állítsd meg a járőrt',
       },
+      markerAction: {
+        stop: 'Állj meg ott, ahol van',
+        reset: 'Menj vissza az elejére',
+      },
+      wallMode: {
+        ignore: 'Sétálj át a falakon',
+        hold: 'Várj a falaknál',
+        turn: 'Fordulj vissza a falaknál',
+      },
+      wallCheck: {
+        centre: 'A token közepe',
+        width: 'Egész token',
+      },
+      oneWayWalls: {
+        block: 'Tömb',
+        pass: 'Engedd át',
+      },
+      transparentWalls: {
+        block: 'Tömb',
+        pass: 'Engedd át',
+      },
     },
     menu: {
       statusRunning: 'Járőrözési tokenek: {patrols}. Útvonalak: {routes}.',
@@ -7261,6 +8241,7 @@ const TokenControllerMod = (() => {
       stop: 'Leállítás',
       add: 'Lépéskód',
       draw: 'Rajzból',
+      bounce: 'Visszapattanási terület',
       record: 'Rekord',
       examples: 'Példák',
       reset: 'Visszaállítás',
@@ -7307,11 +8288,13 @@ const TokenControllerMod = (() => {
     route: {
       drawn: 'Megrajzolt útvonal, {points} pont',
       recorded: 'Felvett útvonal, {points} pont',
+      area: 'Visszapattanó terület, {points} sarkok',
       path: 'Útvonal',
       mode: 'Mód',
       interval: 'Intervallum',
       maxTokens: 'A legtöbb token',
       randomStart: 'Véletlenszerű indítás',
+      walls: 'Falak',
       start: 'Fix indítás',
       tokens: 'Tokenek',
     },
@@ -7357,6 +8340,30 @@ const TokenControllerMod = (() => {
         label: 'Járőr húzása',
         desc: 'Amikor húz egy járőrjelzőt: folytassa (az útvonal onnan folytatódik, ahol elejtette) vagy álljon meg (az őrjárat véget ér).',
       },
+      stopMarkers: {
+        label: 'Stop jelzők',
+        desc: 'Állapotjelzők, amelyek leállítják a tokent az útvonaláról, és megállítják a követését, pontosvesszővel elválasztva (például halott;piros), vagy nincs. Egy ilyen jelzővel rendelkező vezető követői is megállnak.',
+      },
+      markerAction: {
+        label: 'Marker akció leállítása',
+        desc: 'Mit csinál egy járőr token, ha Stop Markert kap: megáll (ahol van) vagy reset (visszamegy oda, ahonnan indult).',
+      },
+      wallMode: {
+        label: 'Falak',
+        desc: 'Mit tesznek a járőrök és a követők a dinamikus világítású falaknál és a zárt ajtóknál és ablakoknál: figyelmen kívül hagyni (átmenni), tartani (várni, amíg szabaddá válik az út, például, amíg kinyílik egy ajtó) vagy megfordulni (az járőrök visszafordulnak). Mindegyik útvonal kiválaszthatja a sajátját, így a szellemek továbbra is áthaladhatnak a falakon.',
+      },
+      wallCheck: {
+        label: 'Falellenőrzés',
+        desc: 'központ: csak a token közepének kell távol maradnia a falaktól. szélesség: az egész token igen, tehát egy nagy token nem tud átnyomni egy szűk résen.',
+      },
+      oneWayWalls: {
+        label: 'Egyirányú falak',
+        desc: 'Függetlenül attól, hogy az egyirányú falak megállítják-e a jelzőket (blokk) vagy sem (áthalad).',
+      },
+      transparentWalls: {
+        label: 'Átlátszó falak',
+        desc: 'Akár átlátszó falak, amelyek átengedik a fényt, megállítják a jelzőket (blokk), vagy nem (áthaladnak).',
+      },
       buttonStep: {
         label: 'Cellák kattintásonként',
         desc: 'Milyen messzire mozgatják a rögzítési nyilak a tokent.',
@@ -7392,13 +8399,16 @@ const TokenControllerMod = (() => {
       add: 'Hozzon létre egy útvonalat lépéskódból, például U2R2D2L2.',
       edit: 'Módosítsa az útvonal lépéskódját.',
       draw: 'Hozzon létre egy útvonalat, amely követi a kiválasztott rajzot ezen az oldalon.',
+      bounce:
+        'Hozzon létre egy útvonalat, amelyen a tokenek a kiválasztott zárt rajzon belül vándorolnak, annak széleiről visszapattanva.',
       record:
         'Rögzítsen egy útvonalat a kiválasztott token gombokkal történő mozgatásával vagy húzásával.',
-      route: 'Útvonalopció módosítása: mód, intervallum, max., véletlenszerű vagy kezdés.',
+      route: 'Útvonalopció módosítása: mód, intervallum, max., véletlenszerű, falak vagy kezdet.',
       show: 'Az útvonal részleteinek és gombjainak megjelenítése.',
       rename: 'Útvonal átnevezése.',
       copy: 'Útvonal másolása új néven.',
       remove: 'Útvonal eltávolítása (először kérdez).',
+      ids: 'A kiválasztott azonosítók helyett ezekkel az azonosítókkal járjon el a tokenekkel, így más modok, például a ScriptCards vezérelhetik a tokeneket. Remove --ids leveszi a tokeneket az útvonalukról; soha nem távolít el útvonalat.',
       list: 'Sorolja fel az útvonalakat vagy a vezérelt tokeneket.',
       examples: 'Adja hozzá a példaútvonalakat.',
       export: 'Útvonalak megjelenítése szövegként egy másik játékba másoláshoz.',
@@ -7436,6 +8446,7 @@ const TokenControllerMod = (() => {
           'Rajzból: rajzoljon vonalat, sokszöget, szabadkézi alakzatot, téglalapot vagy ellipszist a rajzeszközökkel, jelölje ki, majd kattintson a Rajzból elemre. A tokenek végigmennek rajta, csak ezen az oldalon. A rajzot utólag törölheti.',
           'Rögzítés: válasszon ki egy tokent, és kattintson a Rögzítés gombra. Mozgassa a nyílgombokkal, vagy húzza a térképen (a Roll20 útpontokat követi), majd kattintson a Mentés gombra. A négyzetrácsokon a felvétel szerkeszthető lépéskód lesz.',
           'A hurokútvonalak újra elölről kezdődnek; oda-vissza utak járnak vissza, ahogy jöttek; ha az útvonalak a végén megállnak. Új útvonalak, amelyek ott végződnek, ahol indulnak; mások oda-vissza járnak.',
+          'Visszapattanási terület: rajzoljon egy zárt alakzatot a terület köré, jelölje ki, majd kattintson a Visszapattanási terület elemre. A rajta indult tokenek egyenes vonalban haladnak, és visszapattannak a széleiről (és a falakról, hacsak az útvonal nem hagyja figyelmen kívül), minden alkalommal véletlenszerűen fordulnak egy kicsit. A véletlenszerű indítás minden tokent a terület véletlenszerű cellájába helyezi.',
         ],
       },
       codes: {
@@ -7458,6 +8469,8 @@ const TokenControllerMod = (() => {
           'Ezredmásodperc lépésenként ehhez az útvonalhoz, vagy 0 a globális intervallumhoz.',
         max: 'A legtöbb token, amely egyszerre lehet az útvonalon, vagy 0 korlát nélkül.',
         random: 'be: minden token az útvonal egy véletlenszerű pontján kezdődik.',
+        walls:
+          'figyelmen kívül hagyja (sétáljon át a falakon), tartsa (várjon a falaknál és zárt ajtóknál), forduljon (forduljon vissza) vagy alapértelmezett (használja a Falak beállítást).',
         start:
           'set: a tokenek induláskor a kiválasztott token pozíciójára ugranak. világos: ott kezdik, ahol állnak.',
       },
@@ -7470,6 +8483,8 @@ const TokenControllerMod = (() => {
           'Követés: válassza ki a vezetőt, majd kattintson a Vezető gombra, majd válassza ki a követőket, és kattintson a Követés gombra. Beírhatod a vezető nevét is: !tokencontroller follow Goblin Boss. A követők követik a járőröző tokeneket, a húzott tokeneket és a TokenMod által mozgatott tokeneket.',
           'A követők követhetnek más követőket, láncot vagy oszlopot alkotva.',
           'Az őrjárati token elhúzása onnan továbbítja az őrjáratot, ahol ledobta, kivéve, ha a Járőrhúzás leállításra van állítva.',
+          'Falak: bekapcsolt falak mellett a járőrök és a követők nem mennek át dinamikus világító falakon vagy zárt ajtókon és ablakokon; nyitott ajtók és ablakok engedik át őket. Adja meg az útvonalnak saját falait (például szellem esetén figyelmen kívül hagyja).',
+          'Stop Markers: egy jelző, amely megkapja az egyik ilyen állapotjelzőt (például halott), elhagyja az útvonalat és abbahagyja a követést, valamint a vezető követői, akik egy megállót kapnak. Állítsa be őket: !tokencontroller set stopMarkers dead;red. Ez akkor is működik, ha egy másik Mod hozzáadja a jelölőt.',
         ],
       },
       grids: {
@@ -7493,6 +8508,7 @@ const TokenControllerMod = (() => {
         heading: 'Parancsok',
         intro:
           'Csak a GM-ek használhatják ezeket a parancsokat. Az útvonalakat a menügombok segítségével el lehet nevezni, vagy #id-jükkel hivatkozni lehet rájuk. Tegye a neveket szóközzel „idézőjelbe”, ha egy parancs két nevet vesz fel.',
+        mods: 'Más modok is el tudják küldeni ezeket a parancsokat, például ScriptCard-okról. Nem tudnak kiválasztani tokeneket, ezért a --ids jellel, majd pontosvesszővel elválasztott tokenazonosítókkal nevezik el őket: !tc stop --ids ID1;ID2. A válaszok a GM-hez mennek.',
         colCommand: 'Parancs',
         colDesc: 'Mit csinál',
       },
@@ -7603,6 +8619,8 @@ const TokenControllerMod = (() => {
       paused: 'Tutte le pattuglie si fermarono.',
       resumed: 'Sono riprese le pattuglie.',
       journalRebuilt: 'Schede ricostruite: {help} e {deck}.',
+      markerStopped: 'Fermato da un indicatore di fermata: {tokens}.',
+      markerReset: 'Rimandati al punto di partenza tramite un indicatore di stop: {tokens}.',
     },
     errors: {
       noTokens: 'Nessun token selezionato.',
@@ -7628,6 +8646,12 @@ const TokenControllerMod = (() => {
       usageCopy: 'Assegna un percorso e un nome alla copia.',
       badJson: 'Questo non è il testo di esportazione del percorso.',
       tokenLocked: '{tokens} non può essere avviato: bloccato.',
+      tokenMarked: '{tokens} non può iniziare: ha un indicatore di stop.',
+      outsideArea: '{tokens} non può avviarsi: è esterno a "{name}".',
+      selectOneArea:
+        "Seleziona esattamente un disegno chiuso (un poligono, un rettangolo, un'ellisse o un ciclo a mano libera).",
+      areaTooSmall: "Il disegno selezionato necessita di almeno tre angoli per creare un'area.",
+      idsNotFound: 'Nessun token ha questi ID: {ids}.',
       routeOnOtherPage:
         '{tokens} non può iniziare: "{name}" è stato disegnato su un\'altra pagina.',
       startOnOtherPage:
@@ -7663,7 +8687,7 @@ const TokenControllerMod = (() => {
       },
       selectOneDrawing:
         'Disegna il percorso con uno strumento di disegno, selezionalo (trascina una casella attorno a un contorno sottile se facendo clic non si riesce a raggiungerlo), quindi riprova.',
-      usageRoute: 'Opzioni: modalità, intervallo, max, casuale, avvio.',
+      usageRoute: 'Opzioni: modalità, intervallo, max, casuale, muri, avvio.',
       routeOnOtherPage:
         'I percorsi disegnati funzionano solo sulla pagina su cui sono stati disegnati.',
       startOnOtherPage: "Cancella l'inizio fisso o sposta prima il token su quella pagina.",
@@ -7679,8 +8703,15 @@ const TokenControllerMod = (() => {
         'Assicurati che i token si trovino nelle celle vicine della stessa riga (colonna sulle pagine esadecimali (H)).',
       unknownCommand: "Digitare !tokencontroller help per l'elenco dei comandi.",
       tokenLocked: 'Sblocca prima il token.',
+      tokenMarked: "Rimuovere il contrassegno o modificare l'impostazione Contrassegni di arresto.",
+      outsideArea:
+        "Sposta prima i gettoni all'interno dell'area o attiva l'avvio casuale del percorso.",
+      selectOneArea:
+        "Disegna l'area con uno strumento di disegno, selezionala (trascina una casella attorno a un contorno sottile se facendo clic non si riesce a raggiungerlo), quindi riprova.",
+      idsNotFound: 'Fornisci gli ID token dopo --ids, separati da punto e virgola.',
     },
     warnings: {
+      idsNotFound: 'Nessun token ha questi ID, quindi sono stati ignorati: {ids}.',
       offPage:
         'Parte del percorso esce dalla pagina (passi: {count}). Questi passaggi vengono saltati.',
       combatTrackerOnly:
@@ -7743,6 +8774,27 @@ const TokenControllerMod = (() => {
         continue: 'Continua da lì',
         stop: 'Ferma la pattuglia',
       },
+      markerAction: {
+        stop: "Fermati dov'è",
+        reset: "Torna all'inizio",
+      },
+      wallMode: {
+        ignore: 'Cammina attraverso i muri',
+        hold: 'Aspetta ai muri',
+        turn: 'Tornare alle mura',
+      },
+      wallCheck: {
+        centre: 'Centro del gettone',
+        width: 'Gettone intero',
+      },
+      oneWayWalls: {
+        block: 'Bloccare',
+        pass: 'Lascia passare',
+      },
+      transparentWalls: {
+        block: 'Bloccare',
+        pass: 'Lascia passare',
+      },
     },
     menu: {
       statusRunning: 'Gettoni di pattugliamento: {patrols}. Percorsi: {routes}.',
@@ -7765,6 +8817,7 @@ const TokenControllerMod = (() => {
       stop: 'Fermare',
       add: 'Codice passo',
       draw: 'Dal disegno',
+      bounce: 'Area di rimbalzo',
       record: 'Documentazione',
       examples: 'Esempi',
       reset: 'Reset',
@@ -7811,11 +8864,13 @@ const TokenControllerMod = (() => {
     route: {
       drawn: 'Percorso tracciato, {points} punti',
       recorded: 'Percorso registrato, {points} punti',
+      area: 'Area di rimbalzo, {points} angoli',
       path: 'Sentiero',
       mode: 'Modalità',
       interval: 'Intervallo',
       maxTokens: 'La maggior parte dei gettoni',
       randomStart: 'Inizio casuale',
+      walls: 'Muri',
       start: 'Inizio fisso',
       tokens: 'Gettoni',
     },
@@ -7861,6 +8916,30 @@ const TokenControllerMod = (() => {
         label: 'Trascinare una pattuglia',
         desc: 'Quando trascini un segnalino pattuglia: continua (il percorso prosegue da dove lo hai lasciato) oppure fermati (la pattuglia termina).',
       },
+      stopMarkers: {
+        label: 'Indicatori di arresto',
+        desc: 'Indicatori di stato che tolgono un gettone dal suo percorso e gli impediscono di seguirlo, separati da punto e virgola (ad esempio morto; rosso) o nessuno. Anche i seguaci di un leader con uno di questi segnalini si fermano.',
+      },
+      markerAction: {
+        label: "Arresta l'azione del marcatore",
+        desc: "Cosa fa un segnalino di pattuglia quando riceve un Segnalino di Stop: si ferma (rimane dov'è) o si resetta (torna al punto di partenza).",
+      },
+      wallMode: {
+        label: 'Muri',
+        desc: "Cosa fanno le pattuglie e i seguaci con l'illuminazione dinamica dei muri e delle porte e finestre chiuse: ignorare (attraversare), trattenere (aspettare finché la strada è libera, ad esempio finché non si apre una porta) o girare (le pattuglie tornano indietro). Ogni percorso può scegliere il proprio, quindi i fantasmi possono ancora camminare attraverso i muri.",
+      },
+      wallCheck: {
+        label: 'Controllo del muro',
+        desc: "centro: solo la parte centrale del gettone deve restare lontana dai muri. larghezza: lo fa l'intero gettone, quindi un gettone grande non può passare attraverso uno spazio stretto.",
+      },
+      oneWayWalls: {
+        label: 'Muri a senso unico',
+        desc: 'Se i muri unidirezionali fermano i gettoni (blocco) o meno (passaggio).',
+      },
+      transparentWalls: {
+        label: 'Pareti trasparenti',
+        desc: 'Sia che le pareti trasparenti, che lasciano passare la luce, fermino i gettoni (bloccano) oppure no (passino).',
+      },
       buttonStep: {
         label: 'Celle per clic',
         desc: 'Di quanto le frecce di registrazione spostano un token.',
@@ -7897,12 +8976,15 @@ const TokenControllerMod = (() => {
       add: 'Crea un percorso da un codice passo, come U2R2D2L2.',
       edit: 'Modificare il codice passo di un percorso.',
       draw: 'Crea un percorso che segue il disegno selezionato in questa pagina.',
+      bounce:
+        "Crea un percorso sul quale i token vagano all'interno del disegno chiuso selezionato, rimbalzando sui suoi bordi.",
       record: 'Registra un percorso spostando il token selezionato con i pulsanti o trascinandolo.',
-      route: "Modifica un'opzione di percorso: modalità, intervallo, massimo, casuale o inizio.",
+      route: "Cambia un'opzione di percorso: modalità, intervallo, max, casuale, muri o inizio.",
       show: 'Mostra i dettagli e i pulsanti di un percorso.',
       rename: 'Rinominare un percorso.',
       copy: 'Copia un percorso con un nuovo nome.',
       remove: 'Rimuovere un percorso (chiede prima).',
+      ids: 'Agisci sui token con questi ID invece che su quelli selezionati, in modo che altri Mod come ScriptCard possano controllare i token. rimuovi --ids toglie i token dai loro percorsi; non rimuove mai un percorso.',
       list: 'Elenca i percorsi o i token controllati.',
       examples: 'Aggiungi i percorsi di esempio.',
       export: 'Mostra percorsi come testo da copiare in un altro gioco.',
@@ -7940,6 +9022,7 @@ const TokenControllerMod = (() => {
           "Dal disegno: disegna una linea, un poligono, una forma a mano libera, un rettangolo o un'ellisse con gli strumenti di disegno, selezionala e fai clic su Da disegno. I token la percorrono, solo su quella pagina. Successivamente è possibile eliminare il disegno.",
           'Registra: seleziona un token e fai clic su Registra. Spostarlo con i pulsanti freccia o trascinarlo sulla mappa (vengono seguiti 20 waypoint), quindi fare clic su Salva. Sulle griglie quadrate la registrazione diventa un codice passo che è possibile modificare.',
           'I percorsi ad anello riprendono da capo; i percorsi di andata e ritorno ripercorrono la strada da cui sono venuti; una volta che i percorsi si fermano alla fine. Nuovi percorsi che terminano dove iniziano il giro; altri vanno avanti e indietro.',
+          "Area di rimbalzo: disegna una forma chiusa attorno all'area, selezionala e fai clic su Area di rimbalzo. I gettoni avviati su di esso viaggiano in linea retta e rimbalzano sui suoi bordi (e sui muri, a meno che il percorso non li ignori), girando un po' a caso ogni volta. L'avvio casuale inserisce ciascun gettone in una cella casuale dell'area.",
         ],
       },
       codes: {
@@ -7961,6 +9044,8 @@ const TokenControllerMod = (() => {
         interval: "Millisecondi per passo per questo percorso o 0 per l'intervallo globale.",
         max: 'Il numero massimo di token che possono trovarsi sul percorso contemporaneamente o 0 per nessun limite.',
         random: 'on: ogni token inizia in un punto casuale lungo il percorso.',
+        walls:
+          "ignora (cammina attraverso i muri), tieni premuto (aspetta davanti ai muri e alle porte chiuse), gira (torna indietro) o imposta il valore predefinito (usa l'impostazione Muri).",
         start:
           'set: i token saltano alla posizione del token selezionato quando iniziano. chiaro: iniziano da dove si trovano.',
       },
@@ -7973,6 +9058,8 @@ const TokenControllerMod = (() => {
           'Segui: seleziona il leader e fai clic su Leader, quindi seleziona i follower e fai clic su Segui. Puoi anche digitare il nome del leader: !tokencontroller segui Goblin Boss. I follower seguono i token che pattugliano, i token che trascini e i token spostati da TokenMod.',
           'I follower possono seguire altri follower, creando una catena o una colonna.',
           "Trascinare un gettone di pattuglia riporta la pattuglia dal punto in cui l'hai rilasciata, a meno che il trascinamento di una pattuglia non sia impostato per interrompersi.",
+          "Muri: con l'impostazione Muri attiva, pattuglie e seguaci non attraversano muri con illuminazione dinamica o porte e finestre chiuse; porte e finestre aperte li lasciano passare. Assegna a un percorso l'opzione delle proprie mura (ad esempio ignora per un fantasma).",
+          'Segnalini di Stop: un gettone che ottiene uno di questi segnalini di stato (ad esempio morto) lascia il suo percorso e smette di seguirlo, e anche i seguaci di un leader che ottiene uno si fermano. Impostali con !tokencontroller set stopMarkers dead;red. Funziona anche quando un altro Mod aggiunge il marcatore.',
         ],
       },
       grids: {
@@ -7996,6 +9083,7 @@ const TokenControllerMod = (() => {
         heading: 'Comandi',
         intro:
           'Solo i GM possono utilizzare questi comandi. È possibile nominare i percorsi o fare riferimento al loro #id dai pulsanti del menu. Metti i nomi con spazi tra "virgolette" quando un comando richiede due nomi.',
+        mods: 'Anche altri mod possono inviare questi comandi, ad esempio da ScriptCards. Non possono selezionare i token, quindi li nominano con --ids seguito da ID token separati da punto e virgola: !tc stop --ids ID1;ID2. Le risposte vanno al GM.',
         colCommand: 'Comando',
         colDesc: 'Cosa fa',
       },
@@ -8107,6 +9195,8 @@ const TokenControllerMod = (() => {
       paused: 'すべてのパトロールが停止されました。',
       resumed: 'パトロールが再開されました。',
       journalRebuilt: '再構築された配布資料: {help} および {deck}。',
+      markerStopped: '停止マーカーによって停止されました: {tokens}。',
+      markerReset: '停止マーカーによって開始位置に戻されました: {tokens}。',
     },
     errors: {
       noTokens: 'トークンが選択されていません。',
@@ -8132,6 +9222,12 @@ const TokenControllerMod = (() => {
       usageCopy: 'コピーのルートと名前を指定します。',
       badJson: 'これはルート エクスポート テキストではありません。',
       tokenLocked: '{tokens} を開始できません: ロックされています。',
+      tokenMarked: '{tokens} は開始できません。停止マーカーがあります。',
+      outsideArea: '{tokens} は開始できません。「{name}」の外にあります。',
+      selectOneArea:
+        '閉じた図面 (多角形、長方形、楕円、またはフリーハンド ループ) を 1 つだけ選択します。',
+      areaTooSmall: '選択した図面で領域を作成するには、少なくとも 3 つの角が必要です。',
+      idsNotFound: 'これらの ID を持つトークンはありません: {ids}。',
       routeOnOtherPage: '{tokens} を開始できません: 「{name}」は別のページに描画されました。',
       startOnOtherPage: '{tokens} を開始できません。「{name}」の固定開始点は別のページにあります。',
       routeFull: '{tokens} を開始できません: 「{name}」にはすでに {max} トークンがあります。',
@@ -8163,7 +9259,7 @@ const TokenControllerMod = (() => {
       },
       selectOneDrawing:
         '描画ツールでルートを描画し、それを選択し (クリックし損ねた場合は、細い輪郭の周囲にボックスをドラッグします)、もう一度試してください。',
-      usageRoute: 'オプション: モード、間隔、最大、ランダム、開始。',
+      usageRoute: 'オプション: モード、間隔、最大、ランダム、壁、開始。',
       routeOnOtherPage: '描画されたルートは、それが描画されたページ上でのみ機能します。',
       startOnOtherPage: '固定開始をクリアするか、最初にトークンをそのページに移動します。',
       noLeader:
@@ -8179,8 +9275,15 @@ const TokenControllerMod = (() => {
         'トークンが同じ行 (16 進数 (H) ページの列) の隣接するセルにあることを確認してください。',
       unknownCommand: 'コマンドのリストを表示するには、「!tokencontroller help」と入力します。',
       tokenLocked: 'まずトークンのロックを解除します。',
+      tokenMarked: 'マーカーを削除するか、[マーカーの停止] 設定を変更します。',
+      outsideArea:
+        '最初にエリア内でトークンを移動するか、ルートのランダム スタートをオンにします。',
+      selectOneArea:
+        '描画ツールで領域を描画し、それを選択し (クリックし損ねた場合は、細い輪郭の周囲にボックスをドラッグします)、もう一度試してください。',
+      idsNotFound: '--ids の後にトークン ID をセミコロンで区切って指定します。',
     },
     warnings: {
+      idsNotFound: 'これらの ID を持つトークンはないため、スキップされました: {ids}。',
       offPage:
         'ルートの一部がページからはみ出しています (ステップ: {count})。それらの手順はスキップされます。',
       combatTrackerOnly:
@@ -8243,6 +9346,27 @@ const TokenControllerMod = (() => {
         continue: 'そこから続けてください',
         stop: 'パトロールをやめてください',
       },
+      markerAction: {
+        stop: 'そこに止まってください',
+        reset: '最初に戻る',
+      },
+      wallMode: {
+        ignore: '壁を通り抜ける',
+        hold: '壁際で待つ',
+        turn: '壁に向かって振り返る',
+      },
+      wallCheck: {
+        centre: 'トークンの中心',
+        width: 'トークン全体',
+      },
+      oneWayWalls: {
+        block: 'ブロック',
+        pass: '通してください',
+      },
+      transparentWalls: {
+        block: 'ブロック',
+        pass: '通してください',
+      },
     },
     menu: {
       statusRunning: 'パトロールトークン: {patrols}。ルート: {routes}。',
@@ -8265,6 +9389,7 @@ const TokenControllerMod = (() => {
       stop: '停止',
       add: 'ステップコード',
       draw: '図面から',
+      bounce: 'バウンスエリア',
       record: '記録',
       examples: '例',
       reset: 'リセット',
@@ -8311,11 +9436,13 @@ const TokenControllerMod = (() => {
     route: {
       drawn: '描かれたルート、{points} ポイント',
       recorded: '記録されたルート、{points} ポイント',
+      area: 'バウンスエリア、{points} コーナー',
       path: 'パス',
       mode: 'モード',
       interval: '間隔',
       maxTokens: 'ほとんどのトークン',
       randomStart: 'ランダムスタート',
+      walls: '壁',
       start: '固定スタート',
       tokens: 'トークン',
     },
@@ -8361,6 +9488,30 @@ const TokenControllerMod = (() => {
         label: 'パトロールのドラッグ',
         desc: 'パトロール トークンをドラッグする場合: 続行 (ドロップした場所からルートが続行) または停止 (パトロールが終了)。',
       },
+      stopMarkers: {
+        label: 'ストップマーカー',
+        desc: 'トークンをルートから外し、その後のトークンを停止するステータス マーカー。セミコロンで区切られるか (例: Dead;red)、または何もありません。これらのマーカーのいずれかを持っているリーダーのフォロワーも停止します。',
+      },
+      markerAction: {
+        label: 'マーカーアクションの停止',
+        desc: '停止マーカーを取得したときのパトロール トークンの動作: 停止 (その場所に留まる) またはリセット (開始位置に戻る)。',
+      },
+      wallMode: {
+        label: '壁',
+        desc: '動的照明の壁や閉ざされたドアや窓でパトロールや追随者が行うこと: 無視 (通り抜ける)、保留 (道が空くまで、たとえばドアが開くまで待つ)、または方向転換 (パトロールが引き返す)。それぞれのルートは独自に選択できるため、幽霊は壁を通り抜けることができます。',
+      },
+      wallCheck: {
+        label: '壁のチェック',
+        desc: '中心: トークンの中央だけが壁から離れていなければなりません。 width: トークン全体がそうなるので、大きなトークンは狭い隙間を通り抜けることができません。',
+      },
+      oneWayWalls: {
+        label: '一方通行の壁',
+        desc: '一方通行の壁がトークンを止めるか（ブロック）、止めないか（パス）。',
+      },
+      transparentWalls: {
+        label: 'シースルーウォール',
+        desc: '光を通す透明な壁がトークンを止めるか（ブロックするか）、しないか（通過するか）。',
+      },
       buttonStep: {
         label: 'クリックごとのセル数',
         desc: '記録用の矢印がトークンを移動させる距離。',
@@ -8396,12 +9547,14 @@ const TokenControllerMod = (() => {
       add: 'U2R2D2L2 などのステップ コードからルートを作成します。',
       edit: 'ルートのステップコードを変更します。',
       draw: 'このページで選択した図面に従うルートを作成します。',
+      bounce: '選択した閉じた図面内をトークンが歩き回り、その端で跳ね返るルートを作成します。',
       record: '選択したトークンをボタンで移動するか、ドラッグしてルートを記録します。',
-      route: 'ルート オプションを変更します: モード、間隔、最大、ランダム、または開始。',
+      route: 'ルート オプションを変更します: モード、間隔、最大、ランダム、壁、または開始。',
       show: 'ルートの詳細とボタンを表示します。',
       rename: 'ルートの名前を変更します。',
       copy: 'ルートを新しい名前でコピーします。',
       remove: 'ルートを削除します (最初に質問します)。',
+      ids: '選択した ID の代わりにこれらの ID を持つトークンに作用するため、ScriptCard などの他の Mod がトークンを制御できるようになります。 --ids を削除すると、トークンがルートから削除されます。ルートが削除されることはありません。',
       list: 'ルート、または制御されているトークンをリストします。',
       examples: 'ルート例を追加します。',
       export: '別のゲームにコピーするテキストとしてルートを表示します。',
@@ -8439,6 +9592,7 @@ const TokenControllerMod = (() => {
           '図面から: 描画ツールを使用して線、多角形、フリーハンド形状、長方形、または楕円を描き、それを選択して「図面から」をクリックします。トークンはそのページ上でのみそれに沿って歩きます。描画は後で削除できます。',
           '記録: トークンを選択し、「記録」をクリックします。矢印ボタンを使用して移動するか、マップ上でドラッグして (Roll20 ウェイポイントに従います)、[保存] をクリックします。正方形のグリッドでは、録音は編集可能なステップ コードになります。',
           'ループ ルートは最初からやり直します。往復ルートは来た道を戻ります。ルートが最後に停止すると。ループの開始位置で終了する新しいルート。他の人は行ったり来たりします。',
+          'バウンスエリア: エリアの周囲に閉じた形状を描画し、それを選択して「バウンスエリア」をクリックします。その上で開始されたトークンは直線的に移動し、その端 (およびルートが無視しない限り壁) で跳ね返り、毎回少しランダムに回転します。ランダム スタートでは、各トークンがエリアのランダムなセルに配置されます。',
         ],
       },
       codes: {
@@ -8460,6 +9614,8 @@ const TokenControllerMod = (() => {
         interval: 'このルートのステップあたりのミリ秒、またはグローバル間隔の場合は 0。',
         max: 'ルート上に一度に存在できるトークンの最大数、または制限がない場合は 0。',
         random: 'on: 各トークンはルート上のランダムな点から始まります。',
+        walls:
+          '無視 (壁を通り抜ける)、保留 (壁や閉まったドアで待つ)、方向転換 (引き返す)、またはデフォルト (壁設定を使用)。',
         start:
           'set: トークンは開始時に選択されたトークンの位置にジャンプします。明確です。彼らは自分が立っているところから始まります。',
       },
@@ -8472,6 +9628,8 @@ const TokenControllerMod = (() => {
           'フォロー: リーダーを選択して「リーダー」をクリックし、フォロワーを選択して「フォロー」をクリックします。リーダーの名前を入力することもできます: !tokencontroller follow ゴブリン ボス。フォロワーは、巡回するトークン、ドラッグしたトークン、TokenMod によって移動されたトークンを追跡します。',
           'フォロワーは他のフォロワーをフォローしてチェーンや列を作ることができます。',
           'パトロール トークンをドラッグすると、パトロールのドラッグが停止するように設定されていない限り、ドロップした場所からパトロールが続行されます。',
+          '壁: 壁をオンにすると、パトロールとフォロワーは動的照明の壁や閉じたドアや窓を通り抜けません。開いたドアや窓はそれらを通過させます。ルートに独自の壁オプションを与えます (たとえば、ゴーストを無視する)。',
+          '停止マーカー: これらのステータス マーカーの 1 つ (たとえば死亡) を取得したトークンはルートを離れてフォローを停止し、リーダーのフォロワーも 1 つの停止を取得します。 !tokencontroller set stopMarkers Dead;red で設定します。これは、別の Mod がマーカーを追加した場合にも機能します。',
         ],
       },
       grids: {
@@ -8495,6 +9653,7 @@ const TokenControllerMod = (() => {
         heading: 'コマンド',
         intro:
           'これらのコマンドは GM のみが使用できます。ルートには名前を付けることも、メニュー ボタンから #id で参照することもできます。コマンドに 2 つの名前が必要な場合は、名前を「引用符」で囲んでスペースを入れます。',
+        mods: '他の Mod も、たとえば ScriptCard からこれらのコマンドを送信できます。トークンを選択できないため、--ids の後にトークン ID をセミコロンで区切って名前を付けます: !tc stop --ids ID1;ID2。返信は GM に送られます。',
         colCommand: '指示',
         colDesc: '何をするのか',
       },
@@ -8566,7 +9725,7 @@ const TokenControllerMod = (() => {
     },
     messages: {
       migrated:
-        '버전 4에서 업그레이드되었습니다. 유지된 경로: {routes}. 보관된 순찰 토큰: {patrols}. 이전 매크로와 !tc 명령은 여전히 ​​작동합니다.',
+        '버전 4에서 업그레이드되었습니다. 유지된 경로: {routes}. 보관된 순찰 토큰: {patrols}. 이전 매크로와 !tc 명령은 여전히 작동합니다.',
       removedGuide:
         '플레이어가 볼 수 있었던 기존 "TokenController 사용 가이드" 유인물은 GM 전용 도움말 유인물로 대체되었습니다.',
       pruned: '토큰이 더 이상 존재하지 않기 때문에 잊어버린 순찰: {count}.',
@@ -8605,6 +9764,8 @@ const TokenControllerMod = (() => {
       paused: '모든 순찰이 일시 중지되었습니다.',
       resumed: '순찰이 재개되었습니다.',
       journalRebuilt: '유인물 재구성: {help} 및 {deck}.',
+      markerStopped: '정지 표시에 의해 정지됨: {tokens}.',
+      markerReset: '정지 표시({tokens})를 통해 시작한 위치로 다시 보냈습니다.',
     },
     errors: {
       noTokens: '선택된 토큰이 없습니다.',
@@ -8630,6 +9791,12 @@ const TokenControllerMod = (() => {
       usageCopy: '복사본의 경로와 이름을 지정합니다.',
       badJson: '경로 내보내기 텍스트가 아닙니다.',
       tokenLocked: '{tokens}을(를) 시작할 수 없습니다: 잠겨 있습니다.',
+      tokenMarked: '{tokens}을(를) 시작할 수 없습니다. 중지 마커가 있습니다.',
+      outsideArea: '{tokens}을(를) 시작할 수 없습니다. "{name}" 외부에 있습니다.',
+      selectOneArea:
+        '정확히 하나의 닫힌 그림(다각형, 직사각형, 타원 또는 자유형 루프)을 선택합니다.',
+      areaTooSmall: '선택한 도면에 영역을 만들려면 모서리가 세 개 이상 필요합니다.',
+      idsNotFound: '다음 ID를 가진 토큰이 없습니다: {ids}.',
       routeOnOtherPage:
         '{tokens}을(를) 시작할 수 없습니다. "{name}"이(가) 다른 페이지에 그려졌습니다.',
       startOnOtherPage:
@@ -8663,7 +9830,7 @@ const TokenControllerMod = (() => {
       },
       selectOneDrawing:
         '그리기 도구를 사용하여 경로를 그리고 선택한 다음(클릭하여 놓친 경우 얇은 윤곽선 주위에 상자를 드래그) 다시 시도하십시오.',
-      usageRoute: '옵션: 모드, 간격, 최대, 무작위, 시작.',
+      usageRoute: '옵션: 모드, 간격, 최대, 무작위, 벽, 시작.',
       routeOnOtherPage: '그려진 경로는 그려진 페이지에서만 작동합니다.',
       startOnOtherPage: '고정 시작을 지우거나 먼저 토큰을 해당 페이지로 이동하세요.',
       noLeader:
@@ -8676,8 +9843,14 @@ const TokenControllerMod = (() => {
       calibrateFailed: '토큰이 동일한 행(16진수(H) 페이지의 열)의 인접 셀에 있는지 확인하십시오.',
       unknownCommand: '명령 목록을 보려면 !tokencontroller help를 입력하세요.',
       tokenLocked: '먼저 토큰을 잠금 해제하세요.',
+      tokenMarked: '마커를 제거하거나 정지 마커 설정을 변경하십시오.',
+      outsideArea: '먼저 해당 지역 내부로 토큰을 이동하거나 경로에 대해 무작위 시작을 켜십시오.',
+      selectOneArea:
+        '그리기 도구를 사용하여 영역을 그리고 선택한 다음(클릭하지 못한 경우 얇은 윤곽선 주위로 상자를 드래그) 다시 시도하십시오.',
+      idsNotFound: '--ids 뒤에 세미콜론으로 구분하여 토큰 ID를 제공하세요.',
     },
     warnings: {
+      idsNotFound: '다음 ID를 가진 토큰이 없으므로 건너뛰었습니다: {ids}.',
       offPage: '경로의 일부가 페이지를 벗어납니다(단계: {count}). 해당 단계는 건너뜁니다.',
       combatTrackerOnly:
         '전투 감지는 턴 추적기로 설정되어 있으므로 이 스위치는 변경할 때까지 아무런 효과가 없습니다.',
@@ -8739,6 +9912,27 @@ const TokenControllerMod = (() => {
         continue: '거기서부터 계속해',
         stop: '순찰을 중지하세요',
       },
+      markerAction: {
+        stop: '그 자리에 멈춰',
+        reset: '처음으로 돌아가기',
+      },
+      wallMode: {
+        ignore: '벽을 통과해 걷기',
+        hold: '벽에서 기다리세요',
+        turn: '벽에서 돌아서세요',
+      },
+      wallCheck: {
+        centre: '토큰의 중심',
+        width: '전체 토큰',
+      },
+      oneWayWalls: {
+        block: '차단하다',
+        pass: '통과시키다',
+      },
+      transparentWalls: {
+        block: '차단하다',
+        pass: '통과시키다',
+      },
     },
     menu: {
       statusRunning: '순찰 토큰: {patrols}. 경로: {routes}.',
@@ -8761,6 +9955,7 @@ const TokenControllerMod = (() => {
       stop: '멈추다',
       add: '단계 코드',
       draw: '도면에서',
+      bounce: '바운스 영역',
       record: '기록',
       examples: '예',
       reset: '다시 놓기',
@@ -8807,11 +10002,13 @@ const TokenControllerMod = (() => {
     route: {
       drawn: '그려진 경로, {points} 포인트',
       recorded: '기록된 경로, {points} 포인트',
+      area: '바운스 영역, {points} 코너',
       path: '길',
       mode: '방법',
       interval: '간격',
       maxTokens: '대부분의 토큰',
       randomStart: '무작위 시작',
+      walls: '벽',
       start: '고정 시작',
       tokens: '토큰',
     },
@@ -8851,11 +10048,35 @@ const TokenControllerMod = (() => {
       },
       followMode: {
         label: '팔로우 모드',
-        desc: '트레일: 추종자들은 리더의 발자취를 따라 한 줄로 걷는다. 대형: 추종자들은 리더 주변에서 자신의 위치를 ​​유지합니다(위치를 변경하려면 추종자를 드래그하세요).',
+        desc: '트레일: 추종자들은 리더의 발자취를 따라 한 줄로 걷는다. 대형: 추종자들은 리더 주변에서 자신의 위치를 유지합니다(위치를 변경하려면 추종자를 드래그하세요).',
       },
       manualMove: {
         label: '순찰대 끌기',
         desc: '순찰 토큰을 끌 때: 계속(경로가 토큰을 놓은 곳부터 계속됨) 또는 중지(순찰 종료)됩니다.',
+      },
+      stopMarkers: {
+        label: '정지 마커',
+        desc: '토큰을 해당 경로에서 벗어나 추적을 중지하는 상태 표시는 세미콜론으로 구분되거나(예: dead;red) 또는 없음입니다. 이러한 마커 중 하나를 가진 리더의 추종자도 중지됩니다.',
+      },
+      markerAction: {
+        label: '정지 마커 동작',
+        desc: '순찰 토큰이 중지 마커를 받으면 수행하는 작업: 중지(현재 위치에 유지) 또는 재설정(시작한 위치로 돌아감).',
+      },
+      wallMode: {
+        label: '벽',
+        desc: '순찰대원과 추종자들이 역동적인 조명 벽과 닫힌 문과 창문에서 하는 일: 무시(통행), 보류(길이 깨끗해질 때까지 기다리기(예: 문이 열릴 때까지)) 또는 회전(순찰대가 돌아올 때까지). 각 경로는 자체적으로 선택할 수 있으므로 유령은 여전히 벽을 통과할 수 있습니다.',
+      },
+      wallCheck: {
+        label: '월 체크',
+        desc: '중앙: 토큰의 중앙만 벽에서 떨어져 있어야 합니다. 너비: 전체 토큰이 그러하므로 큰 토큰은 좁은 간격을 통과할 수 없습니다.',
+      },
+      oneWayWalls: {
+        label: '단방향 벽',
+        desc: '단방향 벽이 토큰을 중지하는지(차단) 또는 중지하지 않는지(통과) 여부입니다.',
+      },
+      transparentWalls: {
+        label: '투명 벽',
+        desc: '빛을 통과시키는 투명한 벽이 토큰을 중지(차단)하는지 여부(통과).',
       },
       buttonStep: {
         label: '클릭당 셀 수',
@@ -8892,12 +10113,14 @@ const TokenControllerMod = (() => {
       add: 'U2R2D2L2와 같은 단계 코드에서 경로를 만듭니다.',
       edit: '경로의 단계 코드를 변경합니다.',
       draw: '이 페이지에서 선택한 그림을 따르는 경로를 만듭니다.',
+      bounce: '선택한 닫힌 도면 내부에서 토큰이 가장자리에서 튕겨져 돌아다니는 경로를 만듭니다.',
       record: '선택한 토큰을 버튼으로 이동하거나 드래그하여 경로를 기록하세요.',
-      route: '경로 옵션을 변경합니다: 모드, 간격, 최대, 무작위 또는 시작.',
+      route: '경로 옵션 변경: 모드, 간격, 최대, 무작위, 벽 또는 시작.',
       show: '경로의 세부정보와 버튼을 표시합니다.',
       rename: '경로 이름을 바꿉니다.',
       copy: '새 이름으로 경로를 복사합니다.',
       remove: '경로를 제거합니다(먼저 묻습니다).',
+      ids: '선택한 ID 대신 이러한 ID를 사용하여 토큰을 작동하면 ScriptCard와 같은 다른 Mod가 토큰을 제어할 수 있습니다. --ids 제거는 경로에서 토큰을 제거합니다. 결코 경로를 제거하지 않습니다.',
       list: '제어되는 경로 또는 토큰을 나열합니다.',
       examples: '예시 경로를 추가합니다.',
       export: '경로를 텍스트로 표시하여 다른 게임에 복사하세요.',
@@ -8934,6 +10157,7 @@ const TokenControllerMod = (() => {
           '그리기에서: 그리기 도구를 사용하여 선, 다각형, 자유형 모양, 직사각형 또는 타원을 그리고 이를 선택한 다음 그리기에서를 클릭합니다. 토큰은 해당 페이지에서만 이동합니다. 나중에 그림을 삭제할 수 있습니다.',
           '기록: 토큰을 선택하고 기록을 클릭합니다. 화살표 버튼을 사용하여 이동하거나 지도에서 드래그한 다음(Roll20 웨이포인트를 따릅니다) 저장을 클릭합니다. 정사각형 그리드에서 녹음은 편집할 수 있는 단계 코드가 됩니다.',
           '순환 경로는 처음부터 다시 시작됩니다. 왕복 경로는 왔던 길을 되돌아갑니다. 경로가 끝에 멈추면. 루프가 시작되는 곳에서 끝나는 새로운 경로; 다른 사람들은 앞뒤로 이동합니다.',
+          '바운스 영역: 영역 주위에 닫힌 모양을 그리고 이를 선택한 다음 바운스 영역을 클릭합니다. 그 위에서 시작된 토큰은 직선으로 이동하고 가장자리에서 튕겨 나가며(경로가 이를 무시하지 않는 한 벽에서) 매번 조금씩 무작위로 회전합니다. 무작위 시작은 각 토큰을 해당 지역의 무작위 셀에 넣습니다.',
         ],
       },
       codes: {
@@ -8954,6 +10178,8 @@ const TokenControllerMod = (() => {
         interval: '이 경로의 경우 단계당 밀리초, 전역 간격의 경우 0입니다.',
         max: '한 번에 경로에 있을 수 있는 최대 토큰 수 또는 제한이 없는 경우 0입니다.',
         random: 'on: 각 토큰은 경로를 따라 임의의 지점에서 시작됩니다.',
+        walls:
+          '무시(벽을 통과하여 걷기), 보류(벽과 닫힌 문에서 대기), 회전(뒤로 돌아서) 또는 기본값(벽 설정 사용).',
         start:
           'set: 토큰은 시작 시 선택한 토큰의 위치로 점프합니다. 명확함: 그들은 자신이 서 있는 곳에서 시작합니다.',
       },
@@ -8966,6 +10192,8 @@ const TokenControllerMod = (() => {
           '팔로우: 리더를 선택하고 리더를 클릭한 다음 팔로워를 선택하고 팔로우를 클릭합니다. 리더의 이름을 입력할 수도 있습니다: !tokencontroller Follow Goblin Boss. 팔로어는 순찰하는 토큰, 드래그한 토큰, TokenMod가 이동한 토큰을 따릅니다.',
           '팔로워는 다른 팔로워를 따라가며 체인이나 기둥을 만들 수 있습니다.',
           '순찰 토큰 끌기가 중지로 설정되어 있지 않은 한 순찰 토큰을 드래그하면 놓은 위치부터 순찰이 계속됩니다.',
+          '벽: 벽 설정이 켜져 있으면 순찰대와 추종자는 역동적인 조명 벽이나 닫힌 문 및 창문을 통과하여 걷지 않습니다. 문과 창문을 열어서 통과시키세요. 경로에 자체 벽 옵션을 제공합니다(예: 유령 무시).',
+          '정지 마커: 이러한 상태 마커 중 하나(예: 사망)를 얻은 토큰은 경로를 떠나 팔로우를 중지하고 리더의 추종자도 한 정지를 얻습니다. !tokencontroller set stopMarkers dead;red로 설정하세요. 이는 다른 Mod가 마커를 추가할 때도 작동합니다.',
         ],
       },
       grids: {
@@ -8989,6 +10217,7 @@ const TokenControllerMod = (() => {
         heading: '명령',
         intro:
           'GM만이 이 명령을 사용할 수 있습니다. 경로는 메뉴 버튼의 #id로 이름을 지정하거나 참조할 수 있습니다. 명령이 두 개의 이름을 사용하는 경우 이름을 공백과 함께 "따옴표"로 묶습니다.',
+        mods: '다른 모드도 ScriptCard 등에서 이러한 명령을 보낼 수 있습니다. 토큰을 선택할 수 없으므로 --ids 뒤에 세미콜론으로 구분된 토큰 ID(!tc stop --ids ID1;ID2)를 사용하여 이름을 지정합니다. 답변은 GM에게 전달됩니다.',
         colCommand: '명령',
         colDesc: '기능',
       },
@@ -9083,7 +10312,7 @@ const TokenControllerMod = (() => {
         'Zaimportowane trasy {added}; pominięto {skipped} (nazwa już używana lub nieprawidłowa).',
       started: '{tokens} rozpoczęło się w dniu „{name}”.',
       stopped: 'Tokeny zatrzymane: {count}.',
-      reset: 'Tokeny wróciły do ​​miejsca, w którym zaczęły: {count}.',
+      reset: 'Tokeny wróciły do miejsca, w którym zaczęły: {count}.',
       locked: 'Zablokowano: {tokens} ({mode}).',
       unlocked: 'Odblokowano: {tokens}.',
       leaderSet: '{token} jest liderem. Wybierz obserwujących i kliknij Obserwuj.',
@@ -9100,6 +10329,9 @@ const TokenControllerMod = (() => {
       paused: 'Wszystkie patrole zatrzymały się.',
       resumed: 'Patrole zostały wznowione.',
       journalRebuilt: 'Przebudowano materiały informacyjne: {help} i {deck}.',
+      markerStopped: 'Zatrzymany przez znacznik zatrzymania: {tokens}.',
+      markerReset:
+        'Odesłany z powrotem do miejsca rozpoczęcia przez znacznik zatrzymania: {tokens}.',
     },
     errors: {
       noTokens: 'Nie wybrano tokenów.',
@@ -9125,6 +10357,13 @@ const TokenControllerMod = (() => {
       usageCopy: 'Podaj trasę i nazwę kopii.',
       badJson: 'To nie jest tekst eksportu trasy.',
       tokenLocked: '{tokens} nie można uruchomić: zablokowane.',
+      tokenMarked: '{tokens} nie mogą rozpocząć się: mają znacznik zatrzymania.',
+      outsideArea: '{tokens} nie może rozpocząć się: znajdują się poza „{name}”.',
+      selectOneArea:
+        'Wybierz dokładnie jeden zamknięty rysunek (wielokąt, prostokąt, elipsa lub odręczna pętla).',
+      areaTooSmall:
+        'Wybrany rysunek potrzebuje co najmniej trzech narożników, aby utworzyć obszar.',
+      idsNotFound: 'Żadne tokeny nie mają tych identyfikatorów: {ids}.',
       routeOnOtherPage:
         '{tokens} nie może się rozpocząć: „{name}” został narysowany na innej stronie.',
       startOnOtherPage:
@@ -9159,7 +10398,7 @@ const TokenControllerMod = (() => {
       },
       selectOneDrawing:
         'Narysuj trasę za pomocą narzędzia do rysowania, zaznacz ją (przeciągnij ramkę wokół cienkiego konturu, jeśli kliknięcie go nie zauważy), a następnie spróbuj ponownie.',
-      usageRoute: 'Opcje: tryb, interwał, max, losowy, start.',
+      usageRoute: 'Opcje: tryb, interwał, max, losowy, ściany, start.',
       routeOnOtherPage: 'Narysowane trasy działają tylko na stronie, na której zostały narysowane.',
       startOnOtherPage: 'Wyczyść stały początek lub najpierw przesuń token na tę stronę.',
       noLeader:
@@ -9174,8 +10413,14 @@ const TokenControllerMod = (() => {
         'Upewnij się, że tokeny znajdują się w sąsiednich komórkach tego samego wiersza (kolumna na stronach szesnastkowych (H)).',
       unknownCommand: 'Wpisz !tokencontroller help, aby wyświetlić listę poleceń.',
       tokenLocked: 'Najpierw odblokuj token.',
+      tokenMarked: 'Usuń znacznik lub zmień ustawienie znaczników zatrzymania.',
+      outsideArea: 'Najpierw przesuń żetony do obszaru lub włącz opcję Losowy start dla trasy.',
+      selectOneArea:
+        'Narysuj obszar za pomocą narzędzia do rysowania, zaznacz go (przeciągnij ramkę wokół cienkiego konturu, jeśli kliknięcie go nie zauważy), a następnie spróbuj ponownie.',
+      idsNotFound: 'Podaj identyfikatory tokenów po --ids, oddzielone średnikami.',
     },
     warnings: {
+      idsNotFound: 'Żadne tokeny nie mają tych identyfikatorów, więc zostały pominięte: {ids}.',
       offPage: 'Część trasy wychodzi poza stronę (kroki: {count}). Te kroki są pomijane.',
       combatTrackerOnly:
         'Wykrywanie walki jest ustawione na śledzenie tur, więc ten przełącznik nie działa, dopóki go nie zmienisz.',
@@ -9237,6 +10482,27 @@ const TokenControllerMod = (() => {
         continue: 'Stamtąd kontynuuj',
         stop: 'Zatrzymaj patrol',
       },
+      markerAction: {
+        stop: 'Zatrzymaj się tam, gdzie to jest',
+        reset: 'Wróć do początku',
+      },
+      wallMode: {
+        ignore: 'Przejdź przez ściany',
+        hold: 'Poczekaj pod ścianami',
+        turn: 'Odwróć się do ścian',
+      },
+      wallCheck: {
+        centre: 'Środek tokena',
+        width: 'Cały token',
+      },
+      oneWayWalls: {
+        block: 'Blok',
+        pass: 'Przepuszczać',
+      },
+      transparentWalls: {
+        block: 'Blok',
+        pass: 'Przepuszczać',
+      },
     },
     menu: {
       statusRunning: 'Żetony patrolowania: {patrols}. Trasy: {routes}.',
@@ -9258,6 +10524,7 @@ const TokenControllerMod = (() => {
       stop: 'Zatrzymywać się',
       add: 'Kod kroku',
       draw: 'Z rysunku',
+      bounce: 'Obszar odbicia',
       record: 'Nagrywać',
       examples: 'Przykłady',
       reset: 'Nastawić',
@@ -9304,11 +10571,13 @@ const TokenControllerMod = (() => {
     route: {
       drawn: 'Wyznaczona trasa, {points} punktów',
       recorded: 'Zapisana trasa, {points} punktów',
+      area: 'Obszar odbicia, {points} narożniki',
       path: 'Ścieżka',
       mode: 'Tryb',
       interval: 'Interwał',
       maxTokens: 'Większość tokenów',
       randomStart: 'Losowy początek',
+      walls: 'Ściany',
       start: 'Naprawiono start',
       tokens: 'Żetony',
     },
@@ -9354,6 +10623,30 @@ const TokenControllerMod = (() => {
         label: 'Przeciąganie patrolu',
         desc: 'Gdy przeciągniesz żeton patrolowania: kontynuuj (trasa będzie kontynuowana od miejsca, w którym go upuściłeś) lub zatrzymaj (patrol zakończy się).',
       },
+      stopMarkers: {
+        label: 'Zatrzymaj znaczniki',
+        desc: 'Znaczniki stanu, które usuwają żeton z trasy i zatrzymują go, oddzielając je średnikami (na przykład martwy; czerwony) lub żadnym. Podążający za liderem posiadającym jeden z tych znaczników również się zatrzymują.',
+      },
+      markerAction: {
+        label: 'Zatrzymaj działanie znacznika',
+        desc: 'Co robi żeton patrolujący, gdy otrzyma znacznik zatrzymania: zatrzymuje się (pozostaje tam, gdzie był) lub resetuje (wraca do miejsca, w którym zaczął).',
+      },
+      wallMode: {
+        label: 'Ściany',
+        desc: 'Co patrole i towarzysze robią przy dynamicznym oświetlaniu ścian oraz zamkniętych drzwi i okien: ignoruj (przejdź), przytrzymaj (poczekaj, aż droga będzie wolna, np. aż otworzą się drzwi) lub odwróć się (patrole zawracają). Każda trasa może wybrać własną, więc duchy nadal mogą przechodzić przez ściany.',
+      },
+      wallCheck: {
+        label: 'Kontrola ściany',
+        desc: 'środek: tylko środek żetonu musi znajdować się z dala od ścian. szerokość: robi to cały żeton, więc duży żeton nie może przecisnąć się przez wąską szczelinę.',
+      },
+      oneWayWalls: {
+        label: 'Ściany jednokierunkowe',
+        desc: 'Czy ściany jednokierunkowe zatrzymują żetony (blok), czy nie (pas).',
+      },
+      transparentWalls: {
+        label: 'Przezroczyste ściany',
+        desc: 'Niezależnie od tego, czy przezroczyste ściany, które przepuszczają światło, zatrzymują żetony (blok), czy nie (przechodzą).',
+      },
       buttonStep: {
         label: 'Komórki na kliknięcie',
         desc: 'Jak daleko strzałki nagrywania przesuwają żeton.',
@@ -9389,12 +10682,15 @@ const TokenControllerMod = (() => {
       add: 'Utwórz trasę na podstawie kodu kroku, np. U2R2D2L2.',
       edit: 'Zmień kod etapu trasy.',
       draw: 'Utwórz trasę zgodnie z wybranym rysunkiem na tej stronie.',
+      bounce:
+        'Utwórz trasę, po której żetony wędrują wewnątrz wybranego zamkniętego rysunku, odbijając się od jego krawędzi.',
       record: 'Zapisz trasę przesuwając wybrany token przyciskami lub przeciągając go.',
-      route: 'Zmień opcję trasy: tryb, interwał, maks., losowo lub start.',
+      route: 'Zmień opcję trasy: tryb, interwał, maks., losowo, ściany lub start.',
       show: 'Pokaż szczegóły trasy i przyciski.',
       rename: 'Zmień nazwę trasy.',
       copy: 'Skopiuj trasę pod nową nazwą.',
       remove: 'Usuń trasę (najpierw pyta).',
+      ids: 'Działaj na tokenach z tymi identyfikatorami, a nie na wybranych, aby inne Mody, takie jak Karty Skryptów, mogły kontrolować tokeny. usuń --ids usuwa tokeny ze swoich tras; nigdy nie usuwa trasy.',
       list: 'Wypisz trasy lub tokeny, które są kontrolowane.',
       examples: 'Dodaj przykładowe trasy.',
       export: 'Pokaż trasy jako tekst do skopiowania do innej gry.',
@@ -9432,6 +10728,7 @@ const TokenControllerMod = (() => {
           'Z rysunku: narysuj linię, wielokąt, kształt odręczny, prostokąt lub elipsę za pomocą narzędzi do rysowania, wybierz go i kliknij Z rysunku. Żetony chodzą po niej, tylko na tej stronie. Możesz później usunąć rysunek.',
           'Nagraj: wybierz token i kliknij Nagraj. Przesuń go za pomocą przycisków strzałek lub przeciągnij na mapę (podążane będą punkty trasy Roll20), a następnie kliknij Zapisz. Na siatkach kwadratowych nagranie staje się kodem kroku, który można edytować.',
           'Trasy pętli rozpoczynają się od początku; trasy tam i z powrotem prowadzą z powrotem tą samą drogą, którą przyszli; gdy trasy zatrzymują się na końcu. Nowe trasy, które kończą się w miejscu rozpoczęcia pętli; inni chodzą tam i z powrotem.',
+          'Obszar odbicia: narysuj zamknięty kształt wokół obszaru, wybierz go i kliknij Obszar odbicia. Rozpoczęte na nim żetony poruszają się po liniach prostych i odbijają się od jego krawędzi (oraz od ścian, chyba że trasa je ignoruje), za każdym razem obracając się nieco losowo. Losowy start umieszcza każdy żeton w losowej komórce obszaru.',
         ],
       },
       codes: {
@@ -9453,6 +10750,8 @@ const TokenControllerMod = (() => {
         interval: 'Milisekundy na krok dla tej trasy lub 0 dla interwału globalnego.',
         max: 'Najwięcej żetonów, które mogą znajdować się na trasie jednocześnie, lub 0 w przypadku braku limitu.',
         random: 'on: każdy żeton zaczyna się w losowym punkcie na trasie.',
+        walls:
+          'ignoruj (przejdź przez ściany), przytrzymaj (czekaj przy ścianach i zamkniętych drzwiach), odwróć się (odwróć) lub domyśl (użyj ustawienia Ściany).',
         start:
           'set: żetony przeskakują na pozycję wybranego żetonu po uruchomieniu. jasne: zaczynają tam, gdzie stoją.',
       },
@@ -9465,6 +10764,8 @@ const TokenControllerMod = (() => {
           'Obserwuj: wybierz lidera i kliknij Lidera, następnie wybierz obserwujących i kliknij Obserwuj. Możesz także wpisać imię lidera: !tokencontroller podążaj za Goblinem Bossem. Obserwujący podążają za tokenami, które patrolują, tokenami, które przeciągasz i tokenami przenoszonymi przez TokenMod.',
           'Obserwujący mogą podążać za innymi obserwującymi, tworząc łańcuch lub kolumnę.',
           'Przeciągnięcie żetonu patrolowania powoduje kontynuację patrolu od miejsca, w którym go upuściłeś, chyba że przeciąganie patrolu zostanie zatrzymane.',
+          'Ściany: przy włączonej opcji Ściany patrole i towarzysze nie przechodzą przez dynamicznie oświetlane ściany lub zamknięte drzwi i okna; otwarte drzwi i okna ich przepuszczają. Nadaj trasie opcję własnych ścian (na przykład ignorowanie ducha).',
+          'Znaczniki zatrzymania: żeton, który otrzyma jeden z tych znaczników statusu (na przykład martwy), opuszcza swoją trasę i przestaje podążać, a także zwolennicy lidera, którzy również otrzymują jeden przystanek. Ustaw je za pomocą !tokencontroller set stopMarkers dead;red. Działa to również, gdy inny Mod dodaje znacznik.',
         ],
       },
       grids: {
@@ -9488,6 +10789,7 @@ const TokenControllerMod = (() => {
         heading: 'Polecenia',
         intro:
           'Tylko MG mogą używać tych poleceń. Trasom można nadać nazwy lub można do nich odnosić się za pomocą #id za pomocą przycisków menu. Nazwy ze spacjami należy umieszczać w cudzysłowie, gdy polecenie przyjmuje dwie nazwy.',
+        mods: "Inni Modowie również mogą wysyłać te polecenia, na przykład z Kart Skryptów. Nie mogą wybierać tokenów, więc nadają im nazwę za pomocą --ids, po którym następują identyfikatory tokenów oddzielone średnikami: !tc stop --ids ID1;ID2. Odpowiedzi trafiają do GM'a.",
         colCommand: 'Rozkaz',
         colDesc: 'Co to robi',
       },
@@ -9596,6 +10898,8 @@ const TokenControllerMod = (() => {
       paused: 'Todas as patrulhas pararam.',
       resumed: 'As patrulhas foram retomadas.',
       journalRebuilt: 'Apostilas reconstruídas: {help} e {deck}.',
+      markerStopped: 'Parado por um marcador de paragem: {tokens}.',
+      markerReset: 'Enviado de volta para onde começou por um marcador de paragem: {tokens}.',
     },
     errors: {
       noTokens: 'Nenhum token selecionado.',
@@ -9621,6 +10925,13 @@ const TokenControllerMod = (() => {
       usageCopy: 'Dê uma rota e um nome à cópia.',
       badJson: 'Esse não é um texto de exportação de rotas.',
       tokenLocked: '{tokens} não pode iniciar: bloqueado.',
+      tokenMarked: '{tokens} não pode iniciar: possuem um marcador de paragem.',
+      outsideArea: '{tokens} não pode iniciar: estão fora de "{name}".',
+      selectOneArea:
+        'Selecione exatamente um desenho fechado (um polígono, retângulo, elipse ou loop à mão livre).',
+      areaTooSmall:
+        'O desenho selecionado necessita de, pelo menos, três cantos para formar uma área.',
+      idsNotFound: 'Nenhum token possui estes IDs: {ids}.',
       routeOnOtherPage: '{tokens} não pode iniciar: "{name}" foi desenhado noutra página.',
       startOnOtherPage:
         '{tokens} não pode ser iniciado: o início fixo de "{name}" está noutra página.',
@@ -9653,7 +10964,7 @@ const TokenControllerMod = (() => {
       },
       selectOneDrawing:
         'Desenhe a rota com uma ferramenta de desenho, selecione-a (arraste uma caixa à volta de um contorno fino se clicar em errado) e tente novamente.',
-      usageRoute: 'Opções: modo, intervalo, máximo, aleatório, início.',
+      usageRoute: 'Opções: modo, intervalo, máximo, aleatório, paredes, início.',
       routeOnOtherPage: 'As rotas desenhadas funcionam apenas na página em que foram desenhadas.',
       startOnOtherPage: 'Limpe o início fixo ou mova primeiro o token para essa página.',
       noLeader:
@@ -9668,8 +10979,15 @@ const TokenControllerMod = (() => {
         'Certifique-se de que os tokens estão em células vizinhas da mesma linha (coluna nas páginas Hex(H)).',
       unknownCommand: 'Digite !tokencontroller help para obter a lista de comandos.',
       tokenLocked: 'Desbloqueie o token primeiro.',
+      tokenMarked: 'Remova o marcador ou altere a definição dos marcadores de paragem.',
+      outsideArea:
+        'Mova primeiro os tokens dentro da área ou ative o Início aleatório para a rota.',
+      selectOneArea:
+        'Desenhe a área com uma ferramenta de desenho, seleccione-a (arraste uma caixa à volta de um contorno fino se clicar em errado) e tente novamente.',
+      idsNotFound: 'Forneça os IDs de token após --ids, separados por ponto e vírgula.',
     },
     warnings: {
+      idsNotFound: 'Nenhum token possui estes IDs, pelo que foram ignorados: {ids}.',
       offPage: 'Parte da rota sai da página (passos: {count}). Estas etapas são ignoradas.',
       combatTrackerOnly:
         'A Detecção de Combate está definida para o rastreador de turno, pelo que esta opção não terá qualquer efeito até que a altere.',
@@ -9731,6 +11049,27 @@ const TokenControllerMod = (() => {
         continue: 'Continue a partir daí',
         stop: 'Pare a patrulha',
       },
+      markerAction: {
+        stop: 'Pare onde está',
+        reset: 'Voltar ao início',
+      },
+      wallMode: {
+        ignore: 'Atravesse paredes',
+        hold: 'Espere nas paredes',
+        turn: 'Volte para as paredes',
+      },
+      wallCheck: {
+        centre: 'Centro do token',
+        width: 'Token inteiro',
+      },
+      oneWayWalls: {
+        block: 'Bloco',
+        pass: 'Deixe passar',
+      },
+      transparentWalls: {
+        block: 'Bloco',
+        pass: 'Deixe passar',
+      },
     },
     menu: {
       statusRunning: 'Tokens de patrulha: {patrols}. Percursos: {routes}.',
@@ -9753,6 +11092,7 @@ const TokenControllerMod = (() => {
       stop: 'Parar',
       add: 'Código da etapa',
       draw: 'Do desenho',
+      bounce: 'Área de rejeição',
       record: 'Registo',
       examples: 'Exemplos',
       reset: 'Reiniciar',
@@ -9799,11 +11139,13 @@ const TokenControllerMod = (() => {
     route: {
       drawn: 'Percurso desenhado, {points} pontos',
       recorded: 'Percurso registado, {points} pontos',
+      area: 'Área de salto, {points} cantos',
       path: 'Percurso',
       mode: 'Modo',
       interval: 'Intervalo',
       maxTokens: 'A maioria dos tokens',
       randomStart: 'Início aleatório',
+      walls: 'Paredes',
       start: 'Início fixo',
       tokens: 'Fichas',
     },
@@ -9849,6 +11191,30 @@ const TokenControllerMod = (() => {
         label: 'Arrastando uma patrulha',
         desc: 'Ao arrastar uma ficha de patrulha: continue (a rota continua a partir do local onde a largou) ou pare (a patrulha termina).',
       },
+      stopMarkers: {
+        label: 'Marcadores de paragem',
+        desc: 'Marcadores de estado que desviam um token da sua rota e o impedem de o seguir, separados por ponto e vírgula (por exemplo, morto; vermelho) ou nenhum. Os seguidores de um líder com um destes marcadores também param.',
+      },
+      markerAction: {
+        label: 'Parar a ação do marcador',
+        desc: 'O que faz uma ficha de patrulha quando recebe um Marcador de Paragem: parar (permanece onde está) ou reiniciar (volta para onde começou).',
+      },
+      wallMode: {
+        label: 'Paredes',
+        desc: 'O que as patrulhas e os seguidores fazem em paredes de iluminação dinâmica e portas e janelas fechadas: ignorar (passar), segurar (esperar até que o caminho esteja livre, por exemplo, até que uma porta se abra) ou virar (as patrulhas regressam). Cada rota pode escolher a sua própria, pelo que os fantasmas ainda podem atravessar paredes.',
+      },
+      wallCheck: {
+        label: 'Verificação de parede',
+        desc: 'centro: apenas o meio de uma ficha deve estar afastado das paredes. largura: todo o token o faz, pelo que um token grande não pode passar por uma lacuna estreita.',
+      },
+      oneWayWalls: {
+        label: 'Paredes Unidirecionais',
+        desc: 'Se as paredes unidirecionais param os tokens (bloquear) ou não (passar).',
+      },
+      transparentWalls: {
+        label: 'Paredes transparentes',
+        desc: 'Sejam paredes transparentes, que deixam passar a luz, fichas de paragem (bloqueio) ou não (passagem).',
+      },
       buttonStep: {
         label: 'Células por clique',
         desc: 'A que distância as setas de gravação movem um token.',
@@ -9884,12 +11250,15 @@ const TokenControllerMod = (() => {
       add: 'Crie uma rota a partir de um código de passo, como por exemplo U2R2D2L2.',
       edit: 'Altere o código de etapa de uma rota.',
       draw: 'Crie uma rota que siga o desenho selecionado nesta página.',
+      bounce:
+        'Crie uma rota na qual os tokens vagueiam dentro do desenho fechado selecionado, ricocheteando nas suas margens.',
       record: 'Grave uma rota movendo o token selecionado com botões ou arrastando-o.',
-      route: 'Altere uma opção de rota: modo, intervalo, máximo, aleatório ou início.',
+      route: 'Altere uma opção de rota: modo, intervalo, máximo, aleatório, paredes ou início.',
       show: 'Mostrar detalhes e botões de uma rota.',
       rename: 'Renomeie uma rota.',
       copy: 'Copie uma rota com um novo nome.',
       remove: 'Remover uma rota (pergunta primeiro).',
+      ids: 'Aja sobre os tokens com estes IDs em vez dos selecionados, para que outros Mods, como os ScriptCards, possam controlar os tokens. remove --ids retira os tokens das suas rotas; nunca remove uma rota.',
       list: 'Liste as rotas ou os tokens que estão a ser controlados.',
       examples: 'Adicione as rotas de exemplo.',
       export: 'Mostrar rotas como texto para copiar noutro jogo.',
@@ -9927,6 +11296,7 @@ const TokenControllerMod = (() => {
           'A partir do Desenho: desenhe uma linha, polígono, forma à mão livre, retângulo ou elipse com as ferramentas de desenho, selecione-o e clique em A partir do Desenho. Os tokens caminham ao longo do mesmo, apenas nessa página. Pode excluir o desenho posteriormente.',
           'Gravar: selecione um token e clique em Gravar. Mova-o com os botões de seta ou arraste-o no mapa (os pontos de passagem Roll20 são seguidos) e clique em Guardar. Nas grelhas quadradas, a gravação torna-se um código de passo que pode editar.',
           'As rotas circulares recomeçam desde o início; os percursos de ida e volta regressam pelo caminho de onde vieram; uma vez que as rotas param no final. Novas rotas que terminam onde iniciam o loop; outros vão e voltam.',
+          'Área de salto: desenhe uma forma fechada à volta da área, seleccione-a e clique em Área de salto. Os tokens iniciados nele viajam em linhas retas e ricocheteiam nas suas bordas (e nas paredes, a menos que a rota os ignore), girando um pouco aleatoriamente de cada vez. O início aleatório coloca cada ficha numa célula aleatória da área.',
         ],
       },
       codes: {
@@ -9948,6 +11318,8 @@ const TokenControllerMod = (() => {
         interval: 'Milissegundos por passo para esta rota ou 0 para o intervalo global.',
         max: 'O maior número de tokens que podem estar na rota de uma só vez, ou 0 sem limite.',
         random: 'on: cada token começa num ponto aleatório ao longo da rota.',
+        walls:
+          'ignorar (atravessar paredes), segurar (esperar nas paredes e portas fechadas), virar (voltar atrás) ou padrão (utilizar a definição Paredes).',
         start:
           'set: os tokens saltam para a posição do token selecionado quando são iniciados. claro: começam onde estão.',
       },
@@ -9960,6 +11332,8 @@ const TokenControllerMod = (() => {
           'Seguir: selecione o líder e clique em Líder, depois selecione os seguidores e clique em Seguir. Pode também digitar o nome do líder: !tokencontroller follow Goblin Boss. Os seguidores seguem os tokens que patrulham, os tokens que arrasta e os tokens movidos pelo TokenMod.',
           'Os seguidores podem seguir outros seguidores, formando uma corrente ou coluna.',
           'Arrastar uma ficha de patrulha continua a patrulha a partir do local onde a libertou, a menos que Arrastar uma Patrulha esteja definido para parar.',
+          'Paredes: com a definição Paredes ativada, as patrulhas e os seguidores não transitam por paredes com iluminação dinâmica ou portas e janelas fechadas; portas e janelas abertas deixam-nos passar. Dê a uma rota a sua própria opção de paredes (por exemplo, ignorar um fantasma).',
+          'Marcadores de paragem: um token que recebe um destes marcadores de estado (por exemplo, morto) sai da sua rota e deixa de seguir, e os seguidores de um líder que recebe uma paragem também. Defina-os com !tokencontroller set stopMarkers dead;red. Isto também funciona quando outro Mod adiciona o marcador.',
         ],
       },
       grids: {
@@ -9983,6 +11357,7 @@ const TokenControllerMod = (() => {
         heading: 'Comandos',
         intro:
           'Apenas os GMs podem usar estes comandos. As rotas podem ser nomeadas ou referenciadas pelo seu #id nos botões do menu. Coloque nomes com espaços entre “aspas” quando um comando recebe dois nomes.',
+        mods: 'Outros Mods também podem enviar estes comandos, por exemplo, a partir de ScriptCards. Não podem selecionar tokens, por isso nomeiam-nos com --ids seguido de IDs de token separados por ponto e vírgula: !tc stop --ids ID1;ID2. As respostas vão para o GM.',
         colCommand: 'Comando',
         colDesc: 'O que faz',
       },
@@ -10092,6 +11467,8 @@ const TokenControllerMod = (() => {
       paused: 'Todas as patrulhas pararam.',
       resumed: 'As patrulhas foram retomadas.',
       journalRebuilt: 'Apostilas reconstruídas: {help} e {deck}.',
+      markerStopped: 'Parado por um marcador de parada: {tokens}.',
+      markerReset: 'Enviado de volta para onde começou por um marcador de parada: {tokens}.',
     },
     errors: {
       noTokens: 'Nenhum token selecionado.',
@@ -10117,6 +11494,12 @@ const TokenControllerMod = (() => {
       usageCopy: 'Dê uma rota e um nome para a cópia.',
       badJson: 'Esse não é um texto de exportação de rota.',
       tokenLocked: '{tokens} não pode iniciar: bloqueado.',
+      tokenMarked: '{tokens} não pode iniciar: eles possuem um marcador de parada.',
+      outsideArea: '{tokens} não pode iniciar: eles estão fora de "{name}".',
+      selectOneArea:
+        'Selecione exatamente um desenho fechado (um polígono, retângulo, elipse ou loop à mão livre).',
+      areaTooSmall: 'O desenho selecionado precisa de pelo menos três cantos para formar uma área.',
+      idsNotFound: 'Nenhum token possui estes IDs: {ids}.',
       routeOnOtherPage: '{tokens} não pode iniciar: "{name}" foi desenhado em outra página.',
       startOnOtherPage:
         '{tokens} não pode ser iniciado: o início fixo de "{name}" está em outra página.',
@@ -10132,7 +11515,7 @@ const TokenControllerMod = (() => {
       unknownSetting: 'Não há configuração chamada "{key}".',
       badSettingValue: '"{value}" não é um valor válido para {key}.',
       calibrateNeedsTokens: 'Selecione um ou dois tokens ajustados aos centros das células.',
-      calibrateFailed: 'Os tokens selecionados não puderam ser usados ​​para calibrar a grade.',
+      calibrateFailed: 'Os tokens selecionados não puderam ser usados para calibrar a grade.',
       unknownCommand: 'Comando desconhecido "{command}".',
       gmOnly: 'Somente o GM pode usar o TokenController.',
       internal: 'Algo deu errado. Os detalhes estão no console da API.',
@@ -10149,7 +11532,7 @@ const TokenControllerMod = (() => {
       },
       selectOneDrawing:
         'Desenhe a rota com uma ferramenta de desenho, selecione-a (arraste uma caixa ao redor de um contorno fino se clicar em errado) e tente novamente.',
-      usageRoute: 'Opções: modo, intervalo, máximo, aleatório, início.',
+      usageRoute: 'Opções: modo, intervalo, máximo, aleatório, paredes, início.',
       routeOnOtherPage: 'As rotas desenhadas funcionam apenas na página em que foram desenhadas.',
       startOnOtherPage: 'Limpe o início fixo ou mova o token para essa página primeiro.',
       noLeader: 'Selecione o líder e clique em Líder, ou dê seu nome: !tokencontroller follow Name',
@@ -10162,8 +11545,15 @@ const TokenControllerMod = (() => {
         'Certifique-se de que os tokens estejam em células vizinhas da mesma linha (coluna nas páginas Hex (H)).',
       unknownCommand: 'Digite !tokencontroller help para obter a lista de comandos.',
       tokenLocked: 'Desbloqueie o token primeiro.',
+      tokenMarked: 'Remova o marcador ou altere a configuração dos marcadores de parada.',
+      outsideArea:
+        'Mova os tokens dentro da área primeiro ou ative o Início aleatório para a rota.',
+      selectOneArea:
+        'Desenhe a área com uma ferramenta de desenho, selecione-a (arraste uma caixa ao redor de um contorno fino se clicar em errado) e tente novamente.',
+      idsNotFound: 'Forneça IDs de token após --ids, separados por ponto e vírgula.',
     },
     warnings: {
+      idsNotFound: 'Nenhum token possui estes IDs, então eles foram ignorados: {ids}.',
       offPage: 'Parte da rota sai da página (etapas: {count}). Essas etapas são ignoradas.',
       combatTrackerOnly:
         'A Detecção de Combate está definida para o rastreador de turno, portanto, essa opção não terá efeito até que você a altere.',
@@ -10225,6 +11615,27 @@ const TokenControllerMod = (() => {
         continue: 'Continue a partir daí',
         stop: 'Pare a patrulha',
       },
+      markerAction: {
+        stop: 'Pare onde está',
+        reset: 'Volte ao início',
+      },
+      wallMode: {
+        ignore: 'Atravesse paredes',
+        hold: 'Espere nas paredes',
+        turn: 'Volte para as paredes',
+      },
+      wallCheck: {
+        centre: 'Centro do token',
+        width: 'Token inteiro',
+      },
+      oneWayWalls: {
+        block: 'Bloquear',
+        pass: 'Deixe passar',
+      },
+      transparentWalls: {
+        block: 'Bloquear',
+        pass: 'Deixe passar',
+      },
     },
     menu: {
       statusRunning: 'Tokens de patrulha: {patrols}. Rotas: {routes}.',
@@ -10246,6 +11657,7 @@ const TokenControllerMod = (() => {
       stop: 'Parar',
       add: 'Código da etapa',
       draw: 'Do desenho',
+      bounce: 'Área de rejeição',
       record: 'Registro',
       examples: 'Exemplos',
       reset: 'Reiniciar',
@@ -10292,11 +11704,13 @@ const TokenControllerMod = (() => {
     route: {
       drawn: 'Rota desenhada, {points} pontos',
       recorded: 'Rota registrada, {points} pontos',
+      area: 'Área de salto, {points} cantos',
       path: 'Caminho',
       mode: 'Modo',
       interval: 'Intervalo',
       maxTokens: 'A maioria dos tokens',
       randomStart: 'Início aleatório',
+      walls: 'Paredes',
       start: 'Início fixo',
       tokens: 'Fichas',
     },
@@ -10342,6 +11756,30 @@ const TokenControllerMod = (() => {
         label: 'Arrastando uma patrulha',
         desc: 'Ao arrastar uma ficha de patrulha: continue (a rota continua de onde você a soltou) ou pare (a patrulha termina).',
       },
+      stopMarkers: {
+        label: 'Marcadores de parada',
+        desc: 'Marcadores de status que desviam um token de sua rota e o impedem de segui-lo, separados por ponto e vírgula (por exemplo, morto; vermelho) ou nenhum. Seguidores de um líder com um desses marcadores também param.',
+      },
+      markerAction: {
+        label: 'Parar ação do marcador',
+        desc: 'O que uma ficha de patrulha faz quando recebe um Marcador de Parada: parar (permanece onde está) ou reiniciar (volta para onde começou).',
+      },
+      wallMode: {
+        label: 'Paredes',
+        desc: 'O que as patrulhas e os seguidores fazem em paredes de iluminação dinâmica e portas e janelas fechadas: ignorar (passar), segurar (esperar até que o caminho esteja livre, por exemplo, até que uma porta se abra) ou virar (as patrulhas voltam). Cada rota pode escolher a sua própria, então os fantasmas ainda podem atravessar paredes.',
+      },
+      wallCheck: {
+        label: 'Verificação de parede',
+        desc: 'centro: apenas o meio de uma ficha deve ficar longe das paredes. largura: o token inteiro o faz, portanto, um token grande não pode passar por uma lacuna estreita.',
+      },
+      oneWayWalls: {
+        label: 'Paredes Unidirecionais',
+        desc: 'Se as paredes unidirecionais param os tokens (bloquear) ou não (passar).',
+      },
+      transparentWalls: {
+        label: 'Paredes transparentes',
+        desc: 'Sejam paredes transparentes, que deixam passar luz, fichas de parada (bloqueio) ou não (passagem).',
+      },
       buttonStep: {
         label: 'Células por clique',
         desc: 'A que distância as setas de gravação movem um token.',
@@ -10377,12 +11815,15 @@ const TokenControllerMod = (() => {
       add: 'Crie uma rota a partir de um código de etapa, como U2R2D2L2.',
       edit: 'Altere o código de etapa de uma rota.',
       draw: 'Crie uma rota que siga o desenho selecionado nesta página.',
+      bounce:
+        'Crie uma rota na qual os tokens vagam dentro do desenho fechado selecionado, ricocheteando em suas bordas.',
       record: 'Grave uma rota movendo o token selecionado com botões ou arrastando-o.',
-      route: 'Altere uma opção de rota: modo, intervalo, máximo, aleatório ou início.',
+      route: 'Altere uma opção de rota: modo, intervalo, máximo, aleatório, paredes ou início.',
       show: 'Mostrar detalhes e botões de uma rota.',
       rename: 'Renomeie uma rota.',
       copy: 'Copie uma rota com um novo nome.',
       remove: 'Remover uma rota (pergunta primeiro).',
+      ids: 'Aja nos tokens com esses IDs em vez dos selecionados, para que outros Mods, como ScriptCards, possam controlar os tokens. remove --ids tira os tokens de suas rotas; nunca remove uma rota.',
       list: 'Liste as rotas ou os tokens que estão sendo controlados.',
       examples: 'Adicione as rotas de exemplo.',
       export: 'Mostre rotas como texto para copiar em outro jogo.',
@@ -10420,6 +11861,7 @@ const TokenControllerMod = (() => {
           'Do Desenho: desenhe uma linha, polígono, forma à mão livre, retângulo ou elipse com as ferramentas de desenho, selecione-o e clique em Do Desenho. Os tokens caminham ao longo dele, apenas nessa página. Você pode excluir o desenho posteriormente.',
           'Gravar: selecione um token e clique em Gravar. Mova-o com os botões de seta ou arraste-o no mapa (os waypoints Roll20 são seguidos) e clique em Salvar. Em grades quadradas, a gravação se torna um código de etapa que você pode editar.',
           'As rotas circulares recomeçam desde o início; rotas de ida e volta voltam pelo caminho de onde vieram; uma vez que as rotas param no final. Novas rotas que terminam onde iniciam o loop; outros vão e voltam.',
+          'Área de salto: desenhe uma forma fechada ao redor da área, selecione-a e clique em Área de salto. Os tokens iniciados nele viajam em linhas retas e ricocheteiam em suas bordas (e nas paredes, a menos que a rota os ignore), girando um pouco aleatoriamente a cada vez. O início aleatório coloca cada ficha em uma célula aleatória da área.',
         ],
       },
       codes: {
@@ -10441,6 +11883,8 @@ const TokenControllerMod = (() => {
         interval: 'Milissegundos por etapa para esta rota ou 0 para o intervalo global.',
         max: 'O maior número de tokens que podem estar na rota de uma só vez, ou 0 sem limite.',
         random: 'on: cada token começa em um ponto aleatório ao longo da rota.',
+        walls:
+          'ignorar (atravessar paredes), segurar (esperar nas paredes e portas fechadas), virar (voltar) ou padrão (usar a configuração Paredes).',
         start:
           'set: os tokens saltam para a posição do token selecionado quando são iniciados. claro: eles começam onde estão.',
       },
@@ -10453,6 +11897,8 @@ const TokenControllerMod = (() => {
           'Seguir: selecione o líder e clique em Líder, depois selecione os seguidores e clique em Seguir. Você também pode digitar o nome do líder: !tokencontroller follow Goblin Boss. Os seguidores seguem os tokens que patrulham, os tokens que você arrasta e os tokens movidos pelo TokenMod.',
           'Os seguidores podem seguir outros seguidores, formando uma corrente ou coluna.',
           'Arrastar uma ficha de patrulha continua a patrulha de onde você a soltou, a menos que Arrastar uma Patrulha esteja definido para parar.',
+          'Paredes: com a configuração Paredes ativada, patrulhas e seguidores não transitam por paredes com iluminação dinâmica ou portas e janelas fechadas; portas e janelas abertas os deixam passar. Dê a uma rota sua própria opção de paredes (por exemplo, ignorar um fantasma).',
+          'Marcadores de parada: um token que recebe um desses marcadores de status (por exemplo, morto) sai de sua rota e para de seguir, e os seguidores de um líder que recebe uma parada também. Defina-os com !tokencontroller set stopMarkers dead;red. Isso também funciona quando outro Mod adiciona o marcador.',
         ],
       },
       grids: {
@@ -10476,6 +11922,7 @@ const TokenControllerMod = (() => {
         heading: 'Comandos',
         intro:
           'Somente GMs podem usar esses comandos. As rotas podem ser nomeadas ou referenciadas por seu #id nos botões do menu. Coloque nomes com espaços entre “aspas” quando um comando leva dois nomes.',
+        mods: 'Outros Mods também podem enviar esses comandos, por exemplo, de ScriptCards. Eles não podem selecionar tokens, então eles os nomeiam com --ids seguido por IDs de token separados por ponto e vírgula: !tc stop --ids ID1;ID2. As respostas vão para o GM.',
         colCommand: 'Comando',
         colDesc: 'O que isso faz',
       },
@@ -10586,6 +12033,8 @@ const TokenControllerMod = (() => {
       paused: 'Все патрули остановились.',
       resumed: 'Патрули возобновились.',
       journalRebuilt: 'Перестроены раздаточные материалы: {help} и {deck}.',
+      markerStopped: 'Остановлен маркером остановки: {tokens}.',
+      markerReset: 'Отправляется обратно туда, где они начали, с помощью стоп-маркера: {tokens}.',
     },
     errors: {
       noTokens: 'Токены не выбраны.',
@@ -10611,6 +12060,12 @@ const TokenControllerMod = (() => {
       usageCopy: 'Укажите маршрут и имя копии.',
       badJson: 'Это не текст экспорта маршрута.',
       tokenLocked: '{tokens} не может запуститься: заблокировано.',
+      tokenMarked: '{tokens} не может запуститься: у него есть маркер остановки.',
+      outsideArea: '{tokens} не может запуститься: они находятся за пределами "{name}".',
+      selectOneArea:
+        'Выберите ровно один замкнутый рисунок (многоугольник, прямоугольник, эллипс или контур от руки).',
+      areaTooSmall: 'Выбранному рисунку необходимо как минимум три угла, чтобы составить площадь.',
+      idsNotFound: 'Ни один токен не имеет таких идентификаторов: {ids}.',
       routeOnOtherPage: '{tokens} не может начаться: «{name}» было нарисовано на другой странице.',
       startOnOtherPage:
         '{tokens} не может начаться: фиксированное начало «{name}» находится на другой странице.',
@@ -10643,7 +12098,7 @@ const TokenControllerMod = (() => {
       },
       selectOneDrawing:
         'Нарисуйте маршрут с помощью инструмента рисования, выберите его (перетащите рамку вокруг тонкого контура, если щелчок не промахнулся), затем повторите попытку.',
-      usageRoute: 'Опции: режим, интервал, максимум, случайный, старт.',
+      usageRoute: 'Опции: режим, интервал, максимум, случайный, стены, старт.',
       routeOnOtherPage:
         'Нарисованные маршруты работают только на той странице, на которой они были нарисованы.',
       startOnOtherPage:
@@ -10660,8 +12115,16 @@ const TokenControllerMod = (() => {
         'Убедитесь, что жетоны находятся в соседних ячейках одной строки (столбец на страницах Hex (H)).',
       unknownCommand: 'Введите !tokencontroller help для получения списка команд.',
       tokenLocked: 'Сначала разблокируйте токен.',
+      tokenMarked: 'Удалите маркер или измените настройку «Стоп-маркеры».',
+      outsideArea:
+        'Сначала переместите жетоны внутри области или включите случайное начало маршрута.',
+      selectOneArea:
+        'Нарисуйте область с помощью инструмента рисования, выберите ее (перетащите рамку вокруг тонкого контура, если щелчок не попал в нее), затем повторите попытку.',
+      idsNotFound: 'Укажите идентификаторы токенов после --ids, разделенные точкой с запятой.',
     },
     warnings: {
+      idsNotFound:
+        'Ни один токен не имеет таких идентификаторов, поэтому они были пропущены: {ids}.',
       offPage: 'Часть маршрута выходит за пределы страницы (шаги: {count}). Эти шаги пропускаются.',
       combatTrackerOnly:
         'Обнаружение боя настроено на отслеживание поворотов, поэтому этот переключатель не будет действовать, пока вы его не измените.',
@@ -10723,6 +12186,27 @@ const TokenControllerMod = (() => {
         continue: 'Продолжайте оттуда',
         stop: 'Остановить патруль',
       },
+      markerAction: {
+        stop: 'Остановись там, где это',
+        reset: 'Вернуться к началу',
+      },
+      wallMode: {
+        ignore: 'Пройти сквозь стены',
+        hold: 'Жди у стен',
+        turn: 'Повернуться назад у стен',
+      },
+      wallCheck: {
+        centre: 'Центр токена',
+        width: 'Целый токен',
+      },
+      oneWayWalls: {
+        block: 'Блокировать',
+        pass: 'Пропустить',
+      },
+      transparentWalls: {
+        block: 'Блокировать',
+        pass: 'Пропустить',
+      },
     },
     menu: {
       statusRunning: 'Жетоны патрулирования: {patrols}. Маршруты: {routes}.',
@@ -10745,6 +12229,7 @@ const TokenControllerMod = (() => {
       stop: 'Останавливаться',
       add: 'Код шага',
       draw: 'Из рисунка',
+      bounce: 'Область отскока',
       record: 'Записывать',
       examples: 'Примеры',
       reset: 'Перезагрузить',
@@ -10791,11 +12276,13 @@ const TokenControllerMod = (() => {
     route: {
       drawn: 'Нарисован маршрут, {points} баллов',
       recorded: 'Записанный маршрут, {points} баллов',
+      area: 'Зона отскока, {points} углов',
       path: 'Путь',
       mode: 'Режим',
       interval: 'Интервал',
       maxTokens: 'Большинство токенов',
       randomStart: 'Случайный старт',
+      walls: 'Стены',
       start: 'Фиксированный старт',
       tokens: 'Токены',
     },
@@ -10841,6 +12328,30 @@ const TokenControllerMod = (() => {
         label: 'Перетаскивание патруля',
         desc: 'Когда вы перетаскиваете жетон патрулирования: продолжайте (маршрут продолжается с того места, где вы его бросили) или остановитесь (патрулирование заканчивается).',
       },
+      stopMarkers: {
+        label: 'Стоп-маркеры',
+        desc: 'Маркеры состояния, которые сбивают токен с его маршрута и останавливают его, разделяются точкой с запятой (например, мертвый;красный) или отсутствуют. Последователи лидера с одним из этих маркеров тоже останавливаются.',
+      },
+      markerAction: {
+        label: 'Остановить действие маркера',
+        desc: 'Что делает жетон патрулирования, когда получает маркер остановки: останавливается (остается на месте) или сбрасывается (возвращается к тому месту, где начал).',
+      },
+      wallMode: {
+        label: 'Стены',
+        desc: 'Что делают патрули и сопровождающие при динамическом освещении стен и закрытых дверях и окнах: игнорировать (проходить), удерживать (ждать, пока не освободится путь, например, пока не откроется дверь) или поворачивать (патрули поворачивают назад). Каждый маршрут может выбирать свой, поэтому призраки по-прежнему могут проходить сквозь стены.',
+      },
+      wallCheck: {
+        label: 'Проверка стены',
+        desc: 'центр: только середина жетона должна оставаться подальше от стен. ширина: весь токен имеет такую ширину, поэтому большой токен не может протиснуться в узкий зазор.',
+      },
+      oneWayWalls: {
+        label: 'Односторонние стены',
+        desc: 'Останавливают ли односторонние стены жетоны (блокируют) или нет (проходят).',
+      },
+      transparentWalls: {
+        label: 'Прозрачные стены',
+        desc: 'Независимо от того, пропускают ли свет прозрачные стены, останавливают жетоны (блокируют) или нет (проходят).',
+      },
       buttonStep: {
         label: 'Ячейок на клик',
         desc: 'Насколько далеко стрелки записи перемещают фишку.',
@@ -10877,12 +12388,15 @@ const TokenControllerMod = (() => {
       add: 'Создайте маршрут из кода шага, например U2R2D2L2.',
       edit: 'Измените код шага маршрута.',
       draw: 'Создайте маршрут, следующий за выбранным рисунком на этой странице.',
+      bounce:
+        'Создайте маршрут, по которому жетоны бродят внутри выбранного замкнутого рисунка, отскакивая от его краев.',
       record: 'Запишите маршрут, перемещая выбранный жетон кнопками или перетаскивая его.',
-      route: 'Измените вариант маршрута: режим, интервал, максимум, случайный или начало.',
+      route: 'Измените вариант маршрута: режим, интервал, максимум, случайный, стены или начало.',
       show: 'Отображение сведений о маршруте и кнопок.',
       rename: 'Переименуйте маршрут.',
       copy: 'Скопируйте маршрут под новым именем.',
       remove: 'Удалить маршрут (сначала спрашивает).',
+      ids: 'Действуйте на токены с этими идентификаторами вместо выбранных, чтобы другие моды, такие как ScriptCards, могли управлять токенами. удаление --ids убирает токены с их маршрутов; он никогда не удаляет маршрут.',
       list: 'Перечислите маршруты или контролируемые токены.',
       examples: 'Добавьте примеры маршрутов.',
       export: 'Покажите маршруты в виде текста для копирования в другую игру.',
@@ -10920,6 +12434,7 @@ const TokenControllerMod = (() => {
           'Из рисунка: нарисуйте линию, многоугольник, фигуру от руки, прямоугольник или эллипс с помощью инструментов рисования, выберите его и нажмите «Из рисунка». Токены ходят по нему, только на этой странице. После этого рисунок можно удалить.',
           'Запись: выберите токен и нажмите «Запись». Переместите его с помощью кнопок со стрелками или перетащите на карту (следуют путевые точки Roll20), затем нажмите «Сохранить». В квадратных сетках запись становится кодом шага, который вы можете редактировать.',
           'Кольцевые маршруты начинаются снова с самого начала; маршруты туда и обратно возвращаются туда, откуда пришли; как только маршруты останавливаются в конце. Новые маршруты, которые заканчиваются там, где они начинаются; другие ходят туда и обратно.',
+          'Область отскока: нарисуйте замкнутую фигуру вокруг области, выберите ее и нажмите «Область отскока». Жетоны, находящиеся на нем, перемещаются по прямым линиям и отскакивают от его краев (и от стен, если только маршрут их не игнорирует), каждый раз поворачиваясь немного случайным образом. Случайный старт помещает каждый жетон в случайную ячейку области.',
         ],
       },
       codes: {
@@ -10941,6 +12456,8 @@ const TokenControllerMod = (() => {
         interval: 'Миллисекунды на шаг для этого маршрута или 0 для глобального интервала.',
         max: 'Максимальное количество жетонов, которые могут находиться на маршруте одновременно, или 0 без ограничений.',
         random: 'включено: каждый токен начинается в случайной точке маршрута.',
+        walls:
+          'игнорировать (пройти сквозь стены), удерживать (подождать у стен и закрытых дверей), повернуть (повернуть назад) или по умолчанию (использовать настройку «Стены»).',
         start:
           'set: токены при запуске переходят на позицию выбранного токена. ясно: они начинаются там, где стоят.',
       },
@@ -10953,6 +12470,8 @@ const TokenControllerMod = (() => {
           'Следовать: выберите лидера и нажмите «Лидер», затем выберите последователей и нажмите «Следовать». Вы также можете ввести имя лидера: !tokencontroller Follow Goblin Boss. Последователи следуют за токенами, которые патрулируют, жетонами, которые вы перетаскиваете, и жетонами, перемещаемыми TokenMod.',
           'Подписчики могут подписываться на других подписчиков, образуя цепочку или столбец.',
           'При перетаскивании жетона патрулирования патруль продолжается с того места, где вы его бросили, если только перетаскивание патруля не установлено на остановку.',
+          'Стены: при включенной настройке «Стены» патрули и сопровождающие не проходят через стены с динамическим освещением или закрытые двери и окна; открытые двери и окна пропускали их. Предоставьте маршруту возможность иметь собственные стены (например, игнорировать призрака).',
+          'Маркеры остановки: жетон, получивший один из этих маркеров статуса (например, мертвый), покидает свой маршрут и перестает следовать, а последователи лидера, получившего одну остановку, тоже останавливаются. Установите их с помощью !tokencontroller set stopMarkers Dead;red. Это также работает, когда другой мод добавляет маркер.',
         ],
       },
       grids: {
@@ -10976,6 +12495,7 @@ const TokenControllerMod = (() => {
         heading: 'Команды',
         intro:
           'Только GM могут использовать эти команды. Маршрутам можно давать имена или ссылаться на них по #id с помощью кнопок меню. Заключайте имена через пробелы в «кавычки», если команда принимает два имени.',
+        mods: 'Другие моды тоже могут отправлять эти команды, например, из ScriptCards. Они не могут выбирать токены, поэтому называют их с помощью --ids, за которым следуют идентификаторы токенов, разделенные точкой с запятой: !tc stop --ids ID1;ID2. Ответы отправляются GM.',
         colCommand: 'Команда',
         colDesc: 'Что он делает',
       },
@@ -11087,6 +12607,9 @@ const TokenControllerMod = (() => {
       paused: 'Todas las patrullas hicieron una pausa.',
       resumed: 'Se reanudaron las patrullas.',
       journalRebuilt: 'Documentos reconstruidos: {help} y {deck}.',
+      markerStopped: 'Detenido por un marcador de parada: {tokens}.',
+      markerReset:
+        'Enviado de regreso al punto de partida mediante un marcador de parada: {tokens}.',
     },
     errors: {
       noTokens: 'No hay tokens seleccionados.',
@@ -11112,6 +12635,12 @@ const TokenControllerMod = (() => {
       usageCopy: 'Da una ruta y un nombre para la copia.',
       badJson: 'Ese no es un texto de exportación de ruta.',
       tokenLocked: '{tokens} no puede iniciarse: bloqueado.',
+      tokenMarked: '{tokens} no puede comenzar: tiene un marcador de parada.',
+      outsideArea: '{tokens} no puede iniciar: están fuera de "{name}".',
+      selectOneArea:
+        'Seleccione exactamente un dibujo cerrado (un polígono, un rectángulo, una elipse o un bucle a mano alzada).',
+      areaTooSmall: 'El dibujo seleccionado necesita al menos tres esquinas para formar un área.',
+      idsNotFound: 'Ningún token tiene estos ID: {ids}.',
       routeOnOtherPage: '{tokens} no puede iniciarse: "{name}" se dibujó en otra página.',
       startOnOtherPage:
         '{tokens} no puede iniciarse: el inicio fijo de "{name}" está en otra página.',
@@ -11144,7 +12673,7 @@ const TokenControllerMod = (() => {
       },
       selectOneDrawing:
         'Dibuje la ruta con una herramienta de dibujo, selecciónela (arrastre un cuadro alrededor de un contorno delgado si no logra hacer clic) y vuelva a intentarlo.',
-      usageRoute: 'Opciones: modo, intervalo, máximo, aleatorio, inicio.',
+      usageRoute: 'Opciones: modo, intervalo, máximo, aleatorio, paredes, inicio.',
       routeOnOtherPage:
         'Las rutas dibujadas sólo funcionan en la página en la que fueron dibujadas.',
       startOnOtherPage: 'Borre el inicio fijo o mueva el token a esa página primero.',
@@ -11161,8 +12690,15 @@ const TokenControllerMod = (() => {
         'Asegúrese de que las fichas estén en celdas vecinas de la misma fila (columna en las páginas Hex (H)).',
       unknownCommand: 'Escriba !tokencontroller help para obtener la lista de comandos.',
       tokenLocked: 'Desbloquea el token primero.',
+      tokenMarked: 'Elimine el marcador o cambie la configuración de Detener marcadores.',
+      outsideArea:
+        'Primero mueve las fichas dentro del área o activa el inicio aleatorio de la ruta.',
+      selectOneArea:
+        'Dibuje el área con una herramienta de dibujo, selecciónela (arrastre un cuadro alrededor de un contorno delgado si no logra hacer clic) y vuelva a intentarlo.',
+      idsNotFound: 'Proporcione los ID de los tokens después de --ids, separados por punto y coma.',
     },
     warnings: {
+      idsNotFound: 'Ningún token tiene estos ID, por lo que se omitieron: {ids}.',
       offPage: 'Parte de la ruta sale de la página (pasos: {count}). Esos pasos se omiten.',
       combatTrackerOnly:
         'La detección de combate está configurada en el rastreador de turnos, por lo que este interruptor no tiene efecto hasta que lo cambies.',
@@ -11224,6 +12760,27 @@ const TokenControllerMod = (() => {
         continue: 'Continúe desde allí',
         stop: 'detener la patrulla',
       },
+      markerAction: {
+        stop: 'Deténgase donde está',
+        reset: 'volver al inicio',
+      },
+      wallMode: {
+        ignore: 'Caminar a través de paredes',
+        hold: 'Espera en las paredes',
+        turn: 'Vuelve a las paredes',
+      },
+      wallCheck: {
+        centre: 'Centro de la ficha',
+        width: 'ficha entera',
+      },
+      oneWayWalls: {
+        block: 'Bloquear',
+        pass: 'Dejar pasar',
+      },
+      transparentWalls: {
+        block: 'Bloquear',
+        pass: 'Dejar pasar',
+      },
     },
     menu: {
       statusRunning: 'Fichas de patrullaje: {patrols}. Rutas: {routes}.',
@@ -11245,6 +12802,7 @@ const TokenControllerMod = (() => {
       stop: 'Detener',
       add: 'Código de paso',
       draw: 'Del dibujo',
+      bounce: 'Área de rebote',
       record: 'Registro',
       examples: 'Ejemplos',
       reset: 'Reiniciar',
@@ -11291,11 +12849,13 @@ const TokenControllerMod = (() => {
     route: {
       drawn: 'Ruta dibujada, {points} puntos',
       recorded: 'Ruta registrada, {points} puntos',
+      area: 'Área de rebote, {points} esquinas',
       path: 'Camino',
       mode: 'Modo',
       interval: 'Intervalo',
       maxTokens: 'La mayoría de las fichas',
       randomStart: 'Inicio aleatorio',
+      walls: 'Paredes',
       start: 'inicio fijo',
       tokens: 'Fichas',
     },
@@ -11341,6 +12901,30 @@ const TokenControllerMod = (() => {
         label: 'Arrastrando una patrulla',
         desc: 'Cuando arrastras una ficha de patrulla: continúa (la ruta continúa desde donde la dejaste) o detente (la patrulla termina).',
       },
+      stopMarkers: {
+        label: 'Marcadores de parada',
+        desc: 'Marcadores de estado que sacan un token de su ruta y evitan que siga, separados por punto y coma (por ejemplo, muerto; rojo) o ninguno. Los seguidores de un líder con uno de estos marcadores también se detienen.',
+      },
+      markerAction: {
+        label: 'Detener acción del marcador',
+        desc: 'Qué hace una ficha de patrulla cuando recibe un Marcador de Parada: detenerse (permanece donde está) o reiniciarse (vuelve al punto de inicio).',
+      },
+      wallMode: {
+        label: 'Paredes',
+        desc: 'Lo que hacen las patrullas y los seguidores en paredes con iluminación dinámica y puertas y ventanas cerradas: ignorar (caminar), esperar hasta que el camino esté despejado, por ejemplo hasta que se abra una puerta) o girar (las patrullas retroceden). Cada ruta puede elegir la suya propia, por lo que los fantasmas aún pueden atravesar las paredes.',
+      },
+      wallCheck: {
+        label: 'Verificación de pared',
+        desc: 'Centro: sólo la mitad de una ficha debe quedar libre de las paredes. ancho: toda la ficha lo hace, por lo que una ficha grande no puede pasar por un espacio estrecho.',
+      },
+      oneWayWalls: {
+        label: 'Muros unidireccionales',
+        desc: 'Si los muros unidireccionales detienen las fichas (bloquean) o no (pasan).',
+      },
+      transparentWalls: {
+        label: 'Paredes transparentes',
+        desc: 'Ya sean paredes transparentes, que dejan pasar la luz, detienen las fichas (bloquean) o no (pasan).',
+      },
       buttonStep: {
         label: 'Celdas por clic',
         desc: 'Hasta qué punto las flechas de grabación mueven una ficha.',
@@ -11376,12 +12960,15 @@ const TokenControllerMod = (() => {
       add: 'Cree una ruta a partir de un código de paso, como U2R2D2L2.',
       edit: 'Cambiar el código de paso de una ruta.',
       draw: 'Cree una ruta que siga el dibujo seleccionado en esta página.',
+      bounce:
+        'Cree una ruta en la que las fichas deambulen dentro del dibujo cerrado seleccionado, rebotando en sus bordes.',
       record: 'Graba una ruta moviendo el token seleccionado con botones o arrastrándolo.',
-      route: 'Cambie una opción de ruta: modo, intervalo, máximo, aleatorio o inicio.',
+      route: 'Cambie una opción de ruta: modo, intervalo, máximo, aleatorio, paredes o inicio.',
       show: 'Muestra los detalles y botones de una ruta.',
       rename: 'Cambiar el nombre de una ruta.',
       copy: 'Copie una ruta con un nuevo nombre.',
       remove: 'Eliminar una ruta (pregunta primero).',
+      ids: 'Actúa sobre los tokens con estos ID en lugar de los seleccionados, para que otros Mods como ScriptCards puedan controlar los tokens. eliminar --ids elimina los tokens de sus rutas; nunca elimina una ruta.',
       list: 'Enumere las rutas o los tokens que se controlan.',
       examples: 'Agregue las rutas de ejemplo.',
       export: 'Muestra rutas como texto para copiar en otro juego.',
@@ -11419,6 +13006,7 @@ const TokenControllerMod = (() => {
           'Desde Dibujo: dibuja una línea, polígono, forma a mano alzada, rectángulo o elipse con las herramientas de dibujo, selecciónala y haz clic en Desde Dibujo. Las fichas caminan a lo largo de él, solo en esa página. Puedes borrar el dibujo después.',
           'Grabar: seleccione un token y haga clic en Grabar. Muévalo con los botones de flecha o arrástrelo en el mapa (se siguen los puntos de referencia de Roll20), luego haga clic en Guardar. En las cuadrículas, la grabación se convierte en un código de paso que puedes editar.',
           'Las rutas circulares empiezan de nuevo desde el principio; las rutas de ida y vuelta regresan por donde vinieron; una vez que las rutas se detienen al final. Nuevas rutas que terminan donde empiezan el bucle; otros van y vienen.',
+          'Área de rebote: dibuje una forma cerrada alrededor del área, selecciónela y haga clic en Área de rebote. Las fichas que comienzan en él viajan en línea recta y rebotan en sus bordes (y en las paredes, a menos que la ruta las ignore), girando un poco al azar cada vez. El inicio aleatorio coloca cada ficha en una celda aleatoria del área.',
         ],
       },
       codes: {
@@ -11440,6 +13028,8 @@ const TokenControllerMod = (() => {
         interval: 'Milisegundos por paso para esta ruta o 0 para el intervalo global.',
         max: 'La mayor cantidad de tokens que puede haber en la ruta a la vez, o 0 sin límite.',
         random: 'activado: cada ficha comienza en un punto aleatorio a lo largo de la ruta.',
+        walls:
+          'ignorar (caminar a través de paredes), mantener (esperar en paredes y puertas cerradas), girar (retroceder) o predeterminado (usar la configuración de Paredes).',
         start:
           'set: las fichas saltan a la posición de la ficha seleccionada cuando comienzan. claro: empiezan donde están.',
       },
@@ -11452,6 +13042,8 @@ const TokenControllerMod = (() => {
           'Seguir: seleccione el líder y haga clic en Líder, luego seleccione los seguidores y haga clic en Seguir. También puedes escribir el nombre del líder: !tokencontroller sigue a Goblin Boss. Los seguidores siguen los tokens que patrullan, los tokens que arrastras y los tokens movidos por TokenMod.',
           'Los seguidores pueden seguir a otros seguidores, formando una cadena o una columna.',
           'Al arrastrar una ficha de patrulla, la patrulla continúa desde donde la dejaste, a menos que Arrastrar una patrulla esté configurado para detenerse.',
+          'Muros: con los Muros activados, las patrullas y seguidores no caminan a través de muros con iluminación dinámica o puertas y ventanas cerradas; puertas abiertas y ventanas les dejan pasar. Dale a una ruta su propia opción de paredes (por ejemplo, ignorarla si aparece un fantasma).',
+          'Marcadores de parada: una ficha que obtiene uno de estos marcadores de estado (por ejemplo, muerto) abandona su ruta y deja de seguir, y los seguidores de un líder que obtiene uno también se detienen. Configúrelos con !tokencontroller set stopMarkers dead;red. Esto también funciona cuando otro Mod agrega el marcador.',
         ],
       },
       grids: {
@@ -11475,6 +13067,7 @@ const TokenControllerMod = (() => {
         heading: 'Comandos',
         intro:
           'Sólo los GM pueden usar estos comandos. Las rutas se pueden nombrar o hacer referencia a ellas mediante su #id en los botones del menú. Coloque los nombres con espacios entre "comillas" cuando un comando tenga dos nombres.',
+        mods: 'Otros Mods también pueden enviar estos comandos, por ejemplo desde ScriptCards. No pueden seleccionar tokens, por lo que los nombran con --ids seguido de ID de token separados por punto y coma: !tc stop --ids ID1;ID2. Las respuestas van al GM.',
         colCommand: 'Dominio',
         colDesc: 'que hace',
       },
@@ -11585,6 +13178,8 @@ const TokenControllerMod = (() => {
       paused: 'Alla patruller pausade.',
       resumed: 'Patruller återupptogs.',
       journalRebuilt: 'Handouts ombyggda: {help} och {deck}.',
+      markerStopped: 'Stoppas av en stoppmarkör: {tokens}.',
+      markerReset: 'Skickade tillbaka till där de började av en stoppmarkör: {tokens}.',
     },
     errors: {
       noTokens: 'Inga tokens har valts.',
@@ -11610,6 +13205,12 @@ const TokenControllerMod = (() => {
       usageCopy: 'Ge en rutt och ett namn för kopian.',
       badJson: 'Det är inte ruttexporttext.',
       tokenLocked: '{tokens} kan inte starta: låst.',
+      tokenMarked: '{tokens} kan inte starta: de har en stoppmarkör.',
+      outsideArea: '{tokens} kan inte starta: de är utanför "{name}".',
+      selectOneArea:
+        'Välj exakt en sluten ritning (en polygon, rektangel, ellips eller frihandsögla).',
+      areaTooSmall: 'Den valda ritningen behöver minst tre hörn för att göra ett område.',
+      idsNotFound: 'Inga tokens har dessa ID:n: {ids}.',
       routeOnOtherPage: '{tokens} kan inte starta: "{name}" ritades på en annan sida.',
       startOnOtherPage:
         '{tokens} kan inte starta: den fasta starten för "{name}" finns på en annan sida.',
@@ -11642,7 +13243,7 @@ const TokenControllerMod = (() => {
       },
       selectOneDrawing:
         'Rita rutten med ett ritverktyg, markera det (dra en ruta runt en tunn kontur om du missar den genom att klicka), försök sedan igen.',
-      usageRoute: 'Alternativ: läge, intervall, max, slumpmässig, start.',
+      usageRoute: 'Alternativ: läge, intervall, max, slumpmässigt, väggar, start.',
       routeOnOtherPage: 'Ritade rutter fungerar bara på sidan de ritades på.',
       startOnOtherPage: 'Rensa den fasta starten eller flytta token till den sidan först.',
       noLeader:
@@ -11656,8 +13257,15 @@ const TokenControllerMod = (() => {
         'Se till att tokens finns i närliggande celler på samma rad (kolumn på Hex (H)-sidor).',
       unknownCommand: 'Skriv !tokencontroller help för listan med kommandon.',
       tokenLocked: 'Lås upp token först.',
+      tokenMarked: 'Ta bort markören eller ändra inställningen för stoppmarkörer.',
+      outsideArea:
+        'Flytta tokens innanför området först, eller aktivera Slumpmässig start för rutten.',
+      selectOneArea:
+        'Rita området med ett ritverktyg, markera det (dra en ruta runt en tunn kontur om du missar det genom att klicka), försök sedan igen.',
+      idsNotFound: 'Ge token-ID:n efter --ids, avgränsade med semikolon.',
     },
     warnings: {
+      idsNotFound: 'Inga tokens har dessa ID:n, så de hoppades över: {ids}.',
       offPage: 'En del av rutten går utanför sidan (steg: {count}). De stegen hoppas över.',
       combatTrackerOnly:
         'Combat Detection är inställt på svängspåraren, så den här omkopplaren har ingen effekt förrän du ändrar den.',
@@ -11719,6 +13327,27 @@ const TokenControllerMod = (() => {
         continue: 'Fortsätt därifrån',
         stop: 'Stoppa patrullen',
       },
+      markerAction: {
+        stop: 'Stanna där det är',
+        reset: 'Gå tillbaka till början',
+      },
+      wallMode: {
+        ignore: 'Gå genom väggar',
+        hold: 'Vänta vid väggarna',
+        turn: 'Vänd tillbaka vid väggarna',
+      },
+      wallCheck: {
+        centre: 'Mitten av token',
+        width: 'Hel token',
+      },
+      oneWayWalls: {
+        block: 'Blockera',
+        pass: 'Släppa fram',
+      },
+      transparentWalls: {
+        block: 'Blockera',
+        pass: 'Släppa fram',
+      },
     },
     menu: {
       statusRunning: 'Patrullerande tokens: {patrols}. Rutter: {routes}.',
@@ -11740,6 +13369,7 @@ const TokenControllerMod = (() => {
       stop: 'Stopp',
       add: 'Stegkod',
       draw: 'Från ritning',
+      bounce: 'Studsområde',
       record: 'Spela in',
       examples: 'Exempel',
       reset: 'Återställa',
@@ -11786,11 +13416,13 @@ const TokenControllerMod = (() => {
     route: {
       drawn: 'Ritad rutt, {points} poäng',
       recorded: 'Inspelad rutt, {points} poäng',
+      area: 'Avvisningsområde, {points} hörn',
       path: 'Väg',
       mode: 'Läge',
       interval: 'Intervall',
       maxTokens: 'De flesta tokens',
       randomStart: 'Slumpmässig start',
+      walls: 'Väggar',
       start: 'Fast start',
       tokens: 'Polletter',
     },
@@ -11836,6 +13468,30 @@ const TokenControllerMod = (() => {
         label: 'Dra en patrull',
         desc: 'När du drar en patrulleringstoken: fortsätt (rutten fortsätter där du tappade den) eller stanna (patrullen slutar).',
       },
+      stopMarkers: {
+        label: 'Stoppmarkörer',
+        desc: 'Statusmarkörer som tar bort en token från dess rutt och stoppar den efter, åtskilda av semikolon (till exempel död;röd), eller ingen. Följare av en ledare med en av dessa markörer slutar också.',
+      },
+      markerAction: {
+        label: 'Åtgärd vid stoppmarkör',
+        desc: 'Vad en patrullerande token gör när den får en stoppmarkering: stoppa (den stannar där den är) eller återställ (den går tillbaka till där den började).',
+      },
+      wallMode: {
+        label: 'Väggar',
+        desc: 'Vad patruller och följare gör vid dynamiska belysningsväggar och stängda dörrar och fönster: ignorera (gå igenom), hålla (vänta tills vägen är fri, till exempel tills en dörr öppnas) eller vända (patruller vänder tillbaka). Varje rutt kan välja sin egen, så spöken kan fortfarande gå genom väggar.',
+      },
+      wallCheck: {
+        label: 'Väggkontroll',
+        desc: 'mitten: endast mitten av en token måste hålla sig borta från väggar. bredd: hela poletten gör det, så en stor pollett kan inte pressa sig genom ett smalt gap.',
+      },
+      oneWayWalls: {
+        label: 'Enkelriktade väggar',
+        desc: 'Om enkelriktade väggar stoppar polletter (blockera) eller inte (pass).',
+      },
+      transparentWalls: {
+        label: 'Genomskinliga väggar',
+        desc: 'Oavsett om genomskinliga väggar, som släpper igenom ljus, stoppar tokens (blockerar) eller inte (passerar).',
+      },
       buttonStep: {
         label: 'Celler per klick',
         desc: 'Hur långt inspelningspilarna flyttar en token.',
@@ -11871,13 +13527,16 @@ const TokenControllerMod = (() => {
       add: 'Skapa en rutt från en stegkod, till exempel U2R2D2L2.',
       edit: 'Ändra en rutts stegkod.',
       draw: 'Skapa en rutt som följer den valda ritningen på denna sida.',
+      bounce:
+        'Skapa en rutt där tokens vandrar in i den valda stängda ritningen och studsar mot dess kanter.',
       record:
         'Spela in en rutt genom att flytta den valda token med knappar eller genom att dra den.',
-      route: 'Ändra ett ruttalternativ: läge, intervall, max, slumpmässigt eller start.',
+      route: 'Ändra ett ruttalternativ: läge, intervall, max, slumpmässigt, väggar eller start.',
       show: 'Visa en rutts detaljer och knappar.',
       rename: 'Byt namn på en rutt.',
       copy: 'Kopiera en rutt under ett nytt namn.',
       remove: 'Ta bort en rutt (frågar först).',
+      ids: 'Agera på tokens med dessa ID:n istället för de valda, så att andra Mods som ScriptCards kan styra tokens. ta bort --ids tar tokens från sina rutter; den tar aldrig bort en rutt.',
       list: 'Lista rutterna eller de tokens som kontrolleras.',
       examples: 'Lägg till exempel på rutter.',
       export: 'Visa rutter som text att kopiera till ett annat spel.',
@@ -11915,6 +13574,7 @@ const TokenControllerMod = (() => {
           'Från ritning: rita en linje, polygon, frihandsform, rektangel eller ellips med ritverktygen, välj den och klicka på Från ritning. Tokens går längs den, bara på den sidan. Du kan radera ritningen i efterhand.',
           'Spela in: välj en token och klicka på Spela in. Flytta den med pilknapparna eller dra den på kartan (Roll20 waypoints följs), klicka sedan på Spara. På kvadratiska rutnät blir inspelningen en stegkod som du kan redigera.',
           'Slingrutter börjar om från början; rutter fram och tillbaka går tillbaka som de kom; när rutter stannar i slutet. Nya rutter som slutar där de börjar loopa; andra går fram och tillbaka.',
+          'Bounce Area: rita en stängd form runt området, markera den och klicka på Bounce Area. Tokens som startas på den färdas i raka linjer och studsar från dess kanter (och från väggar, om inte rutten ignorerar dem), och svänger lite slumpmässigt varje gång. Slumpmässig start placerar varje token i en slumpmässig cell i området.',
         ],
       },
       codes: {
@@ -11936,6 +13596,8 @@ const TokenControllerMod = (() => {
         interval: 'Millisekunder per steg för denna rutt, eller 0 för det globala intervallet.',
         max: 'De flesta tokens som kan finnas på rutten på en gång, eller 0 utan gräns.',
         random: 'på: varje token börjar på en slumpmässig punkt längs rutten.',
+        walls:
+          'ignorera (gå genom väggar), håll (vänta vid väggar och stängda dörrar), vänd (vänd tillbaka) eller standard (använd inställningen Väggar).',
         start:
           'set: tokens hoppar till den valda tokens position när de startar. klart: de börjar där de står.',
       },
@@ -11948,6 +13610,8 @@ const TokenControllerMod = (() => {
           'Följ: välj ledaren och klicka på Ledare, välj sedan följare och klicka på Följ. Du kan också skriva in ledarens namn: !tokencontroller follow Goblin Boss. Följare följer tokens som patrullerar, tokens du drar och tokens som flyttas av TokenMod.',
           'Följare kan följa andra följare, skapa en kedja eller en kolumn.',
           'Att dra en patrulleringstoken för patrullen vidare där du tappar den, om inte Drag a Patrol är inställd på att stoppa.',
+          'Väggar: med inställningen Väggar på går patruller och följare inte genom dynamiska belysningsväggar eller stängda dörrar och fönster; öppna dörrar och fönster släpper igenom dem. Ge en rutt dess egna väggalternativ (till exempel ignorera för ett spöke).',
+          'Stoppmarkörer: en token som får en av dessa statusmarkörer (till exempel död) lämnar sin rutt och slutar följa, och anhängarna till en ledare som får ett stopp också. Ställ in dem med !tokencontroller set stopMarkers dead;red. Detta fungerar också när en annan mod lägger till markören.',
         ],
       },
       grids: {
@@ -11971,6 +13635,7 @@ const TokenControllerMod = (() => {
         heading: 'Kommandon',
         intro:
           'Endast GM:er kan använda dessa kommandon. Rutter kan namnges eller refereras till med deras #id från menyknapparna. Sätt namn med mellanslag inom "citattecken" när ett kommando tar två namn.',
+        mods: 'Andra Mods kan också skicka dessa kommandon, till exempel från ScriptCards. De kan inte välja tokens, så de namnger dem med --ids följt av token-ID:n separerade med semikolon: !tc stop --ids ID1;ID2. Svaren går till GM.',
         colCommand: 'Kommando',
         colDesc: 'Vad den gör',
       },
@@ -12081,6 +13746,8 @@ const TokenControllerMod = (() => {
       paused: 'Tüm devriyeler durduruldu.',
       resumed: 'Devriyeler yeniden başladı.',
       journalRebuilt: 'Ödevler yeniden oluşturuldu: {help} ve {deck}.',
+      markerStopped: 'Bir Durdurma İşareti Tarafından Durduruldu: {tokens}.',
+      markerReset: 'Durdurma İşareti ile başladıkları yere geri gönderildiler: {tokens}.',
     },
     errors: {
       noTokens: 'Hiçbir jeton seçilmedi.',
@@ -12106,6 +13773,12 @@ const TokenControllerMod = (() => {
       usageCopy: 'Kopya için bir rota ve ad verin.',
       badJson: 'Bu rota dışa aktarma metni değil.',
       tokenLocked: '{tokens} başlatılamıyor: kilitli.',
+      tokenMarked: '{tokens} başlayamıyor: bir Durdurma İşareti var.',
+      outsideArea: '{tokens} başlatılamıyor: "{name}" dışındalar.',
+      selectOneArea:
+        'Tam olarak bir kapalı çizim seçin (çokgen, dikdörtgen, elips veya serbest el döngüsü).',
+      areaTooSmall: 'Seçilen çizimin alan oluşturabilmesi için en az üç köşeye ihtiyacı vardır.',
+      idsNotFound: 'Şu kimliklere sahip jeton yok: {ids}.',
       routeOnOtherPage: '{tokens} başlatılamıyor: "{name}" başka bir sayfaya çizilmiş.',
       startOnOtherPage: '{tokens} başlatılamıyor: "{name}" sabit başlangıcı başka bir sayfadadır.',
       routeFull: '{tokens} başlatılamıyor: "{name}" zaten {max} belirteçlerine sahip.',
@@ -12137,7 +13810,7 @@ const TokenControllerMod = (() => {
       },
       selectOneDrawing:
         'Rotayı bir çizim aracıyla çizin, seçin (tıklandığında gözden kaçırılırsa kutuyu ince bir anahat etrafında sürükleyin), sonra tekrar deneyin.',
-      usageRoute: 'Seçenekler: mod, aralık, maksimum, rastgele, başlangıç.',
+      usageRoute: 'Seçenekler: mod, aralık, maksimum, rastgele, duvarlar, başlangıç.',
       routeOnOtherPage: 'Çizilen rotalar yalnızca çizildikleri sayfada çalışır.',
       startOnOtherPage: 'Sabit başlangıcı temizleyin veya önce jetonu o sayfaya taşıyın.',
       noLeader: "Lideri seçin ve Lider'e tıklayın veya adını verin: !tokencontroller follow Name",
@@ -12152,8 +13825,15 @@ const TokenControllerMod = (() => {
         'Belirteçlerin aynı satırın komşu hücrelerinde olduğundan emin olun (Hex (H) sayfalardaki sütun).',
       unknownCommand: 'Komutların listesi için !tokencontroller help yazın.',
       tokenLocked: 'Önce jetonun kilidini açın.',
+      tokenMarked: 'İşaretçiyi kaldırın veya İşaretçileri Durdurma ayarını değiştirin.',
+      outsideArea:
+        'Önce jetonları alanın içine taşıyın veya rota için Rastgele başlangıç seçeneğini açın.',
+      selectOneArea:
+        'Alanı bir çizim aracıyla çizin, seçin (tıklandığında gözden kaçırılırsa kutuyu ince bir çerçevenin etrafında sürükleyin), sonra tekrar deneyin.',
+      idsNotFound: 'Jeton kimliklerini --ids sonrasında noktalı virgülle ayırarak verin.',
     },
     warnings: {
+      idsNotFound: 'Hiçbir jeton bu kimliklere sahip olmadığından atlandı: {ids}.',
       offPage: 'Rotanın bir kısmı sayfanın dışına çıkıyor (adımlar: {count}). Bu adımlar atlanır.',
       combatTrackerOnly:
         'Savaş Tespiti dönüş izleyiciye ayarlıdır, dolayısıyla bu anahtarın siz değiştirene kadar hiçbir etkisi yoktur.',
@@ -12215,6 +13895,27 @@ const TokenControllerMod = (() => {
         continue: 'Oradan devam et',
         stop: 'Devriyeyi durdur',
       },
+      markerAction: {
+        stop: 'Olduğu yerde dur',
+        reset: 'Başlangıca geri dön',
+      },
+      wallMode: {
+        ignore: 'Duvarların içinden geç',
+        hold: 'Duvarlarda bekleyin',
+        turn: 'Duvarlara arkanı dön',
+      },
+      wallCheck: {
+        centre: 'Belirtecin merkezi',
+        width: 'Bütün jeton',
+      },
+      oneWayWalls: {
+        block: 'Engellemek',
+        pass: 'Geçmesine izin ver',
+      },
+      transparentWalls: {
+        block: 'Engellemek',
+        pass: 'Geçmesine izin ver',
+      },
     },
     menu: {
       statusRunning: 'Devriye jetonları: {patrols}. Rotalar: {routes}.',
@@ -12237,6 +13938,7 @@ const TokenControllerMod = (() => {
       stop: 'Durmak',
       add: 'Adım Kodu',
       draw: 'Çizimden',
+      bounce: 'Sıçrama Alanı',
       record: 'Kayıt',
       examples: 'Örnekler',
       reset: 'Sıfırla',
@@ -12283,11 +13985,13 @@ const TokenControllerMod = (() => {
     route: {
       drawn: 'Rota çizildi, {points} puan',
       recorded: 'Kaydedilen rota, {points} puan',
+      area: 'Sıçrama alanı, {points} köşeler',
       path: 'Yol',
       mode: 'Mod',
       interval: 'Aralık',
       maxTokens: 'Çoğu jeton',
       randomStart: 'Rastgele başlangıç',
+      walls: 'Duvarlar',
       start: 'Sabit başlangıç',
       tokens: 'Jetonlar',
     },
@@ -12333,6 +14037,30 @@ const TokenControllerMod = (() => {
         label: 'Bir Devriyeyi Sürüklemek',
         desc: 'Bir devriye jetonunu sürüklediğinizde: devam edin (rota, bıraktığınız yerden devam eder) veya durun (devriye biter).',
       },
+      stopMarkers: {
+        label: 'İşaretçileri Durdur',
+        desc: 'Noktalı virgüllerle (örneğin ölü; kırmızı) ayrılmış veya hiçbiriyle ayrılmış olarak, bir jetonu rotasından çıkaran ve takip etmesini durduran durum işaretçileri. Bu işaretlerden birine sahip bir liderin takipçileri de durur.',
+      },
+      markerAction: {
+        label: 'İşaretçi Eylemini Durdur',
+        desc: 'Devriye gezen bir token, Durdurma İşareti aldığında ne yapar: Durdurun (olduğu yerde kalır) veya sıfırlayın (başladığı yere geri döner).',
+      },
+      wallMode: {
+        label: 'Duvarlar',
+        desc: 'Dinamik aydınlatmalı duvarlarda ve kapalı kapı ve pencerelerde devriyelerin ve takipçilerin yaptığı şey: görmezden gelmek (içeriden geçmek), beklemek (yol boşalıncaya kadar beklemek, örneğin bir kapı açılıncaya kadar) veya dönmek (devriyeler geri dönmek). Her rota kendi rotasını seçebilir, böylece hayaletler hâlâ duvarların içinden geçebilir.',
+      },
+      wallCheck: {
+        label: 'Duvar Kontrolü',
+        desc: 'merkez: jetonun yalnızca ortasının duvarlardan uzak durması gerekir. genişlik: jetonun tamamı öyledir, bu nedenle büyük bir jeton dar bir aralıktan geçemez.',
+      },
+      oneWayWalls: {
+        label: 'Tek Yönlü Duvarlar',
+        desc: 'Tek yönlü duvarların jetonları durdurup durdurmadığı (blok) veya durdurmadığı (geçme).',
+      },
+      transparentWalls: {
+        label: 'Şeffaf Duvarlar',
+        desc: 'Işığın geçmesine izin veren şeffaf duvarların jetonları durdurup durdurmadığı (bloke) veya etmemesi (geçmesi).',
+      },
       buttonStep: {
         label: 'Tıklama Başına Hücre Sayısı',
         desc: 'Kayıt oklarının jetonu ne kadar uzağa taşıdığı.',
@@ -12369,12 +14097,16 @@ const TokenControllerMod = (() => {
       add: 'U2R2D2L2 gibi bir adım kodundan rota oluşturun.',
       edit: 'Bir rotanın adım kodunu değiştirin.',
       draw: 'Bu sayfada seçilen çizimi takip eden bir rota oluşturun.',
+      bounce:
+        'Belirteçlerin seçilen kapalı çizimin içinde dolaşıp kenarlarından sıçradığı bir rota oluşturun.',
       record: 'Seçilen jetonu düğmelerle hareket ettirerek veya sürükleyerek bir rota kaydedin.',
-      route: 'Bir rota seçeneğini değiştirin: mod, aralık, maksimum, rastgele veya başlangıç.',
+      route:
+        'Bir rota seçeneğini değiştirin: mod, aralık, maksimum, rastgele, duvarlar veya başlangıç.',
       show: 'Bir rotanın ayrıntılarını ve düğmelerini gösterin.',
       rename: 'Bir rotayı yeniden adlandırın.',
       copy: 'Bir rotayı yeni bir adla kopyalayın.',
       remove: 'Bir rotayı kaldırın (önce sorar).',
+      ids: "Seçilenler yerine bu kimliklere sahip jetonlar üzerinde hareket edin, böylece ScriptCard'lar gibi diğer Modlar jetonları kontrol edebilir. kaldır --ids jetonları rotalarından çıkarır; asla bir rotayı kaldırmaz.",
       list: 'Rotaları veya kontrol edilen jetonları listeleyin.',
       examples: 'Örnek rotaları ekleyin.',
       export: 'Başka bir oyuna kopyalamak için rotaları metin olarak gösterin.',
@@ -12412,6 +14144,7 @@ const TokenControllerMod = (() => {
           'Çizimden: çizim araçlarını kullanarak bir çizgi, çokgen, serbest şekil, dikdörtgen veya elips çizin, seçin ve Çizimden öğesine tıklayın. Jetonlar yalnızca bu sayfada yürür. Daha sonra çizimi silebilirsiniz.',
           "Kaydet: Bir belirteç seçin ve Kaydet'e tıklayın. Ok düğmeleriyle hareket ettirin veya harita üzerinde sürükleyin (Roll20 yol noktaları takip edilir), ardından Kaydet'e tıklayın. Kare ızgaralarda kayıt, düzenleyebileceğiniz bir adım koduna dönüşür.",
           'Döngü rotaları yeniden baştan başlar; ileri geri rotalar geldikleri yoldan geri yürür; rotalar sonunda durduğunda. Döngünün başladığı yerde biten yeni rotalar; diğerleri ileri geri gider.',
+          "Sıçrama Alanı: alanın çevresine kapalı bir şekil çizin, onu seçin ve Sıçrama Alanı'na tıklayın. Üzerinde başlatılan jetonlar düz çizgiler halinde hareket eder ve kenarlarından (ve rota onları görmezden gelmediği sürece duvarlardan) sekerek her seferinde biraz rastgele döner. Rastgele başlangıç, her jetonu alanın rastgele bir hücresine yerleştirir.",
         ],
       },
       codes: {
@@ -12433,6 +14166,8 @@ const TokenControllerMod = (() => {
         interval: 'Bu rota için adım başına milisaniye veya genel aralık için 0.',
         max: 'Aynı anda rotada olabilecek en fazla jeton veya sınırsız olarak 0.',
         random: 'açık: her jeton rota boyunca rastgele bir noktada başlar.',
+        walls:
+          'görmezden gelin (duvarlardan geçin), tutun (duvarlarda ve kapalı kapılarda bekleyin), dönün (geri dönün) veya varsayılanı kullanın (Duvarlar ayarını kullanın).',
         start:
           'set: jetonlar başladığında seçilen jetonun konumuna atlar. açık: durdukları yerden başlıyorlar.',
       },
@@ -12445,6 +14180,8 @@ const TokenControllerMod = (() => {
           "Takip et: lideri seçin ve Lider'e tıklayın, ardından takipçileri seçin ve Takip Et'e tıklayın. Ayrıca liderin adını da yazabilirsiniz: !tokencontroller Goblin Boss'u takip edin. Takipçiler devriye gezen jetonları, sürüklediğiniz jetonları ve TokenMod tarafından taşınan jetonları takip eder.",
           'Takipçiler diğer takipçileri takip ederek bir zincir veya sütun oluşturabilirler.',
           'Bir Devriyeyi Sürüklemek durmaya ayarlı olmadığı sürece, bir devriye jetonunu sürüklemek, devriyeyi bıraktığınız yerden devam ettirir.',
+          'Duvarlar: Duvarlar ayarı açıkken devriyeler ve takipçiler dinamik aydınlatmalı duvarlardan veya kapalı kapı ve pencerelerden geçmez; açık kapılar ve pencereler onların geçmesine izin veriyor. Bir rotaya kendi duvarları seçeneğini verin (örneğin bir hayaleti görmezden gelin).',
+          'Durdurma İşaretçileri: Bu durum işaretleyicilerinden (örneğin ölü) birini alan bir token, rotasını terk eder ve takip etmeyi bırakır ve bir liderin takipçileri de bir durak alır. Bunları !tokencontroller set stopMarkers dead;red ile ayarlayın. Bu aynı zamanda başka bir Mod işaretçiyi eklediğinde de çalışır.',
         ],
       },
       grids: {
@@ -12468,6 +14205,7 @@ const TokenControllerMod = (() => {
         heading: 'Komutlar',
         intro:
           'Bu komutları yalnızca GM\'ler kullanabilir. Rotalar, menü düğmelerinden #id\'leriyle adlandırılabilir veya bunlara başvurulabilir. Bir komut iki ad aldığında adları boşluklu olarak "tırnak" içine koyun.',
+        mods: "Diğer Modlar da bu komutları örneğin ScriptCard'lardan gönderebilir. Belirteçleri seçemezler, bu nedenle onları --ids ve ardından noktalı virgülle ayrılmış belirteç kimlikleriyle adlandırırlar: !tc stop --ids ID1;ID2. Cevaplar GM'ye gidiyor.",
         colCommand: 'Emretmek',
         colDesc: 'Ne işe yarar',
       },
@@ -12579,6 +14317,8 @@ const TokenControllerMod = (() => {
       paused: 'Усі патрулі зробили паузу.',
       resumed: 'Патрулювання відновили.',
       journalRebuilt: 'Роздаткові матеріали перебудовано: {help} та {deck}.',
+      markerStopped: 'Зупинено маркером зупинки: {tokens}.',
+      markerReset: 'Повернуто туди, звідки вони почали, маркер зупинки: {tokens}.',
     },
     errors: {
       noTokens: 'Токенів не вибрано.',
@@ -12604,6 +14344,12 @@ const TokenControllerMod = (() => {
       usageCopy: 'Вкажіть маршрут і назву копії.',
       badJson: 'Це не текст експорту маршруту.',
       tokenLocked: '{tokens} не може запуститися: заблоковано.',
+      tokenMarked: '{tokens} не може початися: у них є маркер зупинки.',
+      outsideArea: '{tokens} не може запуститися: вони за межами "{name}".',
+      selectOneArea:
+        'Виберіть рівно один закритий малюнок (багатокутник, прямокутник, еліпс або петлю від руки).',
+      areaTooSmall: 'Вибраний малюнок потребує принаймні трьох кутів, щоб створити область.',
+      idsNotFound: 'Жоден маркер не має таких ідентифікаторів: {ids}.',
       routeOnOtherPage: '{tokens} не може початися: "{name}" намальовано на іншій сторінці.',
       startOnOtherPage:
         '{tokens} не може початися: фіксований початок "{name}" знаходиться на іншій сторінці.',
@@ -12636,7 +14382,7 @@ const TokenControllerMod = (() => {
       },
       selectOneDrawing:
         'Намалюйте маршрут за допомогою інструмента для малювання, виділіть його (перетягніть рамку навколо тонкого контуру, якщо клацання пропустив його), а потім повторіть спробу.',
-      usageRoute: 'Опції: режим, інтервал, максимум, випадковий, старт.',
+      usageRoute: 'Опції: режим, інтервал, максимум, випадковий, стіни, старт.',
       routeOnOtherPage: 'Намальовані маршрути працюють лише на сторінці, на якій вони намальовані.',
       startOnOtherPage:
         'Очистіть фіксований початок або спочатку перемістіть маркер на цю сторінку.',
@@ -12652,8 +14398,15 @@ const TokenControllerMod = (() => {
         'Переконайтеся, що маркери знаходяться в сусідніх клітинках того самого рядка (стовпець на сторінках Hex (H)).',
       unknownCommand: 'Введіть !tokencontroller help для списку команд.',
       tokenLocked: 'Спочатку розблокуйте маркер.',
+      tokenMarked: 'Видаліть маркер або змініть параметр Зупинити маркери.',
+      outsideArea:
+        'Спочатку перемістіть жетони всередину області або ввімкніть випадковий початок маршруту.',
+      selectOneArea:
+        'Намалюйте область за допомогою інструмента для малювання, виділіть її (перетягніть рамку навколо тонкого контуру, якщо клацання його пропускає), а потім повторіть спробу.',
+      idsNotFound: 'Укажіть ідентифікатори токенів після --ids, розділивши їх крапкою з комою.',
     },
     warnings: {
+      idsNotFound: 'Жоден маркер не має цих ідентифікаторів, тому їх було пропущено: {ids}.',
       offPage:
         'Частина маршруту проходить поза сторінкою (кроки: {count}). Ці кроки пропускаються.',
       combatTrackerOnly:
@@ -12716,6 +14469,27 @@ const TokenControllerMod = (() => {
         continue: 'Продовжуйте звідти',
         stop: 'Зупиніть патруль',
       },
+      markerAction: {
+        stop: 'Зупиніться там, де є',
+        reset: 'Поверніться до початку',
+      },
+      wallMode: {
+        ignore: 'Пройти крізь стіни',
+        hold: 'Чекай біля стін',
+        turn: 'Поверніться до стін',
+      },
+      wallCheck: {
+        centre: 'Центр жетона',
+        width: 'Цілий жетон',
+      },
+      oneWayWalls: {
+        block: 'Блокувати',
+        pass: 'Пропустити',
+      },
+      transparentWalls: {
+        block: 'Блокувати',
+        pass: 'Пропустити',
+      },
     },
     menu: {
       statusRunning: 'Жетони патрулювання: {patrols}. Маршрути: {routes}.',
@@ -12738,6 +14512,7 @@ const TokenControllerMod = (() => {
       stop: 'СТІЙ',
       add: 'Код кроку',
       draw: 'З Малювання',
+      bounce: 'Область відскоку',
       record: 'запис',
       examples: 'Приклади',
       reset: 'Скинути',
@@ -12784,11 +14559,13 @@ const TokenControllerMod = (() => {
     route: {
       drawn: 'Накреслений маршрут, {points} балів',
       recorded: 'Записаний маршрут, {points} балів',
+      area: 'Область відскоку, {points} кутів',
       path: 'шлях',
       mode: 'Режим',
       interval: 'Інтервал',
       maxTokens: 'Більшість жетонів',
       randomStart: 'Випадковий старт',
+      walls: 'Стіни',
       start: 'Фіксований старт',
       tokens: 'Жетони',
     },
@@ -12834,6 +14611,30 @@ const TokenControllerMod = (() => {
         label: 'Перетягування патруля',
         desc: 'Коли ви перетягуєте жетон патрулювання: продовжуйте (маршрут продовжується з того місця, де ви його кинули) або зупиняйтеся (патрулювання закінчується).',
       },
+      stopMarkers: {
+        label: 'Маркери зупинки',
+        desc: 'Маркери статусу, які відхиляють маркер від його маршруту та зупиняють його слідування, розділені крапкою з комою (наприклад, мертвий; червоний) або жодного. Послідовники лідера з одним із цих маркерів також зупиняються.',
+      },
+      markerAction: {
+        label: 'Зупинити дію маркера',
+        desc: 'Що робить жетон патрулювання, коли він отримує маркер зупинки: зупиняється (він залишається там, де є) або скидається (він повертається туди, звідки почав).',
+      },
+      wallMode: {
+        label: 'Стіни',
+        desc: 'Що роблять патрулі та супроводжувачі при динамічному освітленні стін і закритих дверях і вікнах: ігнорують (проходять), тримають (чекають, поки шлях звільниться, наприклад, поки двері відчиняться) або повертають (патрулі повертаються назад). Кожен маршрут може вибрати свій, тому привиди все одно можуть проходити крізь стіни.',
+      },
+      wallCheck: {
+        label: 'Перевірка стіни',
+        desc: 'центр: тільки середина жетона має залишатися подалі від стін. ширина: весь жетон відповідає, тому великий жетон не може протиснутися через вузьку щілину.',
+      },
+      oneWayWalls: {
+        label: 'Односторонні стіни',
+        desc: 'Чи зупиняють односторонні стіни жетони (блокувати) чи ні (пропускати).',
+      },
+      transparentWalls: {
+        label: 'Прозорі стіни',
+        desc: 'Чи прозорі стіни, які пропускають світло, зупиняють жетони (блокують) чи ні (пропускають).',
+      },
       buttonStep: {
         label: 'Клітинки за клік',
         desc: 'Наскільки стрілки запису пересувають жетон.',
@@ -12869,12 +14670,15 @@ const TokenControllerMod = (() => {
       add: 'Створіть маршрут із коду кроку, наприклад U2R2D2L2.',
       edit: 'Змінити код кроку маршруту.',
       draw: 'Створіть маршрут за вибраним малюнком на цій сторінці.',
+      bounce:
+        'Створіть маршрут, за яким жетони блукають усередині вибраного закритого малюнка, відскакуючи від його країв.',
       record: 'Записуйте маршрут, переміщуючи вибраний жетон кнопками або перетягуючи його.',
-      route: 'Змініть варіант маршруту: режим, інтервал, максимум, випадковий або початок.',
+      route: 'Змініть варіант маршруту: режим, інтервал, максимум, випадковий, стіни або початок.',
       show: 'Показати деталі маршруту та кнопки.',
       rename: 'Перейменувати маршрут.',
       copy: 'Скопіюйте маршрут під новою назвою.',
       remove: 'Видалити маршрут (спочатку запитує).',
+      ids: 'Дійте на токени з цими ідентифікаторами замість вибраних, щоб інші моди, такі як ScriptCards, могли контролювати токени. видалити --ids знімає жетони зі своїх маршрутів; він ніколи не видаляє маршрут.',
       list: 'Перелічіть маршрути або маркери, які контролюються.',
       examples: 'Додайте приклади маршрутів.',
       export: 'Показувати маршрути як текст для копіювання в іншу гру.',
@@ -12912,6 +14716,7 @@ const TokenControllerMod = (() => {
           'З малюнка: намалюйте лінію, багатокутник, фігуру від руки, прямокутник або еліпс за допомогою інструментів малювання, виділіть це та натисніть «З малюнка». Жетони проходять уздовж нього, лише на цій сторінці. Згодом малюнок можна видалити.',
           'Запис: виберіть маркер і натисніть Записати. Перемістіть його за допомогою кнопок зі стрілками або перетягніть на мапі (дотримуйтеся маршрутних точок Roll20), а потім натисніть «Зберегти». На квадратних сітках запис стає кроковим кодом, який можна редагувати.',
           'Кольцеві маршрути починаються спочатку; туди-назад маршрути повертаються тим шляхом, яким вони прийшли; один раз маршрути зупиняються в кінці. Нові маршрути, які закінчуються там, де вони починаються; інші ходять туди-сюди.',
+          'Зона відскоку: намалюйте замкнуту форму навколо області, виберіть її та клацніть «Область відскоку». Жетони, запущені на ньому, рухаються по прямих лініях і відскакують від його країв (і від стін, якщо маршрут їх не ігнорує), щоразу трохи повертаючись навмання. Випадковий початок поміщає кожен жетон у випадкову клітинку області.',
         ],
       },
       codes: {
@@ -12933,6 +14738,8 @@ const TokenControllerMod = (() => {
         interval: 'Мілісекунди на крок для цього маршруту або 0 для глобального інтервалу.',
         max: 'Максимальна кількість жетонів, які можуть бути на маршруті одночасно, або 0 без обмежень.',
         random: 'on: кожен жетон починається з випадкової точки на маршруті.',
+        walls:
+          'ігнорувати (проходити крізь стіни), утримувати (чекати біля стін і зачинених дверей), повертати (повертатись назад) або за замовчуванням (використовуйте налаштування «Стіни»).',
         start:
           'set: жетони переходять на позицію вибраного жетона, коли вони починаються. ясно: вони починають там, де стоять.',
       },
@@ -12945,6 +14752,8 @@ const TokenControllerMod = (() => {
           'Стежити: виберіть лідера та натисніть Лідер, потім виберіть послідовників і натисніть Слідувати. Ви також можете ввести ім’я лідера: !tokencontroller follow Goblin Boss. Підписники стежать за жетонами, які патрулюють, за жетонами, які ви перетягуєте, і за жетонами, які переміщує TokenMod.',
           'Підписники можуть слідувати за іншими підписниками, створюючи ланцюжок або колону.',
           'Перетягування жетона патрулювання продовжує патрулювання з того місця, де ви його впустили, якщо перетягування патруля не зупинено.',
+          'Стіни: з увімкненим параметром «Стіни» патрулі та слідчі не проходять через стіни з динамічним освітленням або закриті двері та вікна; відкриті двері та вікна пропускають їх. Надайте маршруту власні стіни (наприклад, ігноруйте для привида).',
+          'Маркери зупинки: маркер, який отримує один із цих маркерів статусу (наприклад, мертвий), залишає свій маршрут і припиняє слідувати, а також послідовники лідера, який отримує одну зупинку. Встановіть їх за допомогою !tokencontroller set stopMarkers dead;red. Це також працює, коли інший мод додає маркер.',
         ],
       },
       grids: {
@@ -12968,6 +14777,7 @@ const TokenControllerMod = (() => {
         heading: 'Команди',
         intro:
           'Тільки GM можуть використовувати ці команди. Маршрути можна назвати або посилатися за їх #id за допомогою кнопок меню. Помістіть імена з пробілами в лапки, коли команда приймає два імена.',
+        mods: 'Інші моди також можуть надсилати ці команди, наприклад, із ScriptCards. Вони не можуть вибрати маркери, тому вони називають їх за допомогою --ids, після якого йдуть ідентифікатори маркерів, розділені крапкою з комою: !tc stop --ids ID1;ID2. Відповіді надходять до GM.',
         colCommand: 'Команда',
         colDesc: 'Що воно робить',
       },
@@ -13864,6 +15674,22 @@ const TokenControllerMod = (() => {
         }
         return /^[\w:-]{1,60}$/.test(text) ? ok(text) : bad;
       }
+      case 'stopMarkers': {
+        const markers = parseMarkerList(raw);
+        if (markers === null) {
+          return bad;
+        }
+        return ok(markers.length > 0 ? markers.join(';') : 'none');
+      }
+      case 'markerAction':
+        return option(MARKER_ACTION_OPTIONS);
+      case 'wallMode':
+        return option(WALL_MODE_OPTIONS);
+      case 'wallCheck':
+        return option(WALL_CHECK_OPTIONS);
+      case 'oneWayWalls':
+      case 'transparentWalls':
+        return option(WALL_PASS_OPTIONS);
       case 'buttonStep': {
         const n = typeof raw === 'number' ? Math.trunc(raw) : parseStrictInt(raw);
         return n === null || n < 1 ? bad : ok(clamp(n, 1, MAX_BUTTON_STEP));
@@ -13908,7 +15734,7 @@ const TokenControllerMod = (() => {
   /**
    * Validates one route option.
    *
-   * @param {string} key Option: mode, interval, maxTokens or randomStart.
+   * @param {string} key Option: mode, interval, maxTokens, randomStart or walls.
    * @param {*} raw Raw value.
    * @returns {{valid: boolean, value?: *}} Result.
    */
@@ -13938,6 +15764,15 @@ const TokenControllerMod = (() => {
         const b = parseBoolean(raw);
         return b === null ? { valid: false } : { valid: true, value: b };
       }
+      case 'walls':
+        // Empty or "default" follows the Walls setting; "off" means walk through.
+        if (['', 'default', '-'].includes(text)) {
+          return { valid: true, value: null };
+        }
+        if (['off', 'none', '0'].includes(text)) {
+          return { valid: true, value: 'ignore' };
+        }
+        return WALL_MODE_OPTIONS.includes(text) ? { valid: true, value: text } : { valid: false };
       default:
         return { valid: false };
     }
@@ -14002,11 +15837,12 @@ const TokenControllerMod = (() => {
     const route = {
       id: toText(raw.id),
       name: cleanName(raw.name),
-      kind: raw.kind === ROUTE_KIND_WAYPOINTS ? ROUTE_KIND_WAYPOINTS : ROUTE_KIND_CODE,
+      kind: [ROUTE_KIND_WAYPOINTS, ROUTE_KIND_AREA].includes(raw.kind) ? raw.kind : ROUTE_KIND_CODE,
       mode: ROUTE_MODE_OPTIONS.includes(raw.mode) ? raw.mode : 'pingpong',
       interval: validateRouteOption('interval', raw.interval ?? '').value ?? null,
       maxTokens: validateRouteOption('maxTokens', raw.maxTokens ?? '').value ?? null,
       randomStart: raw.randomStart === true,
+      walls: validateRouteOption('walls', raw.walls ?? '').value ?? null,
       start: normaliseStart(raw.start),
     };
     if (route.kind === ROUTE_KIND_CODE) {
@@ -14014,6 +15850,14 @@ const TokenControllerMod = (() => {
         return null;
       }
       route.code = toText(raw.code);
+    } else if (route.kind === ROUTE_KIND_AREA) {
+      // An area is a polygon fixed to the page it was drawn on.
+      route.anchor = ANCHOR_PAGE;
+      route.pageId = toText(raw.pageId);
+      route.points = normalisePoints(raw.points).filter((p) => 'x' in p);
+      if (route.points.length < 3) {
+        return null;
+      }
     } else {
       route.anchor = raw.anchor === ANCHOR_PAGE ? ANCHOR_PAGE : ANCHOR_TOKEN;
       route.points = normalisePoints(raw.points);
@@ -14100,6 +15944,12 @@ const TokenControllerMod = (() => {
       anchor,
       origin: normalisePosition(raw.origin),
       dueAt: Number(raw.dueAt) || 0,
+      // Bounce routes: the bearing the token travels on and where that line began.
+      heading: Number.isFinite(raw.heading) ? raw.heading : null,
+      line:
+        Array.isArray(raw.line) && raw.line.length === 2 && raw.line.every(Number.isFinite)
+          ? [raw.line[0], raw.line[1]]
+          : null,
     };
   }
 
@@ -15024,6 +16874,544 @@ const TokenControllerMod = (() => {
     return { points, closed };
   }
 
+  // Dynamic lighting barriers that patrols and followers can be kept behind.
+  //
+  // Roll20 does not stop tokens that the API moves at walls (its own "restrict
+  // movement" only applies to people dragging tokens), so the Mod checks each
+  // move against the page's barriers itself:
+  //   - walls: `pathv2` (Jumpgate) or `path` (Legacy) drawings on the walls
+  //     layer, with a barrierType of wall, oneWay or transparent;
+  //   - doors and windows: `door` and `window` objects, which block only while
+  //     they are closed. They are placed by x and -y (y measured upwards) with
+  //     two handles relative to that point, also with y upwards.
+  //
+  // The geometry functions are pure, so they can be unit tested in Node.
+
+  const LAYER_WALLS = 'walls';
+
+  // In width mode a token may brush a wall by this share of its half-width, so
+  // tokens fit corridors whose walls run along the cell edges.
+  const BODY_RATIO = 0.9;
+
+  const EPSILON = 1e-9;
+
+  const cache = new Map();
+
+  // ---------------------------------------------------------------------------
+  // Geometry (pure)
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Turns rings of points into wall segments.
+   *
+   * @param {number[][][]} rings Rings in page pixels.
+   * @param {string} kind Barrier kind.
+   * @returns {{a: number[], b: number[], kind: string}[]} Segments.
+   */
+  function ringsToSegments(rings, kind) {
+    const segments = [];
+    for (const ring of rings) {
+      for (let i = 1; i < ring.length; i++) {
+        const a = ring[i - 1];
+        const b = ring[i];
+        if (Math.hypot(a[0] - b[0], a[1] - b[1]) > EPSILON) {
+          segments.push({ a, b, kind });
+        }
+      }
+    }
+    return segments;
+  }
+
+  /**
+   * Returns the signed area of the triangle a, b, c (twice over).
+   *
+   * @param {number[]} a Point.
+   * @param {number[]} b Point.
+   * @param {number[]} c Point.
+   * @returns {number} Cross product.
+   */
+  function cross(a, b, c) {
+    return (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0]);
+  }
+
+  /**
+   * Returns true when point p, known to be in line with a and b, lies between them.
+   *
+   * @param {number[]} a Segment start.
+   * @param {number[]} b Segment end.
+   * @param {number[]} p Point.
+   * @returns {boolean} True when on the segment.
+   */
+  function onSegment(a, b, p) {
+    return (
+      Math.min(a[0], b[0]) - EPSILON <= p[0] &&
+      p[0] <= Math.max(a[0], b[0]) + EPSILON &&
+      Math.min(a[1], b[1]) - EPSILON <= p[1] &&
+      p[1] <= Math.max(a[1], b[1]) + EPSILON
+    );
+  }
+
+  /**
+   * Returns true when segment ab touches or crosses segment cd.
+   *
+   * @param {number[]} a First segment start.
+   * @param {number[]} b First segment end.
+   * @param {number[]} c Second segment start.
+   * @param {number[]} d Second segment end.
+   * @returns {boolean} True when they meet.
+   */
+  function segmentsCross(a, b, c, d) {
+    const d1 = cross(c, d, a);
+    const d2 = cross(c, d, b);
+    const d3 = cross(a, b, c);
+    const d4 = cross(a, b, d);
+    if (
+      ((d1 > EPSILON && d2 < -EPSILON) || (d1 < -EPSILON && d2 > EPSILON)) &&
+      ((d3 > EPSILON && d4 < -EPSILON) || (d3 < -EPSILON && d4 > EPSILON))
+    ) {
+      return true;
+    }
+    return (
+      (Math.abs(d1) <= EPSILON && onSegment(c, d, a)) ||
+      (Math.abs(d2) <= EPSILON && onSegment(c, d, b)) ||
+      (Math.abs(d3) <= EPSILON && onSegment(a, b, c)) ||
+      (Math.abs(d4) <= EPSILON && onSegment(a, b, d))
+    );
+  }
+
+  /**
+   * Returns the distance from a point to a segment.
+   *
+   * @param {number[]} p Point.
+   * @param {number[]} a Segment start.
+   * @param {number[]} b Segment end.
+   * @returns {number} Pixels.
+   */
+  function pointSegmentDistance(p, a, b) {
+    const dx = b[0] - a[0];
+    const dy = b[1] - a[1];
+    const length = dx * dx + dy * dy;
+    const t =
+      length > 0 ? Math.max(0, Math.min(1, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / length)) : 0;
+    return Math.hypot(p[0] - (a[0] + t * dx), p[1] - (a[1] + t * dy));
+  }
+
+  /**
+   * Returns the shortest distance between two segments.
+   *
+   * @param {number[]} a First segment start.
+   * @param {number[]} b First segment end.
+   * @param {number[]} c Second segment start.
+   * @param {number[]} d Second segment end.
+   * @returns {number} Pixels (0 when they meet).
+   */
+  function segmentDistance(a, b, c, d) {
+    if (segmentsCross(a, b, c, d)) {
+      return 0;
+    }
+    return Math.min(
+      pointSegmentDistance(a, c, d),
+      pointSegmentDistance(b, c, d),
+      pointSegmentDistance(c, a, b),
+      pointSegmentDistance(d, a, b)
+    );
+  }
+
+  /**
+   * Returns the first wall a move runs into.
+   *
+   * With a radius of 0 only the line between the two centres is checked. With
+   * a radius, the token's body must not pass through a wall either; a token
+   * that already overlaps a wall may still move away from it.
+   *
+   * @param {{a: number[], b: number[]}[]} walls Wall segments.
+   * @param {number[]} from [x, y] the token moves from.
+   * @param {number[]} to [x, y] the token moves to.
+   * @param {number} [radius=0] Half the token's width, in pixels.
+   * @returns {object|null} The wall in the way, or null.
+   */
+  function blockingWall(walls, from, to, radius = 0) {
+    for (const wall of walls) {
+      if (segmentsCross(from, to, wall.a, wall.b)) {
+        return wall;
+      }
+      if (radius > 0 && segmentDistance(from, to, wall.a, wall.b) < radius) {
+        const startGap = pointSegmentDistance(from, wall.a, wall.b);
+        if (startGap >= radius || pointSegmentDistance(to, wall.a, wall.b) < startGap) {
+          return wall;
+        }
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Returns the radius a token's body is checked with.
+   *
+   * @param {number} width Token width.
+   * @param {number} height Token height.
+   * @returns {number} Pixels.
+   */
+  function bodyRadius(width, height) {
+    return (Math.min(Number(width) || 0, Number(height) || 0) / 2) * BODY_RATIO;
+  }
+
+  /**
+   * Converts a door's or window's position into a segment in page pixels.
+   *
+   * @param {object} props { x, y, path } where path holds handle0 and handle1.
+   * @returns {number[][]|null} [start, end], or null when the path is missing.
+   */
+  function portalEnds(props) {
+    let path = props.path;
+    if (typeof path === 'string') {
+      try {
+        path = JSON.parse(path);
+      } catch {
+        return null;
+      }
+    }
+    if (!isRecord(path) || !isRecord(path.handle0) || !isRecord(path.handle1)) {
+      return null;
+    }
+    const x = Number(props.x) || 0;
+    const y = Number(props.y) || 0;
+    const end = (h) => [x + (Number(h.x) || 0), -(y + (Number(h.y) || 0))];
+    return [end(path.handle0), end(path.handle1)];
+  }
+
+  /**
+   * Returns true when walls of a kind block movement, given the settings.
+   *
+   * @param {string} kind wall, oneway, transparent, door or window (lower case).
+   * @param {object} config Mod settings.
+   * @returns {boolean} True when they block.
+   */
+  function kindBlocks(kind, config) {
+    if (kind === 'oneway') {
+      return config.oneWayWalls !== 'pass';
+    }
+    if (kind === 'transparent') {
+      return config.transparentWalls !== 'pass';
+    }
+    return true;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Reading barriers (Roll20)
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Forgets the barriers read from pages, for example after a wall or door changes.
+   *
+   * @returns {void}
+   */
+  function clearWallCache() {
+    cache.clear();
+  }
+
+  /**
+   * Reads every barrier on a page: walls of any kind and closed doors and windows.
+   *
+   * @param {string} pageId Page ID.
+   * @returns {{a: number[], b: number[], kind: string}[]} Segments.
+   */
+  function readWalls(pageId) {
+    const page = getObj('page', pageId);
+    const size = {
+      width: Number(page?.get('width')) || 0,
+      height: Number(page?.get('height')) || 0,
+    };
+    const segments = [];
+    for (const type of [PATH_TYPE_V2, PATH_TYPE_LEGACY]) {
+      for (const wall of findObjs({ _type: type, _pageid: pageId, layer: LAYER_WALLS })) {
+        const kind = toText(wall.get('barrierType')).toLowerCase() || 'wall';
+        segments.push(...ringsToSegments(pathToRings(drawingProps(wall), size), kind));
+      }
+    }
+    for (const type of ['door', 'window']) {
+      for (const portal of findObjs({ _type: type, _pageid: pageId })) {
+        if (portal.get('isOpen') === true) {
+          continue;
+        }
+        const ends = portalEnds({
+          x: portal.get('x'),
+          y: portal.get('y'),
+          path: portal.get('path'),
+        });
+        if (ends) {
+          segments.push({ a: ends[0], b: ends[1], kind: type });
+        }
+      }
+    }
+    return segments;
+  }
+
+  /**
+   * Returns the barriers on a page that block movement with the given settings.
+   *
+   * @param {string} pageId Page ID.
+   * @param {object} config Mod settings.
+   * @returns {{a: number[], b: number[], kind: string}[]} Segments.
+   */
+  function getWalls(pageId, config) {
+    if (!cache.has(pageId)) {
+      cache.set(pageId, readWalls(pageId));
+    }
+    return cache.get(pageId).filter((wall) => kindBlocks(wall.kind, config));
+  }
+
+  /**
+   * Returns true when a change to a drawing, door or window may change where
+   * the walls are.
+   *
+   * @param {object} obj Roll20 object.
+   * @param {object} [prev] Previous attributes.
+   * @returns {boolean} True for barriers.
+   */
+  function isBarrier(obj, prev) {
+    const type = obj.get('_type');
+    if (type === 'door' || type === 'window') {
+      return true;
+    }
+    return obj.get('layer') === LAYER_WALLS || prev?.layer === LAYER_WALLS;
+  }
+
+  // Bounce routes: a token wanders inside a drawn area, travelling in straight
+  // lines and bouncing off the area's edges (and walls) like a ball in Pong.
+  // Pure functions only, so the module can be unit tested in Node.
+  //
+  // On pages with a grid the token steps from cell to cell, choosing each time
+  // the neighbour that keeps it closest to its line of travel, so it moves at
+  // an angle like a line drawn on squared paper. On gridless pages it moves a
+  // cell's width along its heading. At an edge its heading is reflected off the
+  // edge and turned by a few random degrees, so its path does not repeat.
+
+  // Each bounce turns the reflected heading by up to this many degrees either way.
+  const JITTER_DEGREES = 20;
+
+  // How many random points to try when picking a random cell inside an area.
+  const RANDOM_TRIES = 200;
+
+  /**
+   * Returns a unit vector for a screen bearing (0 = up, 90 = right).
+   *
+   * @param {number} degrees Bearing.
+   * @returns {number[]} [x, y] with y down.
+   */
+  function headingVector(degrees) {
+    const radians = (degrees * Math.PI) / 180;
+    return [Math.sin(radians), -Math.cos(radians)];
+  }
+
+  /**
+   * Returns true when a point is inside a polygon (even-odd rule).
+   *
+   * @param {number[]} point [x, y].
+   * @param {number[][]} polygon Corners, in order.
+   * @returns {boolean} True when inside.
+   */
+  function pointInPolygon(point, polygon) {
+    const [x, y] = point;
+    let inside = false;
+    for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+      const [xi, yi] = polygon[i];
+      const [xj, yj] = polygon[j];
+      if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) {
+        inside = !inside;
+      }
+    }
+    return inside;
+  }
+
+  /**
+   * Returns the polygon's edges as segments.
+   *
+   * @param {number[][]} polygon Corners.
+   * @returns {{a: number[], b: number[]}[]} Edges, including the closing one.
+   */
+  function polygonEdges(polygon) {
+    return polygon.map((a, i) => ({ a, b: polygon[(i + 1) % polygon.length] }));
+  }
+
+  /**
+   * Returns the polygon's centroid (the average of its corners).
+   *
+   * @param {number[][]} polygon Corners.
+   * @returns {number[]} [x, y].
+   */
+  function polygonCentre(polygon) {
+    const sum = polygon.reduce((acc, [x, y]) => [acc[0] + x, acc[1] + y], [0, 0]);
+    return [sum[0] / polygon.length, sum[1] / polygon.length];
+  }
+
+  /**
+   * Reflects a heading off a segment.
+   *
+   * @param {number} heading Bearing in degrees.
+   * @param {{a: number[], b: number[]}} edge The edge it hits.
+   * @returns {number} The reflected bearing.
+   */
+  function reflectHeading(heading, edge) {
+    const [vx, vy] = headingVector(heading);
+    const ex = edge.b[0] - edge.a[0];
+    const ey = edge.b[1] - edge.a[1];
+    const length = Math.hypot(ex, ey) || 1;
+    const nx = -ey / length;
+    const ny = ex / length;
+    const dot = vx * nx + vy * ny;
+    return bearing(vx - 2 * dot * nx, vy - 2 * dot * ny);
+  }
+
+  /**
+   * Picks a random cell centre inside an area.
+   *
+   * @param {object} grid Grid object.
+   * @param {number[][]} polygon Area corners.
+   * @param {() => number} random Random number source in [0, 1).
+   * @returns {number[]|null} [x, y], or null when no cell was found.
+   */
+  function randomPointInArea(grid, polygon, random) {
+    const xs = polygon.map((p) => p[0]);
+    const ys = polygon.map((p) => p[1]);
+    const [left, right, top, bottom] = [
+      Math.min(...xs),
+      Math.max(...xs),
+      Math.min(...ys),
+      Math.max(...ys),
+    ];
+    for (let i = 0; i < RANDOM_TRIES; i++) {
+      const x = left + random() * (right - left);
+      const y = top + random() * (bottom - top);
+      const point = snapToCell(grid, x, y);
+      if (pointInPolygon(point, polygon)) {
+        return point;
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Returns the first edge a move crosses.
+   *
+   * @param {number[]} from [x, y].
+   * @param {number[]} to [x, y].
+   * @param {{a: number[], b: number[]}[]} edges Edges.
+   * @returns {object|null} The nearest edge crossed, or null.
+   */
+  function firstEdgeCrossed(from, to, edges) {
+    let best = null;
+    let bestDistance = Infinity;
+    for (const edge of edges) {
+      if (segmentsCross(from, to, edge.a, edge.b)) {
+        const mid = [(edge.a[0] + edge.b[0]) / 2, (edge.a[1] + edge.b[1]) / 2];
+        const distance = Math.hypot(mid[0] - from[0], mid[1] - from[1]);
+        if (distance < bestDistance) {
+          best = edge;
+          bestDistance = distance;
+        }
+      }
+    }
+    return best;
+  }
+
+  /**
+   * Returns the cells (or, on gridless pages, the point) a token could move to
+   * next along a line, best first.
+   *
+   * @param {object} grid Grid object.
+   * @param {number[]} pos Token position.
+   * @param {number[]} origin A point on the line of travel.
+   * @param {number} heading Bearing in degrees.
+   * @returns {number[][]} Candidate positions.
+   */
+  function candidates(grid, pos, origin, heading) {
+    const [ux, uy] = headingVector(heading);
+    if (!grid.snap) {
+      const pitch = cellPitch(grid);
+      return [[pos[0] + ux * pitch, pos[1] + uy * pitch]];
+    }
+    return Object.keys(DIRECTIONS)
+      .filter((dir) => !directionZigzags(grid, dir))
+      .map((dir) => stepFrom(grid, pos, dir))
+      .map((next) => {
+        const progress = (next[0] - pos[0]) * ux + (next[1] - pos[1]) * uy;
+        // Distance of the cell from the line of travel.
+        const offLine = Math.abs((next[0] - origin[0]) * uy - (next[1] - origin[1]) * ux);
+        return { next, progress, offLine };
+      })
+      .filter((c) => c.progress > 1e-6)
+      .sort((a, b) => a.offLine - b.offLine || b.progress - a.progress)
+      .map((c) => c.next);
+  }
+
+  /**
+   * Works out a bouncing token's next move.
+   *
+   * @param {object} options Options.
+   * @param {object} options.grid Grid object.
+   * @param {number[]} options.pos Token position.
+   * @param {number} options.heading Current bearing in degrees.
+   * @param {number[]} options.origin Where the current line of travel started.
+   * @param {number[][]} options.polygon Area corners.
+   * @param {(from: number[], to: number[]) => object|null} [options.blockedBy]
+   *        Returns the wall (with a and b) in the way of a move, or null.
+   * @param {() => number} [options.random] Random number source in [0, 1).
+   * @returns {{to: number[]|null, heading: number, origin: number[]}} Where to
+   *          move (null to stay put this time), and the line to follow next.
+   */
+  function nextBounce({
+    grid,
+    pos,
+    heading,
+    origin,
+    polygon,
+    blockedBy = () => null,
+    random = Math.random,
+  }) {
+    const edges = polygonEdges(polygon);
+    const outside = !pointInPolygon(pos, polygon);
+    if (outside) {
+      // Dragged out of its area: head back towards the middle of it.
+      const centre = polygonCentre(polygon);
+      heading = bearing(centre[0] - pos[0], centre[1] - pos[1]);
+      origin = pos;
+    }
+
+    const obstacle = (to) => {
+      const wall = blockedBy(pos, to);
+      if (wall) {
+        return wall;
+      }
+      if (outside) {
+        return null;
+      }
+      return firstEdgeCrossed(pos, to, edges) || (pointInPolygon(to, polygon) ? null : edges[0]);
+    };
+
+    let current = heading;
+    let line = origin;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const options = candidates(grid, pos, line, current);
+      const to = options.find((next) => !obstacle(next));
+      const hit = options.length > 0 ? obstacle(options[0]) : null;
+      // The first time, a cell that is in the way means a bounce rather than a
+      // slide along the edge.
+      if (to && (!hit || attempt > 0)) {
+        return { to, heading: current, origin: line };
+      }
+      // Bounce off what is in the way: reflect, turn a little at random and
+      // start a new line from here. If that fails too, go straight back.
+      const jitter = (random() * 2 - 1) * JITTER_DEGREES;
+      current =
+        attempt === 0 && hit
+          ? (reflectHeading(current, hit) + jitter + 360) % 360
+          : (current + 180 + jitter + 360) % 360;
+      line = pos;
+    }
+    return { to: null, heading: current, origin: pos };
+  }
+
   // The movement engine: patrols, followers, locks, combat and recording.
   //
   // One scheduler wakes every SCHEDULER_TICK_MS and moves each patrol whose due
@@ -15228,6 +17616,9 @@ const TokenControllerMod = (() => {
     if (s.locks[tokenId]) {
       return { ok: false, reason: 'tokenLocked' };
     }
+    if (stopMarkerOf(token)) {
+      return { ok: false, reason: 'tokenMarked' };
+    }
     if (route.anchor === ANCHOR_PAGE && route.pageId !== pageId) {
       return { ok: false, reason: 'routeOnOtherPage' };
     }
@@ -15268,6 +17659,9 @@ const TokenControllerMod = (() => {
       origin,
       dueAt: now() + intervalFor(route),
     };
+    if (route.kind === ROUTE_KIND_AREA) {
+      return startBounce(token, route, patrol, ctx);
+    }
     const frames = trackFor(patrol, route, ctx);
     if (frames.length < 2) {
       return { ok: false, reason: 'emptyTrack' };
@@ -15282,6 +17676,62 @@ const TokenControllerMod = (() => {
     const first = frames[patrol.index];
     moveTokenTo(token, [first.x, first.y]);
     return { ok: true, offPage: framesOffPage(frames, ctx.widthPx, ctx.heightPx) };
+  }
+
+  /**
+   * Puts a token on a bounce route, at a random cell of the area when the route
+   * has a random start, heading off in a random direction.
+   *
+   * @param {object} token Roll20 graphic.
+   * @param {object} route Area route.
+   * @param {object} patrol New patrol record.
+   * @param {object} ctx Page context.
+   * @returns {{ok: true, offPage: number}|{ok: false, reason: string}} Outcome.
+   */
+  function startBounce(token, route, patrol, ctx) {
+    const polygon = route.points.map((p) => [p.x, p.y]);
+    let pos = positionOf(token);
+    if (route.randomStart) {
+      pos = randomPointInArea(ctx.grid, polygon, Math.random) || pos;
+    }
+    if (!pointInPolygon(pos, polygon)) {
+      return { ok: false, reason: 'outsideArea' };
+    }
+    const s = getState();
+    patrol.heading = Math.random() * 360;
+    patrol.line = pos;
+    delete s.follows[token.id];
+    s.patrols[token.id] = patrol;
+    moveTokenTo(token, pos);
+    return { ok: true, offPage: 0 };
+  }
+
+  /**
+   * Moves a token on a bounce route one step, bouncing off the area's edges and,
+   * unless the route ignores them, off walls and closed doors.
+   *
+   * @param {object} token Roll20 graphic.
+   * @param {object} patrol Patrol record.
+   * @param {object} route Area route.
+   * @param {object} ctx Page context.
+   * @returns {void}
+   */
+  function advanceBounce(token, patrol, route, ctx) {
+    const pos = positionOf(token);
+    const ignoreWalls = wallModeFor(route) === 'ignore';
+    const step = nextBounce({
+      grid: ctx.grid,
+      pos,
+      heading: Number.isFinite(patrol.heading) ? patrol.heading : Math.random() * 360,
+      origin: patrol.line || pos,
+      polygon: route.points.map((p) => [p.x, p.y]),
+      blockedBy: ignoreWalls ? undefined : (from, to) => wallInTheWay(token, to, ctx),
+    });
+    patrol.heading = step.heading;
+    patrol.line = step.origin;
+    if (step.to && onPage({ x: step.to[0], y: step.to[1] }, ctx)) {
+      moveTokenTo(token, step.to);
+    }
   }
 
   /**
@@ -15329,6 +17779,63 @@ const TokenControllerMod = (() => {
   }
 
   /**
+   * Returns true when a frame's position is on the page.
+   *
+   * @param {object} frame Track frame.
+   * @param {object} ctx Page context.
+   * @returns {boolean} True when on the page.
+   */
+  function onPage(frame, ctx) {
+    return frame.x >= 0 && frame.y >= 0 && frame.x <= ctx.widthPx && frame.y <= ctx.heightPx;
+  }
+
+  /**
+   * Returns how a route treats walls: its own Walls option, or the setting.
+   *
+   * @param {object} route Route record.
+   * @returns {string} ignore, hold or turn.
+   */
+  function wallModeFor(route) {
+    return route.walls || getConfig().wallMode;
+  }
+
+  /**
+   * Returns true when a wall, or a closed door or window, stands between a
+   * token and where it would move to. Frames that do not move the token (waits,
+   * turns, stealth) and frames off the page are never blocked.
+   *
+   * @param {object} token Roll20 graphic.
+   * @param {object} frame Track frame, or { x, y }.
+   * @param {object} ctx Page context.
+   * @returns {boolean} True when blocked.
+   */
+  function moveIsBlocked(token, frame, ctx) {
+    if (!frame || frame.wait || frame.stealth || frame.face !== undefined || !onPage(frame, ctx)) {
+      return false;
+    }
+    return Boolean(wallInTheWay(token, [frame.x, frame.y], ctx));
+  }
+
+  /**
+   * Returns the wall, door or window between a token and a point, if any.
+   *
+   * @param {object} token Roll20 graphic.
+   * @param {number[]} to [x, y].
+   * @param {object} ctx Page context.
+   * @returns {object|null} The barrier segment ({ a, b, kind }), or null.
+   */
+  function wallInTheWay(token, to, ctx) {
+    const config = getConfig();
+    const walls = getWalls(ctx.page.id, config);
+    if (walls.length === 0) {
+      return null;
+    }
+    const radius =
+      config.wallCheck === 'width' ? bodyRadius(token.get('width'), token.get('height')) : 0;
+    return blockingWall(walls, positionOf(token), to, radius);
+  }
+
+  /**
    * Moves one patrol to its next frame.
    *
    * @param {string} tokenId Token ID.
@@ -15346,8 +17853,16 @@ const TokenControllerMod = (() => {
     if (s.locks[tokenId]) {
       return;
     }
+    if (stopMarkerOf(token)) {
+      applyStopMarkers();
+      return;
+    }
     const ctx = getPageContext(token.get('_pageid'));
     if (!ctx) {
+      return;
+    }
+    if (route.kind === ROUTE_KIND_AREA) {
+      advanceBounce(token, patrol, route, ctx);
       return;
     }
     if (!patrol.anchor) {
@@ -15360,13 +17875,28 @@ const TokenControllerMod = (() => {
       return;
     }
 
-    const step = nextFrame(
-      frames,
-      Math.min(patrol.index, frames.length - 1),
-      patrol.dir,
-      route.mode,
-      getConfig().movement === 'segment'
-    );
+    const mode = wallModeFor(route);
+    const segment = getConfig().movement === 'segment';
+    const index = Math.min(patrol.index, frames.length - 1);
+    if (route.mode === 'once' && patrol.dir < 0 && index <= 0) {
+      // A run-once patrol that turned back at a wall is home again.
+      delete s.patrols[tokenId];
+      return;
+    }
+
+    let step = nextFrame(frames, index, patrol.dir, route.mode, segment);
+    if (mode !== 'ignore' && moveIsBlocked(token, frames[step.index], ctx)) {
+      if (mode === 'hold') {
+        // Wait for the way to clear, for example for a door to open.
+        return;
+      }
+      // Turn back, and take the first step back now if that way is clear.
+      patrol.dir = -patrol.dir;
+      step = nextFrame(frames, index, patrol.dir, route.mode, segment);
+      if (moveIsBlocked(token, frames[step.index], ctx)) {
+        return;
+      }
+    }
     patrol.index = step.index;
     patrol.dir = step.dir;
     const target = frames[step.index];
@@ -15378,14 +17908,10 @@ const TokenControllerMod = (() => {
       if (facing !== 'off') {
         token.set('rotation', rotationFor(target.face, facing));
       }
-    } else if (!target.wait) {
+    } else if (!target.wait && onPage(target, ctx)) {
       // Frames off the page are skipped; the patrol keeps its place on the track
       // and rejoins it when the route comes back on to the page.
-      const onPage =
-        target.x >= 0 && target.y >= 0 && target.x <= ctx.widthPx && target.y <= ctx.heightPx;
-      if (onPage) {
-        moveTokenTo(token, [target.x, target.y]);
-      }
+      moveTokenTo(token, [target.x, target.y]);
     }
 
     if (step.finished) {
@@ -15426,6 +17952,9 @@ const TokenControllerMod = (() => {
    */
   function tick() {
     const s = getState();
+    // Markers are checked even while patrols wait, so a token killed in combat
+    // has already left its route when the fight ends.
+    applyStopMarkers();
     const inCombat = updateCombatState();
     if (s.paused) {
       return;
@@ -15489,6 +18018,77 @@ const TokenControllerMod = (() => {
    */
   function clearTrackCache() {
     trackCache.clear();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Stop markers
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Returns the Stop Marker a token shows, if any.
+   *
+   * @param {object} token Roll20 graphic.
+   * @returns {string|null} Marker name, or null.
+   */
+  function stopMarkerOf(token) {
+    const setting = getConfig().stopMarkers;
+    return setting && setting !== 'none' ? findMarker(token, setting.split(';')) : null;
+  }
+
+  /**
+   * Takes tokens that show a Stop Marker off their routes (stopping them or
+   * sending them back, as Stop Marker Action says), and stops them following.
+   * Followers of a leader that shows one stop too. Tells the GM who stopped.
+   *
+   * The API raises no change events for markers set by other Mods, so this runs
+   * on every scheduler tick as well as when a GM changes a token's markers.
+   *
+   * @returns {number} Number of tokens stopped.
+   */
+  function applyStopMarkers() {
+    if (getConfig().stopMarkers === 'none') {
+      return 0;
+    }
+    const s = getState();
+    const marked = new Map();
+    const isMarked = (tokenId) => {
+      if (!marked.has(tokenId)) {
+        const token = getObj('graphic', tokenId);
+        marked.set(tokenId, token ? Boolean(stopMarkerOf(token)) : false);
+      }
+      return marked.get(tokenId);
+    };
+
+    const stopped = [];
+    const sentBack = [];
+    const reset = getConfig().markerAction === 'reset';
+    for (const tokenId of Object.keys(s.patrols)) {
+      if (isMarked(tokenId)) {
+        (reset ? sentBack : stopped).push(tokenId);
+        if (reset) {
+          resetPatrol(tokenId);
+        } else {
+          stopPatrol(tokenId);
+        }
+      }
+    }
+    for (const [followerId, follow] of Object.entries(s.follows)) {
+      if (isMarked(followerId) || isMarked(follow.leaderId)) {
+        delete s.follows[followerId];
+        if (!stopped.includes(followerId) && !sentBack.includes(followerId)) {
+          stopped.push(followerId);
+        }
+      }
+    }
+
+    const names = (ids) => ids.map((id) => tokenLabel(getObj('graphic', id), id)).join(', ');
+    if (stopped.length > 0) {
+      notifyGm('markerStopped', { tokens: names(stopped) });
+    }
+    if (sentBack.length > 0) {
+      notifyGm('markerReset', { tokens: names(sentBack) });
+    }
+    return stopped.length + sentBack.length;
   }
 
   // ---------------------------------------------------------------------------
@@ -15761,9 +18361,15 @@ const TokenControllerMod = (() => {
         const y = ly + follow.offset[1];
         target = grid ? snapToCell(grid, x, y) : [x, y];
       }
-      if (target) {
-        moveTokenTo(follower, target, visited);
+      if (!target) {
+        return;
       }
+      const ctx = getConfig().wallMode === 'ignore' ? null : getPageContext(leader.get('_pageid'));
+      // Followers wait rather than walk through walls, when walls are on.
+      if (ctx && moveIsBlocked(follower, { x: target[0], y: target[1] }, ctx)) {
+        return;
+      }
+      moveTokenTo(follower, target, visited);
     });
   }
 
@@ -15814,6 +18420,9 @@ const TokenControllerMod = (() => {
     if (patrol) {
       if (getConfig().manualMove === 'stop') {
         delete s.patrols[tokenId];
+      } else if (s.routes[patrol.routeId]?.kind === ROUTE_KIND_AREA) {
+        // Bounce on from where it was dropped.
+        patrol.line = to;
       } else if (patrol.anchor && s.routes[patrol.routeId]?.anchor !== ANCHOR_PAGE) {
         // Carry on along the same route from the new spot.
         patrol.anchor = [patrol.anchor[0] + to[0] - from[0], patrol.anchor[1] + to[1] - from[1]];
@@ -16024,7 +18633,7 @@ const TokenControllerMod = (() => {
       ['S', 'stealth'],
     ].map(([c, key]) => [code(c), escapeHtml(t(`handout.codes.${key}`, lang))]);
 
-    const routeOptions = ['mode', 'interval', 'max', 'random', 'start'].map((key) => [
+    const routeOptions = ['mode', 'interval', 'max', 'random', 'walls', 'start'].map((key) => [
       code(key),
       escapeHtml(t(`handout.routeOptions.${key}`, lang)),
     ]);
@@ -16068,7 +18677,7 @@ const TokenControllerMod = (() => {
     ${section('tokens', list(raw('tokens.points')))}
     ${section('grids', list(raw('grids.points')))}
     ${section('combat', list(raw('combat.points')))}
-    ${section('commands', `<p style="${STYLE.p}">${h('commands.intro')}</p>${table([t('handout.commands.colCommand', lang), t('handout.commands.colDesc', lang)], commands)}`)}
+    ${section('commands', `<p style="${STYLE.p}">${h('commands.intro')}</p><p style="${STYLE.p}">${h('commands.mods')}</p>${table([t('handout.commands.colCommand', lang), t('handout.commands.colDesc', lang)], commands)}`)}
     ${section('settings', `<p style="${STYLE.p}">${h('settings.intro')}</p>${table([t('handout.settings.colKey', lang), t('handout.settings.colName', lang), t('handout.settings.colDesc', lang)], settings)}`)}
     ${section('upgrading', `${list(raw('upgrading.points'))}${table([t('handout.upgrading.colV4', lang), t('handout.upgrading.colV5', lang)], legacyCommands)}`)}
     ${section('troubleshooting', list(raw('troubleshooting.points')))}
@@ -16104,7 +18713,7 @@ const TokenControllerMod = (() => {
       <p style="${STYLE.subtitle}">${escapeHtml(tr('deck.subtitle'))} • v${SCRIPT_VERSION}</p>
     </div>
     ${group('menu.patrols', 'deck.patrolsDesc', [btn('menu', ''), btn('startRoute', `start ${q('prompts.route')}`), btn('stop', 'stop', true), btn('reset', 'reset', true), btn('stopAll', 'stop all', true), btn('pause', 'pause', true), btn('resume', 'resume', true)])}
-    ${group('menu.create', 'deck.createDesc', [btn('add', `add ${q('prompts.name')} ${q('prompts.code', 'U2R2D2L2')}`), btn('draw', `draw ${q('prompts.name')}`), btn('record', `record ${q('prompts.name')}`), btn('examples', 'examples', true), btn('list', 'list', true)])}
+    ${group('menu.create', 'deck.createDesc', [btn('add', `add ${q('prompts.name')} ${q('prompts.code', 'U2R2D2L2')}`), btn('draw', `draw ${q('prompts.name')}`), btn('bounce', `bounce ${q('prompts.name')}`), btn('record', `record ${q('prompts.name')}`), btn('examples', 'examples', true), btn('list', 'list', true)])}
     ${group('menu.selected', 'deck.selectedDesc', [btn('lock', 'lock'), btn('unlock', 'unlock', true), btn('leader', 'leader'), btn('follow', 'follow'), btn('unfollow', 'unfollow', true)])}
     ${group('menu.tools', 'deck.toolsDesc', [btn('combatOn', 'combat on', true), btn('combatOff', 'combat off', true), btn('settings', 'set', true), btn('status', 'status', true), btn('calibrate', 'calibrate', true), btn('help', 'help', true)])}
     <div style="${STYLE.footer}">${escapeHtml(tr('deck.footer', { help: HANDOUT_HELP_NAME }))}</div>
@@ -16322,6 +18931,12 @@ const TokenControllerMod = (() => {
     { key: 'lockMarker' },
     { key: 'followMode', options: FOLLOW_MODE_OPTIONS },
     { key: 'manualMove', options: MANUAL_MOVE_OPTIONS },
+    { key: 'stopMarkers' },
+    { key: 'markerAction', options: MARKER_ACTION_OPTIONS },
+    { key: 'wallMode', options: WALL_MODE_OPTIONS },
+    { key: 'wallCheck', options: WALL_CHECK_OPTIONS },
+    { key: 'oneWayWalls', options: WALL_PASS_OPTIONS },
+    { key: 'transparentWalls', options: WALL_PASS_OPTIONS },
     { key: 'buttonStep' },
     { key: 'language' },
   ];
@@ -16401,7 +19016,7 @@ const TokenControllerMod = (() => {
     if (key === 'interval') {
       return tr('values.ms', { ms: value });
     }
-    if (key === 'lockMarker' && value === 'none') {
+    if ((key === 'lockMarker' || key === 'stopMarkers') && value === 'none') {
       return tr('values.none');
     }
     if (OPTION_KEYS.includes(key)) {
@@ -16465,6 +19080,9 @@ const TokenControllerMod = (() => {
       return route.code;
     }
     const points = route.points.filter((p) => 'x' in p).length;
+    if (route.kind === ROUTE_KIND_AREA) {
+      return tr('route.area', { points });
+    }
     return tr(route.anchor === ANCHOR_PAGE ? 'route.drawn' : 'route.recorded', { points });
   }
 
@@ -16521,12 +19139,75 @@ const TokenControllerMod = (() => {
   }
 
   /**
-   * Returns the selected tokens, whispering an error when there are none.
+   * Splits a `--ids` list off the arguments, so other Mods (which cannot select
+   * tokens) can say which tokens a command is for. The IDs follow `--ids` (or
+   * `--ids|`), separated by semicolons, commas or spaces, up to the next `--`
+   * option or the end of the command.
+   *
+   * @param {object[]} words Arguments.
+   * @returns {{ids: string[]|null, words: object[]}} The IDs (null when there is
+   *          no `--ids`) and the other arguments.
+   */
+  function splitIds(words) {
+    const index = words.findIndex((w) => /^--ids(?:[|=:]|$)/i.test(w.text));
+    if (index === -1) {
+      return { ids: null, words };
+    }
+    let end = index + 1;
+    while (end < words.length && !words[end].text.startsWith('--')) {
+      end++;
+    }
+    const ids = [
+      words[index].text.replace(/^--ids[|=:]?/i, ''),
+      ...words.slice(index + 1, end).map((w) => w.text),
+    ]
+      .join(';')
+      .split(/[;,\s]+/)
+      .filter(Boolean);
+    return { ids: [...new Set(ids)], words: [...words.slice(0, index), ...words.slice(end)] };
+  }
+
+  /**
+   * Returns the tokens with the given IDs, warning about IDs that are not tokens.
    *
    * @param {object} msg Chat message.
+   * @param {string[]} ids Token IDs.
+   * @returns {object[]} Tokens.
+   */
+  function tokensFromIds(msg, ids) {
+    const tokens = [];
+    const missing = [];
+    for (const id of ids) {
+      const token = getObj('graphic', id);
+      if (isToken(token)) {
+        tokens.push(token);
+      } else {
+        missing.push(id);
+      }
+    }
+    if (tokens.length > 0 && missing.length > 0) {
+      whisperWarning(msg.playerid, tr('warnings.idsNotFound', { ids: missing.join(', ') }));
+    }
+    return tokens;
+  }
+
+  /**
+   * Returns the tokens a command is for: those given with `--ids`, otherwise
+   * the selected ones. Whispers an error when there are none.
+   *
+   * @param {object} msg Chat message.
+   * @param {string[]|null} [ids] Token IDs from `--ids`, or null for the selection.
    * @returns {object[]|null} Tokens, or null.
    */
-  function requireTokens(msg) {
+  function requireTokens(msg, ids = null) {
+    if (ids) {
+      const tokens = tokensFromIds(msg, ids);
+      if (tokens.length === 0) {
+        fail(msg.playerid, 'idsNotFound', { ids: ids.join(', ') || '-' });
+        return null;
+      }
+      return tokens;
+    }
     const { tokens } = readSelection(msg);
     if (tokens.length === 0) {
       fail(msg.playerid, 'noTokens');
@@ -16645,6 +19326,7 @@ const TokenControllerMod = (() => {
           )
         ),
         buildButton(tr('buttons.draw'), cmd(`draw ${query(tr('prompts.name'), null)}`)),
+        buildButton(tr('buttons.bounce'), cmd(`bounce ${query(tr('prompts.name'), null)}`)),
         buildButton(tr('buttons.record'), cmd(`record ${query(tr('prompts.name'), null)}`)),
         buildSecondaryButton(tr('buttons.examples'), cmd('examples')),
       ].join('')
@@ -16708,15 +19390,18 @@ const TokenControllerMod = (() => {
     const tokens = tokensOnRoute(route.id).map(
       (id) => getObj('graphic', id) || { id, get: () => id }
     );
+    const area = route.kind === ROUTE_KIND_AREA;
     const lines = [
       buildRow(tr('route.path'), `<code>${escapeHtml(describeRoute(route))}</code>`),
-      buildRow(
-        tr('route.mode'),
-        buildSecondaryButton(
-          tr(`values.mode.${route.mode}`),
-          cmd(`route ${ref} mode ${query(tr('route.mode'), ROUTE_MODE_OPTIONS)}`)
-        )
-      ),
+      area
+        ? ''
+        : buildRow(
+            tr('route.mode'),
+            buildSecondaryButton(
+              tr(`values.mode.${route.mode}`),
+              cmd(`route ${ref} mode ${query(tr('route.mode'), ROUTE_MODE_OPTIONS)}`)
+            )
+          ),
       buildRow(
         tr('route.interval'),
         buildSecondaryButton(
@@ -16736,6 +19421,15 @@ const TokenControllerMod = (() => {
         buildSecondaryButton(
           tr(route.randomStart ? 'values.on' : 'values.off'),
           cmd(`route ${ref} random ${route.randomStart ? 'off' : 'on'}`)
+        )
+      ),
+      buildRow(
+        tr('route.walls'),
+        buildSecondaryButton(
+          route.walls
+            ? tr(`values.wallMode.${route.walls}`)
+            : `${tr('values.default')} (${tr(`values.wallMode.${getConfig().wallMode}`)})`,
+          cmd(`route ${ref} walls ${query(tr('route.walls'), ['default', ...WALL_MODE_OPTIONS])}`)
         )
       ),
       buildRow(
@@ -16992,22 +19686,7 @@ const TokenControllerMod = (() => {
     const drawing = drawings[0];
     const pageId = drawing.get('_pageid');
     const page = getObj('page', pageId);
-    const props = {
-      type: drawing.get('_type'),
-      _path: drawing.get('_path') ?? drawing.get('path'),
-      points: drawing.get('points'),
-      shape: drawing.get('shape'),
-      x: drawing.get('x'),
-      y: drawing.get('y'),
-      left: drawing.get('left'),
-      top: drawing.get('top'),
-      width: drawing.get('width'),
-      height: drawing.get('height'),
-      scaleX: drawing.get('scaleX'),
-      scaleY: drawing.get('scaleY'),
-      rotation: drawing.get('rotation'),
-    };
-    const result = drawingWaypoints(props, {
+    const result = drawingWaypoints(drawingProps(drawing), {
       width: page?.get('width'),
       height: page?.get('height'),
     });
@@ -17021,6 +19700,54 @@ const TokenControllerMod = (() => {
       anchor: ANCHOR_PAGE,
       pageId,
       points: result.points.map(([x, y]) => ({ x, y })),
+    });
+  }
+
+  /**
+   * `bounce <name>`: create a route on which tokens bounce around inside the
+   * selected closed drawing.
+   *
+   * @param {object} msg Chat message.
+   * @param {object[]} words Arguments.
+   * @returns {void}
+   */
+  function commandBounce(msg, words) {
+    const { drawings } = readSelection(msg);
+    if (drawings.length !== 1) {
+      fail(msg.playerid, 'selectOneArea');
+      return;
+    }
+    const name = checkNewName(msg, joinWords(words));
+    if (!name) {
+      return;
+    }
+    const drawing = drawings[0];
+    const pageId = drawing.get('_pageid');
+    const page = getObj('page', pageId);
+    const [ring] = pathToRings(drawingProps(drawing), {
+      width: page?.get('width'),
+      height: page?.get('height'),
+    });
+    const corners = ring ? simplifyPoints(ring) : [];
+    // A closed outline repeats its first corner at the end.
+    const last = corners.at(-1);
+    if (
+      last &&
+      corners.length > 1 &&
+      Math.hypot(last[0] - corners[0][0], last[1] - corners[0][1]) < 1
+    ) {
+      corners.pop();
+    }
+    if (corners.length < 3) {
+      fail(msg.playerid, 'areaTooSmall');
+      return;
+    }
+    createRoute(msg, {
+      name,
+      kind: ROUTE_KIND_AREA,
+      mode: 'loop',
+      pageId,
+      points: corners.map(([x, y]) => ({ x, y })),
     });
   }
 
@@ -17049,6 +19776,7 @@ const TokenControllerMod = (() => {
       maxtokens: 'maxTokens',
       random: 'randomStart',
       randomstart: 'randomStart',
+      walls: 'walls',
       start: 'start',
     };
     const key = aliases[option];
@@ -17141,6 +19869,11 @@ const TokenControllerMod = (() => {
    * @returns {void}
    */
   function commandRemove(msg, words) {
+    if (splitIds(words).ids) {
+      // `remove --ids` takes tokens off their routes; it never removes a route.
+      commandStop(msg, words);
+      return;
+    }
     const confirmed = words.at(-1)?.text.toLowerCase() === 'confirm';
     const route = requireRoute(msg, joinWords(confirmed ? words.slice(0, -1) : words));
     if (!route) {
@@ -17274,8 +20007,9 @@ const TokenControllerMod = (() => {
    * @returns {void}
    */
   function commandStart(msg, words) {
-    const tokens = requireTokens(msg);
-    const route = tokens && requireRoute(msg, joinWords(words));
+    const { ids, words: rest } = splitIds(words);
+    const tokens = requireTokens(msg, ids);
+    const route = tokens && requireRoute(msg, joinWords(rest));
     if (!tokens || !route) {
       return;
     }
@@ -17307,14 +20041,19 @@ const TokenControllerMod = (() => {
   }
 
   /**
-   * Returns the tokens a stop or reset applies to: the selection, a route's
-   * tokens, or every patrolling token for `all`.
+   * Returns the tokens a stop or reset applies to: the tokens given with
+   * `--ids`, a route's tokens, every patrolling token for `all`, or the selection.
    *
    * @param {object} msg Chat message.
-   * @param {object[]} words Arguments.
+   * @param {object[]} words Arguments, without the `--ids` list.
+   * @param {string[]|null} ids Token IDs from `--ids`, or null.
    * @returns {string[]|null} Token IDs, or null after an error.
    */
-  function targetTokenIds(msg, words) {
+  function targetTokenIds(msg, words, ids) {
+    if (ids) {
+      const tokens = requireTokens(msg, ids);
+      return tokens ? tokens.map((tok) => tok.id) : null;
+    }
     const text = joinWords(words);
     if (text.toLowerCase() === 'all') {
       return Object.keys(getPatrols());
@@ -17336,14 +20075,15 @@ const TokenControllerMod = (() => {
    * @returns {void}
    */
   function commandStop(msg, words) {
-    const ids = targetTokenIds(msg, words);
+    const { ids: given, words: rest } = splitIds(words);
+    const ids = targetTokenIds(msg, rest, given);
     if (!ids) {
       return;
     }
     let count = 0;
     for (const id of ids) {
       const stopped = stopPatrol(id);
-      const unfollowed = words.length === 0 && unfollow(id);
+      const unfollowed = (given !== null || rest.length === 0) && unfollow(id);
       if (stopped || unfollowed) {
         count++;
       }
@@ -17359,7 +20099,8 @@ const TokenControllerMod = (() => {
    * @returns {void}
    */
   function commandReset(msg, words) {
-    const ids = targetTokenIds(msg, words);
+    const { ids: given, words: rest } = splitIds(words);
+    const ids = targetTokenIds(msg, rest, given);
     if (!ids) {
       return;
     }
@@ -17368,14 +20109,15 @@ const TokenControllerMod = (() => {
   }
 
   /**
-   * `lock` / `unlock`.
+   * `lock` / `unlock [--ids <ids>]`.
    *
    * @param {object} msg Chat message.
    * @param {boolean} lock True to lock.
+   * @param {object[]} words Arguments.
    * @returns {void}
    */
-  function commandLock(msg, lock) {
-    const tokens = requireTokens(msg);
+  function commandLock(msg, lock, words) {
+    const tokens = requireTokens(msg, splitIds(words).ids);
     if (!tokens) {
       return;
     }
@@ -17880,10 +20622,10 @@ const TokenControllerMod = (() => {
         commandPause(msg, false);
         break;
       case 'lock':
-        commandLock(msg, true);
+        commandLock(msg, true, args);
         break;
       case 'unlock':
-        commandLock(msg, false);
+        commandLock(msg, false, args);
         break;
       case 'leader':
         commandLeader(msg);
@@ -17902,6 +20644,9 @@ const TokenControllerMod = (() => {
         break;
       case 'draw':
         commandDraw(msg, args);
+        break;
+      case 'bounce':
+        commandBounce(msg, args);
         break;
       case 'record':
         commandRecord(msg, args);
@@ -17977,7 +20722,9 @@ const TokenControllerMod = (() => {
     if (prefix !== COMMAND && !legacy) {
       return;
     }
-    if (!playerIsGM(msg.playerid)) {
+    // Commands sent by other Mods (ScriptCards, macros run by the API) come from
+    // the player "API". Replies to them go to the GM.
+    if (msg.playerid !== API_PLAYER_ID && !playerIsGM(msg.playerid)) {
       fail(msg.playerid, 'gmOnly');
       return;
     }
@@ -18032,8 +20779,12 @@ const TokenControllerMod = (() => {
    * @returns {void}
    */
   function handleGraphicChange(obj, prev) {
-    if (isToken(obj)) {
-      handleTokenChange(obj, prev);
+    if (!isToken(obj)) {
+      return;
+    }
+    handleTokenChange(obj, prev);
+    if (prev?.statusmarkers !== obj.get('statusmarkers')) {
+      applyStopMarkers();
     }
   }
 
@@ -18182,6 +20933,17 @@ const TokenControllerMod = (() => {
       guarded('destroy:graphic', (obj) => forgetToken(obj.id))
     );
     on('change:page', guarded('change:page', clearTrackCache));
+    // Walls, doors and windows are read once per page and read again when one changes.
+    const wallChanged = (obj, prev) => {
+      if (isBarrier(obj, prev)) {
+        clearWallCache();
+      }
+    };
+    for (const type of ['path', 'pathv2', 'door', 'window']) {
+      for (const event of ['add', 'change', 'destroy']) {
+        on(`${event}:${type}`, guarded(`${event}:${type}`, wallChanged));
+      }
+    }
     on(
       'change:campaign:turnorder',
       guarded('change:campaign:turnorder', (campaign) => handleTurnOrderChange(campaign))

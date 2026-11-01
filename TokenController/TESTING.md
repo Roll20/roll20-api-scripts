@@ -34,7 +34,7 @@ For the upgrade test, install TokenController **4.0.1** in the Legacy game first
 
 ## Setup
 
-- [ ] Install `TokenController.js` and save. The API console shows `-=> TokenController v5.0.0 … (Jumpgate) <=-` (or `(Legacy)`).
+- [ ] Install `TokenController.js` and save. The API console shows `-=> TokenController v5.0.1 … (Jumpgate) <=-` (or `(Legacy)`).
 - [ ] The GM receives the "TokenController is ready." whisper.
 - [ ] The Journal has **TokenController - Help** and **TokenController - Command Deck**, neither visible to players.
 - [ ] Every button in the Command Deck works.
@@ -130,7 +130,7 @@ For the upgrade test, install TokenController **4.0.1** in the Legacy game first
 
 ## One-Click
 
-- [ ] With the Mod installed from One-Click, the version list offers 5.0.0, 4.0.1, 4.0.0 and older, and installing 4.0.1 and 4.0.0 works (no "No such file" error).
+- [ ] With the Mod installed from One-Click, the version list offers 5.0.1, 5.0.0, 4.0.1, 4.0.0 and older, and installing 4.0.1 and 4.0.0 works (no "No such file" error).
 - [ ] The useroptions (Movement, Turn Tokens, Combat Detection, Combat Behaviour, Lock Mode, Follow Mode, Language) apply after saving, and a value changed in chat is not overwritten on restart.
 
 ## Languages and Hexploration

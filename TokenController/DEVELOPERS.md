@@ -81,7 +81,7 @@ One `setInterval` runs every `SCHEDULER_TICK_MS` (250 ms). Each patrol has a `du
 ```js
 {
   schemaVersion: 5,
-  version: '5.0.0',
+  version: '5.0.1',
   config: { language, interval, movement, facing, combatDetection, combatBehaviour,
             lockMode, lockMarker, followMode, manualMove, stopMarkers, markerAction,
             wallMode, wallCheck, oneWayWalls, transparentWalls, buttonStep },

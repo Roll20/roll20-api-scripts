@@ -1,6 +1,6 @@
 {
   "name": "tokencontroller-roll20",
-  "version": "5.0.0",
+  "version": "5.0.1",
   "description": "Roll20 API Mod that moves tokens along patrol routes, makes tokens follow each other and locks tokens in place.",
   "private": true,
   "type": "module",

@@ -1,5 +1,20 @@
 # Changelog
 
+## 5.0.1 (2026-11-01)
+
+Features and a fix from user feedback. There are no breaking changes: new settings are off until you turn them on.
+
+### Fixed
+
+- Commands sent by other Mods (for example a ScriptCards `--@tc|` call) were refused with "Only the GM can use TokenController", because Roll20 sends them from the player "API". They are now accepted, and their replies are whispered to the GM.
+
+### Added
+
+- **Stop Markers** setting: a list of status markers separated by semicolons (for example `dead;red`). A patrolling token that gets one leaves its route, so dead guards stop marching after a fight; **Stop Marker Action** chooses whether it stays where it is or goes back to where it started. Marked tokens stop following, followers of a marked leader stop too, and marked tokens cannot be started. Markers are checked on every scheduler tick, even while patrols are paused for combat, so markers added by other Mods count.
+- **`--ids`** for `start`, `stop`, `reset`, `lock`, `unlock` and `remove`: act on the tokens with the given IDs (separated by semicolons, commas or spaces) instead of the selection, so other Mods can control tokens. `remove --ids` takes tokens off their routes and never removes a route.
+- **Walls** setting and per-route `walls` option: patrols can wait at, or turn back from, dynamic lighting walls (Jumpgate `pathv2` and Legacy `path` drawings on the walls layer) and closed doors and windows, instead of walking through them. Open doors and windows let tokens through, and followers wait rather than cross a wall. A route set to `ignore` still walks through walls, for ghosts. **Wall Check** chooses whether a token's centre or its whole width must stay clear, and **One-Way Walls** and **See-Through Walls** whether those kinds block.
+- **Bounce areas** (`bounce <name>` and a **Bounce Area** button): tokens wander inside a selected closed drawing, travelling in straight lines and bouncing off its edges, and off walls, like a ball in Pong.
+
 ## 5.0.0 (2026-10-30)
 
 A full rewrite by MidNiteShadow7 of Developesque's TokenController, which was reported as not working in Jumpgate and no longer supported.

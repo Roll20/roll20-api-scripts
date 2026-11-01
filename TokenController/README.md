@@ -190,7 +190,7 @@ TokenController.start(tokenId, 'Guard Walk'); // true when started
 TokenController.stop(tokenId);
 TokenController.reset(tokenId);
 TokenController.routeOf(tokenId); // "Guard Walk" or null
-TokenController.version; // "5.0.0"
+TokenController.version; // "5.0.1"
 ```
 
 ## Upgrading from Version 4
