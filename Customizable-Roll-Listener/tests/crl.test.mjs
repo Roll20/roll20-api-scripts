@@ -213,6 +213,13 @@ test('players cannot use commands', () => {
   assert.match(game.lastChat(), /Only a GM/);
 });
 
+test('commands sent by other Mods are accepted and answered to the GM', () => {
+  const game = start();
+  game.command('!crl new Scripted --commands /em hello', 'API');
+  assert.equal(game.ofType('ability').length, 1);
+  assert.match(game.lastChat(), /^\/w gm /);
+});
+
 test('delete asks first, then removes the ability', () => {
   const game = start();
   game.command('!crl new Gone --commands /em bye');

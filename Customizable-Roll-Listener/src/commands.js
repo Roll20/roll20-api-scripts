@@ -13,6 +13,7 @@ import {
   whisperWarning,
 } from './chat.js';
 import {
+  API_PLAYER_ID,
   COLOR_MUTED,
   COLOR_OFF,
   COLOR_OK,
@@ -1083,7 +1084,9 @@ export function handleCommand(msg) {
   if (!/^!crl(?:\s|$)/i.test(content)) {
     return false;
   }
-  if (!playerIsGM(msg.playerid)) {
+  // Commands sent by other Mods (ScriptCards, macros run by the API) come from
+  // the player "API". Replies to them go to the GM.
+  if (msg.playerid !== API_PLAYER_ID && !playerIsGM(msg.playerid)) {
     fail(msg.playerid, 'gmOnly');
     return true;
   }

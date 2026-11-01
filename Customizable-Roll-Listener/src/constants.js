@@ -9,6 +9,9 @@ export const STATE_KEY = 'CRL';
 export const SCHEMA_VERSION = 2;
 export const COMMAND = '!crl';
 
+// The player ID Roll20 gives chat messages sent by Mods with sendChat.
+export const API_PLAYER_ID = 'API';
+
 // Name listener commands are sent as when they are not sent as the roller.
 // Version 1 used the same name, so existing macros and filters still see it.
 export const CRL_SPEAKER = 'CRL';

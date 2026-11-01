@@ -5,7 +5,7 @@ Run chat commands automatically when a matching roll or message appears in chat.
 - **Version:** 2.0.0
 - **Authors:** Scott C. (original), The Aaron (version 1.1 fixes), MidNiteShadow7 (version 2)
 - **Dependencies:** none
-- **Command:** `!crl` (GM only)
+- **Command:** `!crl` (GM only; other Mods such as ScriptCards can send it too, and replies go to the GM)
 
 Version 2 is a full rewrite. It reads roll templates, plain chat, emotes, `/roll` results, rollable table results and the output of other mods, and comes with an inspector that shows exactly what a message contains. Version 1 listeners are upgraded automatically, and the version 1 `!crl \\create` style commands still work.
 
