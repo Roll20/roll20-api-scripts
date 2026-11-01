@@ -187,6 +187,7 @@ export function normaliseListener(raw) {
     templates: cleanList(src.templates),
     types: cleanList(src.types).map((t) => t.toLowerCase()),
     text: cleanList(src.text, MAX_TEXT_TERMS),
+    exclude: cleanList(src.exclude, MAX_TEXT_TERMS),
     regex: src.regex === true,
     who: cleanList(src.who),
     players: cleanList(src.players),

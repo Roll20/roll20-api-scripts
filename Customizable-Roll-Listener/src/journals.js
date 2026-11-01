@@ -163,6 +163,7 @@ export function buildHelpHtml(locale) {
     ['--templates', 'templates'],
     ['--types', 'types'],
     ['--text', 'text'],
+    ['--exclude', 'exclude'],
     ['--regex', 'regex'],
     ['--who', 'who'],
     ['--players', 'players'],

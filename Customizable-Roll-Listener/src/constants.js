@@ -107,6 +107,7 @@ export const DEFAULT_LISTENER = {
   templates: [],
   types: [],
   text: [],
+  exclude: [],
   regex: false,
   who: [],
   players: [],

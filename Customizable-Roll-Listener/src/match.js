@@ -141,6 +141,28 @@ export function matchText(listener, message) {
 }
 
 /**
+ * Returns true when any of a listener's excluded pieces of text appears in
+ * a message, searched like its text: the raw content, then the readable
+ * text.
+ *
+ * @param {object} listener Listener rules.
+ * @param {object} message Analysed message.
+ * @returns {boolean} True when an excluded piece is found.
+ */
+export function matchExclude(listener, message) {
+  return listener.exclude.some((term) => {
+    let pattern;
+    try {
+      pattern = compileTerm(term, listener.regex);
+    } catch {
+      return false;
+    }
+    const found = (source) => [...source.matchAll(pattern)].some((hit) => hit[0].length > 0);
+    return found(message.raw) || found(message.text);
+  });
+}
+
+/**
  * Parses a template field condition such as "subcategory=Attack" or
  * "title~sword".
  *
@@ -318,6 +340,9 @@ export function matchListener(listener, message) {
   const text = matchText(listener, message);
   if (!text.ok) {
     return fail('text');
+  }
+  if (listener.exclude.length > 0 && matchExclude(listener, message)) {
+    return fail('exclude');
   }
 
   const checks = {

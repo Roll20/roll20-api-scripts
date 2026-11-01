@@ -96,6 +96,18 @@ function playerNameOf(msg) {
 }
 
 /**
+ * Shortens embedded data such as a Beacon card's weapon icon
+ * (src="data:image/svg+xml,…"), which can fill the inspector's limit before
+ * the attributes a GM may want to match.
+ *
+ * @param {string} text Raw content.
+ * @returns {string} Content with each quoted data: URI cut to its type.
+ */
+export function shortenDataUris(text) {
+  return String(text).replaceAll(/(["'])data:([^,;"']*)[^"']*\1/gi, '$1data:$2,…$1');
+}
+
+/**
  * Shortens text for display.
  *
  * @param {string} text Text.
@@ -171,7 +183,7 @@ function sendInspection(playerId, message) {
   lines.push(buildSectionLabel(tr('inspect.text')));
   lines.push(buildCode(truncate(message.text)));
   lines.push(buildSectionLabel(tr('inspect.raw')));
-  lines.push(buildCode(truncate(message.raw)));
+  lines.push(buildCode(truncate(shortenDataUris(message.raw))));
   lines.push(buildSectionLabel(tr('inspect.listeners')));
   const listeners = getListeners();
   if (listeners.length === 0) {

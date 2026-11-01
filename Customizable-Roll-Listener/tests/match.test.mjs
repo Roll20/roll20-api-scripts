@@ -168,6 +168,21 @@ test('template fields are read with their inline rolls as results', () => {
   assert.equal(matchListener(listener({ fields: ['rname=Dagger'] }), message).ok, false);
 });
 
+test('excluded text stops a listener, searched like the text', () => {
+  const message = analyseMessage({
+    type: 'general',
+    who: 'Bob',
+    content: 'Attack (Shortsword) hits',
+  });
+  const verdict = (rules) => matchListener(listener({ text: ['sword'], ...rules }), message);
+  assert.equal(verdict({}).ok, true);
+  assert.equal(verdict({ exclude: ['dagger'] }).ok, true);
+  assert.equal(verdict({ exclude: ['dagger', 'SHORTSWORD'] }).ok, false);
+  assert.equal(verdict({ exclude: ['shortsword'] }).reason, 'exclude');
+  assert.equal(verdict({ exclude: ['^attack'], regex: true }).ok, false);
+  assert.equal(verdict({ exclude: ['^hits'], regex: true }).ok, true);
+});
+
 test('regular expression text', () => {
   const message = analyseMessage({ type: 'general', who: 'Bob', content: 'Rolled a 17' });
   assert.equal(matchListener(listener({ text: ['rolled a \\d+'], regex: true }), message).ok, true);

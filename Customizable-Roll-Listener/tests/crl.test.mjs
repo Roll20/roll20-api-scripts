@@ -340,6 +340,38 @@ test('the inspector whispers a breakdown of the next message', () => {
   assertNoRawKeys(game);
 });
 
+test('the inspector shortens embedded images in the raw content', () => {
+  const game = start();
+  game.command('!crl inspect');
+  game.clearChat();
+  const icon = 'data:image/svg+xml,' + '1234567890'.repeat(400);
+  game.say({ content: `<img src="${icon}"><span data-rollSubcategory="Attack">Hit</span>` });
+  const card = game.chat.find((c) => /CRL Inspector/.test(c.text))?.text || '';
+  assert.ok(card.includes('data:image/svg+xml,…'), card);
+  assert.match(card, /data-rollSubcategory/);
+  assert.ok(!card.includes('1234567890'));
+});
+
+test('--exclude and --fields split on && with or without spaces', () => {
+  const game = start();
+  game.command(
+    '!crl new Swords --text sword --exclude dagger&&short sword --fields title~Attacks&&mode!=Advantage --commands /em swings'
+  );
+  const id = idOf(game, 'Swords');
+  same(game.crlState().listeners[id].exclude, ['dagger', 'short sword']);
+  same(game.crlState().listeners[id].fields, ['title~Attacks', 'mode!=Advantage']);
+  game.command(`!crl edit ${id} --fields - --exclude dagger`);
+  game.clearChat();
+  game.say({ content: 'Longsword attack' });
+  assert.equal(game.actions().length, 1);
+  game.clearChat();
+  game.say({ content: 'Sword and dagger attack' });
+  same(game.actions(), []);
+  game.command(`!crl edit ${id} --exclude -`);
+  same(game.crlState().listeners[id].exclude, []);
+  assertNoRawKeys(game);
+});
+
 test('test runs the commands with sample values', () => {
   const game = start();
   game.command('!crl new T --commands /em ${who} ${natural}');

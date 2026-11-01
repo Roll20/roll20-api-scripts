@@ -67,6 +67,8 @@ const OPTION_KEYS = {
   type: 'types',
   types: 'types',
   text: 'text',
+  exclude: 'exclude',
+  not: 'exclude',
   regex: 'regex',
   mode: 'regex',
   who: 'who',
@@ -98,6 +100,7 @@ const LISTENER_ROWS = [
   'templates',
   'types',
   'text',
+  'exclude',
   'regex',
   'who',
   'players',
@@ -373,6 +376,27 @@ export function applyOptions(base, options, ownId) {
       problem('badRegex', invalid);
     }
   }
+  if ('exclude' in options) {
+    const terms = cleared(options.exclude)
+      ? []
+      : toText(options.exclude)
+          .split(/\s*&&\s*/)
+          .map((term) => term.trim())
+          .filter(Boolean);
+    const invalid = next.regex ? findInvalidTerm(terms) : null;
+    if (terms.length > MAX_TEXT_TERMS) {
+      problem('tooManyTerms', { max: MAX_TEXT_TERMS });
+    } else if (invalid) {
+      problem('badRegex', invalid);
+    } else {
+      next.exclude = terms;
+    }
+  } else if ('regex' in options && next.regex) {
+    const invalid = findInvalidTerm(next.exclude);
+    if (invalid) {
+      problem('badRegex', invalid);
+    }
+  }
   if ('fields' in options) {
     const terms = cleared(options.fields)
       ? []
@@ -494,6 +518,8 @@ function formatField(listener, key) {
     case 'text':
     case 'fields':
       return value.length > 0 ? value.join(' && ') : tr('values.any');
+    case 'exclude':
+      return value.length > 0 ? value.join(' && ') : tr('values.none');
     case 'results':
       return value.length > 0 ? value.map((r) => tr(`results.${r}`)).join(', ') : tr('values.any');
     case 'types':

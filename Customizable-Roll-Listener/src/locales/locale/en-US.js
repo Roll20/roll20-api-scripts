@@ -48,6 +48,7 @@ export default {
       'Roll templates separated by spaces - none for no template - empty for any - Inspect shows a roll’s template',
     types: 'Message types separated by spaces - empty for any except api',
     text: 'Text to look for - see the Help handout - empty for any',
+    exclude: 'Text that stops the listener - separate pieces with && - empty for none',
     regex: 'How to read the text',
     who: 'Speaker or character names separated by commas - empty for anyone',
     players: 'Player names separated by commas - empty for anyone',
@@ -91,6 +92,7 @@ export default {
     templates: 'Roll templates',
     types: 'Message types',
     text: 'Text',
+    exclude: 'Excluded text',
     regex: 'Text is',
     who: 'Speakers / characters',
     players: 'Players',
@@ -149,6 +151,7 @@ export default {
       player: 'player does not match',
       field: 'template field does not match',
       text: 'text not found',
+      exclude: 'excluded text found',
       roll: 'no roll meets the roll conditions',
     },
   },
@@ -199,7 +202,7 @@ export default {
     gmOnly: 'Ask your GM to set up listeners for you.',
     unknownCommand: 'Type !crl help to see every command.',
     badOption:
-      'Options are --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name and --commands.',
+      'Options are --templates, --types, --text, --exclude, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name and --commands.',
     notFound: 'Type !crl to see the list of listeners.',
     nameInvalid:
       'Use up to {max} characters, without these: | { } [ ] \\ @ % # ? ~ or "--", and do not start with "-".',
@@ -233,7 +236,7 @@ export default {
     help: 'Show this list.',
     optionsTitle: 'Options',
     options:
-      'Options: --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name and --commands. Names may be used instead of IDs.',
+      'Options: --templates, --types, --text, --exclude, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name and --commands. Names may be used instead of IDs.',
     placeholders:
       'Commands can use ${who}, ${character}, ${player}, ${template}, ${total}, ${natural}, ${result}, ${expression}, ${table}, ${listener} and ${field:name}.',
     handouts: 'The "{help}" handout explains everything; the "{deck}" handout has buttons.',
@@ -295,6 +298,7 @@ export default {
         'Text: one or more pieces of text, separated by &&, that must all appear. Matching ignores upper and lower case. Text is also found in roll totals and rollable table results, and in the message’s raw content, which Inspect shows under Raw content: for a Beacon card, that is its HTML.',
         '## in the text stands for an inline roll; the roll checks then only look at the rolls found there. Without ##, every roll in the message is checked.',
         'Text can be a regular expression instead of plain text (--regex on).',
+        'Excluded text: pieces of text, separated by &&, that stop the listener when any of them appears, such as --text sword --exclude dagger. They are searched like the text, and read as regular expressions with --regex on.',
         'Speakers / characters: the name shown in chat, or the character name in the roll template. Players: the player’s display name.',
         'Template fields: conditions on the fields Inspect lists, such as subcategory=Attack or title~sword, separated by &&. = and != compare the whole value, ~ and !~ look for text in it, and case is ignored. A missing field counts as empty. Use it rather than --text when you mean one field, because --text also searches a Beacon card’s hidden HTML.',
       ],
@@ -344,6 +348,8 @@ export default {
         'Roll template names, separated by spaces. none = no template. See Roll Template Names above.',
       types: 'Message types, separated by spaces: {types}.',
       text: 'Text to find. Separate pieces with &&. ## marks an inline roll.',
+      exclude:
+        'Text that stops the listener: if any piece appears, it does not trigger. Separate pieces with &&. Searched like --text.',
       regex: 'on to read the text as regular expressions, off for plain text.',
       who: 'Speaker or character names, separated by commas.',
       players: 'Player display names, separated by commas.',
@@ -393,7 +399,7 @@ export default {
     inspector: {
       heading: 'The Inspector',
       points: [
-        'Click Inspect Next Message, then make the roll. CRL whispers what it saw: the message type, speaker, character, template and its fields, every roll with its dice, the text listeners search, the raw content (the message as Roll20 sent it, which --text also searches), and why each listener did or did not trigger.',
+        'Click Inspect Next Message, then make the roll. CRL whispers what it saw: the message type, speaker, character, template and its fields, every roll with its dice, the text listeners search, the raw content (the message as Roll20 sent it, with embedded images shortened, which --text also searches), and why each listener did or did not trigger.',
         'Use it to find a sheet’s template name, or to see what a Beacon sheet (such as D&D 2024) sends.',
         'Beacon sheets post roll cards instead of roll templates. CRL reads them: the template is the card’s first class (dnd-2024 for D&D 2024), the character, title (such as Dexterity Check) and subcategory become fields, and each roll in the breakdown is a roll, so crit, fumble, total and natural checks work.',
       ],
