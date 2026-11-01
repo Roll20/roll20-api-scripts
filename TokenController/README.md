@@ -121,11 +121,13 @@ Only GMs, and other Mods (see [Working with Other Mods](#working-with-other-mods
 | --------------------------------------- | -------------------------------------------------------------- |
 | `!tc` / `!token-control`                | `!tokencontroller`                                             |
 | `!tc set <path> <code>`                 | `!tokencontroller edit <route> <code>`                         |
+| `!tc set <setting> <value>`             | `!tokencontroller set <setting> <value>`                       |
 | `!tc setstart` / `clearstart <path>`    | `!tokencontroller route <route> start set\|clear`              |
 | `!tc build`, `!tc draft`                | `!tokencontroller record`                                      |
 | `!tc tick <ms>`                         | `!tokencontroller set interval <ms>`                           |
 | `!tc unit <n>`                          | `!tokencontroller set buttonStep <n>`                          |
 | `!tc rotate` / `combat` / `substeps`    | `!tokencontroller set facing` / `combatBehaviour` / `movement` |
+| `!tc combat on` / `off`                 | `!tokencontroller combat on` / `off`                           |
 | `!tc pathinterval` / `maxtokens`        | `!tokencontroller route <route> interval` / `max`              |
 | `!tc runonce` / `cycle` / `randomstart` | `!tokencontroller route <route> mode` / `random`               |
 | `!tc duplicate`                         | `!tokencontroller copy`                                        |

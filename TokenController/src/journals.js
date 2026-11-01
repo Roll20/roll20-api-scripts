@@ -159,10 +159,12 @@ export function buildHelpHtml(locale) {
   const legacyCommands = [
     ['!tc / !token-control', `${COMMAND}`],
     ['!tc set <path> <code>', `${COMMAND} edit <route> <code>`],
+    ['!tc set <setting> <value>', `${COMMAND} set <setting> <value>`],
     ['!tc setstart / clearstart <path>', `${COMMAND} route <route> start set|clear`],
     ['!tc build, !tc draft', `${COMMAND} record`],
     ['!tc tick <ms>', `${COMMAND} set interval <ms>`],
     ['!tc rotate / combat / substeps', `${COMMAND} set facing / combatBehaviour / movement`],
+    ['!tc combat on / off', `${COMMAND} combat on / off`],
     ['!tc pathinterval / maxtokens', `${COMMAND} route <route> interval / max`],
     ['!tc runonce / cycle / randomstart', `${COMMAND} route <route> mode / random`],
     ['!tc duplicate', `${COMMAND} copy`],
