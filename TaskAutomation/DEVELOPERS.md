@@ -187,6 +187,22 @@ npm run format
 
 `t(key, locale, vars)` and `tRaw` fall back to en-US. Version 1.0.0 ships en-US only. To add a language, add it to `LOCALE_DEFINITIONS` in `src/locales/metadata.js`, copy `en-US.js` to `<code>.js`, import it in `src/locales/index.js`, then run `npm run sync-locales -- --locale=<code> --yes` and review the text.
 
+```bash
+npm run sync-locales                                   # translate strings missing from any locale
+npm run sync-locales -- --keys handout.commands.intro  # translate reworded keys again (comma-separated)
+npm run sync-locales -- --dry-run                      # list what would be translated, without changes
+npm run sync-locales -- --locale=fr                    # one locale
+npm run sync-locales -- --untranslated                 # also re-send strings still identical to English
+npm run regenerate-locales                             # re-translate everything (slow)
+```
+
+- Strings a locale already has are left alone, even when they match English, because many are meant to (grid names, command words, product names). `--untranslated` re-sends those, so check its result line by line.
+- After rewording an English string, run `--keys` with its key path (array items by index, e.g. `handout.quickStart.steps.2`); otherwise the old translations stay.
+- Four locales are translated at once (`--concurrency=N`, `1` for one at a time). The script slows down and retries when Google asks it to, and asks before starting unless given `--yes`.
+- It uses Google Translate's free endpoint (no key needed), masks `{placeholders}`, `--options` and `&lt;…&gt;`, keeps English when a placeholder does not survive, and formats files with the Mod's Prettier settings.
+- Review the machine translations before a release.
+- `scripts/sync-locales.mjs` is the same file in every Mod in this repository; copy changes to the others.
+
 ## Coding Standards
 
 - Modern JavaScript (ES2020+), strict mode via the Rollup IIFE wrapper.

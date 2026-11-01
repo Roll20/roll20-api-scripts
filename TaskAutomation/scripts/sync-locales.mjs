@@ -7,15 +7,27 @@ import { createInterface } from 'node:readline/promises';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import prettier from 'prettier';
 
+// The same file is used by every Mod in this repository; keep the copies identical.
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const LOCALE_DIR = resolve(__dirname, '../src/locales/locale');
 const SOURCE_LOCALE = 'en-US';
 const GOOGLE_TRANSLATE_HOST = 'translate.googleapis.com';
 const GOOGLE_TRANSLATE_PATH = '/translate_a/single?client=gtx';
+const DEFAULT_CONCURRENCY = 4;
 
 /**
  * @typedef {{ timeoutMs: number, maxRetries: number, retryDelayMs: number, interRequestDelayMs: number }} TranslateConfig
+ */
+
+/**
+ * Which strings a run translates.
+ * - `keys`: key paths (`handout.commands.mods`) translated again even when they have a translation.
+ * - `untranslated`: also re-send strings that are still identical to English.
+ * - `all`: re-translate every string (regenerate mode).
+ *
+ * @typedef {{ keys: string[], untranslated: boolean, all: boolean }} SyncPolicy
  */
 
 /** @type {TranslateConfig} */
@@ -35,6 +47,8 @@ const REGENERATE_CONFIG = {
 };
 
 const PLACEHOLDER_PATTERN = /(\{[^{}]+\}|&lt;[^&]+&gt;|--[a-zA-Z0-9_-]+)/g;
+// The translator sometimes changes the case of mask tokens, so they are matched case-insensitively.
+const MASK_TOKEN_PATTERN = /__L10N_PLACEHOLDER_(\d+)__/giu;
 
 /**
  * Loads a locale module from disk and returns its translation object.
@@ -44,7 +58,7 @@ const PLACEHOLDER_PATTERN = /(\{[^{}]+\}|&lt;[^&]+&gt;|--[a-zA-Z0-9_-]+)/g;
  */
 async function loadLocale(localeCode) {
   const filePath = resolve(LOCALE_DIR, `${localeCode}.js`);
-  const moduleUrl = pathToFileURL(filePath).href;
+  const moduleUrl = `${pathToFileURL(filePath).href}?t=${statSync(filePath).mtimeMs}`;
   const loaded = await import(moduleUrl);
   return loaded.default;
 }
@@ -58,7 +72,7 @@ async function loadLocale(localeCode) {
 function maskPlaceholders(text) {
   const placeholders = [];
   const masked = text.replaceAll(PLACEHOLDER_PATTERN, (match) => {
-    const token = `__TC_PLACEHOLDER_${placeholders.length}__`;
+    const token = `__L10N_PLACEHOLDER_${placeholders.length}__`;
     placeholders.push(match);
     return token;
   });
@@ -73,12 +87,37 @@ function maskPlaceholders(text) {
  * @returns {string} Restored string with original placeholders reinserted.
  */
 function unmaskPlaceholders(text, placeholders) {
-  return placeholders.reduce(
-    (restored, placeholder, index) =>
-      restored
-        .replaceAll(`__TC_PLACEHOLDER_${index}__`, placeholder)
-        .replaceAll(`__TC_PLACEHOLDER_${index}__`, placeholder),
-    text
+  return text.replaceAll(
+    MASK_TOKEN_PATTERN,
+    (match, index) => placeholders[Number(index)] ?? match
+  );
+}
+
+/**
+ * Returns true when a masked string still contains words to translate.
+ *
+ * Strings made only of placeholders and punctuation (e.g. `{source} {verb} {target}.`)
+ * must not be sent for translation: the service translates the mask tokens themselves.
+ *
+ * @param {string} masked Source string after placeholder masking.
+ * @returns {boolean} True when at least one letter remains outside mask tokens.
+ */
+function hasTranslatableText(masked) {
+  return /\p{L}/u.test(masked.replaceAll(MASK_TOKEN_PATTERN, ''));
+}
+
+/**
+ * Returns true when every source placeholder survived translation.
+ *
+ * @param {string} translated Translated string after placeholder restoration.
+ * @param {string[]} placeholders Original placeholders captured before translation.
+ * @returns {boolean} True when each placeholder appears at least as often as in the source.
+ */
+function placeholdersIntact(translated, placeholders) {
+  return placeholders.every(
+    (placeholder) =>
+      translated.split(placeholder).length - 1 >=
+      placeholders.filter((item) => item === placeholder).length
   );
 }
 
@@ -147,6 +186,11 @@ async function translateSingle(text, targetLocale, cache, config, attempt = 0) {
   }
 
   const { masked, placeholders } = maskPlaceholders(text);
+  if (!hasTranslatableText(masked)) {
+    cache.set(cacheKey, text);
+    return text;
+  }
+
   const query = `&sl=en&tl=${encodeURIComponent(targetLocale)}&dt=t&q=${encodeURIComponent(masked)}`;
   const requestPath = `${GOOGLE_TRANSLATE_PATH}${query}`;
 
@@ -160,21 +204,28 @@ async function translateSingle(text, targetLocale, cache, config, attempt = 0) {
       : text;
 
     const translated = unmaskPlaceholders(translatedMasked, placeholders);
+    if (!placeholdersIntact(translated, placeholders)) {
+      console.warn(
+        `[sync-locales] ${targetLocale}: placeholders were altered in translation; keeping English for "${text}"`
+      );
+      cache.set(cacheKey, text);
+      return text;
+    }
     cache.set(cacheKey, translated);
     return translated;
   } catch (error) {
-    if (attempt < config.maxRetries && error.message.includes('timed out')) {
+    // Rate limits (429) and server errors are worth waiting out, like timeouts.
+    const retryable = /timed out|HTTP (429|5\d\d)/u.test(error.message);
+    if (attempt < config.maxRetries && retryable) {
       const delayMs = config.retryDelayMs * Math.pow(2, attempt);
       await new Promise((resolve) => setTimeout(resolve, delayMs));
       return translateSingle(text, targetLocale, cache, config, attempt + 1);
     }
 
-    if (attempt === config.maxRetries) {
-      console.error(
-        `[sync-locales] Translation failed for ${targetLocale} after ${config.maxRetries} retries: ${error.message}`
-      );
-    }
-    cache.set(cacheKey, text);
+    // Keep the English text without caching it; `--untranslated` or `--keys` can retry it later.
+    console.error(
+      `[sync-locales] Translation failed for ${targetLocale} after ${attempt} retries: ${error.message}`
+    );
     return text;
   }
 }
@@ -183,13 +234,15 @@ async function translateSingle(text, targetLocale, cache, config, attempt = 0) {
  * Creates a mutable translation placeholder that is finalized later.
  *
  * @param {string} sourceValue English source value that needs translation.
- * @param {Array<{ set: (value: string) => void, text: string }>} translationTasks Task list used to backfill translated values.
+ * @param {string} path Key path of the value, for dry runs.
+ * @param {Array<{ set: (value: string) => void, text: string, path: string }>} translationTasks Task list used to backfill translated values.
  * @returns {{ readonly value: string }} Deferred wrapper whose `value` is set after translation tasks complete.
  */
-function createDeferredTranslation(sourceValue, translationTasks) {
+function createDeferredTranslation(sourceValue, path, translationTasks) {
   let translatedValue = sourceValue;
   translationTasks.push({
     text: sourceValue,
+    path,
     set: (value) => {
       translatedValue = value;
     },
@@ -202,24 +255,69 @@ function createDeferredTranslation(sourceValue, translationTasks) {
 }
 
 /**
+ * Joins a parent key path and a child key or array index.
+ *
+ * @param {string} parent Parent path ('' at the root).
+ * @param {string|number} key Child key or index.
+ * @returns {string} Dotted path such as `handout.commands.mods` or `quickStart.steps.2`.
+ */
+function joinPath(parent, key) {
+  return parent ? `${parent}.${key}` : String(key);
+}
+
+/**
+ * Returns true when a path is one of the requested keys, or inside one.
+ *
+ * @param {string} path Key path of a string.
+ * @param {string[]} keys Requested key paths.
+ * @returns {boolean} True when the string was asked for.
+ */
+function isRequestedKey(path, keys) {
+  return keys.some((key) => path === key || path.startsWith(`${key}.`));
+}
+
+/**
+ * Decides whether a source string needs translating into the target locale.
+ *
+ * Strings that already exist in the target are left alone by default, even when
+ * they match English: many are meant to (grid names such as "Hex (V)", "CRL",
+ * command examples), and re-sending them on every run mistranslated them.
+ *
+ * @param {string} path Key path of the string.
+ * @param {string} sourceValue English value.
+ * @param {unknown} targetValue Current value in the target locale.
+ * @param {SyncPolicy} policy What this run translates.
+ * @returns {boolean} True when the string should be translated.
+ */
+function needsTranslation(path, sourceValue, targetValue, policy) {
+  if (typeof targetValue !== 'string') {
+    return true;
+  }
+  if (policy.all || isRequestedKey(path, policy.keys)) {
+    return true;
+  }
+  return policy.untranslated && targetValue === sourceValue;
+}
+
+/**
  * Counts the number of strings that need translation in a locale.
  *
  * @param {unknown} sourceValue Source locale node from `en-US`.
  * @param {unknown} targetValue Target locale node at the same path.
- * @param {boolean} [forceRetranslate=false] Whether to count already-translated strings.
+ * @param {SyncPolicy} policy What this run translates.
+ * @param {string} [path=''] Key path of the node.
  * @returns {number} Count of strings needing translation.
  */
-function countTranslationNeeds(sourceValue, targetValue, forceRetranslate = false) {
+function countTranslationNeeds(sourceValue, targetValue, policy, path = '') {
   if (typeof sourceValue === 'string') {
-    return forceRetranslate || typeof targetValue !== 'string' || targetValue === sourceValue
-      ? 1
-      : 0;
+    return needsTranslation(path, sourceValue, targetValue, policy) ? 1 : 0;
   }
 
   if (Array.isArray(sourceValue)) {
     const targetArray = Array.isArray(targetValue) ? targetValue : [];
     return sourceValue.reduce(
-      (sum, item, index) => sum + countTranslationNeeds(item, targetArray[index], forceRetranslate),
+      (sum, item, index) =>
+        sum + countTranslationNeeds(item, targetArray[index], policy, joinPath(path, index)),
       0
     );
   }
@@ -235,7 +333,8 @@ function countTranslationNeeds(sourceValue, targetValue, forceRetranslate = fals
         countTranslationNeeds(
           /** @type {Record<string, unknown>} */ (sourceValue)[key],
           targetObj[key],
-          forceRetranslate
+          policy,
+          joinPath(path, key)
         ),
       0
     );
@@ -245,16 +344,39 @@ function countTranslationNeeds(sourceValue, targetValue, forceRetranslate = fals
 }
 
 /**
+ * Returns true when a key path names something in the source locale.
+ *
+ * @param {Record<string, unknown>} source Source locale data.
+ * @param {string} key Dotted key path.
+ * @returns {boolean} True when the path exists.
+ */
+function keyExists(source, key) {
+  let node = source;
+  for (const part of key.split('.')) {
+    if (!node || typeof node !== 'object' || !(part in node)) {
+      return false;
+    }
+    node = node[part];
+  }
+  return true;
+}
+
+/**
+ * @typedef {{ missing: number, translated: number, pruned: number, policy: SyncPolicy }} SyncStats
+ * @typedef {Array<{ set: (value: string) => void, text: string, path: string }>} TranslationTasks
+ */
+
+/**
  * Synchronizes array entries recursively against source locale structure.
  *
  * @param {unknown[]} sourceArray Source array from `en-US`.
  * @param {unknown} targetValue Current locale value for the same key path.
- * @param {{ missing: number, translated: number }} stats Mutable counters for reporting sync actions.
- * @param {Array<{ set: (value: string) => void, text: string }>} translationTasks Deferred translation tasks collected during traversal.
- * @param {(sourceValue: unknown, targetValue: unknown, stats: { missing: number, translated: number }, translationTasks: Array<{ set: (value: string) => void, text: string }>) => unknown} syncEntry Recursive sync function used for nested values.
+ * @param {SyncStats} stats Mutable counters for reporting sync actions.
+ * @param {TranslationTasks} translationTasks Deferred translation tasks collected during traversal.
+ * @param {string} path Key path of the array.
  * @returns {unknown[]} Synchronized array preserving source structure.
  */
-function syncArray(sourceArray, targetValue, stats, translationTasks, syncEntry) {
+function syncArray(sourceArray, targetValue, stats, translationTasks, path) {
   const targetArray = Array.isArray(targetValue) ? targetValue : [];
   const synced = [];
 
@@ -263,7 +385,15 @@ function syncArray(sourceArray, targetValue, stats, translationTasks, syncEntry)
       stats.missing += 1;
     }
 
-    synced.push(syncEntry(sourceArray[index], targetArray[index], stats, translationTasks));
+    synced.push(
+      syncValue(
+        sourceArray[index],
+        targetArray[index],
+        stats,
+        translationTasks,
+        joinPath(path, index)
+      )
+    );
   }
 
   return synced;
@@ -275,12 +405,12 @@ function syncArray(sourceArray, targetValue, stats, translationTasks, syncEntry)
  *
  * @param {Record<string, unknown>} sourceObject Source object from `en-US`.
  * @param {unknown} targetValue Current locale value for the same object path.
- * @param {{ missing: number, translated: number, pruned: number }} stats Mutable counters for reporting sync actions.
- * @param {Array<{ set: (value: string) => void, text: string }>} translationTasks Deferred translation tasks collected during traversal.
- * @param {(sourceValue: unknown, targetValue: unknown, stats: { missing: number, translated: number, pruned: number }, translationTasks: Array<{ set: (value: string) => void, text: string }>) => unknown} syncEntry Recursive sync function used for nested values.
+ * @param {SyncStats} stats Mutable counters for reporting sync actions.
+ * @param {TranslationTasks} translationTasks Deferred translation tasks collected during traversal.
+ * @param {string} path Key path of the object.
  * @returns {Record<string, unknown>} Synchronized object with schema-only keys retained.
  */
-function syncObject(sourceObject, targetValue, stats, translationTasks, syncEntry) {
+function syncObject(sourceObject, targetValue, stats, translationTasks, path) {
   const targetObject =
     targetValue && typeof targetValue === 'object' && !Array.isArray(targetValue)
       ? /** @type {Record<string, unknown>} */ (targetValue)
@@ -292,7 +422,13 @@ function syncObject(sourceObject, targetValue, stats, translationTasks, syncEntr
       stats.missing += 1;
     }
 
-    synced[key] = syncEntry(sourceObject[key], targetObject[key], stats, translationTasks);
+    synced[key] = syncValue(
+      sourceObject[key],
+      targetObject[key],
+      stats,
+      translationTasks,
+      joinPath(path, key)
+    );
   }
 
   for (const key of Object.keys(targetObject)) {
@@ -305,45 +441,26 @@ function syncObject(sourceObject, targetValue, stats, translationTasks, syncEntr
 }
 
 /**
- * Synchronizes a single string value against the English source string.
- *
- * @param {unknown} sourceValue Source locale value expected to be a string.
- * @param {unknown} targetValue Target locale value to compare.
- * @param {{ missing: number, translated: number, forceRetranslate: boolean }} stats Mutable counters for reporting sync actions.
- * @param {Array<{ set: (value: string) => void, text: string }>} translationTasks Deferred translation tasks collected during traversal.
- * @returns {unknown} Existing localized string or deferred translated value wrapper.
- */
-function syncStringValue(sourceValue, targetValue, stats, translationTasks) {
-  if (typeof targetValue !== 'string') {
-    stats.missing += 1;
-    stats.translated += 1;
-    return createDeferredTranslation(sourceValue, translationTasks);
-  }
-
-  if (stats.forceRetranslate || targetValue === sourceValue) {
-    stats.translated += 1;
-    return createDeferredTranslation(sourceValue, translationTasks);
-  }
-
-  return targetValue;
-}
-
-/**
  * Recursively synchronizes any translation node (string, array, object, or primitive).
  *
  * @param {unknown} sourceValue Source locale node from `en-US`.
  * @param {unknown} targetValue Target locale node at the same path.
- * @param {{ missing: number, translated: number }} stats Mutable counters for reporting sync actions.
- * @param {Array<{ set: (value: string) => void, text: string }>} translationTasks Deferred translation tasks collected during traversal.
+ * @param {SyncStats} stats Mutable counters for reporting sync actions.
+ * @param {TranslationTasks} translationTasks Deferred translation tasks collected during traversal.
+ * @param {string} [path=''] Key path of the node.
  * @returns {unknown} Synchronized node value.
  */
-function syncValue(sourceValue, targetValue, stats, translationTasks) {
+function syncValue(sourceValue, targetValue, stats, translationTasks, path = '') {
   if (typeof sourceValue === 'string') {
-    return syncStringValue(sourceValue, targetValue, stats, translationTasks);
+    if (!needsTranslation(path, sourceValue, targetValue, stats.policy)) {
+      return targetValue;
+    }
+    stats.translated += 1;
+    return createDeferredTranslation(sourceValue, path, translationTasks);
   }
 
   if (Array.isArray(sourceValue)) {
-    return syncArray(sourceValue, targetValue, stats, translationTasks, syncValue);
+    return syncArray(sourceValue, targetValue, stats, translationTasks, path);
   }
 
   if (sourceValue && typeof sourceValue === 'object') {
@@ -352,7 +469,7 @@ function syncValue(sourceValue, targetValue, stats, translationTasks) {
       targetValue,
       stats,
       translationTasks,
-      syncValue
+      path
     );
   }
 
@@ -386,7 +503,8 @@ function finalizeValue(value) {
 }
 
 /**
- * Writes a locale translation object to its locale module file and formats it with Prettier.
+ * Writes a locale translation object to its locale module file and formats it with
+ * Prettier, using the Mod's own Prettier settings so unchanged lines stay unchanged.
  *
  * @param {string} localeCode Locale code for the output file name.
  * @param {Record<string, unknown>} localeData Synchronized translation data to persist.
@@ -395,8 +513,8 @@ function finalizeValue(value) {
 async function writeLocale(localeCode, localeData) {
   const filePath = resolve(LOCALE_DIR, `${localeCode}.js`);
   const content = `const TRANSLATION = ${JSON.stringify(localeData, null, 2)};\n\nexport default TRANSLATION;\n`;
-  writeFileSync(filePath, content, 'utf8');
-  const formatted = await prettier.format(content, { filepath: filePath });
+  const config = (await prettier.resolveConfig(filePath)) ?? {};
+  const formatted = await prettier.format(content, { ...config, filepath: filePath });
   writeFileSync(filePath, formatted, 'utf8');
 }
 
@@ -408,16 +526,28 @@ async function writeLocale(localeCode, localeData) {
  * @param {Record<string, unknown>} localeData Current locale data.
  * @param {Map<string, string>} cache In-memory cache for translation results.
  * @param {TranslateConfig} config Translation configuration.
- * @param {boolean} forceRetranslate Whether to re-translate already-translated strings.
+ * @param {SyncPolicy} policy What this run translates.
+ * @param {boolean} dryRun List what would be translated without translating or writing.
  * @returns {Promise<void>}
  */
-async function processLocale(localeCode, source, localeData, cache, config, forceRetranslate) {
-  const stats = { missing: 0, translated: 0, pruned: 0, forceRetranslate };
+async function processLocale(localeCode, source, localeData, cache, config, policy, dryRun) {
+  /** @type {SyncStats} */
+  const stats = { missing: 0, translated: 0, pruned: 0, policy };
+  /** @type {TranslationTasks} */
   const translationTasks = [];
   const syncedDraft = syncValue(source, localeData, stats, translationTasks);
 
   if (translationTasks.length === 0 && stats.pruned === 0) {
     console.info(`[sync-locales] ${localeCode}: up to date`);
+    return;
+  }
+
+  const prunedNote = stats.pruned > 0 ? `, pruned ${stats.pruned}` : '';
+  if (dryRun) {
+    const paths = translationTasks.map((task) => task.path).join(', ');
+    console.info(
+      `[sync-locales] ${localeCode}: would translate ${stats.translated}${prunedNote}${paths ? ` (${paths})` : ''}`
+    );
     return;
   }
 
@@ -436,66 +566,103 @@ async function processLocale(localeCode, source, localeData, cache, config, forc
   const synced = finalizeValue(syncedDraft);
   await writeLocale(localeCode, synced);
 
-  const prunedNote = stats.pruned > 0 ? `, pruned ${stats.pruned}` : '';
   console.info(
     `[sync-locales] ${localeCode}: missing ${stats.missing}, translated ${stats.translated}${prunedNote}`
   );
 }
 
 /**
- * Synchronizes all non-English locale files against `en-US`.
- * Processes locales in order of most strings needing translation first,
- * then oldest by last-modified date, so interrupted runs make the most progress.
+ * Runs an async worker over items with at most `limit` running at once.
  *
- * @param {string} [localeFilter] Optional locale code to limit sync to a single locale.
- * @returns {Promise<void>} Resolves after all targeted locale files have been synchronized and written.
+ * @template T
+ * @param {T[]} items Items to process, in order.
+ * @param {number} limit Maximum number of workers at once.
+ * @param {(item: T) => Promise<void>} worker Async function run for each item.
+ * @returns {Promise<void>} Resolves when every item has been processed.
  */
-export async function syncLocales(localeFilter) {
-  const files = getLocaleCodes();
+async function runWithConcurrency(items, limit, worker) {
+  let next = 0;
+  const lanes = Array.from({ length: Math.max(1, Math.min(limit, items.length)) }, async () => {
+    while (next < items.length) {
+      const item = items[next];
+      next += 1;
+      await worker(item);
+    }
+  });
+  await Promise.all(lanes);
+}
 
+/**
+ * Returns the target locale codes, optionally limited to one, or null after reporting an error.
+ *
+ * @param {string} [localeFilter] Optional locale code.
+ * @returns {string[] | null} Locale codes to process.
+ */
+function targetLocales(localeFilter) {
   if (localeFilter === SOURCE_LOCALE) {
     console.error(
       `[sync-locales] ${SOURCE_LOCALE} is the source locale and cannot be synchronized.`
     );
     process.exitCode = 1;
+    return null;
+  }
+  let codes = getLocaleCodes().filter((code) => code !== SOURCE_LOCALE);
+  if (localeFilter) {
+    codes = codes.filter((code) => code === localeFilter);
+    if (codes.length === 0) {
+      console.error(`[sync-locales] No locale found matching: ${localeFilter}`);
+      process.exitCode = 1;
+      return null;
+    }
+  }
+  return codes;
+}
+
+/**
+ * Synchronizes non-English locale files against `en-US`.
+ * Processes locales in order of most strings needing translation first,
+ * then oldest by last-modified date, so interrupted runs make the most progress.
+ *
+ * @param {{ localeFilter?: string, policy?: SyncPolicy, concurrency?: number, dryRun?: boolean }} [options] Run options.
+ * @returns {Promise<void>} Resolves after all targeted locale files have been synchronized and written.
+ */
+export async function syncLocales({
+  localeFilter,
+  policy = { keys: [], untranslated: false, all: false },
+  concurrency = DEFAULT_CONCURRENCY,
+  dryRun = false,
+} = {}) {
+  const codes = targetLocales(localeFilter);
+  if (!codes) {
     return;
   }
 
   const source = await loadLocale(SOURCE_LOCALE);
-  let targetLocaleCodes = files.filter((code) => code !== SOURCE_LOCALE);
-
-  if (localeFilter) {
-    targetLocaleCodes = targetLocaleCodes.filter((code) => code === localeFilter);
-    if (targetLocaleCodes.length === 0) {
-      console.error(`[sync-locales] No locale found matching: ${localeFilter}`);
-      process.exitCode = 1;
-      return;
-    }
+  const unknownKeys = policy.keys.filter((key) => !keyExists(source, key));
+  if (unknownKeys.length > 0) {
+    console.error(`[sync-locales] Not in ${SOURCE_LOCALE}: ${unknownKeys.join(', ')}`);
+    process.exitCode = 1;
+    return;
   }
 
   // Pre-scan all locales to determine priority ordering without making any HTTP requests.
   const localeMetadata = await Promise.all(
-    targetLocaleCodes.map(async (localeCode) => {
+    codes.map(async (localeCode) => {
       const filePath = resolve(LOCALE_DIR, `${localeCode}.js`);
       const [localeData, { mtimeMs }] = [await loadLocale(localeCode), statSync(filePath)];
-      const needsTranslation = countTranslationNeeds(source, localeData);
-      return { localeCode, localeData, mtimeMs, needsTranslation };
+      const needs = countTranslationNeeds(source, localeData, policy);
+      return { localeCode, localeData, mtimeMs, needs };
     })
   );
 
   // Sort: most strings needing translation first, then oldest file as tiebreaker.
-  localeMetadata.sort((a, b) => {
-    if (b.needsTranslation !== a.needsTranslation) {
-      return b.needsTranslation - a.needsTranslation;
-    }
-    return a.mtimeMs - b.mtimeMs;
-  });
+  localeMetadata.sort((a, b) => (b.needs !== a.needs ? b.needs - a.needs : a.mtimeMs - b.mtimeMs));
 
   const cache = new Map();
-
-  for (const { localeCode, localeData } of localeMetadata) {
-    await processLocale(localeCode, source, localeData, cache, SYNC_CONFIG, false);
-  }
+  const config = policy.all ? REGENERATE_CONFIG : SYNC_CONFIG;
+  await runWithConcurrency(localeMetadata, concurrency, ({ localeCode, localeData }) =>
+    processLocale(localeCode, source, localeData, cache, config, policy, dryRun)
+  );
 }
 
 /**
@@ -503,69 +670,58 @@ export async function syncLocales(localeFilter) {
  * regardless of whether it already has a translation. Uses longer timeouts.
  *
  * @param {string} [localeFilter] Optional locale code to limit regeneration to a single locale.
+ * @param {number} [concurrency] Locales processed at once.
  * @returns {Promise<void>} Resolves after all targeted locale files have been regenerated.
  */
-export async function regenerateLocales(localeFilter) {
-  const files = readdirSync(LOCALE_DIR)
-    .filter((file) => file.endsWith('.js'))
-    .map((file) => file.replace(/\.js$/u, ''));
-
-  if (localeFilter === SOURCE_LOCALE) {
-    console.error(
-      `[sync-locales] ${SOURCE_LOCALE} is the source locale and cannot be regenerated.`
-    );
-    process.exitCode = 1;
-    return;
-  }
-
-  const source = await loadLocale(SOURCE_LOCALE);
-  let targetLocaleCodes = files.filter((code) => code !== SOURCE_LOCALE);
-
-  if (localeFilter) {
-    targetLocaleCodes = targetLocaleCodes.filter((code) => code === localeFilter);
-    if (targetLocaleCodes.length === 0) {
-      console.error(`[sync-locales] No locale found matching: ${localeFilter}`);
-      process.exitCode = 1;
-      return;
-    }
-  }
-
-  const cache = new Map();
-
-  for (const localeCode of targetLocaleCodes) {
-    const localeData = await loadLocale(localeCode);
-    await processLocale(localeCode, source, localeData, cache, REGENERATE_CONFIG, true);
-  }
+export async function regenerateLocales(localeFilter, concurrency = DEFAULT_CONCURRENCY) {
+  await syncLocales({
+    localeFilter,
+    policy: { keys: [], untranslated: true, all: true },
+    concurrency,
+  });
 }
 
 /**
- * Parses CLI locale filter for regenerate mode.
+ * Returns the value of `--name=value` or `--name value`, or undefined.
+ *
+ * @param {string[]} args CLI arguments.
+ * @param {string} name Flag name without dashes.
+ * @returns {string | undefined} Flag value.
+ */
+function flagValue(args, name) {
+  const eq = args.find((arg) => arg.startsWith(`--${name}=`));
+  if (eq) {
+    return eq.slice(name.length + 3);
+  }
+  const index = args.indexOf(`--${name}`);
+  return index !== -1 && args[index + 1] && !args[index + 1].startsWith('-')
+    ? args[index + 1]
+    : undefined;
+}
+
+/** Flags that take a value, so their value is not mistaken for a positional locale. */
+const VALUE_FLAGS = ['--locale', '--keys', '--concurrency'];
+
+/**
+ * Parses the CLI locale filter.
  * Supports: --locale=<code>, --locale <code>, or a positional locale argument.
  *
  * @param {string[]} args CLI arguments excluding node and script paths.
  * @returns {string | undefined} Parsed locale filter.
  */
 function parseLocaleFilter(args) {
-  const isFlag = (arg) => arg.startsWith('-');
-  const localeEq = args.find((arg) => arg.startsWith('--locale='))?.split('=')[1];
-  const localeFlagIndex = args.indexOf('--locale');
-  const localeNext =
-    localeFlagIndex !== -1 && args[localeFlagIndex + 1] && !isFlag(args[localeFlagIndex + 1])
-      ? args[localeFlagIndex + 1]
-      : undefined;
-  const positional = args.find((arg) => arg !== '--regenerate' && !isFlag(arg));
-
-  const candidates = [localeEq, localeNext, positional].filter(
-    (value, index, values) =>
-      typeof value === 'string' && value.length > 0 && values.indexOf(value) === index
+  const localeFlag = flagValue(args, 'locale');
+  const positional = args.find(
+    (arg, index) => !arg.startsWith('-') && !VALUE_FLAGS.includes(args[index - 1])
   );
 
-  if (localeFlagIndex !== -1 && !localeNext && !localeEq) {
+  if (args.includes('--locale') && !localeFlag) {
     console.error('[sync-locales] Missing locale value after --locale.');
     process.exitCode = 1;
     return undefined;
   }
 
+  const candidates = [...new Set([localeFlag, positional].filter(Boolean))];
   if (candidates.length > 1) {
     console.error(
       `[sync-locales] Conflicting locale values provided: ${candidates.join(', ')}. Use a single locale.`
@@ -589,55 +745,34 @@ function getLocaleCodes() {
 }
 
 /**
- * Builds a sync timing estimate used for pre-run warnings.
+ * Estimates how long a run takes from the strings it will send.
  *
- * Estimated formula:
- * - minimum: 4 minutes × locale count
- * - maximum: 7 minutes × locales needing translation
- *
- * @param {string} [localeFilter] Optional locale code to limit estimate scope.
- * @returns {Promise<{ totalLocales: number, localesNeedingTranslation: number, estimatedMinMinutes: number, estimatedMaxMinutes: number } | null>}
+ * @param {string | undefined} localeFilter Optional locale code.
+ * @param {SyncPolicy} policy What this run translates.
+ * @param {number} concurrency Locales processed at once.
+ * @returns {Promise<{ strings: number, locales: number, minutes: number } | null>} Estimate, or null after an error.
  */
-async function estimateSyncTiming(localeFilter) {
-  const files = getLocaleCodes();
-  const source = await loadLocale(SOURCE_LOCALE);
-  let targetLocaleCodes = files.filter((code) => code !== SOURCE_LOCALE);
-
-  if (localeFilter) {
-    if (localeFilter === SOURCE_LOCALE) {
-      console.error(
-        `[sync-locales] ${SOURCE_LOCALE} is the source locale and cannot be synchronized.`
-      );
-      process.exitCode = 1;
-      return null;
-    }
-
-    targetLocaleCodes = targetLocaleCodes.filter((code) => code === localeFilter);
-    if (targetLocaleCodes.length === 0) {
-      console.error(`[sync-locales] No locale found matching: ${localeFilter}`);
-      process.exitCode = 1;
-      return null;
-    }
+async function estimateSync(localeFilter, policy, concurrency) {
+  const codes = targetLocales(localeFilter);
+  if (!codes) {
+    return null;
   }
-
-  const localeMetadata = await Promise.all(
-    targetLocaleCodes.map(async (localeCode) => {
-      const localeData = await loadLocale(localeCode);
-      const needsTranslation = countTranslationNeeds(source, localeData);
-      return { localeCode, needsTranslation };
-    })
+  const source = await loadLocale(SOURCE_LOCALE);
+  const unknownKeys = policy.keys.filter((key) => !keyExists(source, key));
+  if (unknownKeys.length > 0) {
+    console.error(`[sync-locales] Not in ${SOURCE_LOCALE}: ${unknownKeys.join(', ')}`);
+    process.exitCode = 1;
+    return null;
+  }
+  const counts = await Promise.all(
+    codes.map(async (code) => countTranslationNeeds(source, await loadLocale(code), policy))
   );
-
-  const localesNeedingTranslation = localeMetadata.filter(
-    ({ needsTranslation }) => needsTranslation > 0
-  ).length;
-
-  return {
-    totalLocales: targetLocaleCodes.length,
-    localesNeedingTranslation,
-    estimatedMinMinutes: targetLocaleCodes.length * 4,
-    estimatedMaxMinutes: localesNeedingTranslation * 7,
-  };
+  const strings = counts.reduce((sum, n) => sum + n, 0);
+  const locales = counts.filter((n) => n > 0).length;
+  const delay = (policy.all ? REGENERATE_CONFIG : SYNC_CONFIG).interRequestDelayMs;
+  // Each locale sends its strings one after another; locales run side by side.
+  const seconds = (strings * delay) / 1000 / Math.max(1, Math.min(concurrency, locales || 1));
+  return { strings, locales, minutes: Math.ceil(seconds / 60) };
 }
 
 /**
@@ -669,56 +804,67 @@ async function confirmProceed(args, message) {
 }
 
 /**
- * If this module is executed directly, run syncLocales or regenerateLocales based on CLI flags.
+ * If this module is executed directly, synchronize the locales based on CLI flags.
  * Flags:
- *   --regenerate     Force re-translation of all strings (uses longer timeouts).
- *   --locale=<code>  Limit regeneration to a single locale (only valid with --regenerate).
+ *   --keys a.b,c.d   Translate these keys again even when they have a translation
+ *                    (after rewording the English). Missing strings are filled too.
+ *   --untranslated   Also re-send strings still identical to English (for example after
+ *                    a failed run). Check the result: some strings are meant to stay English.
+ *   --regenerate     Re-translate every string (uses longer timeouts).
+ *   --locale=<code>  Limit the run to a single locale.
+ *   --concurrency=N  Locales translated at once (default 4; 1 for one at a time).
+ *   --dry-run        List what would be translated, without translating or writing.
  *   --yes / -y       Skip the confirmation prompt.
  */
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const args = process.argv.slice(2);
-  const isRegenerate = args.includes('--regenerate');
   const localeFilter = parseLocaleFilter(args);
+  const keys = (flagValue(args, 'keys') ?? '')
+    .split(',')
+    .map((key) => key.trim())
+    .filter(Boolean);
+  if (args.includes('--keys') && keys.length === 0) {
+    console.error('[sync-locales] Missing key paths after --keys.');
+    process.exitCode = 1;
+  }
+  const concurrencyText = flagValue(args, 'concurrency');
+  const concurrency = concurrencyText === undefined ? DEFAULT_CONCURRENCY : Number(concurrencyText);
+  if (!Number.isInteger(concurrency) || concurrency < 1) {
+    console.error('[sync-locales] --concurrency needs a whole number of 1 or more.');
+    process.exitCode = 1;
+  }
 
   if (process.exitCode) {
     process.exit(process.exitCode);
   }
 
-  if (isRegenerate) {
-    const localeCodes = getLocaleCodes().filter((code) => code !== SOURCE_LOCALE);
-    const targetCount = localeFilter ? 1 : localeCodes.length;
-    const targetLabel = localeFilter ? `${localeFilter}` : `${targetCount} locales`;
-    const totalMin = targetCount * 30;
-    const totalMax = targetCount * 60;
+  const isRegenerate = args.includes('--regenerate');
+  const dryRun = args.includes('--dry-run');
+  /** @type {SyncPolicy} */
+  const policy = {
+    keys,
+    untranslated: isRegenerate || args.includes('--untranslated'),
+    all: isRegenerate,
+  };
 
+  const estimate = await estimateSync(localeFilter, policy, concurrency);
+  if (!estimate) {
+    process.exit(process.exitCode || 1);
+  }
+  if (estimate.strings === 0) {
+    console.info('[sync-locales] Nothing to translate.');
+    process.exit(0);
+  }
+  if (!dryRun) {
     const shouldProceed = await confirmProceed(
       args,
-      `[sync-locales] Regenerate mode selected for ${targetLabel}. This can take 30-60 minutes per locale (about ${totalMin}-${totalMax} minutes total).`
+      `[sync-locales] ${estimate.strings} strings to translate in ${estimate.locales} locales, ${concurrency} at a time: about ${estimate.minutes} minute(s), longer if Google asks us to slow down.`
     );
-
-    if (!shouldProceed) {
-      console.info('[sync-locales] Cancelled by user.');
-      process.exit(0);
-    }
-  } else {
-    const syncEstimate = await estimateSyncTiming(localeFilter);
-    if (!syncEstimate) {
-      process.exit(process.exitCode || 1);
-    }
-    const shouldProceed = await confirmProceed(
-      args,
-      `[sync-locales] Sync mode selected. This usually takes several minutes. Estimated minimum: about ${syncEstimate.estimatedMinMinutes} minutes (4 × ${syncEstimate.totalLocales} locales). Estimated maximum: about ${syncEstimate.estimatedMaxMinutes} minutes (7 × ${syncEstimate.localesNeedingTranslation} locales needing translation).`
-    );
-
     if (!shouldProceed) {
       console.info('[sync-locales] Cancelled by user.');
       process.exit(0);
     }
   }
 
-  if (isRegenerate) {
-    await regenerateLocales(localeFilter);
-  } else {
-    await syncLocales(localeFilter);
-  }
+  await syncLocales({ localeFilter, policy, concurrency, dryRun });
 }
