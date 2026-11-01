@@ -7,6 +7,7 @@ Features and a fix from user feedback. There are no breaking changes: new settin
 ### Fixed
 
 - Commands sent by other Mods (for example a ScriptCards `--@tc|` call) were refused with "Only the GM can use TokenController", because Roll20 sends them from the player "API". They are now accepted, and their replies are whispered to the GM.
+- `!tc set <setting> <value>` changed nothing: `!tc` runs version 4 commands, where `set` edits a route, so `!tc set stopMarkers dead;red` answered that there was no route called "stopMarkers". `!tc set` now changes a setting when the first word is a setting's name and no route has that name. Likewise `!tc combat on` and `off` switch combat, instead of toggling Combat Behaviour as version 4's `!tc combat` does.
 
 ### Added
 

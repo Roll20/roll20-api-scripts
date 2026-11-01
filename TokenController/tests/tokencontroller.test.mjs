@@ -628,6 +628,29 @@ test('v4 commands and macros keep working through !tc', () => {
   assertNoErrors(api);
 });
 
+test('!tc set and !tc combat on|off take v5 settings unless a route has that name', () => {
+  const api = game();
+  api.command('!tc set wallMode hold', [], 'API');
+  api.command('!tc set stopMarkers dead;red');
+  api.command('!tc combat on');
+  const s = api.tcState();
+  assert.equal(s.config.wallMode, 'hold');
+  assert.equal(s.config.stopMarkers, 'dead;red');
+  assert.equal(s.config.combatBehaviour, 'pause');
+  assert.equal(s.combat.manual, true);
+  api.command('!tc combat off');
+  assert.equal(s.combat.manual, false);
+  api.command('!tc combat');
+  assert.equal(s.config.combatBehaviour, 'step');
+
+  // A v4 path called like a setting is still edited
+  api.command('!tc add Interval U1D1');
+  api.command('!tc set Interval R1L1');
+  assert.equal(Object.values(s.routes).find((r) => r.name === 'Interval').code, 'R1L1');
+  assert.equal(s.config.interval, 2000);
+  assertNoErrors(api);
+});
+
 test('upgrades a v4 game on startup', () => {
   const api = createSandbox({
     state: {

@@ -115,7 +115,7 @@ Only GMs, and other Mods (see [Working with Other Mods](#working-with-other-mods
 
 ### Version 4 commands
 
-`!tc` and `!token-control` accept every version 4 command, so existing macros and old chat buttons keep working. They also accept the version 5 commands.
+`!tc` and `!token-control` accept every version 4 command, so existing macros and old chat buttons keep working. They also accept the version 5 commands. `!tc set <setting> <value>` changes a setting, and `!tc combat on|off` switches combat, unless a route has that name, when the version 4 meaning is used.
 
 | Version 4                               | Version 5                                                      |
 | --------------------------------------- | -------------------------------------------------------------- |

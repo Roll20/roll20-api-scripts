@@ -2,6 +2,7 @@
 // existing macros, the T-Cntrl_ macros and old chat buttons keep working.
 // v5 subcommands typed after `!tc` pass through unchanged.
 
+import { DEFAULT_CONFIG } from './constants.js';
 import { getConfig, findRoute } from './state.js';
 
 /**
@@ -25,6 +26,22 @@ function routeRef(nameWords) {
   const name = nameWords.map((w) => w.text).join(' ');
   const route = findRoute(name);
   return { route, ref: route ? word(`#${route.id}`) : { text: name, quoted: true } };
+}
+
+/**
+ * Returns true when `set` names a v5 setting rather than a v4 path, so
+ * `!tc set wallMode hold` changes the setting. A route with that name wins.
+ *
+ * @param {object[]} rest Words after `set`.
+ * @returns {boolean} True for a v5 setting.
+ */
+function isV5Set(rest) {
+  if (rest.length === 0) {
+    return true;
+  }
+  const key = rest[0].text.toLowerCase();
+  const isSetting = Object.keys(DEFAULT_CONFIG).some((k) => k.toLowerCase() === key);
+  return isSetting && !routeRef(rest.slice(0, -1)).route;
 }
 
 /**
@@ -67,7 +84,7 @@ export function translateLegacy(words) {
       return { words: [word('list'), word('routes')] };
     }
     case 'set':
-      return { words: [word('edit'), ...rest] };
+      return isV5Set(rest) ? pass : { words: [word('edit'), ...rest] };
     case 'setstart':
     case 'clearstart':
       return {
@@ -105,6 +122,10 @@ export function translateLegacy(words) {
         words: [word('set'), word('facing'), word(config.facing === 'off' ? 'down' : 'off')],
       };
     case 'combat':
+      // v4 `combat` toggled combat behaviour; v5 `combat on|off` switches combat.
+      if (['on', 'off'].includes(rest[0]?.text.toLowerCase())) {
+        return pass;
+      }
       return {
         words: [
           word('set'),
