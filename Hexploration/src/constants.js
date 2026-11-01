@@ -9,6 +9,9 @@ export const STATE_KEY = 'Hexploration';
 export const SCHEMA_VERSION = 2;
 export const COMMAND = '!hexploration';
 
+// The player ID Roll20 gives chat messages sent by Mods with sendChat.
+export const API_PLAYER_ID = 'API';
+
 // v1 commands, kept so existing macros and the Hexploration_menu macro still work.
 export const LEGACY_COMMANDS = {
   '!hexploration_fillPoly': 'fill',

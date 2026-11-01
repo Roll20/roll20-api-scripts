@@ -29,7 +29,7 @@ Type `!hexploration` for the chat menu or `!hexploration help` for the command l
 
 ## Commands
 
-Only GMs can use these commands.
+Only GMs can use these commands. Other Mods can send them too (for example ScriptCards), and their replies are whispered to the GM.
 
 | Command                                       | What it does                                                                        |
 | --------------------------------------------- | ----------------------------------------------------------------------------------- |

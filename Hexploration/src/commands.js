@@ -12,6 +12,7 @@ import {
 } from './chat.js';
 import {
   ANNOUNCE_OPTIONS,
+  API_PLAYER_ID,
   COMMAND,
   DEFAULT_CONFIG,
   HANDOUT_DECK_NAME,
@@ -969,7 +970,9 @@ export function handleInput(msg) {
   if (!isMain && !legacy) {
     return;
   }
-  if (!playerIsGM(msg.playerid)) {
+  // Commands sent by other Mods (ScriptCards, macros run by the API) come from
+  // the player "API". Replies to them go to the GM.
+  if (msg.playerid !== API_PLAYER_ID && !playerIsGM(msg.playerid)) {
     return;
   }
 

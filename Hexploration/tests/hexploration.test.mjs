@@ -106,6 +106,14 @@ describe('startup', () => {
     game.command('!hexploration', [], 'p1');
     assert.equal(game.chat.length, before);
   });
+
+  it('accepts commands sent by other Mods and answers the GM', () => {
+    const game = readyGame();
+    const before = game.chat.length;
+    game.command('!hexploration', [], 'API');
+    assert.ok(game.chat.length > before);
+    assert.ok(game.chat.at(-1).text.startsWith('/w gm '));
+  });
 });
 
 describe('filling (Jumpgate)', () => {
