@@ -21,7 +21,7 @@ import {
   SCRIPT_NAME,
   SCRIPT_VERSION,
 } from './constants.js';
-import { t } from './i18n.js';
+import { LOCALE_DEFINITIONS, t } from './i18n.js';
 import { getConfig } from './state.js';
 import { escapeHtml } from './utils.js';
 
@@ -434,6 +434,15 @@ function buildConfigSection(lang) {
     btn('Bar 3', `${COMMAND} config ac-bar bar3`, true),
     btn(t('ui.disableAc', lang), `${COMMAND} config ac-bar none`, true),
   ];
+  // One button opens a drop-down of every language; the list below it shows what is available
+  const languageQuery = LOCALE_DEFINITIONS.map((l) => `${l.nativeName || l.name},${l.code}`).join(
+    '|'
+  );
+  const languageList = LOCALE_DEFINITIONS.map((l) =>
+    l.code === lang
+      ? `<b>${escapeHtml(l.nativeName || l.name)}</b>`
+      : escapeHtml(l.nativeName || l.name)
+  ).join(' · ');
 
   return [
     section(t('ui.config', lang)),
@@ -444,7 +453,16 @@ function buildConfigSection(lang) {
     '</div>',
     `<div style="color:${COLOR_MUTED};font-size:0.8em;margin-top:3px">${escapeHtml(t('labels.acBar', lang))}</div><div>`,
     ...acBarButtons,
-    '</div></div>',
+    '</div>',
+    `<div style="color:${COLOR_MUTED};font-size:0.8em;margin-top:3px">${escapeHtml(t('labels.language', lang))}</div><div>`,
+    btn(
+      `${t('labels.language', lang)} (${LOCALE_DEFINITIONS.length})`,
+      `${COMMAND} config language ?{${t('labels.language', lang)}|${languageQuery}}`,
+      true
+    ),
+    '</div>',
+    `<div style="color:${COLOR_TEXT};font-size:0.8em;margin-top:3px;line-height:1.5">${languageList}</div>`,
+    '</div>',
   ].join('');
 }
 

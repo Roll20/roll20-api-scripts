@@ -150,6 +150,7 @@ Generate a status report in the **Combat Encounter Director - Status** journal:
 !ced config hp-bar bar1
 !ced config ac-bar bar2
 !ced config ac-bar none
+!ced config language fr
 ```
 
 ### Journal Management
@@ -164,12 +165,19 @@ Rebuild the control panel and status journals:
 
 ## Configuration
 
-| Setting | Default | Options                | Description               |
-| ------- | ------- | ---------------------- | ------------------------- |
-| HP Bar  | bar1    | bar1, bar2, bar3       | Which token bar tracks HP |
-| AC Bar  | bar2    | bar1, bar2, bar3, none | Which token bar tracks AC |
+| Setting  | Default | Options                | Description                           |
+| -------- | ------- | ---------------------- | ------------------------------------- |
+| HP Bar   | bar1    | bar1, bar2, bar3       | Which token bar tracks HP             |
+| AC Bar   | bar2    | bar1, bar2, bar3, none | Which token bar tracks AC             |
+| Language | en-US   | see below              | Language of chat replies and handouts |
 
-Configure via Roll20 One-Click settings or with `!ced config`.
+Configure via Roll20 One-Click settings, the Config section of the Command Deck, or with `!ced config`.
+
+### Languages
+
+Combat Encounter Director speaks 24 languages: Afrikaans, Catalan, Chinese (Traditional), Czech, Danish, Dutch, English, Finnish, French, German, Greek, Hebrew, Hungarian, Italian, Japanese, Korean, Polish, Portuguese (Portugal), Portuguese (Brazil), Russian, Spanish, Swedish, Turkish and Ukrainian.
+
+The Config section of the Command Deck lists them all. Its **Language** button opens a drop-down to choose one; or type `!ced config language <code>`, such as `!ced config language fr`. Chat replies, the Command Deck and the Status handout switch straight away.
 
 ---
 
