@@ -1285,6 +1285,8 @@ function handleConfig(args, playerId) {
         return;
       }
       setConfig({ language: normalized });
+      // Rewrite the Command Deck in the new language, on the view the GM was using
+      installControlPanelHandout(getDeckView());
       // Use the NEW language for the confirmation so the GM sees it's working.
       whisper(
         playerId,
