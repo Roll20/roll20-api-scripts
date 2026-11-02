@@ -5395,6 +5395,10 @@ const SmartAoE = (() => {
       'Pass `--selectedID` and `--playerID`, or install SelectManager and run `!smconfig +playerid` once.',
     ],
     [
+      '!forselected and inline rolls',
+      "SelectManager's `!forselected` drops inline rolls, so write rolls as `<<…>>` instead of `[[…]]`, e.g. `--damageFormula1|<<8d6>>`.",
+    ],
+    [
       '2024 (Beacon) sheets',
       'Use the Mod Script Sandbox v1.5. Saves, damage-type attributes, `--ignore` and `--resource` read the 2024 sheet; spell slots (`lvlN_slots_expended`) count up to `lvlN_slots_total`. Magic Resistance comes from a feature of that name.',
     ],

@@ -7,6 +7,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/). Dates f
 
 A crash fix from user feedback. There are no breaking changes.
 
+### Changed
+
+- The README and help handout explain that SelectManager's `!forselected` drops inline rolls, so rolls in a `!forselected` command should be written as `<<…>>`.
+
 ### Fixed
 
 - **Inline rolls lost by another Mod no longer crash SmartAoE.** SelectManager's `!forselected` sends the command on with `sendChat` but without the original message's inline rolls, so a roll such as `--damageFormula1|[[(5+?{Cast at what level?})d6]]` reached SmartAoE as `$[[0]]` with no result, and SmartAoE stopped with "Cannot read properties of undefined (reading 'total')". SmartAoE now whispers which roll has no result and suggests `<<…>>`, which SmartAoE rolls itself.

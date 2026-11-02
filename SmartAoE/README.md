@@ -308,6 +308,7 @@ The 2024 (Beacon) D&D sheet doesn't store its data as attribute objects. When Sm
 - **Line origins** for casters larger than one square start from the token's centre or nearest corner/face (`--origin`), not from the edge facing the target.
 - **Walls** (`--blockedBy`) are checked when the AoE is drawn, that is when the control token moves. After opening or closing a door, nudge the control token so the AoE is drawn again before you trigger it. Walls and doors on the walls layer count, whatever their kind (one-way and transparent walls block too). The point of origin is the caster's centre, corner or face (`--origin`), or the centre of a floating AoE.
 - When SmartAoE is called by another script (ScriptCards, etc.), the call has no selected token and a generic player id. Install **SelectManager** and run `!smconfig +playerid` once, or pass `--selectedID` and `--playerID`.
+- **`!forselected` and inline rolls:** SelectManager's `!forselected` sends the command on without its inline rolls, so a `[[…]]` roll reaches SmartAoE with no result and SmartAoE whispers an error. Write the roll as `<<…>>` instead, e.g. `--damageFormula1|<<(5+?{Cast at what level?})d6>>`, so SmartAoE rolls it itself.
 
 ---
 
