@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.0.2
+
+### Added
+
+- The Config section of the Command Deck now has a **Language** button, which opens a drop-down of all 24 languages, and lists the languages available. Its description already said the language could be chosen there.
+- README: a Languages section, and the language setting in the configuration table.
+
+### Fixed
+
+- Changing the language with `!ced config language` now rewrites the Command Deck in that language straight away. Before, only chat replies changed until the deck was next rebuilt.
+
 ## 1.0.1
 
 ### Added

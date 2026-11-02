@@ -4,16 +4,16 @@
  * ------------------------------------------------
  * Name: Combat Encounter Director
  * Script: CombatEncounterDirector.js
- * Version: 1.0.1
- * Built: 2026-06-15T02:32:49.995Z
+ * Version: 1.0.2
+ * Built: 2026-11-02T19:21:10.960Z
  */
 const CombatEncounterDirectorMod = (() => {
   'use strict';
 
   // Build-time placeholders replaced by rollup.config.js inject-build-metadata plugin.
   const SCRIPT_NAME = 'Combat Encounter Director';
-  const SCRIPT_VERSION = '1.0.1';
-  const SCRIPT_LAST_UPDATED = '2026-06-15T02:32:49.995Z';
+  const SCRIPT_VERSION = '1.0.2';
+  const SCRIPT_LAST_UPDATED = '2026-11-02T19:21:10.960Z';
 
   const DEFAULT_LOCALE$1 = 'en-US';
 
@@ -8006,6 +8006,15 @@ const CombatEncounterDirectorMod = (() => {
       btn('Bar 3', `${COMMAND} config ac-bar bar3`, true),
       btn(t('ui.disableAc', lang), `${COMMAND} config ac-bar none`, true),
     ];
+    // One button opens a drop-down of every language; the list below it shows what is available
+    const languageQuery = LOCALE_DEFINITIONS.map((l) => `${l.nativeName || l.name},${l.code}`).join(
+      '|'
+    );
+    const languageList = LOCALE_DEFINITIONS.map((l) =>
+      l.code === lang
+        ? `<b>${escapeHtml(l.nativeName || l.name)}</b>`
+        : escapeHtml(l.nativeName || l.name)
+    ).join(' · ');
 
     return [
       section(t('ui.config', lang)),
@@ -8016,7 +8025,16 @@ const CombatEncounterDirectorMod = (() => {
       '</div>',
       `<div style="color:${COLOR_MUTED};font-size:0.8em;margin-top:3px">${escapeHtml(t('labels.acBar', lang))}</div><div>`,
       ...acBarButtons,
-      '</div></div>',
+      '</div>',
+      `<div style="color:${COLOR_MUTED};font-size:0.8em;margin-top:3px">${escapeHtml(t('labels.language', lang))}</div><div>`,
+      btn(
+        `${t('labels.language', lang)} (${LOCALE_DEFINITIONS.length})`,
+        `${COMMAND} config language ?{${t('labels.language', lang)}|${languageQuery}}`,
+        true
+      ),
+      '</div>',
+      `<div style="color:${COLOR_TEXT};font-size:0.8em;margin-top:3px;line-height:1.5">${languageList}</div>`,
+      '</div>',
     ].join('');
   }
 
@@ -10166,6 +10184,8 @@ const CombatEncounterDirectorMod = (() => {
           return;
         }
         setConfig({ language: normalized });
+        // Rewrite the Command Deck in the new language, on the view the GM was using
+        installControlPanelHandout(getDeckView());
         // Use the NEW language for the confirmation so the GM sees it's working.
         whisper(
           playerId,
