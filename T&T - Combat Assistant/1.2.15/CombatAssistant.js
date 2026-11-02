@@ -396,9 +396,9 @@ const CombatAssistant = (() => {
         { key: 'CA_ROLLS_INITIATIVE', page: 'main', label: '2024 Combat Assistant Rolls Initiative', type: 'boolean', tip: 'ON lets Combat Assistant roll 2024 initiative from sheet data; OFF keeps native Roll20 initiative.' },
         { key: 'SHEET_2014_CA_ROLLS', page: 'main', label: '2014 Combat Assistant Rolls', type: 'boolean', tip: 'OFF keeps native 2014 saving throws and initiative; ON lets Combat Assistant perform those supported rolls.' },
 
-        { key: 'HIDE_COMBAT_LOG', page: 'privacy', label: 'Hide Combat Log', type: 'boolean', tip: 'Whisper combat results to the GM, including healing amounts. Public healing logs announce healing without HP values or amounts.' },
+        { key: 'HIDE_COMBAT_LOG', page: 'privacy', label: 'Hide Combat Log', type: 'boolean', tip: 'Whisper Combat Logs to the GM instead of publishing them. Healing amounts are controlled separately by Hide Damage Details.' },
         { key: 'HIDE_RESISTANCE_DETAILS', page: 'privacy', label: 'Hide Resistance Details', type: 'boolean', tip: 'Keep final damage amount and type visible, but hide resistance, immunity, and vulnerability explanations in public Combat Logs.' },
-        { key: 'HIDE_DAMAGE_DETAILS', page: 'privacy', label: 'Hide Damage Details', type: 'boolean', tip: 'Hide damage amount and damage type from public Combat Log narration. This also suppresses resistance-detail text.' },
+        { key: 'HIDE_DAMAGE_DETAILS', page: 'privacy', label: 'Hide Damage Details', type: 'boolean', tip: 'Hide public damage details and healing amounts in Combat Logs, including GM whispers. This also suppresses public resistance-detail text.' },
         { key: 'REVEAL_DAMAGE_SOURCE', page: 'privacy', label: 'Reveal Damage Source in Log', type: 'boolean', tip: 'Show who caused damage or healing and which attack, spell, or ability caused it.' },
         { key: 'REVEAL_TOKEN_NAMES_IN_LOG', page: 'privacy', label: 'Reveal Token Names in Log', type: 'boolean', tip: 'Show token names in Combat Logs. OFF uses generic Target, Attacker, Caster, or Healer labels.' },
         { key: 'PUBLIC_PRESENTATION_CARD', page: 'privacy', label: 'Public Presentation Card', type: 'boolean', tip: 'ON shows the startup presentation card publicly. OFF whispers it only to the GM.' },
@@ -4633,7 +4633,8 @@ const CombatAssistant = (() => {
             const sourceAction = String(result.sourceAction || '').trim();
             const isManual = /^manual$/i.test(sourceName) || /^manual(?:\s+healing)?$/i.test(sourceAction);
             const gmOnly = RuntimeConfig.get('HIDE_COMBAT_LOG');
-            const narrative = this.buildHealNarrative(result, isManual || gmOnly);
+            const showAmount = !RuntimeConfig.get('HIDE_DAMAGE_DETAILS');
+            const narrative = this.buildHealNarrative(result, showAmount);
             const fallbackTitle = result.mode === 'temp' ? 'Temporary HP' : 'Healing';
             if (isManual) {
                 const cardStyle = this.getMessageCardStyle('success');
@@ -4651,7 +4652,7 @@ const CombatAssistant = (() => {
             const revealSource = RuntimeConfig.get('REVEAL_DAMAGE_SOURCE');
             const title = revealSource && sourceAction ? sourceAction : fallbackTitle;
             let body = narrative;
-            if (gmOnly) {
+            if (gmOnly && showAmount) {
                 const rolledAmount = Math.max(0, Utils.toInt(result.rolledAmount !== undefined ? result.rolledAmount : result.amount, 0));
                 const rollFormula = String(result.rollFormula || '').trim();
                 const rollDetail = String(result.rollDetail || '').trim();
@@ -7108,20 +7109,13 @@ const CombatAssistant = (() => {
             const sourceActionRaw = String(result.sourceAction || '').trim();
             const isManualSource = /^manual$/i.test(sourceNameRaw) || /^manual(?:\s+healing)?$/i.test(sourceActionRaw);
             const revealSource = RuntimeConfig.get('REVEAL_DAMAGE_SOURCE') && !isManualSource;
-            const sourceName = revealSource && sourceNameRaw
-                ? this.characterNameHtml(hideNames ? 'Healer' : sourceNameRaw)
-                : '';
+            const sourceName = this.characterNameHtml(revealSource && sourceNameRaw && !hideNames ? sourceNameRaw : 'Healer');
             const sourceAction = revealSource && sourceActionRaw
                 ? Html.span(Utils.escapeHtml(sourceActionRaw), 'color:rgb(245,220,80);font-weight:900;')
                 : '';
-            if (sourceName || sourceAction) {
-                const source = sourceName || this.characterNameHtml('Someone');
-                const usingText = sourceAction ? (' using ' + sourceAction) : '';
-                if (result.mode === 'temp') return source + ' grants' + amount + ' temporary HP to ' + targetName + usingText + '.';
-                return source + ' heals ' + targetName + (showAmount ? (' for' + amount + ' HP') : '') + usingText + '.';
-            }
-            if (result.mode === 'temp') return targetName + ' receives' + amount + ' temporary HP.';
-            return targetName + ' is healed' + (showAmount ? (' for' + amount + ' HP') : '') + '.';
+            const usingText = sourceAction ? (' using ' + sourceAction) : '';
+            if (result.mode === 'temp') return sourceName + ' grants' + amount + ' temporary HP to ' + targetName + usingText + '.';
+            return sourceName + ' heals' + (showAmount ? (amount + ' Hit Points to ') : ' ') + targetName + usingText + '.';
         },
 
         conditionBadgesHtml(conditions) {
