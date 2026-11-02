@@ -5,7 +5,7 @@
  * Name: Combat Encounter Director
  * Script: CombatEncounterDirector.js
  * Version: 1.0.2
- * Built: 2026-11-02T19:51:12.894Z
+ * Built: 2026-11-02T23:46:39.247Z
  */
 const CombatEncounterDirectorMod = (() => {
   'use strict';
@@ -13,7 +13,7 @@ const CombatEncounterDirectorMod = (() => {
   // Build-time placeholders replaced by rollup.config.js inject-build-metadata plugin.
   const SCRIPT_NAME = 'Combat Encounter Director';
   const SCRIPT_VERSION = '1.0.2';
-  const SCRIPT_LAST_UPDATED = '2026-11-02T19:51:12.894Z';
+  const SCRIPT_LAST_UPDATED = '2026-11-02T23:46:39.247Z';
 
   const DEFAULT_LOCALE$1 = 'en-US';
 
@@ -468,6 +468,23 @@ const CombatEncounterDirectorMod = (() => {
 
   const DIVIDER_STYLE = `border:none;border-top:1px solid ${COLOR_BORDER};margin:4px 0`;
 
+  // Tables in handouts. Roll20's handout stylesheet gives tables borders and a white background,
+  // so every table part sets its own border and background to keep the chat card's look.
+  const TABLE_RESET = 'border:none;background:transparent';
+  const TABLE_STYLE = `width:100%;border-collapse:collapse;${TABLE_RESET};margin:0;font-size:0.9em`;
+  const TH_STYLE = [
+    TABLE_RESET,
+    `border-bottom:1px solid ${COLOR_ACCENT}`,
+    `color:${COLOR_MUTED}`,
+    'padding:2px 5px',
+    'text-align:left',
+    'font-weight:normal',
+    'font-size:0.8em',
+    'text-transform:uppercase',
+    'letter-spacing:0.08em',
+  ].join(';');
+  const TD_BASE_STYLE = `${TABLE_RESET};border-bottom:1px solid ${COLOR_BORDER};padding:3px 5px`;
+
   /**
    * Sends a whisper to a specific player.
    *
@@ -578,6 +595,24 @@ const CombatEncounterDirectorMod = (() => {
    */
   function buildSectionLabel(text) {
     return `<div style="${SECTION_LABEL_STYLE}">${escapeHtml(text)}</div>`;
+  }
+
+  /**
+   * Builds a table styled like the chat cards, safe inside a handout.
+   *
+   * @param {string[]} headings Column headings (plain text — will be escaped).
+   * @param {string[][]} rows Cells of each row (trusted HTML).
+   * @returns {string} HTML table string.
+   */
+  function buildTable(headings, rows) {
+    const head = headings.map((h) => `<th style="${TH_STYLE}">${escapeHtml(h)}</th>`).join('');
+    const body = rows
+      .map(
+        (cells) =>
+          `<tr style="${TABLE_RESET}">${cells.map((c) => `<td style="${TD_BASE_STYLE};color:${COLOR_TEXT}">${c}</td>`).join('')}</tr>`
+      )
+      .join('');
+    return `<table style="${TABLE_STYLE}"><thead><tr style="${TABLE_RESET}">${head}</tr></thead><tbody>${body}</tbody></table>`;
   }
 
   /**
@@ -804,6 +839,9 @@ const CombatEncounterDirectorMod = (() => {
       deckViewPositioning: 'Posisionering',
       deckViewAdmin: 'Admin',
       deckViewLabel: 'Bekyk:',
+      languageCode: 'Kode',
+      languageName: 'Taal',
+      languageNative: 'Naam in eie taal',
       partySizeLabel: 'Partytjie grootte:',
       hpPercentLabel: 'HP %:',
       acModLabel: 'AC wysiger:',
@@ -1037,6 +1075,9 @@ const CombatEncounterDirectorMod = (() => {
       deckViewPositioning: 'Posicionament',
       deckViewAdmin: 'Admin',
       deckViewLabel: 'Visualització:',
+      languageCode: 'Codi',
+      languageName: 'Llengua',
+      languageNative: 'Nom nadiu',
       partySizeLabel: 'Mida del partit:',
       hpPercentLabel: 'HP %:',
       acModLabel: 'Modificador de CA:',
@@ -1265,6 +1306,9 @@ const CombatEncounterDirectorMod = (() => {
       deckViewPositioning: '定位',
       deckViewAdmin: '行政',
       deckViewLabel: '看法：',
+      languageCode: '程式碼',
+      languageName: '語言',
+      languageNative: '本地名稱',
       partySizeLabel: '聚會規模：',
       hpPercentLabel: '生命值百分比：',
       acModLabel: '交流調節器：',
@@ -1488,6 +1532,9 @@ const CombatEncounterDirectorMod = (() => {
       deckViewPositioning: 'Polohování',
       deckViewAdmin: 'Admin',
       deckViewLabel: 'Pohled:',
+      languageCode: 'Kód',
+      languageName: 'Jazyk',
+      languageNative: 'Vlastní název',
       partySizeLabel: 'Velikost party:',
       hpPercentLabel: '% HP:',
       acModLabel: 'AC modifikátor:',
@@ -1716,6 +1763,9 @@ const CombatEncounterDirectorMod = (() => {
       deckViewPositioning: 'Positionering',
       deckViewAdmin: 'Admin',
       deckViewLabel: 'Udsigt:',
+      languageCode: 'Kode',
+      languageName: 'Sprog',
+      languageNative: 'Eget navn',
       partySizeLabel: 'Feststørrelse:',
       hpPercentLabel: 'HP %:',
       acModLabel: 'AC modifikator:',
@@ -1949,6 +1999,9 @@ const CombatEncounterDirectorMod = (() => {
       deckViewPositioning: 'Positionering',
       deckViewAdmin: 'Beheerder',
       deckViewLabel: 'Weergave:',
+      languageCode: 'Code',
+      languageName: 'Taal',
+      languageNative: 'Eigen naam',
       partySizeLabel: 'Partijgrootte:',
       hpPercentLabel: 'PK%:',
       acModLabel: 'AC-modificator:',
@@ -2180,6 +2233,9 @@ const CombatEncounterDirectorMod = (() => {
       deckViewPositioning: 'Positioning',
       deckViewAdmin: 'Admin',
       deckViewLabel: 'View:',
+      languageCode: 'Code',
+      languageName: 'Language',
+      languageNative: 'Native name',
       partySizeLabel: 'Party size:',
       hpPercentLabel: 'HP %:',
       acModLabel: 'AC modifier:',
@@ -2409,6 +2465,9 @@ const CombatEncounterDirectorMod = (() => {
       deckViewPositioning: 'Paikannus',
       deckViewAdmin: 'Admin',
       deckViewLabel: 'Näytä:',
+      languageCode: 'Koodi',
+      languageName: 'Kieli',
+      languageNative: 'Alkuperäinen nimi',
       partySizeLabel: 'Juhlan koko:',
       hpPercentLabel: 'HP %:',
       acModLabel: 'AC-muunnin:',
@@ -2647,6 +2706,9 @@ const CombatEncounterDirectorMod = (() => {
       deckViewPositioning: 'Positionnement',
       deckViewAdmin: 'Administrateur',
       deckViewLabel: 'Voir:',
+      languageCode: 'Code',
+      languageName: 'Langue',
+      languageNative: 'Nom natif',
       partySizeLabel: 'Taille du groupe :',
       hpPercentLabel: '% de PV :',
       acModLabel: 'Modificateur AC :',
@@ -2885,6 +2947,9 @@ const CombatEncounterDirectorMod = (() => {
       deckViewPositioning: 'Positionierung',
       deckViewAdmin: 'Admin',
       deckViewLabel: 'Sicht:',
+      languageCode: 'Code',
+      languageName: 'Sprache',
+      languageNative: 'Eigenbezeichnung',
       partySizeLabel: 'Gruppengröße:',
       hpPercentLabel: 'HP %:',
       acModLabel: 'AC-Modifikator:',
@@ -3122,6 +3187,9 @@ const CombatEncounterDirectorMod = (() => {
       deckViewPositioning: 'Τοποθέτηση',
       deckViewAdmin: 'Διαχειρ',
       deckViewLabel: 'Θέα:',
+      languageCode: 'Κώδικας',
+      languageName: 'Γλώσσα',
+      languageNative: 'Εγγενές όνομα',
       partySizeLabel: 'Μέγεθος πάρτι:',
       hpPercentLabel: '% HP:',
       acModLabel: 'Τροποποιητής AC:',
@@ -3352,6 +3420,9 @@ const CombatEncounterDirectorMod = (() => {
       deckViewPositioning: 'מיקום',
       deckViewAdmin: 'מנהל מערכת',
       deckViewLabel: 'נוֹף:',
+      languageCode: 'קוד',
+      languageName: 'שפה',
+      languageNative: 'שם מקורי',
       partySizeLabel: 'גודל מסיבה:',
       hpPercentLabel: 'HP %:',
       acModLabel: 'משנה AC:',
@@ -3581,6 +3652,9 @@ const CombatEncounterDirectorMod = (() => {
       deckViewPositioning: 'Elhelyezés',
       deckViewAdmin: 'Admin',
       deckViewLabel: 'Kilátás:',
+      languageCode: 'Kód',
+      languageName: 'Nyelv',
+      languageNative: 'Saját név',
       partySizeLabel: 'A társaság mérete:',
       hpPercentLabel: 'HP %:',
       acModLabel: 'AC módosító:',
@@ -3819,6 +3893,9 @@ const CombatEncounterDirectorMod = (() => {
       deckViewPositioning: 'Posizionamento',
       deckViewAdmin: 'Ammin',
       deckViewLabel: 'Visualizzazione:',
+      languageCode: 'Codice',
+      languageName: 'Lingua',
+      languageNative: 'Nome nativo',
       partySizeLabel: 'Dimensione del gruppo:',
       hpPercentLabel: '% HP:',
       acModLabel: 'Modificatore CA:',
@@ -4053,6 +4130,9 @@ const CombatEncounterDirectorMod = (() => {
       deckViewPositioning: '位置決め',
       deckViewAdmin: '管理者',
       deckViewLabel: 'ビュー：',
+      languageCode: 'コード',
+      languageName: '言語',
+      languageNative: '現地名',
       partySizeLabel: 'パーティーの規模:',
       hpPercentLabel: 'HP %:',
       acModLabel: 'AC モディファイア:',
@@ -4282,6 +4362,9 @@ const CombatEncounterDirectorMod = (() => {
       deckViewPositioning: '포지셔닝',
       deckViewAdmin: '관리자',
       deckViewLabel: '보다:',
+      languageCode: '암호',
+      languageName: '언어',
+      languageNative: '현지 이름',
       partySizeLabel: '파티 규모:',
       hpPercentLabel: 'HP %:',
       acModLabel: 'AC 수정자:',
@@ -4512,6 +4595,9 @@ const CombatEncounterDirectorMod = (() => {
       deckViewPositioning: 'Pozycjonowanie',
       deckViewAdmin: 'Administrator',
       deckViewLabel: 'Pogląd:',
+      languageCode: 'Kod',
+      languageName: 'Język',
+      languageNative: 'Nazwa rodzima',
       partySizeLabel: 'Rozmiar imprezy:',
       hpPercentLabel: '% HP:',
       acModLabel: 'Modyfikator AC:',
@@ -4746,6 +4832,9 @@ const CombatEncounterDirectorMod = (() => {
       deckViewPositioning: 'Posicionamento',
       deckViewAdmin: 'Administrador',
       deckViewLabel: 'Ver:',
+      languageCode: 'Código',
+      languageName: 'Idioma',
+      languageNative: 'Nome nativo',
       partySizeLabel: 'Tamanho da festa:',
       hpPercentLabel: '% de HP:',
       acModLabel: 'Modificador AC:',
@@ -4981,6 +5070,9 @@ const CombatEncounterDirectorMod = (() => {
       deckViewPositioning: 'Posicionamento',
       deckViewAdmin: 'Administrador',
       deckViewLabel: 'Visualizar:',
+      languageCode: 'Código',
+      languageName: 'Idioma',
+      languageNative: 'Nome nativo',
       partySizeLabel: 'Tamanho da festa:',
       hpPercentLabel: '% de HP:',
       acModLabel: 'Modificador AC:',
@@ -5216,6 +5308,9 @@ const CombatEncounterDirectorMod = (() => {
       deckViewPositioning: 'Позиционирование',
       deckViewAdmin: 'Админ',
       deckViewLabel: 'Вид:',
+      languageCode: 'Код',
+      languageName: 'Язык',
+      languageNative: 'Самоназвание',
       partySizeLabel: 'Размер вечеринки:',
       hpPercentLabel: 'ХП %:',
       acModLabel: 'Модификатор переменного тока:',
@@ -5452,6 +5547,9 @@ const CombatEncounterDirectorMod = (() => {
       deckViewPositioning: 'Posicionamiento',
       deckViewAdmin: 'Administración',
       deckViewLabel: 'Vista:',
+      languageCode: 'Código',
+      languageName: 'Idioma',
+      languageNative: 'Nombre nativo',
       partySizeLabel: 'Tamaño del grupo:',
       hpPercentLabel: '% de vida:',
       acModLabel: 'Modificador de CA:',
@@ -5686,6 +5784,9 @@ const CombatEncounterDirectorMod = (() => {
       deckViewPositioning: 'Positionering',
       deckViewAdmin: 'Administration',
       deckViewLabel: 'Se:',
+      languageCode: 'Koda',
+      languageName: 'Språk',
+      languageNative: 'Eget namn',
       partySizeLabel: 'Feststorlek:',
       hpPercentLabel: 'HP %:',
       acModLabel: 'AC modifierare:',
@@ -5920,6 +6021,9 @@ const CombatEncounterDirectorMod = (() => {
       deckViewPositioning: 'Konumlandırma',
       deckViewAdmin: 'Yönetici',
       deckViewLabel: 'Görüş:',
+      languageCode: 'Kod',
+      languageName: 'Dil',
+      languageNative: 'Yerel ad',
       partySizeLabel: 'Parti büyüklüğü:',
       hpPercentLabel: "HP %'si:",
       acModLabel: 'AC değiştirici:',
@@ -6154,6 +6258,9 @@ const CombatEncounterDirectorMod = (() => {
       deckViewPositioning: 'Позиціонування',
       deckViewAdmin: 'адмін',
       deckViewLabel: 'Переглянути:',
+      languageCode: 'Код',
+      languageName: 'Мова',
+      languageNative: 'Рідна назва',
       partySizeLabel: 'Розмір партії:',
       hpPercentLabel: 'HP %:',
       acModLabel: 'Модифікатор змінного струму:',
@@ -7987,11 +8094,19 @@ const CombatEncounterDirectorMod = (() => {
     const languageQuery = LOCALE_DEFINITIONS.map((l) => `${l.nativeName || l.name},${l.code}`).join(
       '|'
     );
-    const languageList = LOCALE_DEFINITIONS.map((l) =>
-      l.code === lang
-        ? `<b>${escapeHtml(l.nativeName || l.name)}</b>`
-        : escapeHtml(l.nativeName || l.name)
-    ).join(' · ');
+    // The same table as the other MidNite Shadow mods: flag and code, English name, native name.
+    // The language in use is in bold.
+    const languageTable = buildTable(
+      [t('ui.languageCode', lang), t('ui.languageName', lang), t('ui.languageNative', lang)],
+      LOCALE_DEFINITIONS.map((l) => {
+        const bold = (html) => (l.code === lang ? `<b>${html}</b>` : html);
+        return [
+          `${buildLocaleFlag(l)}${bold(escapeHtml(l.code))}`,
+          bold(escapeHtml(l.name)),
+          bold(escapeHtml(l.nativeName || l.name)),
+        ];
+      })
+    );
 
     return [
       section(t('ui.config', lang)),
@@ -8010,9 +8125,40 @@ const CombatEncounterDirectorMod = (() => {
         true
       ),
       '</div>',
-      `<div style="color:${COLOR_TEXT};font-size:0.8em;margin-top:3px;line-height:1.5">${languageList}</div>`,
+      `<div style="margin-top:4px">${languageTable}</div>`,
       '</div>',
     ].join('');
+  }
+
+  /**
+   * Builds a Twemoji asset URL for a locale flag.
+   *
+   * @param {string} flag Unicode regional-indicator flag.
+   * @returns {string} SVG asset URL or an empty string.
+   */
+  function flagAssetUrl(flag) {
+    const codepoints = Array.from(String(flag || '').trim())
+      .map((character) => character.codePointAt(0).toString(16))
+      .join('-');
+    return codepoints
+      ? `https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/${codepoints}.svg`
+      : '';
+  }
+
+  /**
+   * Builds a flag image for a locale. An image is used because Roll20 on Windows
+   * shows emoji flags as letter pairs.
+   *
+   * @param {object} locale Locale metadata.
+   * @returns {string} Trusted locale flag HTML.
+   */
+  function buildLocaleFlag(locale) {
+    const label = escapeHtml(locale.flagLabel || locale.name);
+    const url = flagAssetUrl(locale.flag);
+    if (!url) {
+      return '';
+    }
+    return `<img src="${escapeHtml(url)}" alt="${label}" title="${label}" style="width:1.1em;height:1.1em;vertical-align:-0.15em;margin-right:4px;" />`;
   }
 
   /**
@@ -8170,26 +8316,12 @@ const CombatEncounterDirectorMod = (() => {
   // HTML builders for the status journal
   // ---------------------------------------------------------------------------
 
-  // The report is built from the same cards as the chat replies (buildCard). Roll20's handout
-  // stylesheet gives tables borders and a white background, so every table part here sets its
-  // own border and background to keep the card's look.
-  const RESET = 'border:none;background:transparent';
-  const TABLE_STYLE = `width:100%;border-collapse:collapse;${RESET};margin:0;font-size:0.9em`;
+  // The report is built from the same cards and tables as the chat replies (chat.js)
+  const RESET = TABLE_RESET;
   const TR_STYLE = RESET;
   const SUMMARY_TD_LABEL_STYLE = `${RESET};padding:1px 0;color:${COLOR_MUTED}`;
   const SUMMARY_TD_VALUE_STYLE = `${RESET};padding:1px 0;color:${COLOR_TEXT};font-weight:bold;text-align:right`;
-  const TH_STYLE = [
-    RESET,
-    `border-bottom:1px solid ${COLOR_ACCENT}`,
-    `color:${COLOR_MUTED}`,
-    'padding:2px 5px',
-    'text-align:left',
-    'font-weight:normal',
-    'font-size:0.8em',
-    'text-transform:uppercase',
-    'letter-spacing:0.08em',
-  ].join(';');
-  const TD_BASE = `${RESET};border-bottom:1px solid ${COLOR_BORDER};padding:3px 5px`;
+  const TD_BASE = TD_BASE_STYLE;
   const TD_STYLE = `${TD_BASE};color:${COLOR_TEXT};font-weight:bold`;
   const TD_CHANGED_STYLE = `${TD_BASE};color:${COLOR_CHANGED};font-weight:bold`;
   const TD_MUTED_STYLE = `${TD_BASE};color:${COLOR_MUTED}`;

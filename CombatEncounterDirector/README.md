@@ -177,7 +177,7 @@ Configure via Roll20 One-Click settings, the Config section of the Command Deck,
 
 Combat Encounter Director speaks 24 languages: Afrikaans, Catalan, Chinese (Traditional), Czech, Danish, Dutch, English, Finnish, French, German, Greek, Hebrew, Hungarian, Italian, Japanese, Korean, Polish, Portuguese (Portugal), Portuguese (Brazil), Russian, Spanish, Swedish, Turkish and Ukrainian.
 
-The Config section of the Command Deck lists them all. Its **Language** button opens a drop-down to choose one; or type `!ced config language <code>`, such as `!ced config language fr`. Chat replies, the Command Deck and the Status handout switch straight away.
+The Config section of the Command Deck lists them all in a table, with their flags, codes and native names. Its **Language** button opens a drop-down to choose one; or type `!ced config language <code>`, such as `!ced config language fr`. Chat replies, the Command Deck and the Status handout switch straight away.
 
 ---
 

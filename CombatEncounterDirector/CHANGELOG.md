@@ -4,7 +4,7 @@
 
 ### Added
 
-- The Config section of the Command Deck now has a **Language** button, which opens a drop-down of all 24 languages, and lists the languages available. Its description already said the language could be chosen there.
+- The Config section of the Command Deck now has a **Language** button, which opens a drop-down of all 24 languages, and a table of the languages available (flag and code, English name, native name), as in the other MidNite Shadow mods. Its description already said the language could be chosen there.
 - README: a Languages section, and the language setting in the configuration table.
 
 ### Changed

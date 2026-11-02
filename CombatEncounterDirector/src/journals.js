@@ -6,7 +6,6 @@ import {
   COLOR_HEADER_BG,
   COLOR_HEADER_TEXT,
   COLOR_MUTED,
-  COLOR_TEXT,
   COMMAND,
   DECK_VIEW_KEYS,
   DECK_VIEWS,
@@ -18,7 +17,7 @@ import {
   SCRIPT_NAME,
   SCRIPT_VERSION,
 } from './constants.js';
-import { buildButton, buildCard, buildSecondaryButton } from './chat.js';
+import { buildButton, buildCard, buildSecondaryButton, buildTable } from './chat.js';
 import { LOCALE_DEFINITIONS, t } from './i18n.js';
 import { getConfig } from './state.js';
 import { escapeHtml } from './utils.js';
@@ -413,11 +412,19 @@ function buildConfigSection(lang) {
   const languageQuery = LOCALE_DEFINITIONS.map((l) => `${l.nativeName || l.name},${l.code}`).join(
     '|'
   );
-  const languageList = LOCALE_DEFINITIONS.map((l) =>
-    l.code === lang
-      ? `<b>${escapeHtml(l.nativeName || l.name)}</b>`
-      : escapeHtml(l.nativeName || l.name)
-  ).join(' · ');
+  // The same table as the other MidNite Shadow mods: flag and code, English name, native name.
+  // The language in use is in bold.
+  const languageTable = buildTable(
+    [t('ui.languageCode', lang), t('ui.languageName', lang), t('ui.languageNative', lang)],
+    LOCALE_DEFINITIONS.map((l) => {
+      const bold = (html) => (l.code === lang ? `<b>${html}</b>` : html);
+      return [
+        `${buildLocaleFlag(l)}${bold(escapeHtml(l.code))}`,
+        bold(escapeHtml(l.name)),
+        bold(escapeHtml(l.nativeName || l.name)),
+      ];
+    })
+  );
 
   return [
     section(t('ui.config', lang)),
@@ -436,9 +443,40 @@ function buildConfigSection(lang) {
       true
     ),
     '</div>',
-    `<div style="color:${COLOR_TEXT};font-size:0.8em;margin-top:3px;line-height:1.5">${languageList}</div>`,
+    `<div style="margin-top:4px">${languageTable}</div>`,
     '</div>',
   ].join('');
+}
+
+/**
+ * Builds a Twemoji asset URL for a locale flag.
+ *
+ * @param {string} flag Unicode regional-indicator flag.
+ * @returns {string} SVG asset URL or an empty string.
+ */
+function flagAssetUrl(flag) {
+  const codepoints = Array.from(String(flag || '').trim())
+    .map((character) => character.codePointAt(0).toString(16))
+    .join('-');
+  return codepoints
+    ? `https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/${codepoints}.svg`
+    : '';
+}
+
+/**
+ * Builds a flag image for a locale. An image is used because Roll20 on Windows
+ * shows emoji flags as letter pairs.
+ *
+ * @param {object} locale Locale metadata.
+ * @returns {string} Trusted locale flag HTML.
+ */
+function buildLocaleFlag(locale) {
+  const label = escapeHtml(locale.flagLabel || locale.name);
+  const url = flagAssetUrl(locale.flag);
+  if (!url) {
+    return '';
+  }
+  return `<img src="${escapeHtml(url)}" alt="${label}" title="${label}" style="width:1.1em;height:1.1em;vertical-align:-0.15em;margin-right:4px;" />`;
 }
 
 /**
