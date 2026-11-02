@@ -2,10 +2,7 @@ import {
   BOSS_PRESETS,
   COLOR_ACCENT,
   COLOR_BORDER,
-  COLOR_BUTTON_BG,
   COLOR_BUTTON_TEXT,
-  COLOR_CARD_BG_BOTTOM,
-  COLOR_CARD_BG_TOP,
   COLOR_HEADER_BG,
   COLOR_HEADER_TEXT,
   COLOR_MUTED,
@@ -21,6 +18,7 @@ import {
   SCRIPT_NAME,
   SCRIPT_VERSION,
 } from './constants.js';
+import { buildButton, buildCard, buildSecondaryButton } from './chat.js';
 import { LOCALE_DEFINITIONS, t } from './i18n.js';
 import { getConfig } from './state.js';
 import { escapeHtml } from './utils.js';
@@ -29,51 +27,29 @@ import { escapeHtml } from './utils.js';
 // Style constants shared across journal sections
 // ---------------------------------------------------------------------------
 
-const BTN = [
-  `background:${COLOR_BUTTON_BG}`,
-  `color:${COLOR_BUTTON_TEXT}`,
-  'padding:2px 8px',
-  'border-radius:3px',
-  'text-decoration:none',
-  'font-size:0.85em',
-  'display:inline-block',
-  'margin:1px 2px',
-  'font-weight:bold',
-].join(';');
-
-const BTN_DARK = [
-  'background:#2a3a5c',
-  `color:${COLOR_TEXT}`,
-  'border:1px solid #4a5a7a',
-  'padding:2px 8px',
-  'border-radius:3px',
-  'text-decoration:none',
-  'font-size:0.85em',
-  'display:inline-block',
-  'margin:1px 2px',
-].join(';');
-
+// The active tab is a chat-style primary button that cannot be clicked
 const BTN_TAB_ACTIVE = [
   `background:${COLOR_ACCENT}`,
   `color:${COLOR_BUTTON_TEXT}`,
-  'padding:2px 8px',
+  'padding:2px 7px',
   'border-radius:3px',
   'font-weight:bold',
-  'font-size:0.85em',
+  'font-size:0.9em',
   'display:inline-block',
   'margin:1px 2px',
 ].join(';');
 
+// Each section is headed like a chat card's title bar
 const SECTION_HEADER = [
-  'background:#1e2d4a',
-  `color:${COLOR_ACCENT}`,
-  'padding:3px 6px',
+  `background:${COLOR_HEADER_BG}`,
+  `color:${COLOR_HEADER_TEXT}`,
+  'padding:3px 8px',
+  `border-bottom:2px solid ${COLOR_ACCENT}`,
   'font-variant:small-caps',
   'font-weight:bold',
-  'font-size:0.9em',
+  'text-align:center',
   'letter-spacing:0.05em',
-  `border-left:3px solid ${COLOR_ACCENT}`,
-  'margin:6px 0 3px 0',
+  'margin:8px 0 3px 0',
 ].join(';');
 
 const SECTION_BODY = 'padding:2px 4px 4px 4px';
@@ -96,8 +72,7 @@ const DIVIDER = `<hr style="border:none;border-top:1px solid ${COLOR_BORDER};mar
  * @returns {string} HTML anchor string.
  */
 function btn(label, command, dark) {
-  const style = dark ? BTN_DARK : BTN;
-  return `<a href="${escapeHtml(command)}" style="${style}">${escapeHtml(label)}</a>`;
+  return dark ? buildSecondaryButton(label, command) : buildButton(label, command);
 }
 
 /**
@@ -536,25 +511,8 @@ const DECK_VIEW_SECTIONS = {
 function buildDeckHeader(activeView, lang) {
   const viewLabel = deckViewLabel(activeView, lang);
   return [
-    `<div style="background:${COLOR_HEADER_BG};color:${COLOR_HEADER_TEXT};padding:6px 10px;text-align:center;font-variant:small-caps;font-weight:bold;font-size:1.1em;letter-spacing:0.1em;border-bottom:2px solid ${COLOR_ACCENT}">`,
-    `${escapeHtml(SCRIPT_NAME)} v${escapeHtml(SCRIPT_VERSION)}`,
-    '</div>',
-    `<div style="padding:2px 6px 0 6px;font-size:0.75em;color:${COLOR_MUTED};text-align:right">`,
+    `<div style="font-size:0.75em;color:${COLOR_MUTED};text-align:right">`,
     `${escapeHtml(t('ui.deckViewLabel', lang))} ${escapeHtml(viewLabel)}`,
-    '</div>',
-  ].join('');
-}
-
-/**
- * Wraps journal content in a styled card container.
- *
- * @param {string} innerHtml Already-assembled journal HTML body.
- * @returns {string} Wrapped HTML string.
- */
-function wrapJournalContent(innerHtml) {
-  return [
-    `<div style="background-image:-webkit-linear-gradient(135deg,${COLOR_CARD_BG_TOP} 0%,${COLOR_CARD_BG_BOTTOM} 100%);color:${COLOR_TEXT};border:1px solid ${COLOR_BORDER};padding:6px;border-radius:4px">`,
-    innerHtml,
     '</div>',
   ].join('');
 }
@@ -580,7 +538,9 @@ export function buildCommandDeck(view = DEFAULT_DECK_VIEW) {
     })
     .join('');
 
-  return wrapJournalContent(
+  // The deck is one chat card: the same frame, title bar and buttons as CED's chat replies
+  return buildCard(
+    `${SCRIPT_NAME} v${SCRIPT_VERSION}`,
     [buildDeckHeader(activeView, lang), buildDeckTabs(activeView, lang), sectionHtml].join('')
   );
 }
@@ -622,8 +582,9 @@ export function installControlPanelHandout(view = DEFAULT_DECK_VIEW) {
  * @returns {void}
  */
 export function installStatusHandout() {
-  const placeholder = wrapJournalContent(
-    `<p style="color:${COLOR_MUTED};font-style:italic">Run <strong>!ced report refresh</strong> to populate this report.</p>`
+  const placeholder = buildCard(
+    t('report.summary', getConfig().language),
+    `<div style="color:${COLOR_MUTED};font-style:italic">Run <strong>!ced report refresh</strong> to populate this report.</div>`
   );
   const existing = findObjs({ type: 'handout', name: JOURNAL_STATUS_NAME })[0];
   if (!existing) {

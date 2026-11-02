@@ -1,10 +1,8 @@
+import { buildCard } from './chat.js';
 import {
+  COLOR_ACCENT,
   COLOR_BORDER,
-  COLOR_CARD_BG_BOTTOM,
-  COLOR_CARD_BG_TOP,
   COLOR_CHANGED,
-  COLOR_HEADER_BG,
-  COLOR_HEADER_TEXT,
   COLOR_MUTED,
   COLOR_TEXT,
   JOURNAL_STATUS_NAME,
@@ -30,21 +28,30 @@ import {
 // HTML builders for the status journal
 // ---------------------------------------------------------------------------
 
-const TABLE_STYLE = 'width:100%;border-collapse:collapse;font-size:0.85em';
-const SUMMARY_TABLE_STYLE = 'width:100%;border-collapse:collapse;font-size:0.9em';
-const SUMMARY_TD_LABEL_STYLE = `padding:3px 8px 3px 0;color:${COLOR_MUTED}`;
-const SUMMARY_TD_VALUE_STYLE = `padding:3px 0 3px 8px;color:${COLOR_TEXT};font-weight:bold;text-align:right`;
+// The report is built from the same cards as the chat replies (buildCard). Roll20's handout
+// stylesheet gives tables borders and a white background, so every table part here sets its
+// own border and background to keep the card's look.
+const RESET = 'border:none;background:transparent';
+const TABLE_STYLE = `width:100%;border-collapse:collapse;${RESET};margin:0;font-size:0.9em`;
+const TR_STYLE = RESET;
+const SUMMARY_TD_LABEL_STYLE = `${RESET};padding:1px 0;color:${COLOR_MUTED}`;
+const SUMMARY_TD_VALUE_STYLE = `${RESET};padding:1px 0;color:${COLOR_TEXT};font-weight:bold;text-align:right`;
 const TH_STYLE = [
-  `background:${COLOR_HEADER_BG}`,
-  `color:${COLOR_HEADER_TEXT}`,
-  'padding:3px 5px',
+  RESET,
+  `border-bottom:1px solid ${COLOR_ACCENT}`,
+  `color:${COLOR_MUTED}`,
+  'padding:2px 5px',
   'text-align:left',
-  'font-variant:small-caps',
-  'font-size:0.9em',
+  'font-weight:normal',
+  'font-size:0.8em',
+  'text-transform:uppercase',
+  'letter-spacing:0.08em',
 ].join(';');
-const TD_STYLE = `padding:2px 5px;border-bottom:1px solid ${COLOR_BORDER};color:${COLOR_TEXT}`;
-const TD_CHANGED_STYLE = `padding:2px 5px;border-bottom:1px solid ${COLOR_BORDER};color:${COLOR_CHANGED};font-weight:bold`;
-const TD_MUTED_STYLE = `padding:2px 5px;border-bottom:1px solid ${COLOR_BORDER};color:${COLOR_MUTED}`;
+const TD_BASE = `${RESET};border-bottom:1px solid ${COLOR_BORDER};padding:3px 5px`;
+const TD_STYLE = `${TD_BASE};color:${COLOR_TEXT};font-weight:bold`;
+const TD_CHANGED_STYLE = `${TD_BASE};color:${COLOR_CHANGED};font-weight:bold`;
+const TD_MUTED_STYLE = `${TD_BASE};color:${COLOR_MUTED}`;
+const CARD_GAP = '<div style="height:8px"></div>';
 
 /**
  * Returns a human-readable layer name using the active locale.
@@ -84,8 +91,10 @@ function buildTokenRow(record, token, lang) {
   const acChanged = record.acModifier !== 0;
   const dmgChanged = record.damageModifier !== 100;
 
+  // Minions are flagged with -999: their hit points are set to 1, not scaled
+  const hpText = record.hpModifier === -999 ? '= 1' : formatPct(record.hpModifier);
   const hpCell = hpChanged
-    ? `<td style="${TD_CHANGED_STYLE}">${formatPct(record.hpModifier)}</td>`
+    ? `<td style="${TD_CHANGED_STYLE}">${hpText}</td>`
     : `<td style="${TD_MUTED_STYLE}">—</td>`;
 
   const acCell = acChanged
@@ -101,7 +110,7 @@ function buildTokenRow(record, token, lang) {
     : `<td style="${TD_MUTED_STYLE}">—</td>`;
 
   return [
-    '<tr>',
+    `<tr style="${TR_STYLE}">`,
     `<td style="${TD_STYLE}">${name}</td>`,
     `<td style="${TD_MUTED_STYLE}">${token ? escapeHtml(layer) : layer}</td>`,
     hpCell,
@@ -133,39 +142,35 @@ export function buildStatusReportHtml(records, meta) {
   const bossCount = records.filter((r) => ['boss', 'legendary'].includes(r.preset)).length;
   const minionCount = records.filter((r) => r.preset === 'minion').length;
 
-  const cardStyle = [
-    `background-image:-webkit-linear-gradient(135deg,${COLOR_CARD_BG_TOP} 0%,${COLOR_CARD_BG_BOTTOM} 100%)`,
-    'border-radius:4px',
-    'padding:6px 8px',
-    'margin-bottom:8px',
-    `border:1px solid ${COLOR_BORDER}`,
-  ].join(';');
-
-  const summaryHtml = [
-    `<div style="${cardStyle}">`,
-    `<div style="font-weight:bold;font-size:1.05em;color:${COLOR_HEADER_TEXT};margin-bottom:4px">${escapeHtml(t('report.summary', lang))}</div>`,
-    `<table style="${SUMMARY_TABLE_STYLE}">`,
-    buildSummaryRow(t('report.generated', lang), formatTimestamp(meta.generatedAt)),
-    buildSummaryRow(t('report.tokensOnPage', lang), String(meta.totalOnPage)),
-    buildSummaryRow(t('report.trackedTokens', lang), String(trackedCount)),
-    buildSummaryRow(t('report.changed', lang), String(changedCount), COLOR_CHANGED),
-    buildSummaryRow(t('report.hiddenGm', lang), String(hiddenCount)),
-    buildSummaryRow(t('report.bossesLegendary', lang), String(bossCount)),
-    buildSummaryRow(t('report.minions', lang), String(minionCount)),
-    '</table>',
-    '</div>',
-  ].join('');
+  const summaryHtml = buildCard(
+    t('report.summary', lang),
+    [
+      `<table style="${TABLE_STYLE}">`,
+      buildSummaryRow(t('report.generated', lang), formatTimestamp(meta.generatedAt)),
+      buildSummaryRow(t('report.tokensOnPage', lang), String(meta.totalOnPage)),
+      buildSummaryRow(t('report.trackedTokens', lang), String(trackedCount)),
+      buildSummaryRow(t('report.changed', lang), String(changedCount), COLOR_CHANGED),
+      buildSummaryRow(t('report.hiddenGm', lang), String(hiddenCount)),
+      buildSummaryRow(t('report.bossesLegendary', lang), String(bossCount)),
+      buildSummaryRow(t('report.minions', lang), String(minionCount)),
+      '</table>',
+    ].join('')
+  );
 
   if (records.length === 0) {
     return (
       summaryHtml +
-      `<p style="color:${COLOR_MUTED};font-style:italic">${escapeHtml(t('report.noTrackedTokens', lang))}</p>`
+      CARD_GAP +
+      buildCard(
+        t('report.trackedTokens', lang),
+        `<div style="color:${COLOR_MUTED};font-style:italic">${escapeHtml(t('report.noTrackedTokens', lang))}</div>`
+      )
     );
   }
 
   const tableHtml = [
     `<table style="${TABLE_STYLE}">`,
-    '<thead><tr>',
+    `<thead><tr style="${TR_STYLE}">`,
     `<th style="${TH_STYLE}">${escapeHtml(t('report.tokenCol', lang))}</th>`,
     `<th style="${TH_STYLE}">${escapeHtml(t('report.layerCol', lang))}</th>`,
     `<th style="${TH_STYLE}">${escapeHtml(t('report.hpCol', lang))}</th>`,
@@ -179,7 +184,7 @@ export function buildStatusReportHtml(records, meta) {
     '</table>',
   ].join('');
 
-  return summaryHtml + tableHtml;
+  return summaryHtml + CARD_GAP + buildCard(t('report.trackedTokens', lang), tableHtml);
 }
 
 /**
@@ -192,10 +197,10 @@ export function buildStatusReportHtml(records, meta) {
  */
 function buildSummaryRow(label, value, valueColor) {
   const valStyle = valueColor
-    ? `padding:2px 0;color:${valueColor};font-weight:bold;text-align:right`
+    ? `${SUMMARY_TD_VALUE_STYLE};color:${valueColor}`
     : SUMMARY_TD_VALUE_STYLE;
   return [
-    '<tr>',
+    `<tr style="${TR_STYLE}">`,
     `<td style="${SUMMARY_TD_LABEL_STYLE}">${escapeHtml(label)}</td>`,
     `<td style="${valStyle}">${escapeHtml(value)}</td>`,
     '</tr>',
@@ -300,6 +305,9 @@ export function reportChangedTokens(pageId) {
  */
 export function clearStatusReport() {
   const lang = getConfig().language;
-  const emptyHtml = `<p style="color:${COLOR_MUTED};font-style:italic">${escapeHtml(t('confirm.reportCleared', lang))}</p>`;
+  const emptyHtml = buildCard(
+    t('report.summary', lang),
+    `<div style="color:${COLOR_MUTED};font-style:italic">${escapeHtml(t('confirm.reportCleared', lang))}</div>`
+  );
   updateStatusHandout(emptyHtml);
 }

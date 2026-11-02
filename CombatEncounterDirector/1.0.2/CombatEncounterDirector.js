@@ -5,7 +5,7 @@
  * Name: Combat Encounter Director
  * Script: CombatEncounterDirector.js
  * Version: 1.0.2
- * Built: 2026-11-02T19:21:10.960Z
+ * Built: 2026-11-02T19:51:12.894Z
  */
 const CombatEncounterDirectorMod = (() => {
   'use strict';
@@ -13,7 +13,7 @@ const CombatEncounterDirectorMod = (() => {
   // Build-time placeholders replaced by rollup.config.js inject-build-metadata plugin.
   const SCRIPT_NAME = 'Combat Encounter Director';
   const SCRIPT_VERSION = '1.0.2';
-  const SCRIPT_LAST_UPDATED = '2026-11-02T19:21:10.960Z';
+  const SCRIPT_LAST_UPDATED = '2026-11-02T19:51:12.894Z';
 
   const DEFAULT_LOCALE$1 = 'en-US';
 
@@ -7601,51 +7601,29 @@ const CombatEncounterDirectorMod = (() => {
   // Style constants shared across journal sections
   // ---------------------------------------------------------------------------
 
-  const BTN = [
-    `background:${COLOR_BUTTON_BG}`,
-    `color:${COLOR_BUTTON_TEXT}`,
-    'padding:2px 8px',
-    'border-radius:3px',
-    'text-decoration:none',
-    'font-size:0.85em',
-    'display:inline-block',
-    'margin:1px 2px',
-    'font-weight:bold',
-  ].join(';');
-
-  const BTN_DARK = [
-    'background:#2a3a5c',
-    `color:${COLOR_TEXT}`,
-    'border:1px solid #4a5a7a',
-    'padding:2px 8px',
-    'border-radius:3px',
-    'text-decoration:none',
-    'font-size:0.85em',
-    'display:inline-block',
-    'margin:1px 2px',
-  ].join(';');
-
+  // The active tab is a chat-style primary button that cannot be clicked
   const BTN_TAB_ACTIVE = [
     `background:${COLOR_ACCENT}`,
     `color:${COLOR_BUTTON_TEXT}`,
-    'padding:2px 8px',
+    'padding:2px 7px',
     'border-radius:3px',
     'font-weight:bold',
-    'font-size:0.85em',
+    'font-size:0.9em',
     'display:inline-block',
     'margin:1px 2px',
   ].join(';');
 
+  // Each section is headed like a chat card's title bar
   const SECTION_HEADER = [
-    'background:#1e2d4a',
-    `color:${COLOR_ACCENT}`,
-    'padding:3px 6px',
+    `background:${COLOR_HEADER_BG}`,
+    `color:${COLOR_HEADER_TEXT}`,
+    'padding:3px 8px',
+    `border-bottom:2px solid ${COLOR_ACCENT}`,
     'font-variant:small-caps',
     'font-weight:bold',
-    'font-size:0.9em',
+    'text-align:center',
     'letter-spacing:0.05em',
-    `border-left:3px solid ${COLOR_ACCENT}`,
-    'margin:6px 0 3px 0',
+    'margin:8px 0 3px 0',
   ].join(';');
 
   const SECTION_BODY = 'padding:2px 4px 4px 4px';
@@ -7668,8 +7646,7 @@ const CombatEncounterDirectorMod = (() => {
    * @returns {string} HTML anchor string.
    */
   function btn(label, command, dark) {
-    const style = dark ? BTN_DARK : BTN;
-    return `<a href="${escapeHtml(command)}" style="${style}">${escapeHtml(label)}</a>`;
+    return dark ? buildSecondaryButton(label, command) : buildButton(label, command);
   }
 
   /**
@@ -8108,25 +8085,8 @@ const CombatEncounterDirectorMod = (() => {
   function buildDeckHeader(activeView, lang) {
     const viewLabel = deckViewLabel(activeView, lang);
     return [
-      `<div style="background:${COLOR_HEADER_BG};color:${COLOR_HEADER_TEXT};padding:6px 10px;text-align:center;font-variant:small-caps;font-weight:bold;font-size:1.1em;letter-spacing:0.1em;border-bottom:2px solid ${COLOR_ACCENT}">`,
-      `${escapeHtml(SCRIPT_NAME)} v${escapeHtml(SCRIPT_VERSION)}`,
-      '</div>',
-      `<div style="padding:2px 6px 0 6px;font-size:0.75em;color:${COLOR_MUTED};text-align:right">`,
+      `<div style="font-size:0.75em;color:${COLOR_MUTED};text-align:right">`,
       `${escapeHtml(t('ui.deckViewLabel', lang))} ${escapeHtml(viewLabel)}`,
-      '</div>',
-    ].join('');
-  }
-
-  /**
-   * Wraps journal content in a styled card container.
-   *
-   * @param {string} innerHtml Already-assembled journal HTML body.
-   * @returns {string} Wrapped HTML string.
-   */
-  function wrapJournalContent(innerHtml) {
-    return [
-      `<div style="background-image:-webkit-linear-gradient(135deg,${COLOR_CARD_BG_TOP} 0%,${COLOR_CARD_BG_BOTTOM} 100%);color:${COLOR_TEXT};border:1px solid ${COLOR_BORDER};padding:6px;border-radius:4px">`,
-      innerHtml,
       '</div>',
     ].join('');
   }
@@ -8152,7 +8112,9 @@ const CombatEncounterDirectorMod = (() => {
       })
       .join('');
 
-    return wrapJournalContent(
+    // The deck is one chat card: the same frame, title bar and buttons as CED's chat replies
+    return buildCard(
+      `${SCRIPT_NAME} v${SCRIPT_VERSION}`,
       [buildDeckHeader(activeView, lang), buildDeckTabs(activeView, lang), sectionHtml].join('')
     );
   }
@@ -8194,8 +8156,9 @@ const CombatEncounterDirectorMod = (() => {
    * @returns {void}
    */
   function installStatusHandout() {
-    const placeholder = wrapJournalContent(
-      `<p style="color:${COLOR_MUTED};font-style:italic">Run <strong>!ced report refresh</strong> to populate this report.</p>`
+    const placeholder = buildCard(
+      t('report.summary', getConfig().language),
+      `<div style="color:${COLOR_MUTED};font-style:italic">Run <strong>!ced report refresh</strong> to populate this report.</div>`
     );
     const existing = findObjs({ type: 'handout', name: JOURNAL_STATUS_NAME })[0];
     if (!existing) {
@@ -8207,21 +8170,30 @@ const CombatEncounterDirectorMod = (() => {
   // HTML builders for the status journal
   // ---------------------------------------------------------------------------
 
-  const TABLE_STYLE = 'width:100%;border-collapse:collapse;font-size:0.85em';
-  const SUMMARY_TABLE_STYLE = 'width:100%;border-collapse:collapse;font-size:0.9em';
-  const SUMMARY_TD_LABEL_STYLE = `padding:3px 8px 3px 0;color:${COLOR_MUTED}`;
-  const SUMMARY_TD_VALUE_STYLE = `padding:3px 0 3px 8px;color:${COLOR_TEXT};font-weight:bold;text-align:right`;
+  // The report is built from the same cards as the chat replies (buildCard). Roll20's handout
+  // stylesheet gives tables borders and a white background, so every table part here sets its
+  // own border and background to keep the card's look.
+  const RESET = 'border:none;background:transparent';
+  const TABLE_STYLE = `width:100%;border-collapse:collapse;${RESET};margin:0;font-size:0.9em`;
+  const TR_STYLE = RESET;
+  const SUMMARY_TD_LABEL_STYLE = `${RESET};padding:1px 0;color:${COLOR_MUTED}`;
+  const SUMMARY_TD_VALUE_STYLE = `${RESET};padding:1px 0;color:${COLOR_TEXT};font-weight:bold;text-align:right`;
   const TH_STYLE = [
-    `background:${COLOR_HEADER_BG}`,
-    `color:${COLOR_HEADER_TEXT}`,
-    'padding:3px 5px',
+    RESET,
+    `border-bottom:1px solid ${COLOR_ACCENT}`,
+    `color:${COLOR_MUTED}`,
+    'padding:2px 5px',
     'text-align:left',
-    'font-variant:small-caps',
-    'font-size:0.9em',
+    'font-weight:normal',
+    'font-size:0.8em',
+    'text-transform:uppercase',
+    'letter-spacing:0.08em',
   ].join(';');
-  const TD_STYLE = `padding:2px 5px;border-bottom:1px solid ${COLOR_BORDER};color:${COLOR_TEXT}`;
-  const TD_CHANGED_STYLE = `padding:2px 5px;border-bottom:1px solid ${COLOR_BORDER};color:${COLOR_CHANGED};font-weight:bold`;
-  const TD_MUTED_STYLE = `padding:2px 5px;border-bottom:1px solid ${COLOR_BORDER};color:${COLOR_MUTED}`;
+  const TD_BASE = `${RESET};border-bottom:1px solid ${COLOR_BORDER};padding:3px 5px`;
+  const TD_STYLE = `${TD_BASE};color:${COLOR_TEXT};font-weight:bold`;
+  const TD_CHANGED_STYLE = `${TD_BASE};color:${COLOR_CHANGED};font-weight:bold`;
+  const TD_MUTED_STYLE = `${TD_BASE};color:${COLOR_MUTED}`;
+  const CARD_GAP = '<div style="height:8px"></div>';
 
   /**
    * Returns a human-readable layer name using the active locale.
@@ -8263,8 +8235,10 @@ const CombatEncounterDirectorMod = (() => {
     const acChanged = record.acModifier !== 0;
     const dmgChanged = record.damageModifier !== 100;
 
+    // Minions are flagged with -999: their hit points are set to 1, not scaled
+    const hpText = record.hpModifier === -999 ? '= 1' : formatPct(record.hpModifier);
     const hpCell = hpChanged
-      ? `<td style="${TD_CHANGED_STYLE}">${formatPct(record.hpModifier)}</td>`
+      ? `<td style="${TD_CHANGED_STYLE}">${hpText}</td>`
       : `<td style="${TD_MUTED_STYLE}">—</td>`;
 
     const acCell = acChanged
@@ -8280,7 +8254,7 @@ const CombatEncounterDirectorMod = (() => {
       : `<td style="${TD_MUTED_STYLE}">—</td>`;
 
     return [
-      '<tr>',
+      `<tr style="${TR_STYLE}">`,
       `<td style="${TD_STYLE}">${name}</td>`,
       `<td style="${TD_MUTED_STYLE}">${token ? escapeHtml(layer) : layer}</td>`,
       hpCell,
@@ -8312,39 +8286,35 @@ const CombatEncounterDirectorMod = (() => {
     const bossCount = records.filter((r) => ['boss', 'legendary'].includes(r.preset)).length;
     const minionCount = records.filter((r) => r.preset === 'minion').length;
 
-    const cardStyle = [
-      `background-image:-webkit-linear-gradient(135deg,${COLOR_CARD_BG_TOP} 0%,${COLOR_CARD_BG_BOTTOM} 100%)`,
-      'border-radius:4px',
-      'padding:6px 8px',
-      'margin-bottom:8px',
-      `border:1px solid ${COLOR_BORDER}`,
-    ].join(';');
-
-    const summaryHtml = [
-      `<div style="${cardStyle}">`,
-      `<div style="font-weight:bold;font-size:1.05em;color:${COLOR_HEADER_TEXT};margin-bottom:4px">${escapeHtml(t('report.summary', lang))}</div>`,
-      `<table style="${SUMMARY_TABLE_STYLE}">`,
-      buildSummaryRow(t('report.generated', lang), formatTimestamp(meta.generatedAt)),
-      buildSummaryRow(t('report.tokensOnPage', lang), String(meta.totalOnPage)),
-      buildSummaryRow(t('report.trackedTokens', lang), String(trackedCount)),
-      buildSummaryRow(t('report.changed', lang), String(changedCount), COLOR_CHANGED),
-      buildSummaryRow(t('report.hiddenGm', lang), String(hiddenCount)),
-      buildSummaryRow(t('report.bossesLegendary', lang), String(bossCount)),
-      buildSummaryRow(t('report.minions', lang), String(minionCount)),
-      '</table>',
-      '</div>',
-    ].join('');
+    const summaryHtml = buildCard(
+      t('report.summary', lang),
+      [
+        `<table style="${TABLE_STYLE}">`,
+        buildSummaryRow(t('report.generated', lang), formatTimestamp(meta.generatedAt)),
+        buildSummaryRow(t('report.tokensOnPage', lang), String(meta.totalOnPage)),
+        buildSummaryRow(t('report.trackedTokens', lang), String(trackedCount)),
+        buildSummaryRow(t('report.changed', lang), String(changedCount), COLOR_CHANGED),
+        buildSummaryRow(t('report.hiddenGm', lang), String(hiddenCount)),
+        buildSummaryRow(t('report.bossesLegendary', lang), String(bossCount)),
+        buildSummaryRow(t('report.minions', lang), String(minionCount)),
+        '</table>',
+      ].join('')
+    );
 
     if (records.length === 0) {
       return (
         summaryHtml +
-        `<p style="color:${COLOR_MUTED};font-style:italic">${escapeHtml(t('report.noTrackedTokens', lang))}</p>`
+        CARD_GAP +
+        buildCard(
+          t('report.trackedTokens', lang),
+          `<div style="color:${COLOR_MUTED};font-style:italic">${escapeHtml(t('report.noTrackedTokens', lang))}</div>`
+        )
       );
     }
 
     const tableHtml = [
       `<table style="${TABLE_STYLE}">`,
-      '<thead><tr>',
+      `<thead><tr style="${TR_STYLE}">`,
       `<th style="${TH_STYLE}">${escapeHtml(t('report.tokenCol', lang))}</th>`,
       `<th style="${TH_STYLE}">${escapeHtml(t('report.layerCol', lang))}</th>`,
       `<th style="${TH_STYLE}">${escapeHtml(t('report.hpCol', lang))}</th>`,
@@ -8358,7 +8328,7 @@ const CombatEncounterDirectorMod = (() => {
       '</table>',
     ].join('');
 
-    return summaryHtml + tableHtml;
+    return summaryHtml + CARD_GAP + buildCard(t('report.trackedTokens', lang), tableHtml);
   }
 
   /**
@@ -8371,10 +8341,10 @@ const CombatEncounterDirectorMod = (() => {
    */
   function buildSummaryRow(label, value, valueColor) {
     const valStyle = valueColor
-      ? `padding:2px 0;color:${valueColor};font-weight:bold;text-align:right`
+      ? `${SUMMARY_TD_VALUE_STYLE};color:${valueColor}`
       : SUMMARY_TD_VALUE_STYLE;
     return [
-      '<tr>',
+      `<tr style="${TR_STYLE}">`,
       `<td style="${SUMMARY_TD_LABEL_STYLE}">${escapeHtml(label)}</td>`,
       `<td style="${valStyle}">${escapeHtml(value)}</td>`,
       '</tr>',
@@ -8477,7 +8447,10 @@ const CombatEncounterDirectorMod = (() => {
    */
   function clearStatusReport() {
     const lang = getConfig().language;
-    const emptyHtml = `<p style="color:${COLOR_MUTED};font-style:italic">${escapeHtml(t('confirm.reportCleared', lang))}</p>`;
+    const emptyHtml = buildCard(
+      t('report.summary', lang),
+      `<div style="color:${COLOR_MUTED};font-style:italic">${escapeHtml(t('confirm.reportCleared', lang))}</div>`
+    );
     updateStatusHandout(emptyHtml);
   }
 
