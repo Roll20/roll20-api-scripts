@@ -396,7 +396,7 @@ const CombatAssistant = (() => {
         { key: 'CA_ROLLS_INITIATIVE', page: 'main', label: '2024 Combat Assistant Rolls Initiative', type: 'boolean', tip: 'ON lets Combat Assistant roll 2024 initiative from sheet data; OFF keeps native Roll20 initiative.' },
         { key: 'SHEET_2014_CA_ROLLS', page: 'main', label: '2014 Combat Assistant Rolls', type: 'boolean', tip: 'OFF keeps native 2014 saving throws and initiative; ON lets Combat Assistant perform those supported rolls.' },
 
-        { key: 'HIDE_COMBAT_LOG', page: 'privacy', label: 'Hide Combat Log', type: 'boolean', tip: 'Whisper Combat Assistant combat-result logs to the GM instead of publishing them to players.' },
+        { key: 'HIDE_COMBAT_LOG', page: 'privacy', label: 'Hide Combat Log', type: 'boolean', tip: 'Whisper combat results to the GM, including healing amounts. Public healing logs announce healing without HP values or amounts.' },
         { key: 'HIDE_RESISTANCE_DETAILS', page: 'privacy', label: 'Hide Resistance Details', type: 'boolean', tip: 'Keep final damage amount and type visible, but hide resistance, immunity, and vulnerability explanations in public Combat Logs.' },
         { key: 'HIDE_DAMAGE_DETAILS', page: 'privacy', label: 'Hide Damage Details', type: 'boolean', tip: 'Hide damage amount and damage type from public Combat Log narration. This also suppresses resistance-detail text.' },
         { key: 'REVEAL_DAMAGE_SOURCE', page: 'privacy', label: 'Reveal Damage Source in Log', type: 'boolean', tip: 'Show who caused damage or healing and which attack, spell, or ability caused it.' },
@@ -4629,10 +4629,11 @@ const CombatAssistant = (() => {
 
         sendHealResult(result, requestedBy) {
             result = result || {};
-            const narrative = this.buildHealNarrative(result);
             const sourceName = String(result.sourceName || '').trim();
             const sourceAction = String(result.sourceAction || '').trim();
             const isManual = /^manual$/i.test(sourceName) || /^manual(?:\s+healing)?$/i.test(sourceAction);
+            const gmOnly = RuntimeConfig.get('HIDE_COMBAT_LOG');
+            const narrative = this.buildHealNarrative(result, isManual || gmOnly);
             const fallbackTitle = result.mode === 'temp' ? 'Temporary HP' : 'Healing';
             if (isManual) {
                 const cardStyle = this.getMessageCardStyle('success');
@@ -4649,12 +4650,15 @@ const CombatAssistant = (() => {
             }
             const revealSource = RuntimeConfig.get('REVEAL_DAMAGE_SOURCE');
             const title = revealSource && sourceAction ? sourceAction : fallbackTitle;
-            const rolledAmount = Math.max(0, Utils.toInt(result.rolledAmount !== undefined ? result.rolledAmount : result.amount, 0));
-            const rollFormula = String(result.rollFormula || '').trim();
-            const rollDetail = String(result.rollDetail || '').trim();
-            const rollTooltip = rollDetail || (rollFormula ? (rollFormula + '<br>Total: ' + String(rolledAmount)) : ('Healing total: ' + String(rolledAmount)));
-            const rollBox = this.numericRollBoxHtml(rolledAmount, rollTooltip, { size: 34, fontSize: '18px', success: true });
-            const body = this.combatLogResultRowHtml(narrative, rollBox, { rollWidth: 48 });
+            let body = narrative;
+            if (gmOnly) {
+                const rolledAmount = Math.max(0, Utils.toInt(result.rolledAmount !== undefined ? result.rolledAmount : result.amount, 0));
+                const rollFormula = String(result.rollFormula || '').trim();
+                const rollDetail = String(result.rollDetail || '').trim();
+                const rollTooltip = rollDetail || (rollFormula ? (rollFormula + '<br>Total: ' + String(rolledAmount)) : ('Healing total: ' + String(rolledAmount)));
+                const rollBox = this.numericRollBoxHtml(rolledAmount, rollTooltip, { size: 34, fontSize: '18px', success: true });
+                body = this.combatLogResultRowHtml(narrative, rollBox, { rollWidth: 48 });
+            }
             this.sendCombatLogMessage(title, body, 'success', { titleHtml: this.combatLogTitleHtml(result, title) });
         },
 
@@ -5445,10 +5449,10 @@ const CombatAssistant = (() => {
             const avatar = character && Utils.isFunction(character.get) ? String(character.get('avatar') || '').trim() : '';
             const image = this.chatTokenImageHtml(imgsrc, size, avatar, 0) || '<span style="display:block;width:' + size + 'px;height:' + size + 'px;"></span>';
             const sideWidth = size + 4;
-            return '<table style="width:100%;border-collapse:collapse;table-layout:fixed;"><tbody><tr>' +
-                '<td style="width:' + sideWidth + 'px;text-align:left;vertical-align:middle;padding:0;">' + image + '</td>' +
+            return '<table style="width:100%;height:36px;border-collapse:collapse;table-layout:fixed;"><tbody><tr>' +
+                '<td style="width:' + sideWidth + 'px;text-align:center;vertical-align:middle;padding:0;line-height:0;"><div style="width:' + size + 'px;height:' + size + 'px;margin:0 auto;">' + image + '</div></td>' +
                 '<td style="text-align:center;vertical-align:middle;padding:0 2px;">' + textHtml + '</td>' +
-                '<td style="width:' + sideWidth + 'px;text-align:center;vertical-align:middle;padding:0;">' + (rightControlHtml || '') + '</td>' +
+                '<td style="width:' + sideWidth + 'px;text-align:center;vertical-align:middle;padding:0;line-height:0;"><div style="width:18px;height:18px;margin:0 auto;">' + (rightControlHtml || '') + '</div></td>' +
             '</tr></tbody></table>';
         },
 
@@ -7094,12 +7098,12 @@ const CombatAssistant = (() => {
             return parts.join(', ');
         },
 
-        buildHealNarrative(result) {
+        buildHealNarrative(result, showAmount) {
             result = result || {};
             const hideNames = !RuntimeConfig.get('REVEAL_TOKEN_NAMES_IN_LOG');
             const targetName = this.characterNameHtml(hideNames ? 'Target' : String(result.tokenName || 'Target'));
             const displayedAmount = result.effectiveAmount !== undefined && result.effectiveAmount !== null ? result.effectiveAmount : (result.amount || 0);
-            const amount = Html.span(Utils.escapeHtml(String(displayedAmount)), 'color:' + (result.mode === 'temp' ? 'rgb(255,105,180)' : CONFIG.DEFAULT_TEXT_HEAL_COLOR) + ';font-weight:900;');
+            const amount = showAmount ? (' ' + Html.span(Utils.escapeHtml(String(displayedAmount)), 'color:' + (result.mode === 'temp' ? 'rgb(255,105,180)' : CONFIG.DEFAULT_TEXT_HEAL_COLOR) + ';font-weight:900;')) : '';
             const sourceNameRaw = String(result.sourceName || '').trim();
             const sourceActionRaw = String(result.sourceAction || '').trim();
             const isManualSource = /^manual$/i.test(sourceNameRaw) || /^manual(?:\s+healing)?$/i.test(sourceActionRaw);
@@ -7113,13 +7117,11 @@ const CombatAssistant = (() => {
             if (sourceName || sourceAction) {
                 const source = sourceName || this.characterNameHtml('Someone');
                 const usingText = sourceAction ? (' using ' + sourceAction) : '';
-                if (result.mode === 'temp') return source + ' grants ' + amount + ' temporary HP to ' + targetName + usingText + '.';
-                return source + ' heals ' + amount + ' HP to ' + targetName + usingText + '.';
+                if (result.mode === 'temp') return source + ' grants' + amount + ' temporary HP to ' + targetName + usingText + '.';
+                return source + ' heals ' + targetName + (showAmount ? (' for' + amount + ' HP') : '') + usingText + '.';
             }
-            if (result.mode === 'temp') {
-                return targetName + ' receives ' + amount + ' temporary HP (' + Utils.escapeHtml(String(result.previousTemp || 0)) + ' &rarr; ' + Utils.escapeHtml(String(result.currentTemp || 0)) + ').';
-            }
-            return targetName + ' heals ' + amount + ' HP (' + Utils.escapeHtml(String(result.previousHp || 0)) + ' &rarr; ' + Utils.escapeHtml(String(result.currentHp || 0)) + (result.maxHp !== null && result.maxHp !== undefined ? ('/' + Utils.escapeHtml(String(result.maxHp))) : '') + ').';
+            if (result.mode === 'temp') return targetName + ' receives' + amount + ' temporary HP.';
+            return targetName + ' is healed' + (showAmount ? (' for' + amount + ' HP') : '') + '.';
         },
 
         conditionBadgesHtml(conditions) {
