@@ -1,54 +1,129 @@
 {
   "name": "Concentration",
   "script": "Concentration.js",
-  "version": "1.0.0",
-  "previousversions": ["0.1.5", "0.1.8", "0.1.12", "0.1.13", "0.1.14", "0.2.0"],
-  "description": "Concentration tracks concentration markers, reminders, and saving throws for Roll20 characters. It supports manual toggling, HP-loss concentration prompts, optional auto-roll saves, legacy 5e OGL-style spell cards, and D&D 2024 / Beacon spell-card detection. Beacon compatibility may require the Experimental API server, and Debug Mode can help diagnose detection issues.",
-  "authors": "robin, MidNiteShadow7",
+  "version": "1.1.0",
+  "previousversions": [
+    "0.1.12",
+    "0.1.13",
+    "0.1.14",
+    "0.2.0",
+    "1.0.0"
+  ],
+  "description": "# Concentration\n\nKeeps track of who is concentrating on which spell in D&D 5e games.\n\n## Getting started\n\n1. Select the caster's token and type `!concentration Bless` (any spell name). The token gets the concentration marker and everyone is told.\n2. Change the token's hit points in its bar bubble. A Constitution save is rolled at DC 10, or half the damage if higher.\n3. Run the command again, or take the marker off, to end concentration.\n\nType `!concentration` with nothing selected for the settings. The **Concentration - Help** and **Concentration - Command Deck** handouts (GM only) are created in the Journal on startup.\n\n## Features\n\n* Says when concentration starts, switches to a new spell, or ends, and on which spell.\n* Automatic saves (DC 10 or half the damage, up to DC 30), or Roll and Advantage buttons for the player.\n* A failed save, or dropping to 0 hit points, ends concentration.\n* Advantage on saves per character, as with War Caster.\n* Adds the marker when a concentration spell is cast from a D&D 5e 2014 (OGL) or 2024 sheet.\n* Messages for everyone, the GM, or the character's players.\n* Custom token markers, linked and unlinked tokens, and commands from other Mods.\n* Translated into 24 languages.\n\nD&D 2024 sheet detection may need the Experimental API server; Debug Mode explains what was detected.\n\nOriginal Mod by Robin Kuiper. Maintained by MidNiteShadow7.",
+  "authors": "Robin Kuiper, MidNiteShadow7",
   "roll20userid": "1226016, 16506286",
   "patreon": "https://www.patreon.com/robinkuiper",
   "useroptions": [
     {
-      "name": "Command",
+      "name": "language",
+      "displayname": "Language",
+      "type": "select",
+      "options": [
+        "en-US",
+        "af",
+        "ca",
+        "cs",
+        "da",
+        "de",
+        "el",
+        "es",
+        "fi",
+        "fr",
+        "he",
+        "hu",
+        "it",
+        "ja",
+        "ko",
+        "nl",
+        "pl",
+        "pt-BR",
+        "pt-PT",
+        "ru",
+        "sv",
+        "tr",
+        "uk",
+        "zh-TW"
+      ],
+      "default": "en-US",
+      "description": "The language of chat messages and handouts."
+    },
+    {
+      "name": "command",
+      "displayname": "Command",
       "type": "text",
       "default": "concentration",
-      "description": "Primary chat command keyword used by the script (without the ! prefix)."
+      "description": "The chat command, without the !."
     },
     {
-      "name": "Status Marker",
+      "name": "statusmarker",
+      "displayname": "Status Marker",
       "type": "text",
       "default": "stopwatch",
-      "description": "Status marker used to represent concentration on tokens."
+      "description": "The token marker that shows concentration: a built-in marker name or a custom token marker tag."
     },
     {
-      "name": "HP Bar",
-      "type": "number",
-      "default": 1,
-      "description": "Token bar number to monitor for HP loss and concentration checks (1-3)."
-    },
-    {
-      "name": "Send Reminder To",
+      "name": "bar",
+      "displayname": "HP Bar",
       "type": "select",
-      "default": "everyone",
-      "description": "Reminder destination. Accepted values: everyone, character, gm."
+      "options": [
+        "1",
+        "2",
+        "3"
+      ],
+      "default": "1",
+      "description": "The token bar that holds hit points."
     },
     {
-      "name": "Bonus Attribute",
+      "name": "send_reminder_to",
+      "displayname": "Send Reminder To",
+      "type": "select",
+      "options": [
+        "everyone",
+        "character",
+        "gm"
+      ],
+      "default": "everyone",
+      "description": "Who sees concentration messages and saves."
+    },
+    {
+      "name": "auto_add_concentration_marker",
+      "displayname": "Auto Add Con. Marker",
+      "type": "select",
+      "options": [
+        "true",
+        "false"
+      ],
+      "default": "true",
+      "description": "Add the marker when a concentration spell is cast from a D&D 5e 2014 or 2024 sheet."
+    },
+    {
+      "name": "auto_roll_save",
+      "displayname": "Auto Roll Save",
+      "type": "select",
+      "options": [
+        "true",
+        "false"
+      ],
+      "default": "true",
+      "description": "Roll concentration saves automatically. When false, reminders have Roll and Advantage buttons."
+    },
+    {
+      "name": "end_at_zero",
+      "displayname": "End at 0 HP",
+      "type": "select",
+      "options": [
+        "true",
+        "false"
+      ],
+      "default": "true",
+      "description": "End concentration without a save when a token drops to 0 hit points."
+    },
+    {
+      "name": "bonus_attribute",
+      "displayname": "Bonus Attribute",
       "type": "text",
       "default": "constitution_save_mod",
-      "description": "Character attribute used as concentration save modifier."
-    },
-    {
-      "name": "Debug Mode",
-      "type": "select",
-      "default": "false",
-      "description": "Enable debug logging. Accepted values: true, false."
-    },
-    {
-      "name": "Support Mode",
-      "type": "select",
-      "default": "basic",
-      "description": "Debug verbosity mode. Accepted values: basic, detailed."
+      "description": "The sheet attribute added to concentration saves."
     }
   ],
   "dependencies": [],
@@ -64,7 +139,15 @@
     "character.controlledby": "read",
     "character.name": "read",
     "player.lastpage": "read",
-    "attribute.current": "read"
+    "attribute.current": "read",
+    "graphic.bar1_link": "read",
+    "graphic.bar2_link": "read",
+    "graphic.bar3_link": "read",
+    "handout.name": "read,write",
+    "handout.notes": "read,write",
+    "handout.inplayerjournals": "read,write",
+    "handout.controlledby": "read,write",
+    "campaign.token_markers": "read"
   },
   "conflicts": []
 }
