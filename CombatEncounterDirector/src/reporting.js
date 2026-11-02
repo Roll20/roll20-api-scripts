@@ -1,7 +1,5 @@
-import { buildCard } from './chat.js';
+import { buildCard, TABLE_RESET, TABLE_STYLE, TD_BASE_STYLE, TH_STYLE } from './chat.js';
 import {
-  COLOR_ACCENT,
-  COLOR_BORDER,
   COLOR_CHANGED,
   COLOR_MUTED,
   COLOR_TEXT,
@@ -28,26 +26,12 @@ import {
 // HTML builders for the status journal
 // ---------------------------------------------------------------------------
 
-// The report is built from the same cards as the chat replies (buildCard). Roll20's handout
-// stylesheet gives tables borders and a white background, so every table part here sets its
-// own border and background to keep the card's look.
-const RESET = 'border:none;background:transparent';
-const TABLE_STYLE = `width:100%;border-collapse:collapse;${RESET};margin:0;font-size:0.9em`;
+// The report is built from the same cards and tables as the chat replies (chat.js)
+const RESET = TABLE_RESET;
 const TR_STYLE = RESET;
 const SUMMARY_TD_LABEL_STYLE = `${RESET};padding:1px 0;color:${COLOR_MUTED}`;
 const SUMMARY_TD_VALUE_STYLE = `${RESET};padding:1px 0;color:${COLOR_TEXT};font-weight:bold;text-align:right`;
-const TH_STYLE = [
-  RESET,
-  `border-bottom:1px solid ${COLOR_ACCENT}`,
-  `color:${COLOR_MUTED}`,
-  'padding:2px 5px',
-  'text-align:left',
-  'font-weight:normal',
-  'font-size:0.8em',
-  'text-transform:uppercase',
-  'letter-spacing:0.08em',
-].join(';');
-const TD_BASE = `${RESET};border-bottom:1px solid ${COLOR_BORDER};padding:3px 5px`;
+const TD_BASE = TD_BASE_STYLE;
 const TD_STYLE = `${TD_BASE};color:${COLOR_TEXT};font-weight:bold`;
 const TD_CHANGED_STYLE = `${TD_BASE};color:${COLOR_CHANGED};font-weight:bold`;
 const TD_MUTED_STYLE = `${TD_BASE};color:${COLOR_MUTED}`;
