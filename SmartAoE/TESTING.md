@@ -2,6 +2,8 @@
 
 This checklist validates `SmartAoE.js` in a live Roll20 game before release. Run it after every change to the root script; the `X.Y.Z/SmartAoE.js` snapshot must be byte-identical to the root copy before you start. Test in a **Jumpgate** game and, if possible, a **legacy** game.
 
+Before the live checks, run the Node tests, which need nothing but Node.js: `node --test SmartAoE/tests/inline-rolls.test.cjs`.
+
 ## Setup
 
 1. Install **libInline** and paste `SmartAoE.js` into the game's Mod (API) Scripts (or install both from the One-Click library). Disable any other copy of SmartAoE.
@@ -129,6 +131,10 @@ On a page with dynamic lighting walls, draw two rooms side by side, divided by a
    - Expected: The AoE uses the colour passed (before 1.0.0 the player's colour always replaced it).
 2. With HealthColors installed, damage a token through SmartAoE.
    - Expected: HealthColors re-colours the token straight away (`SmartAoE.ObserveTokenChange`), and `SmartAoE.ZeroHPMarkers()` lists the 0 HP markers used.
+3. With SelectManager installed and the PC selected, run `!forselected smartaoe {{ --aoeType|circle, float --radius|20ft --damageFormula1|[[8d6]] }}`.
+   - Expected: A whisper says inline roll 1 has no result and suggests `<<…>>`; no "reading 'total'" error (before 1.0.3 it crashed).
+4. Repeat with `--damageFormula1|<<8d6>>`, then trigger the AoE over the NPC.
+   - Expected: The AoE is drawn and the card shows 8d6 damage.
 
 ## Error reporting
 

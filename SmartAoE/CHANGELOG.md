@@ -7,6 +7,11 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/). Dates f
 
 A crash fix from user feedback. There are no breaking changes.
 
+### Fixed
+
+- **Inline rolls lost by another Mod no longer crash SmartAoE.** SelectManager's `!forselected` sends the command on with `sendChat` but without the original message's inline rolls, so a roll such as `--damageFormula1|[[(5+?{Cast at what level?})d6]]` reached SmartAoE as `$[[0]]` with no result, and SmartAoE stopped with "Cannot read properties of undefined (reading 'total')". SmartAoE now whispers which roll has no result and suggests `<<…>>`, which SmartAoE rolls itself.
+- **An argument with no `|value`**, such as a bare `--instant`, no longer stops with "Cannot read properties of undefined (reading 'match')". It is read as an empty value.
+
 ## [1.0.2] – 2026-10-31
 
 AoEs can stop at walls, from user feedback. There are no breaking changes.

@@ -4331,19 +4331,33 @@ const SmartAoE = (() => {
    * Replaces each $[[n]] placeholder in a string with that roll's total from libInline data, and collects the
    * roll objects that were used.
    *
-   * @param {string} str - Text containing $[[n]] placeholders.
+   * A placeholder with no roll data means the message lost its inline rolls on the way, which happens when another
+   * Mod such as SelectManager's !forselected sends the command on with sendChat. That is thrown as a message for the
+   * caller rather than crashing on the missing total.
+   *
+   * @param {string} [str] - Text containing $[[n]] placeholders (missing when an argument has no "|value").
    * @param {object[]} parsedInlines - Inline roll data from libInline.getRollData.
    * @returns {{text: string, inlines: object[]}} Substituted text and the inline rolls it referenced.
+   * @throws {string} When a placeholder has no matching inline roll.
    */
   const substituteInlineRolls = function (str, parsedInlines) {
     let index;
     const inlineArr = [];
     const reg = /\$\[\[\d+\]\]/g;
 
+    str = str === undefined || str === null ? '' : String(str);
     const foundInlines = str.match(reg) || [];
 
     foundInlines.forEach((inline) => {
       index = inline.replace(/\$\[\[/, '').replace(/\]\]/, '');
+      if (!parsedInlines[index] || parsedInlines[index].total === undefined) {
+        //Square brackets are sent as entities: sendChat would try to roll a literal [[formula]] and crash the sandbox
+        throw (
+          ` Error: Inline roll ${Number(index) + 1} has no result. Another Mod probably sent this command on without ` +
+          `its rolls, as SelectManager's !forselected does. Write the roll as &lt;&lt;formula&gt;&gt; instead of ` +
+          `&#91;&#91;formula&#93;&#93;, for example --damageFormula1|&lt;&lt;8d6&gt;&gt;, so SmartAoE rolls it itself.`
+        );
+      }
       str = str.replace(inline, parsedInlines[index].total);
       inlineArr.push(parsedInlines[index]);
     });
