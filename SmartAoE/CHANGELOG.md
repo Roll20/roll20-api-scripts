@@ -3,6 +3,10 @@
 All notable changes to this project will be documented in this file.  
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/). Dates for 0.25–0.30 are the dates each version was added to the Roll20 One-Click repository.
 
+## [1.0.3] – 2026-11-02
+
+A crash fix from user feedback. There are no breaking changes.
+
 ## [1.0.2] – 2026-10-31
 
 AoEs can stop at walls, from user feedback. There are no breaking changes.
