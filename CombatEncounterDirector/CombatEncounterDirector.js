@@ -5,7 +5,7 @@
  * Name: Combat Encounter Director
  * Script: CombatEncounterDirector.js
  * Version: 1.0.2
- * Built: 2026-11-02T23:46:39.247Z
+ * Built: 2026-11-03T00:27:56.550Z
  */
 const CombatEncounterDirectorMod = (() => {
   'use strict';
@@ -13,7 +13,7 @@ const CombatEncounterDirectorMod = (() => {
   // Build-time placeholders replaced by rollup.config.js inject-build-metadata plugin.
   const SCRIPT_NAME = 'Combat Encounter Director';
   const SCRIPT_VERSION = '1.0.2';
-  const SCRIPT_LAST_UPDATED = '2026-11-02T23:46:39.247Z';
+  const SCRIPT_LAST_UPDATED = '2026-11-03T00:27:56.550Z';
 
   const DEFAULT_LOCALE$1 = 'en-US';
 
@@ -8795,15 +8795,19 @@ const CombatEncounterDirectorMod = (() => {
   }
 
   /**
-   * Strips trailing enumeration (numbers and spaces) from a token name.
+   * Strips trailing enumeration from a token name: CED's own numbers, and the "(1)" that
+   * Roll20's Advanced Transform > Enumerate Tokens adds to duplicate names.
    *
-   * Example: "Goblin 3" → "Goblin", "Orc Warrior 12" → "Orc Warrior"
+   * Example: "Goblin 3" → "Goblin", "Orc Warrior 12" → "Orc Warrior", "Goblin 3 (1)" → "Goblin"
    *
    * @param {string} name Token name.
    * @returns {string} Base name without trailing number.
    */
   function stripEnumeration(name) {
-    return name.replace(/\s+\d+$/, '').trim();
+    return name
+      .replace(/\s*\(\d+\)$/, '')
+      .replace(/\s+\d+$/, '')
+      .trim();
   }
 
   /**

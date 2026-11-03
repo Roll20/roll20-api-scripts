@@ -13,6 +13,7 @@
 
 ### Fixed
 
+- Auto-number Selected (`!ced reinforce enumerate`) now understands names Roll20's own Advanced Transform > Enumerate Tokens has numbered, such as "Goblin 3 (1)". Before, it kept "(1)" as part of the name and gave "Goblin 3 (1) 1".
 - Changing the language with `!ced config language` now rewrites the Command Deck in that language straight away. Before, only chat replies changed until the deck was next rebuilt.
 
 ## 1.0.1
