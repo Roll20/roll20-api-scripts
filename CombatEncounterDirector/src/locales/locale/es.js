@@ -217,6 +217,15 @@ const TRANSLATION = {
     setHpBar2: 'Establecer barra de HP 2',
     setAcBar2: 'Establecer barra de CA 2',
     disableAc: 'Desactivar aire acondicionado',
+    presetReference: 'Referencia de preajustes',
+    presetReferenceDesc:
+      'Qué cambia cada preset. Los ejemplos son para un monstruo con {hp} HP y AC {ac} que causa {damage} de daño. Los HP se redondean al número entero más cercano y un monstruo herido conserva la misma proporción de sus HP. La cifra de daño es sólo una guía para tus dados de daño.',
+    partyPresets: 'Preajustes de grupo',
+    bossPresets: 'Preajustes de jefe',
+    presetPlayers: 'Jugadores',
+    presetChanges: 'Cambios',
+    presetExample: 'Ejemplo',
+    presetHpSet: 'fijado en {hp}',
   },
   report: {
     summary: 'Resumen',

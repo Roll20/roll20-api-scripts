@@ -6,6 +6,7 @@
 
 - The Config section of the Command Deck now has a **Language** button, which opens a drop-down of all 24 languages, and a table of the languages available (flag and code, English name, native name), as in the other MidNite Shadow mods. Its description already said the language could be chosen there.
 - README: a Languages section, and the language setting in the configuration table.
+- A Preset Reference at the end of the README and of the Command Deck (All and Scaling tabs): tables of every party and boss preset, with what each changes and a worked example (a 40 HP, AC 15 monster that deals 20 damage). The deck builds its tables from the preset data, so they always match.
 
 ### Changed
 

@@ -217,6 +217,15 @@ const TRANSLATION = {
     setHpBar2: 'Stellen Sie HP-Leiste 2 ein',
     setAcBar2: 'AC-Leiste 2 einstellen',
     disableAc: 'Deaktivieren Sie die Klimaanlage',
+    presetReference: 'Voreinstellungen im Überblick',
+    presetReferenceDesc:
+      'Was jede Voreinstellung ändert. Die Beispiele gelten für ein Monster mit {hp} HP und AC {ac}, das {damage} Schaden verursacht. Die HP werden auf die nächste ganze Zahl gerundet und ein verwundetes Monster behält den gleichen Anteil seiner HP. Die Schadenszahl ist nur ein Anhaltspunkt für deine Schadenswürfel.',
+    partyPresets: 'Gruppen-Voreinstellungen',
+    bossPresets: 'Boss-Voreinstellungen',
+    presetPlayers: 'Spieler',
+    presetChanges: 'Änderungen',
+    presetExample: 'Beispiel',
+    presetHpSet: 'auf {hp} gesetzt',
   },
   report: {
     summary: 'Zusammenfassung',

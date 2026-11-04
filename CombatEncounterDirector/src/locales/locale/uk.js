@@ -212,6 +212,15 @@ const TRANSLATION = {
     setHpBar2: 'Встановіть шкалу HP 2',
     setAcBar2: 'Встановіть AC бар 2',
     disableAc: 'Вимкнути AC',
+    presetReference: 'Довідка з пресетів',
+    presetReferenceDesc:
+      'Що змінює кожен пресет. Приклади стосуються монстра з {hp} HP і AC {ac}, який завдає {damage} шкоди. HP округлюється до найближчого цілого числа, і поранений монстр зберігає ту саму частку свого HP. Показник шкоди є лише орієнтиром для кубиків шкоди.',
+    partyPresets: 'Пресети для групи',
+    bossPresets: 'Пресети босів',
+    presetPlayers: 'Гравці',
+    presetChanges: 'Зміни',
+    presetExample: 'Приклад',
+    presetHpSet: 'встановлюється {hp}',
   },
   report: {
     summary: 'Резюме',

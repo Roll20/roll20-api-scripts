@@ -211,6 +211,15 @@ const TRANSLATION = {
     setHpBar2: 'HPバー2を設定する',
     setAcBar2: 'ACバー2の設定',
     disableAc: 'ACを無効にする',
+    presetReference: 'プリセット一覧',
+    presetReferenceDesc:
+      '各プリセットの変更内容。例は、{hp} の HP と {ac} の AC を持ち、{damage} のダメージを与えるモンスターの場合です。 HP は最も近い整数に四捨五入され、負傷したモンスターはその HP の同じ割合を維持します。ダメージ数値はダメージダイスの目安にすぎません。',
+    partyPresets: 'パーティープリセット',
+    bossPresets: 'ボスプリセット',
+    presetPlayers: 'プレイヤー数',
+    presetChanges: '変更点',
+    presetExample: '例',
+    presetHpSet: '{hp} に固定',
   },
   report: {
     summary: 'まとめ',

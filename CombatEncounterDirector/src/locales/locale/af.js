@@ -213,6 +213,15 @@ const TRANSLATION = {
     setHpBar2: 'Stel HP bar 2',
     setAcBar2: 'Stel AC bar 2',
     disableAc: 'Deaktiveer AC',
+    presetReference: 'Voorafinstelling-verwysing',
+    presetReferenceDesc:
+      "Wat elke voorafinstelling verander. Die voorbeelde is vir 'n monster met {hp} HP en AC {ac} wat {damage} skade aanrig. HP word tot die naaste heelgetal afgerond, en 'n gewonde monster behou dieselfde deel van sy HP. Die skadesyfer is slegs 'n riglyn vir jou skadedobbelsteen.",
+    partyPresets: 'Groep-voorafinstellings',
+    bossPresets: 'Baas-voorafinstellings',
+    presetPlayers: 'Spelers',
+    presetChanges: 'Veranderinge',
+    presetExample: 'Voorbeeld',
+    presetHpSet: 'gestel op {hp}',
   },
   report: {
     summary: 'Opsomming',

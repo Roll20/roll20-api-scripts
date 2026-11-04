@@ -219,6 +219,15 @@ const TRANSLATION = {
     setHpBar2: 'Állítsa be a HP bar 2-t',
     setAcBar2: 'Állítsa be az AC sávot 2',
     disableAc: 'Az AC letiltása',
+    presetReference: 'Előbeállítások áttekintése',
+    presetReferenceDesc:
+      'Mit változtatnak az egyes előbeállítások. A példák egy {hp} HP-s, AC {ac} értékű szörnyre vonatkoznak, amely {damage} sebzést okoz. A HP-t a legközelebbi egész számra kerekítik, és a megsebesült szörny HP-jának ugyanazt az arányát megtartja. A sebzésérték csak útmutató a sebzéskockáidhoz.',
+    partyPresets: 'Csapat-előbeállítások',
+    bossPresets: 'Boss-előbeállítások',
+    presetPlayers: 'Játékosok',
+    presetChanges: 'Változások',
+    presetExample: 'Példa',
+    presetHpSet: 'beállítva: {hp}',
   },
   report: {
     summary: 'Összegzés',

@@ -216,6 +216,15 @@ const TRANSLATION = {
     setHpBar2: 'Estableix la barra HP 2',
     setAcBar2: 'Estableix la barra AC 2',
     disableAc: "Desactiva l'AC",
+    presetReference: 'Referència de preajustos',
+    presetReferenceDesc:
+      "Què canvia cada preset. Els exemples són per a un monstre amb {hp} HP i CA {ac} que fa {damage} de dany. HP s'arrodoneix al nombre sencer més proper i un monstre ferit conserva la mateixa part dels seus HP. La xifra de danys només és una guia per als daus de dany.",
+    partyPresets: 'Preajustos de grup',
+    bossPresets: 'Preajustos de boss',
+    presetPlayers: 'Jugadors',
+    presetChanges: 'Canvis',
+    presetExample: 'Exemple',
+    presetHpSet: 'fixat a {hp}',
   },
   report: {
     summary: 'Resum',

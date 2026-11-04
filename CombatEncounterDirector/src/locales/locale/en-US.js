@@ -210,6 +210,15 @@ const TRANSLATION = {
     setHpBar2: 'Set HP bar 2',
     setAcBar2: 'Set AC bar 2',
     disableAc: 'Disable AC',
+    presetReference: 'Preset Reference',
+    presetReferenceDesc:
+      'What each preset changes. The examples are for a monster with {hp} HP and AC {ac} that deals {damage} damage. HP is rounded to the nearest whole number, and a wounded monster keeps the same share of its HP. The damage figure is only a guide for your damage dice.',
+    partyPresets: 'Party presets',
+    bossPresets: 'Boss presets',
+    presetPlayers: 'Players',
+    presetChanges: 'Changes',
+    presetExample: 'Example',
+    presetHpSet: 'set to {hp}',
   },
   report: {
     summary: 'Summary',

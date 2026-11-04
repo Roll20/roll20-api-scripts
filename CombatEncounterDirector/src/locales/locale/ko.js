@@ -205,6 +205,15 @@ const TRANSLATION = {
     setHpBar2: 'HP 바 2 설정',
     setAcBar2: 'AC 바 2 설정',
     disableAc: 'AC 비활성화',
+    presetReference: '프리셋 안내',
+    presetReferenceDesc:
+      '각 사전 설정이 변경되는 사항. 예는 {hp} HP와 AC {ac}을 가지고 {damage} 피해를 주는 몬스터에 대한 것입니다. HP는 가장 가까운 정수로 반올림되며, 부상당한 몬스터는 HP의 동일한 비율을 유지합니다. 피해량 수치는 피해 주사위의 기준일 뿐입니다.',
+    partyPresets: '파티 프리셋',
+    bossPresets: '보스 프리셋',
+    presetPlayers: '플레이어',
+    presetChanges: '변경 사항',
+    presetExample: '예시',
+    presetHpSet: '{hp}(으)로 고정',
   },
   report: {
     summary: '요약',

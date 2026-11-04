@@ -5,7 +5,7 @@
  * Name: Combat Encounter Director
  * Script: CombatEncounterDirector.js
  * Version: 1.0.2
- * Built: 2026-11-03T00:27:56.550Z
+ * Built: 2026-11-04T15:03:53.859Z
  */
 const CombatEncounterDirectorMod = (() => {
   'use strict';
@@ -13,7 +13,7 @@ const CombatEncounterDirectorMod = (() => {
   // Build-time placeholders replaced by rollup.config.js inject-build-metadata plugin.
   const SCRIPT_NAME = 'Combat Encounter Director';
   const SCRIPT_VERSION = '1.0.2';
-  const SCRIPT_LAST_UPDATED = '2026-11-03T00:27:56.550Z';
+  const SCRIPT_LAST_UPDATED = '2026-11-04T15:03:53.859Z';
 
   const DEFAULT_LOCALE$1 = 'en-US';
 
@@ -875,6 +875,15 @@ const CombatEncounterDirectorMod = (() => {
       setHpBar2: 'Stel HP bar 2',
       setAcBar2: 'Stel AC bar 2',
       disableAc: 'Deaktiveer AC',
+      presetReference: 'Voorafinstelling-verwysing',
+      presetReferenceDesc:
+        "Wat elke voorafinstelling verander. Die voorbeelde is vir 'n monster met {hp} HP en AC {ac} wat {damage} skade aanrig. HP word tot die naaste heelgetal afgerond, en 'n gewonde monster behou dieselfde deel van sy HP. Die skadesyfer is slegs 'n riglyn vir jou skadedobbelsteen.",
+      partyPresets: 'Groep-voorafinstellings',
+      bossPresets: 'Baas-voorafinstellings',
+      presetPlayers: 'Spelers',
+      presetChanges: 'Veranderinge',
+      presetExample: 'Voorbeeld',
+      presetHpSet: 'gestel op {hp}',
     },
     report: {
       summary: 'Opsomming',
@@ -1113,6 +1122,15 @@ const CombatEncounterDirectorMod = (() => {
       setHpBar2: 'Estableix la barra HP 2',
       setAcBar2: 'Estableix la barra AC 2',
       disableAc: "Desactiva l'AC",
+      presetReference: 'Referència de preajustos',
+      presetReferenceDesc:
+        "Què canvia cada preset. Els exemples són per a un monstre amb {hp} HP i CA {ac} que fa {damage} de dany. HP s'arrodoneix al nombre sencer més proper i un monstre ferit conserva la mateixa part dels seus HP. La xifra de danys només és una guia per als daus de dany.",
+      partyPresets: 'Preajustos de grup',
+      bossPresets: 'Preajustos de boss',
+      presetPlayers: 'Jugadors',
+      presetChanges: 'Canvis',
+      presetExample: 'Exemple',
+      presetHpSet: 'fixat a {hp}',
     },
     report: {
       summary: 'Resum',
@@ -1336,6 +1354,15 @@ const CombatEncounterDirectorMod = (() => {
       setHpBar2: '設定 HP 欄 2',
       setAcBar2: '設定 AC 條 2',
       disableAc: '禁用交流電',
+      presetReference: '預設參考',
+      presetReferenceDesc:
+        '每個預設會發生什麼變化。這些範例適用於具有 {hp} HP 和 AC {ac} 的怪物，造成 {damage} 傷害。生命值四捨五入到最接近的整數，受傷的怪物保持相同比例的生命值。傷害數字僅供傷害骰子參考。',
+      partyPresets: '隊伍預設',
+      bossPresets: '首領預設',
+      presetPlayers: '玩家',
+      presetChanges: '變化',
+      presetExample: '範例',
+      presetHpSet: '設為 {hp}',
     },
     report: {
       summary: '概括',
@@ -1568,6 +1595,15 @@ const CombatEncounterDirectorMod = (() => {
       setHpBar2: 'Nastavte HP bar 2',
       setAcBar2: 'Nastavte AC bar 2',
       disableAc: 'Zakázat AC',
+      presetReference: 'Přehled předvoleb',
+      presetReferenceDesc:
+        'Co každá předvolba mění. Příklady jsou pro monstrum s {hp} HP a AC {ac}, které způsobí poškození {damage}. HP se zaokrouhlí na nejbližší celé číslo a zraněné monstrum si ponechá stejný podíl svých HP. Hodnota poškození je jen vodítkem pro vaše kostky poškození.',
+      partyPresets: 'Předvolby družiny',
+      bossPresets: 'Předvolby bossů',
+      presetPlayers: 'Hráči',
+      presetChanges: 'Změny',
+      presetExample: 'Příklad',
+      presetHpSet: 'nastaveno na {hp}',
     },
     report: {
       summary: 'Shrnutí',
@@ -1799,6 +1835,15 @@ const CombatEncounterDirectorMod = (() => {
       setHpBar2: 'Indstil HP bar 2',
       setAcBar2: 'Indstil AC bar 2',
       disableAc: 'Deaktiver AC',
+      presetReference: 'Oversigt over forudindstillinger',
+      presetReferenceDesc:
+        'Hvad hver forudindstilling ændrer. Eksemplerne er for et monster med {hp} HP og AC {ac}, der giver {damage} skade. HP afrundes til nærmeste hele tal, og et såret monster beholder den samme andel af sin HP. Skadetallet er kun vejledende for dine skadesterninger.',
+      partyPresets: 'Gruppe-forudindstillinger',
+      bossPresets: 'Boss-forudindstillinger',
+      presetPlayers: 'Spillere',
+      presetChanges: 'Ændringer',
+      presetExample: 'Eksempel',
+      presetHpSet: 'sat til {hp}',
     },
     report: {
       summary: 'Oversigt',
@@ -2037,6 +2082,15 @@ const CombatEncounterDirectorMod = (() => {
       setHpBar2: 'Stel HP-balk 2 in',
       setAcBar2: 'AC-balk 2 instellen',
       disableAc: 'Schakel AC uit',
+      presetReference: 'Overzicht van voorinstellingen',
+      presetReferenceDesc:
+        'Wat elke preset verandert. De voorbeelden zijn voor een monster met {hp} HP en AC {ac} dat {damage} schade aanricht. HP wordt afgerond op het dichtstbijzijnde gehele getal, en een gewond monster behoudt hetzelfde deel van zijn HP. Het schadecijfer is slechts een leidraad voor uw schadedobbelstenen.',
+      partyPresets: 'Groepsvoorinstellingen',
+      bossPresets: 'Boss-voorinstellingen',
+      presetPlayers: 'Spelers',
+      presetChanges: 'Veranderingen',
+      presetExample: 'Voorbeeld',
+      presetHpSet: 'ingesteld op {hp}',
     },
     report: {
       summary: 'Samenvatting',
@@ -2269,6 +2323,15 @@ const CombatEncounterDirectorMod = (() => {
       setHpBar2: 'Set HP bar 2',
       setAcBar2: 'Set AC bar 2',
       disableAc: 'Disable AC',
+      presetReference: 'Preset Reference',
+      presetReferenceDesc:
+        'What each preset changes. The examples are for a monster with {hp} HP and AC {ac} that deals {damage} damage. HP is rounded to the nearest whole number, and a wounded monster keeps the same share of its HP. The damage figure is only a guide for your damage dice.',
+      partyPresets: 'Party presets',
+      bossPresets: 'Boss presets',
+      presetPlayers: 'Players',
+      presetChanges: 'Changes',
+      presetExample: 'Example',
+      presetHpSet: 'set to {hp}',
     },
     report: {
       summary: 'Summary',
@@ -2504,6 +2567,15 @@ const CombatEncounterDirectorMod = (() => {
       setHpBar2: 'Aseta HP bar 2',
       setAcBar2: 'Aseta AC bar 2',
       disableAc: 'Poista AC käytöstä',
+      presetReference: 'Esiasetusten viite',
+      presetReferenceDesc:
+        'Mitä kukin esiasetus muuttaa. Esimerkit koskevat hirviötä, jolla on {hp} HP ja AC {ac}, joka aiheuttaa {damage} vahinkoa. HP pyöristetään lähimpään kokonaislukuun, ja haavoittunut hirviö säilyttää saman osuuden HP:staan. Vahinkoluku on vain suuntaa antava vahinkonopillesi.',
+      partyPresets: 'Seurueen esiasetukset',
+      bossPresets: 'Pomojen esiasetukset',
+      presetPlayers: 'Pelaajat',
+      presetChanges: 'Muutokset',
+      presetExample: 'Esimerkki',
+      presetHpSet: 'asetetaan arvoon {hp}',
     },
     report: {
       summary: 'Yhteenveto',
@@ -2745,6 +2817,15 @@ const CombatEncounterDirectorMod = (() => {
       setHpBar2: 'Définir la barre HP 2',
       setAcBar2: 'Définir la barre AC 2',
       disableAc: 'Désactiver la climatisation',
+      presetReference: 'Référence des préréglages',
+      presetReferenceDesc:
+        "Ce que chaque préréglage change. Les exemples concernent un monstre avec {hp} HP et AC {ac} qui inflige {damage} dégâts. Les PV sont arrondis à l'entier le plus proche, et un monstre blessé conserve la même part de ses PV. Le chiffre des dégâts n'est qu'un guide pour vos dés de dégâts.",
+      partyPresets: 'Préréglages de groupe',
+      bossPresets: 'Préréglages de boss',
+      presetPlayers: 'Joueurs',
+      presetChanges: 'Changements',
+      presetExample: 'Exemple',
+      presetHpSet: 'fixés à {hp}',
     },
     report: {
       summary: 'Résumé',
@@ -2986,6 +3067,15 @@ const CombatEncounterDirectorMod = (() => {
       setHpBar2: 'Stellen Sie HP-Leiste 2 ein',
       setAcBar2: 'AC-Leiste 2 einstellen',
       disableAc: 'Deaktivieren Sie die Klimaanlage',
+      presetReference: 'Voreinstellungen im Überblick',
+      presetReferenceDesc:
+        'Was jede Voreinstellung ändert. Die Beispiele gelten für ein Monster mit {hp} HP und AC {ac}, das {damage} Schaden verursacht. Die HP werden auf die nächste ganze Zahl gerundet und ein verwundetes Monster behält den gleichen Anteil seiner HP. Die Schadenszahl ist nur ein Anhaltspunkt für deine Schadenswürfel.',
+      partyPresets: 'Gruppen-Voreinstellungen',
+      bossPresets: 'Boss-Voreinstellungen',
+      presetPlayers: 'Spieler',
+      presetChanges: 'Änderungen',
+      presetExample: 'Beispiel',
+      presetHpSet: 'auf {hp} gesetzt',
     },
     report: {
       summary: 'Zusammenfassung',
@@ -3226,6 +3316,15 @@ const CombatEncounterDirectorMod = (() => {
       setHpBar2: 'Ρυθμίστε τη γραμμή HP 2',
       setAcBar2: 'Ρυθμίστε τη γραμμή AC 2',
       disableAc: 'Απενεργοποιήστε το AC',
+      presetReference: 'Αναφορά προεπιλογών',
+      presetReferenceDesc:
+        'Τι αλλάζει κάθε προεπιλογή. Τα παραδείγματα αφορούν ένα τέρας με {hp} HP και AC {ac} που προκαλεί ζημιά {damage}. Το HP στρογγυλοποιείται στον πλησιέστερο ακέραιο αριθμό και ένα πληγωμένο τέρας διατηρεί το ίδιο μερίδιο του HP του. Ο αριθμός ζημιάς είναι μόνο ένας οδηγός για τα ζάρια ζημιάς σας.',
+      partyPresets: 'Προεπιλογές ομάδας',
+      bossPresets: 'Προεπιλογές boss',
+      presetPlayers: 'Παίκτες',
+      presetChanges: 'Αλλαγές',
+      presetExample: 'Παράδειγμα',
+      presetHpSet: 'ορίζεται σε {hp}',
     },
     report: {
       summary: 'Περίληψη',
@@ -3450,6 +3549,15 @@ const CombatEncounterDirectorMod = (() => {
       setHpBar2: 'הגדר את HP bar 2',
       setAcBar2: 'הגדר AC בר 2',
       disableAc: 'השבת AC',
+      presetReference: 'מדריך הגדרות מראש',
+      presetReferenceDesc:
+        'מה כל הגדרה מראש משנה. הדוגמאות מיועדות למפלצת עם {hp} HP ו-AC {ac} שגורמת לנזק של {damage}. HP מעוגל למספר השלם הקרוב ביותר, ומפלצת פצועה שומרת על אותו חלק מה-HP שלה. נתון הנזק הוא רק מדריך לקוביות הנזק שלך.',
+      partyPresets: 'הגדרות מראש לקבוצה',
+      bossPresets: 'הגדרות מראש לבוס',
+      presetPlayers: 'שחקנים',
+      presetChanges: 'שינויים',
+      presetExample: 'דוּגמָה',
+      presetHpSet: 'נקבע ל-{hp}',
     },
     report: {
       summary: 'תַקצִיר',
@@ -3691,6 +3799,15 @@ const CombatEncounterDirectorMod = (() => {
       setHpBar2: 'Állítsa be a HP bar 2-t',
       setAcBar2: 'Állítsa be az AC sávot 2',
       disableAc: 'Az AC letiltása',
+      presetReference: 'Előbeállítások áttekintése',
+      presetReferenceDesc:
+        'Mit változtatnak az egyes előbeállítások. A példák egy {hp} HP-s, AC {ac} értékű szörnyre vonatkoznak, amely {damage} sebzést okoz. A HP-t a legközelebbi egész számra kerekítik, és a megsebesült szörny HP-jának ugyanazt az arányát megtartja. A sebzésérték csak útmutató a sebzéskockáidhoz.',
+      partyPresets: 'Csapat-előbeállítások',
+      bossPresets: 'Boss-előbeállítások',
+      presetPlayers: 'Játékosok',
+      presetChanges: 'Változások',
+      presetExample: 'Példa',
+      presetHpSet: 'beállítva: {hp}',
     },
     report: {
       summary: 'Összegzés',
@@ -3932,6 +4049,15 @@ const CombatEncounterDirectorMod = (() => {
       setHpBar2: 'Imposta la barra HP 2',
       setAcBar2: 'Impostare la barra CA 2',
       disableAc: 'Disabilita AC',
+      presetReference: 'Riepilogo dei preset',
+      presetReferenceDesc:
+        'Ciò che cambia ogni preimpostazione. Gli esempi riguardano un mostro con {hp} HP e AC {ac} che infligge {damage} danni. Gli HP vengono arrotondati al numero intero più vicino e un mostro ferito mantiene la stessa quota dei suoi HP. La cifra del danno è solo una guida per i tuoi dadi di danno.',
+      partyPresets: 'Preset per il gruppo',
+      bossPresets: 'Preset per i boss',
+      presetPlayers: 'Giocatori',
+      presetChanges: 'Cambiamenti',
+      presetExample: 'Esempio',
+      presetHpSet: 'impostati a {hp}',
     },
     report: {
       summary: 'Riepilogo',
@@ -4168,6 +4294,15 @@ const CombatEncounterDirectorMod = (() => {
       setHpBar2: 'HPバー2を設定する',
       setAcBar2: 'ACバー2の設定',
       disableAc: 'ACを無効にする',
+      presetReference: 'プリセット一覧',
+      presetReferenceDesc:
+        '各プリセットの変更内容。例は、{hp} の HP と {ac} の AC を持ち、{damage} のダメージを与えるモンスターの場合です。 HP は最も近い整数に四捨五入され、負傷したモンスターはその HP の同じ割合を維持します。ダメージ数値はダメージダイスの目安にすぎません。',
+      partyPresets: 'パーティープリセット',
+      bossPresets: 'ボスプリセット',
+      presetPlayers: 'プレイヤー数',
+      presetChanges: '変更点',
+      presetExample: '例',
+      presetHpSet: '{hp} に固定',
     },
     report: {
       summary: 'まとめ',
@@ -4395,6 +4530,15 @@ const CombatEncounterDirectorMod = (() => {
       setHpBar2: 'HP 바 2 설정',
       setAcBar2: 'AC 바 2 설정',
       disableAc: 'AC 비활성화',
+      presetReference: '프리셋 안내',
+      presetReferenceDesc:
+        '각 사전 설정이 변경되는 사항. 예는 {hp} HP와 AC {ac}을 가지고 {damage} 피해를 주는 몬스터에 대한 것입니다. HP는 가장 가까운 정수로 반올림되며, 부상당한 몬스터는 HP의 동일한 비율을 유지합니다. 피해량 수치는 피해 주사위의 기준일 뿐입니다.',
+      partyPresets: '파티 프리셋',
+      bossPresets: '보스 프리셋',
+      presetPlayers: '플레이어',
+      presetChanges: '변경 사항',
+      presetExample: '예시',
+      presetHpSet: '{hp}(으)로 고정',
     },
     report: {
       summary: '요약',
@@ -4633,6 +4777,15 @@ const CombatEncounterDirectorMod = (() => {
       setHpBar2: 'Ustaw pasek HP 2',
       setAcBar2: 'Ustaw pasek AC 2',
       disableAc: 'Wyłącz klimatyzację',
+      presetReference: 'Przegląd ustawień wstępnych',
+      presetReferenceDesc:
+        'Co zmienia każde ustawienie wstępne. Przykłady dotyczą potwora z {hp} HP i KP {ac}, który zadaje {damage} obrażeń. HP jest zaokrąglane do najbliższej liczby całkowitej, a ranny potwór zachowuje tę samą część swojego HP. Liczba obrażeń jest jedynie wskazówką dla twoich kości obrażeń.',
+      partyPresets: 'Ustawienia dla drużyny',
+      bossPresets: 'Ustawienia dla bossów',
+      presetPlayers: 'Gracze',
+      presetChanges: 'Zmiany',
+      presetExample: 'Przykład',
+      presetHpSet: 'ustawione na {hp}',
     },
     report: {
       summary: 'Streszczenie',
@@ -4871,6 +5024,15 @@ const CombatEncounterDirectorMod = (() => {
       setHpBar2: 'Definir barra HP 2',
       setAcBar2: 'Definir barra AC 2',
       disableAc: 'Desativar CA',
+      presetReference: 'Referência de predefinições',
+      presetReferenceDesc:
+        'O que cada predefinição muda. Os exemplos são para um monstro com {hp} HP e AC {ac} que causa {damage} de dano. O HP é arredondado para o número inteiro mais próximo, e um monstro ferido mantém a mesma quota-parte do seu HP. O número de dano é apenas um guia para os seus dados de dano.',
+      partyPresets: 'Predefinições de grupo',
+      bossPresets: 'Predefinições de chefe',
+      presetPlayers: 'Jogadores',
+      presetChanges: 'Mudanças',
+      presetExample: 'Exemplo',
+      presetHpSet: 'definido como {hp}',
     },
     report: {
       summary: 'Resumo',
@@ -5108,6 +5270,15 @@ const CombatEncounterDirectorMod = (() => {
       setHpBar2: 'Definir barra HP 2',
       setAcBar2: 'Definir barra AC 2',
       disableAc: 'Desativar CA',
+      presetReference: 'Referência de predefinições',
+      presetReferenceDesc:
+        'O que cada predefinição muda. Os exemplos são para um monstro com {hp} HP e AC {ac} que causa {damage} de dano. O HP é arredondado para o número inteiro mais próximo, e um monstro ferido mantém a mesma parcela de seu HP. O número de dano é apenas um guia para seus dados de dano.',
+      partyPresets: 'Predefinições de grupo',
+      bossPresets: 'Predefinições de chefe',
+      presetPlayers: 'Jogadores',
+      presetChanges: 'Mudanças',
+      presetExample: 'Exemplo',
+      presetHpSet: 'definido como {hp}',
     },
     report: {
       summary: 'Resumo',
@@ -5347,6 +5518,15 @@ const CombatEncounterDirectorMod = (() => {
       setHpBar2: 'Установить планку HP 2',
       setAcBar2: 'Установите переменную панель 2',
       disableAc: 'Отключить переменный ток',
+      presetReference: 'Справка по пресетам',
+      presetReferenceDesc:
+        'Что меняет каждый пресет. Примеры приведены для монстра с {hp} HP и AC {ac}, который наносит {damage} урона. HP округляется до ближайшего целого числа, и раненый монстр сохраняет ту же долю своего HP. Значение урона является лишь ориентиром для ваших кубиков урона.',
+      partyPresets: 'Пресеты для группы',
+      bossPresets: 'Пресеты боссов',
+      presetPlayers: 'Игроки',
+      presetChanges: 'Изменения',
+      presetExample: 'Пример',
+      presetHpSet: 'устанавливается на {hp}',
     },
     report: {
       summary: 'Краткое содержание',
@@ -5586,6 +5766,15 @@ const CombatEncounterDirectorMod = (() => {
       setHpBar2: 'Establecer barra de HP 2',
       setAcBar2: 'Establecer barra de CA 2',
       disableAc: 'Desactivar aire acondicionado',
+      presetReference: 'Referencia de preajustes',
+      presetReferenceDesc:
+        'Qué cambia cada preset. Los ejemplos son para un monstruo con {hp} HP y AC {ac} que causa {damage} de daño. Los HP se redondean al número entero más cercano y un monstruo herido conserva la misma proporción de sus HP. La cifra de daño es sólo una guía para tus dados de daño.',
+      partyPresets: 'Preajustes de grupo',
+      bossPresets: 'Preajustes de jefe',
+      presetPlayers: 'Jugadores',
+      presetChanges: 'Cambios',
+      presetExample: 'Ejemplo',
+      presetHpSet: 'fijado en {hp}',
     },
     report: {
       summary: 'Resumen',
@@ -5821,6 +6010,15 @@ const CombatEncounterDirectorMod = (() => {
       setHpBar2: 'Ställ in HP bar 2',
       setAcBar2: 'Ställ in AC bar 2',
       disableAc: 'Inaktivera AC',
+      presetReference: 'Översikt över förinställningar',
+      presetReferenceDesc:
+        'Vad varje förinställning ändrar. Exemplen är för ett monster med {hp} HP och AC {ac} som ger {damage} skada. HP avrundas till närmaste heltal, och ett skadat monster behåller samma andel av sin HP. Skadesiffran är endast en vägledning för dina skadetärningar.',
+      partyPresets: 'Gruppförinställningar',
+      bossPresets: 'Bossförinställningar',
+      presetPlayers: 'Spelare',
+      presetChanges: 'Ändringar',
+      presetExample: 'Exempel',
+      presetHpSet: 'sätts till {hp}',
     },
     report: {
       summary: 'Sammanfattning',
@@ -6060,6 +6258,15 @@ const CombatEncounterDirectorMod = (() => {
       setHpBar2: "HP çubuğu 2'yi ayarlayın",
       setAcBar2: "AC çubuğu 2'yi ayarlayın",
       disableAc: "AC'yi devre dışı bırak",
+      presetReference: 'Ön Ayar Başvurusu',
+      presetReferenceDesc:
+        "Her ön ayarın neleri değiştirdiği. Örnekler, {hp} HP ve AC {ac} olan ve {damage} hasar veren bir canavar içindir. HP, en yakın tam sayıya yuvarlanır ve yaralı bir canavar, HP'sinin aynı payını korur. Hasar rakamı yalnızca hasar zarlarınız için bir kılavuzdur.",
+      partyPresets: 'Grup ön ayarları',
+      bossPresets: 'Boss ön ayarları',
+      presetPlayers: 'Oyuncular',
+      presetChanges: 'Değişiklikler',
+      presetExample: 'Örnek',
+      presetHpSet: '{hp} olarak ayarlanır',
     },
     report: {
       summary: 'Özet',
@@ -6296,6 +6503,15 @@ const CombatEncounterDirectorMod = (() => {
       setHpBar2: 'Встановіть шкалу HP 2',
       setAcBar2: 'Встановіть AC бар 2',
       disableAc: 'Вимкнути AC',
+      presetReference: 'Довідка з пресетів',
+      presetReferenceDesc:
+        'Що змінює кожен пресет. Приклади стосуються монстра з {hp} HP і AC {ac}, який завдає {damage} шкоди. HP округлюється до найближчого цілого числа, і поранений монстр зберігає ту саму частку свого HP. Показник шкоди є лише орієнтиром для кубиків шкоди.',
+      partyPresets: 'Пресети для групи',
+      bossPresets: 'Пресети босів',
+      presetPlayers: 'Гравці',
+      presetChanges: 'Зміни',
+      presetExample: 'Приклад',
+      presetHpSet: 'встановлюється {hp}',
     },
     report: {
       summary: 'Резюме',
@@ -7704,6 +7920,171 @@ const CombatEncounterDirectorMod = (() => {
       .sort((a, b) => a.localeCompare(b));
   }
 
+  /**
+   * Resolves a named party preset to a scaling object.
+   *
+   * @param {string} presetKey Preset key (e.g. 'standard', 'large').
+   * @returns {object|null} Preset object or null when not found.
+   */
+  function resolvePartyPreset(presetKey) {
+    return PARTY_PRESETS[presetKey] || null;
+  }
+
+  /**
+   * Returns the party preset whose size is nearest to the given party size.
+   *
+   * @param {number} partySize Number of players.
+   * @returns {object} Nearest preset.
+   */
+  function resolvePartyPresetBySize(partySize) {
+    const presets = Object.values(PARTY_PRESETS);
+    if (presets.length === 0) {
+      return null;
+    }
+
+    return presets.reduce((best, preset) => {
+      const bestDelta = Math.abs(best.partySize - partySize);
+      const thisDelta = Math.abs(preset.partySize - partySize);
+      return thisDelta < bestDelta ? preset : best;
+    }, presets[0]);
+  }
+
+  /**
+   * Applies a scaling profile to one token, updating its state record and token bars.
+   *
+   * @param {Graphic} token Roll20 Graphic object.
+   * @param {{ hp: number, ac: number, damage: number }} profile Scaling values.
+   * @param {string} [operation] Description of the operation for the audit log.
+   * @returns {object} Updated token record.
+   */
+  function applyScalingToToken(token, profile, operation) {
+    const record = ensureTokenRecord(token);
+
+    record.hpModifier = profile.hp;
+    record.acModifier = profile.ac;
+    record.damageModifier = profile.damage;
+    record.lastModified = Date.now();
+    record.lastOperation = operation;
+
+    applyHpToToken(token, record);
+    applyAcToToken(token, record);
+
+    setTokenRecord(token.id, record);
+    return record;
+  }
+
+  /**
+   * Applies a scaling profile to all selected tokens.
+   *
+   * @param {object} msg Roll20 chat message.
+   * @param {{ hp: number, ac: number, damage: number }} profile Scaling values.
+   * @param {string} [label] Human-readable label for feedback messages.
+   * @returns {{ applied: string[], skipped: number }} Result summary.
+   */
+  function applyScalingToSelected(msg, profile, label) {
+    const tokens = getSelectedTokens(msg);
+    if (tokens.length === 0) {
+      return { applied: [], skipped: 0 };
+    }
+
+    const applied = [];
+    for (const token of tokens) {
+      applyScalingToToken(token, profile, label || 'scale');
+      applied.push(getTokenName(token));
+    }
+
+    return { applied, skipped: 0 };
+  }
+
+  /**
+   * Parses and validates a party size integer from a string argument.
+   * Rejects partial matches such as "6players".
+   *
+   * @param {string} raw Raw argument value.
+   * @returns {{ valid: boolean, value?: number, message?: string }} Parsed result.
+   */
+  function parsePartySize(raw) {
+    const n = parseStrictInt(raw);
+    if (!Number.isFinite(n) || n < 1 || n > 30) {
+      return {
+        valid: false,
+        message: `Party size must be a number between 1 and 30 (got "${raw}").`,
+      };
+    }
+    return { valid: true, value: n };
+  }
+
+  /**
+   * Parses and validates an HP percentage from a string argument.
+   * A trailing '%' is stripped before parsing. Rejects partial matches.
+   *
+   * @param {string} raw Raw argument value (e.g. '150' or '150%').
+   * @returns {{ valid: boolean, value?: number, message?: string }} Parsed result.
+   */
+  function parseHpPercent(raw) {
+    const cleaned = String(raw)
+      .replace(/^(\d+)%$/, '$1')
+      .trim();
+    const n = parseStrictInt(cleaned);
+    if (!Number.isFinite(n) || n < 1 || n > 1000) {
+      return {
+        valid: false,
+        message: `HP percentage must be between 1 and 1000 (got "${raw}"). Example: 150`,
+      };
+    }
+    return { valid: true, value: n };
+  }
+
+  /**
+   * Parses and validates an AC modifier from a string argument.
+   * A leading '+' is stripped before parsing. Rejects partial matches.
+   *
+   * @param {string} raw Raw argument value (e.g. '+2', '-1', '0').
+   * @returns {{ valid: boolean, value?: number, message?: string }} Parsed result.
+   */
+  function parseAcModifier(raw) {
+    const cleaned = String(raw).replace(/^\+/, '').trim();
+    const n = parseStrictInt(cleaned);
+    if (!Number.isFinite(n) || n < -10 || n > 10) {
+      return {
+        valid: false,
+        message: `AC modifier must be between -10 and +10 (got "${raw}"). Example: +2`,
+      };
+    }
+    return { valid: true, value: n };
+  }
+
+  /**
+   * Parses and validates a damage percentage from a string argument.
+   * A trailing '%' is stripped before parsing. Rejects partial matches.
+   *
+   * @param {string} raw Raw argument value.
+   * @returns {{ valid: boolean, value?: number, message?: string }} Parsed result.
+   */
+  function parseDamagePercent(raw) {
+    const cleaned = String(raw)
+      .replace(/^(\d+)%$/, '$1')
+      .trim();
+    const n = parseStrictInt(cleaned);
+    if (!Number.isFinite(n) || n < 1 || n > 1000) {
+      return {
+        valid: false,
+        message: `Damage percentage must be between 1 and 1000 (got "${raw}"). Example: 125`,
+      };
+    }
+    return { valid: true, value: n };
+  }
+
+  /**
+   * Returns true when the given string is a valid party preset key.
+   *
+   * @param {string} key Preset key to test.
+   * @returns {boolean} True when valid.
+   */
+  function isValidPartyPreset(key) {
+    return VALID_PARTY_PRESETS.has(key);
+  }
+
   // ---------------------------------------------------------------------------
   // Style constants shared across journal sections
   // ---------------------------------------------------------------------------
@@ -8179,6 +8560,128 @@ const CombatEncounterDirectorMod = (() => {
   }
 
   // ---------------------------------------------------------------------------
+  // Preset reference
+  // ---------------------------------------------------------------------------
+
+  // The example monster in the preset tables. Every result below is a whole number,
+  // so the tables show exactly what the presets write to a token.
+  const EXAMPLE_HP = 40;
+  const EXAMPLE_AC = 15;
+  const EXAMPLE_DAMAGE = 20;
+
+  /**
+   * Formats an AC modifier with its sign, using a true minus sign.
+   *
+   * @param {number} mod AC modifier.
+   * @returns {string} Signed modifier, e.g. '+2', '0' or '−1'.
+   */
+  function signed(mod) {
+    if (mod > 0) return `+${mod}`;
+    if (mod < 0) return `−${Math.abs(mod)}`;
+    return '0';
+  }
+
+  /**
+   * Returns the party sizes that `!ced scale party <size>` maps to each party preset.
+   *
+   * @returns {Map<object, string>} Preset → size range, e.g. '6–8'.
+   */
+  function partySizeRanges() {
+    const sizes = new Map();
+    for (let size = 1; size <= 30; size += 1) {
+      const preset = resolvePartyPresetBySize(size);
+      const range = sizes.get(preset) || [size, size];
+      range[1] = size;
+      sizes.set(preset, range);
+    }
+    return new Map(
+      [...sizes].map(([preset, [from, to]]) => [preset, from === to ? `${from}` : `${from}–${to}`])
+    );
+  }
+
+  /**
+   * Builds the Changes and Example cells for one preset. HP follows the same rounding as
+   * scaling (nearest whole number, at least 1); damage is a guide for the GM's rolls.
+   *
+   * @param {object} preset Party or boss preset.
+   * @param {string} lang Locale code.
+   * @returns {string[]} The two cells, as trusted HTML.
+   */
+  function presetCells(preset, lang) {
+    const hpLabel = escapeHtml(t('labels.hp', lang));
+    const acLabel = escapeHtml(t('labels.ac', lang));
+    const damageLabel = escapeHtml(t('labels.damage', lang));
+    const setHp = preset.hpMode === 'set';
+    const hpChange = setHp
+      ? escapeHtml(t('ui.presetHpSet', lang, { hp: preset.hp }))
+      : `${preset.hp}%`;
+    const newHp = setHp ? preset.hp : roundAtLeastOne((EXAMPLE_HP * preset.hp) / 100);
+    const newDamage = Math.round((EXAMPLE_DAMAGE * preset.damage) / 100);
+    const lines = (rows) => rows.join('<br>');
+    return [
+      lines([
+        `${hpLabel} ${hpChange}`,
+        `${acLabel} ${signed(preset.ac)}`,
+        `${damageLabel} ${preset.damage}%`,
+      ]),
+      lines([
+        `${hpLabel} ${EXAMPLE_HP} → ${newHp}`,
+        `${acLabel} ${EXAMPLE_AC} → ${EXAMPLE_AC + preset.ac}`,
+        `${damageLabel} ${EXAMPLE_DAMAGE} → ${newDamage}`,
+      ]),
+    ];
+  }
+
+  /**
+   * Builds the reference tables of every party and boss preset, with worked examples.
+   *
+   * @param {string} lang Locale code.
+   * @returns {string} HTML string.
+   */
+  function buildPresetReferenceSection(lang) {
+    const sizes = partySizeRanges();
+    const subheading = (text) =>
+      `<div style="color:${COLOR_MUTED};font-size:0.8em;margin:4px 0 2px 0">${escapeHtml(text)}</div>`;
+    const partyTable = buildTable(
+      [
+        t('labels.preset', lang),
+        t('ui.presetPlayers', lang),
+        t('ui.presetChanges', lang),
+        t('ui.presetExample', lang),
+      ],
+      Object.values(PARTY_PRESETS).map((preset) => [
+        escapeHtml(preset.label),
+        sizes.get(preset) || '',
+        ...presetCells(preset, lang),
+      ])
+    );
+    const bossTable = buildTable(
+      [t('labels.preset', lang), t('ui.presetChanges', lang), t('ui.presetExample', lang)],
+      Object.values(BOSS_PRESETS).map((preset) => [
+        escapeHtml(preset.label),
+        ...presetCells(preset, lang),
+      ])
+    );
+
+    return [
+      section(t('ui.presetReference', lang)),
+      desc(
+        t('ui.presetReferenceDesc', lang, {
+          hp: EXAMPLE_HP,
+          ac: EXAMPLE_AC,
+          damage: EXAMPLE_DAMAGE,
+        })
+      ),
+      `<div style="${SECTION_BODY}">`,
+      subheading(t('ui.partyPresets', lang)),
+      partyTable,
+      subheading(t('ui.bossPresets', lang)),
+      bossTable,
+      '</div>',
+    ].join('');
+  }
+
+  // ---------------------------------------------------------------------------
   // Section registry — maps section keys to renderer functions
   // ---------------------------------------------------------------------------
 
@@ -8195,6 +8698,7 @@ const CombatEncounterDirectorMod = (() => {
     reporting: buildReportingSection,
     config: buildConfigSection,
     help: buildHelpSection,
+    presetReference: buildPresetReferenceSection,
   };
 
   const DECK_VIEW_SECTIONS = {
@@ -8211,8 +8715,9 @@ const CombatEncounterDirectorMod = (() => {
       'reporting',
       'config',
       'help',
+      'presetReference',
     ],
-    scaling: ['quickActions', 'partyScaling', 'customScaling', 'bossTools'],
+    scaling: ['quickActions', 'partyScaling', 'customScaling', 'bossTools', 'presetReference'],
     positioning: ['reinforcements', 'layerVisibility', 'positionSaving', 'encounterTemplates'],
     admin: ['resetRecovery', 'reporting', 'config', 'help'],
   };
@@ -8903,171 +9408,6 @@ const CombatEncounterDirectorMod = (() => {
     }
 
     return { reset, missing };
-  }
-
-  /**
-   * Resolves a named party preset to a scaling object.
-   *
-   * @param {string} presetKey Preset key (e.g. 'standard', 'large').
-   * @returns {object|null} Preset object or null when not found.
-   */
-  function resolvePartyPreset(presetKey) {
-    return PARTY_PRESETS[presetKey] || null;
-  }
-
-  /**
-   * Returns the party preset whose size is nearest to the given party size.
-   *
-   * @param {number} partySize Number of players.
-   * @returns {object} Nearest preset.
-   */
-  function resolvePartyPresetBySize(partySize) {
-    const presets = Object.values(PARTY_PRESETS);
-    if (presets.length === 0) {
-      return null;
-    }
-
-    return presets.reduce((best, preset) => {
-      const bestDelta = Math.abs(best.partySize - partySize);
-      const thisDelta = Math.abs(preset.partySize - partySize);
-      return thisDelta < bestDelta ? preset : best;
-    }, presets[0]);
-  }
-
-  /**
-   * Applies a scaling profile to one token, updating its state record and token bars.
-   *
-   * @param {Graphic} token Roll20 Graphic object.
-   * @param {{ hp: number, ac: number, damage: number }} profile Scaling values.
-   * @param {string} [operation] Description of the operation for the audit log.
-   * @returns {object} Updated token record.
-   */
-  function applyScalingToToken(token, profile, operation) {
-    const record = ensureTokenRecord(token);
-
-    record.hpModifier = profile.hp;
-    record.acModifier = profile.ac;
-    record.damageModifier = profile.damage;
-    record.lastModified = Date.now();
-    record.lastOperation = operation;
-
-    applyHpToToken(token, record);
-    applyAcToToken(token, record);
-
-    setTokenRecord(token.id, record);
-    return record;
-  }
-
-  /**
-   * Applies a scaling profile to all selected tokens.
-   *
-   * @param {object} msg Roll20 chat message.
-   * @param {{ hp: number, ac: number, damage: number }} profile Scaling values.
-   * @param {string} [label] Human-readable label for feedback messages.
-   * @returns {{ applied: string[], skipped: number }} Result summary.
-   */
-  function applyScalingToSelected(msg, profile, label) {
-    const tokens = getSelectedTokens(msg);
-    if (tokens.length === 0) {
-      return { applied: [], skipped: 0 };
-    }
-
-    const applied = [];
-    for (const token of tokens) {
-      applyScalingToToken(token, profile, label || 'scale');
-      applied.push(getTokenName(token));
-    }
-
-    return { applied, skipped: 0 };
-  }
-
-  /**
-   * Parses and validates a party size integer from a string argument.
-   * Rejects partial matches such as "6players".
-   *
-   * @param {string} raw Raw argument value.
-   * @returns {{ valid: boolean, value?: number, message?: string }} Parsed result.
-   */
-  function parsePartySize(raw) {
-    const n = parseStrictInt(raw);
-    if (!Number.isFinite(n) || n < 1 || n > 30) {
-      return {
-        valid: false,
-        message: `Party size must be a number between 1 and 30 (got "${raw}").`,
-      };
-    }
-    return { valid: true, value: n };
-  }
-
-  /**
-   * Parses and validates an HP percentage from a string argument.
-   * A trailing '%' is stripped before parsing. Rejects partial matches.
-   *
-   * @param {string} raw Raw argument value (e.g. '150' or '150%').
-   * @returns {{ valid: boolean, value?: number, message?: string }} Parsed result.
-   */
-  function parseHpPercent(raw) {
-    const cleaned = String(raw)
-      .replace(/^(\d+)%$/, '$1')
-      .trim();
-    const n = parseStrictInt(cleaned);
-    if (!Number.isFinite(n) || n < 1 || n > 1000) {
-      return {
-        valid: false,
-        message: `HP percentage must be between 1 and 1000 (got "${raw}"). Example: 150`,
-      };
-    }
-    return { valid: true, value: n };
-  }
-
-  /**
-   * Parses and validates an AC modifier from a string argument.
-   * A leading '+' is stripped before parsing. Rejects partial matches.
-   *
-   * @param {string} raw Raw argument value (e.g. '+2', '-1', '0').
-   * @returns {{ valid: boolean, value?: number, message?: string }} Parsed result.
-   */
-  function parseAcModifier(raw) {
-    const cleaned = String(raw).replace(/^\+/, '').trim();
-    const n = parseStrictInt(cleaned);
-    if (!Number.isFinite(n) || n < -10 || n > 10) {
-      return {
-        valid: false,
-        message: `AC modifier must be between -10 and +10 (got "${raw}"). Example: +2`,
-      };
-    }
-    return { valid: true, value: n };
-  }
-
-  /**
-   * Parses and validates a damage percentage from a string argument.
-   * A trailing '%' is stripped before parsing. Rejects partial matches.
-   *
-   * @param {string} raw Raw argument value.
-   * @returns {{ valid: boolean, value?: number, message?: string }} Parsed result.
-   */
-  function parseDamagePercent(raw) {
-    const cleaned = String(raw)
-      .replace(/^(\d+)%$/, '$1')
-      .trim();
-    const n = parseStrictInt(cleaned);
-    if (!Number.isFinite(n) || n < 1 || n > 1000) {
-      return {
-        valid: false,
-        message: `Damage percentage must be between 1 and 1000 (got "${raw}"). Example: 125`,
-      };
-    }
-    return { valid: true, value: n };
-  }
-
-  /**
-   * Returns true when the given string is a valid party preset key.
-   *
-   * @param {string} key Preset key to test.
-   * @returns {boolean} True when valid.
-   */
-  function isValidPartyPreset(key) {
-    return VALID_PARTY_PRESETS.has(key);
   }
 
   // ---------------------------------------------------------------------------

@@ -216,6 +216,15 @@ const TRANSLATION = {
     setHpBar2: 'Ustaw pasek HP 2',
     setAcBar2: 'Ustaw pasek AC 2',
     disableAc: 'Wyłącz klimatyzację',
+    presetReference: 'Przegląd ustawień wstępnych',
+    presetReferenceDesc:
+      'Co zmienia każde ustawienie wstępne. Przykłady dotyczą potwora z {hp} HP i KP {ac}, który zadaje {damage} obrażeń. HP jest zaokrąglane do najbliższej liczby całkowitej, a ranny potwór zachowuje tę samą część swojego HP. Liczba obrażeń jest jedynie wskazówką dla twoich kości obrażeń.',
+    partyPresets: 'Ustawienia dla drużyny',
+    bossPresets: 'Ustawienia dla bossów',
+    presetPlayers: 'Gracze',
+    presetChanges: 'Zmiany',
+    presetExample: 'Przykład',
+    presetHpSet: 'ustawione na {hp}',
   },
   report: {
     summary: 'Streszczenie',

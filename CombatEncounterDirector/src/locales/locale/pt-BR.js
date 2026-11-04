@@ -215,6 +215,15 @@ const TRANSLATION = {
     setHpBar2: 'Definir barra HP 2',
     setAcBar2: 'Definir barra AC 2',
     disableAc: 'Desativar CA',
+    presetReference: 'Referência de predefinições',
+    presetReferenceDesc:
+      'O que cada predefinição muda. Os exemplos são para um monstro com {hp} HP e AC {ac} que causa {damage} de dano. O HP é arredondado para o número inteiro mais próximo, e um monstro ferido mantém a mesma parcela de seu HP. O número de dano é apenas um guia para seus dados de dano.',
+    partyPresets: 'Predefinições de grupo',
+    bossPresets: 'Predefinições de chefe',
+    presetPlayers: 'Jogadores',
+    presetChanges: 'Mudanças',
+    presetExample: 'Exemplo',
+    presetHpSet: 'definido como {hp}',
   },
   report: {
     summary: 'Resumo',

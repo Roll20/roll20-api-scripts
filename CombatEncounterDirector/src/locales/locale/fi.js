@@ -212,6 +212,15 @@ const TRANSLATION = {
     setHpBar2: 'Aseta HP bar 2',
     setAcBar2: 'Aseta AC bar 2',
     disableAc: 'Poista AC käytöstä',
+    presetReference: 'Esiasetusten viite',
+    presetReferenceDesc:
+      'Mitä kukin esiasetus muuttaa. Esimerkit koskevat hirviötä, jolla on {hp} HP ja AC {ac}, joka aiheuttaa {damage} vahinkoa. HP pyöristetään lähimpään kokonaislukuun, ja haavoittunut hirviö säilyttää saman osuuden HP:staan. Vahinkoluku on vain suuntaa antava vahinkonopillesi.',
+    partyPresets: 'Seurueen esiasetukset',
+    bossPresets: 'Pomojen esiasetukset',
+    presetPlayers: 'Pelaajat',
+    presetChanges: 'Muutokset',
+    presetExample: 'Esimerkki',
+    presetHpSet: 'asetetaan arvoon {hp}',
   },
   report: {
     summary: 'Yhteenveto',

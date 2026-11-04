@@ -215,6 +215,15 @@ const TRANSLATION = {
     setHpBar2: "HP çubuğu 2'yi ayarlayın",
     setAcBar2: "AC çubuğu 2'yi ayarlayın",
     disableAc: "AC'yi devre dışı bırak",
+    presetReference: 'Ön Ayar Başvurusu',
+    presetReferenceDesc:
+      "Her ön ayarın neleri değiştirdiği. Örnekler, {hp} HP ve AC {ac} olan ve {damage} hasar veren bir canavar içindir. HP, en yakın tam sayıya yuvarlanır ve yaralı bir canavar, HP'sinin aynı payını korur. Hasar rakamı yalnızca hasar zarlarınız için bir kılavuzdur.",
+    partyPresets: 'Grup ön ayarları',
+    bossPresets: 'Boss ön ayarları',
+    presetPlayers: 'Oyuncular',
+    presetChanges: 'Değişiklikler',
+    presetExample: 'Örnek',
+    presetHpSet: '{hp} olarak ayarlanır',
   },
   report: {
     summary: 'Özet',

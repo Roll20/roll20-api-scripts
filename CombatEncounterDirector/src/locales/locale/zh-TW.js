@@ -199,6 +199,15 @@ const TRANSLATION = {
     setHpBar2: '設定 HP 欄 2',
     setAcBar2: '設定 AC 條 2',
     disableAc: '禁用交流電',
+    presetReference: '預設參考',
+    presetReferenceDesc:
+      '每個預設會發生什麼變化。這些範例適用於具有 {hp} HP 和 AC {ac} 的怪物，造成 {damage} 傷害。生命值四捨五入到最接近的整數，受傷的怪物保持相同比例的生命值。傷害數字僅供傷害骰子參考。',
+    partyPresets: '隊伍預設',
+    bossPresets: '首領預設',
+    presetPlayers: '玩家',
+    presetChanges: '變化',
+    presetExample: '範例',
+    presetHpSet: '設為 {hp}',
   },
   report: {
     summary: '概括',

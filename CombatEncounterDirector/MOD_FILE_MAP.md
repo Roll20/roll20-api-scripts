@@ -86,11 +86,12 @@ A quick reference for where to find each feature in the source.
 
 ## Journals
 
-| Task                          | File              | Key function                 |
-| ----------------------------- | ----------------- | ---------------------------- |
-| Build control panel HTML      | `src/journals.js` | `buildControlPanelHtml`      |
-| Install/update control panel  | `src/journals.js` | `installControlPanelHandout` |
-| Install/create status journal | `src/journals.js` | `installStatusHandout`       |
+| Task                          | File              | Key function                  |
+| ----------------------------- | ----------------- | ----------------------------- |
+| Build control panel HTML      | `src/journals.js` | `buildControlPanelHtml`       |
+| Install/update control panel  | `src/journals.js` | `installControlPanelHandout`  |
+| Install/create status journal | `src/journals.js` | `installStatusHandout`        |
+| Preset reference tables       | `src/journals.js` | `buildPresetReferenceSection` |
 
 ## State Management
 

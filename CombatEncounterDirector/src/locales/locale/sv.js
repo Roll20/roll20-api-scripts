@@ -212,6 +212,15 @@ const TRANSLATION = {
     setHpBar2: 'Ställ in HP bar 2',
     setAcBar2: 'Ställ in AC bar 2',
     disableAc: 'Inaktivera AC',
+    presetReference: 'Översikt över förinställningar',
+    presetReferenceDesc:
+      'Vad varje förinställning ändrar. Exemplen är för ett monster med {hp} HP och AC {ac} som ger {damage} skada. HP avrundas till närmaste heltal, och ett skadat monster behåller samma andel av sin HP. Skadesiffran är endast en vägledning för dina skadetärningar.',
+    partyPresets: 'Gruppförinställningar',
+    bossPresets: 'Bossförinställningar',
+    presetPlayers: 'Spelare',
+    presetChanges: 'Ändringar',
+    presetExample: 'Exempel',
+    presetHpSet: 'sätts till {hp}',
   },
   report: {
     summary: 'Sammanfattning',

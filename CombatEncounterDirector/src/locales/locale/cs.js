@@ -209,6 +209,15 @@ const TRANSLATION = {
     setHpBar2: 'Nastavte HP bar 2',
     setAcBar2: 'Nastavte AC bar 2',
     disableAc: 'Zakázat AC',
+    presetReference: 'Přehled předvoleb',
+    presetReferenceDesc:
+      'Co každá předvolba mění. Příklady jsou pro monstrum s {hp} HP a AC {ac}, které způsobí poškození {damage}. HP se zaokrouhlí na nejbližší celé číslo a zraněné monstrum si ponechá stejný podíl svých HP. Hodnota poškození je jen vodítkem pro vaše kostky poškození.',
+    partyPresets: 'Předvolby družiny',
+    bossPresets: 'Předvolby bossů',
+    presetPlayers: 'Hráči',
+    presetChanges: 'Změny',
+    presetExample: 'Příklad',
+    presetHpSet: 'nastaveno na {hp}',
   },
   report: {
     summary: 'Shrnutí',

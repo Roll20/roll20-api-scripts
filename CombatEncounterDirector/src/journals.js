@@ -20,7 +20,8 @@ import {
 import { buildButton, buildCard, buildSecondaryButton, buildTable } from './chat.js';
 import { LOCALE_DEFINITIONS, t } from './i18n.js';
 import { getConfig } from './state.js';
-import { escapeHtml } from './utils.js';
+import { resolvePartyPresetBySize } from './scaling.js';
+import { escapeHtml, roundAtLeastOne } from './utils.js';
 
 // ---------------------------------------------------------------------------
 // Style constants shared across journal sections
@@ -497,6 +498,124 @@ function buildHelpSection(lang) {
 }
 
 // ---------------------------------------------------------------------------
+// Preset reference
+// ---------------------------------------------------------------------------
+
+// The example monster in the preset tables. Every result below is a whole number,
+// so the tables show exactly what the presets write to a token.
+const EXAMPLE_HP = 40;
+const EXAMPLE_AC = 15;
+const EXAMPLE_DAMAGE = 20;
+
+/**
+ * Formats an AC modifier with its sign, using a true minus sign.
+ *
+ * @param {number} mod AC modifier.
+ * @returns {string} Signed modifier, e.g. '+2', '0' or '−1'.
+ */
+function signed(mod) {
+  if (mod > 0) return `+${mod}`;
+  if (mod < 0) return `−${Math.abs(mod)}`;
+  return '0';
+}
+
+/**
+ * Returns the party sizes that `!ced scale party <size>` maps to each party preset.
+ *
+ * @returns {Map<object, string>} Preset → size range, e.g. '6–8'.
+ */
+function partySizeRanges() {
+  const sizes = new Map();
+  for (let size = 1; size <= 30; size += 1) {
+    const preset = resolvePartyPresetBySize(size);
+    const range = sizes.get(preset) || [size, size];
+    range[1] = size;
+    sizes.set(preset, range);
+  }
+  return new Map(
+    [...sizes].map(([preset, [from, to]]) => [preset, from === to ? `${from}` : `${from}–${to}`])
+  );
+}
+
+/**
+ * Builds the Changes and Example cells for one preset. HP follows the same rounding as
+ * scaling (nearest whole number, at least 1); damage is a guide for the GM's rolls.
+ *
+ * @param {object} preset Party or boss preset.
+ * @param {string} lang Locale code.
+ * @returns {string[]} The two cells, as trusted HTML.
+ */
+function presetCells(preset, lang) {
+  const hpLabel = escapeHtml(t('labels.hp', lang));
+  const acLabel = escapeHtml(t('labels.ac', lang));
+  const damageLabel = escapeHtml(t('labels.damage', lang));
+  const setHp = preset.hpMode === 'set';
+  const hpChange = setHp
+    ? escapeHtml(t('ui.presetHpSet', lang, { hp: preset.hp }))
+    : `${preset.hp}%`;
+  const newHp = setHp ? preset.hp : roundAtLeastOne((EXAMPLE_HP * preset.hp) / 100);
+  const newDamage = Math.round((EXAMPLE_DAMAGE * preset.damage) / 100);
+  const lines = (rows) => rows.join('<br>');
+  return [
+    lines([
+      `${hpLabel} ${hpChange}`,
+      `${acLabel} ${signed(preset.ac)}`,
+      `${damageLabel} ${preset.damage}%`,
+    ]),
+    lines([
+      `${hpLabel} ${EXAMPLE_HP} → ${newHp}`,
+      `${acLabel} ${EXAMPLE_AC} → ${EXAMPLE_AC + preset.ac}`,
+      `${damageLabel} ${EXAMPLE_DAMAGE} → ${newDamage}`,
+    ]),
+  ];
+}
+
+/**
+ * Builds the reference tables of every party and boss preset, with worked examples.
+ *
+ * @param {string} lang Locale code.
+ * @returns {string} HTML string.
+ */
+function buildPresetReferenceSection(lang) {
+  const sizes = partySizeRanges();
+  const subheading = (text) =>
+    `<div style="color:${COLOR_MUTED};font-size:0.8em;margin:4px 0 2px 0">${escapeHtml(text)}</div>`;
+  const partyTable = buildTable(
+    [
+      t('labels.preset', lang),
+      t('ui.presetPlayers', lang),
+      t('ui.presetChanges', lang),
+      t('ui.presetExample', lang),
+    ],
+    Object.values(PARTY_PRESETS).map((preset) => [
+      escapeHtml(preset.label),
+      sizes.get(preset) || '',
+      ...presetCells(preset, lang),
+    ])
+  );
+  const bossTable = buildTable(
+    [t('labels.preset', lang), t('ui.presetChanges', lang), t('ui.presetExample', lang)],
+    Object.values(BOSS_PRESETS).map((preset) => [
+      escapeHtml(preset.label),
+      ...presetCells(preset, lang),
+    ])
+  );
+
+  return [
+    section(t('ui.presetReference', lang)),
+    desc(
+      t('ui.presetReferenceDesc', lang, { hp: EXAMPLE_HP, ac: EXAMPLE_AC, damage: EXAMPLE_DAMAGE })
+    ),
+    `<div style="${SECTION_BODY}">`,
+    subheading(t('ui.partyPresets', lang)),
+    partyTable,
+    subheading(t('ui.bossPresets', lang)),
+    bossTable,
+    '</div>',
+  ].join('');
+}
+
+// ---------------------------------------------------------------------------
 // Section registry — maps section keys to renderer functions
 // ---------------------------------------------------------------------------
 
@@ -513,6 +632,7 @@ const SECTION_RENDERERS = {
   reporting: buildReportingSection,
   config: buildConfigSection,
   help: buildHelpSection,
+  presetReference: buildPresetReferenceSection,
 };
 
 const DECK_VIEW_SECTIONS = {
@@ -529,8 +649,9 @@ const DECK_VIEW_SECTIONS = {
     'reporting',
     'config',
     'help',
+    'presetReference',
   ],
-  scaling: ['quickActions', 'partyScaling', 'customScaling', 'bossTools'],
+  scaling: ['quickActions', 'partyScaling', 'customScaling', 'bossTools', 'presetReference'],
   positioning: ['reinforcements', 'layerVisibility', 'positionSaving', 'encounterTemplates'],
   admin: ['resetRecovery', 'reporting', 'config', 'help'],
 };

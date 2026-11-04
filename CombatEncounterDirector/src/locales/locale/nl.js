@@ -215,6 +215,15 @@ const TRANSLATION = {
     setHpBar2: 'Stel HP-balk 2 in',
     setAcBar2: 'AC-balk 2 instellen',
     disableAc: 'Schakel AC uit',
+    presetReference: 'Overzicht van voorinstellingen',
+    presetReferenceDesc:
+      'Wat elke preset verandert. De voorbeelden zijn voor een monster met {hp} HP en AC {ac} dat {damage} schade aanricht. HP wordt afgerond op het dichtstbijzijnde gehele getal, en een gewond monster behoudt hetzelfde deel van zijn HP. Het schadecijfer is slechts een leidraad voor uw schadedobbelstenen.',
+    partyPresets: 'Groepsvoorinstellingen',
+    bossPresets: 'Boss-voorinstellingen',
+    presetPlayers: 'Spelers',
+    presetChanges: 'Veranderingen',
+    presetExample: 'Voorbeeld',
+    presetHpSet: 'ingesteld op {hp}',
   },
   report: {
     summary: 'Samenvatting',

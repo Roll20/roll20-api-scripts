@@ -219,6 +219,15 @@ const TRANSLATION = {
     setHpBar2: 'Définir la barre HP 2',
     setAcBar2: 'Définir la barre AC 2',
     disableAc: 'Désactiver la climatisation',
+    presetReference: 'Référence des préréglages',
+    presetReferenceDesc:
+      "Ce que chaque préréglage change. Les exemples concernent un monstre avec {hp} HP et AC {ac} qui inflige {damage} dégâts. Les PV sont arrondis à l'entier le plus proche, et un monstre blessé conserve la même part de ses PV. Le chiffre des dégâts n'est qu'un guide pour vos dés de dégâts.",
+    partyPresets: 'Préréglages de groupe',
+    bossPresets: 'Préréglages de boss',
+    presetPlayers: 'Joueurs',
+    presetChanges: 'Changements',
+    presetExample: 'Exemple',
+    presetHpSet: 'fixés à {hp}',
   },
   report: {
     summary: 'Résumé',

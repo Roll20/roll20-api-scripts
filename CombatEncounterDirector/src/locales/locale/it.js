@@ -219,6 +219,15 @@ const TRANSLATION = {
     setHpBar2: 'Imposta la barra HP 2',
     setAcBar2: 'Impostare la barra CA 2',
     disableAc: 'Disabilita AC',
+    presetReference: 'Riepilogo dei preset',
+    presetReferenceDesc:
+      'Ciò che cambia ogni preimpostazione. Gli esempi riguardano un mostro con {hp} HP e AC {ac} che infligge {damage} danni. Gli HP vengono arrotondati al numero intero più vicino e un mostro ferito mantiene la stessa quota dei suoi HP. La cifra del danno è solo una guida per i tuoi dadi di danno.',
+    partyPresets: 'Preset per il gruppo',
+    bossPresets: 'Preset per i boss',
+    presetPlayers: 'Giocatori',
+    presetChanges: 'Cambiamenti',
+    presetExample: 'Esempio',
+    presetHpSet: 'impostati a {hp}',
   },
   report: {
     summary: 'Riepilogo',

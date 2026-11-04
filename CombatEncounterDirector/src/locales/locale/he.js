@@ -202,6 +202,15 @@ const TRANSLATION = {
     setHpBar2: 'הגדר את HP bar 2',
     setAcBar2: 'הגדר AC בר 2',
     disableAc: 'השבת AC',
+    presetReference: 'מדריך הגדרות מראש',
+    presetReferenceDesc:
+      'מה כל הגדרה מראש משנה. הדוגמאות מיועדות למפלצת עם {hp} HP ו-AC {ac} שגורמת לנזק של {damage}. HP מעוגל למספר השלם הקרוב ביותר, ומפלצת פצועה שומרת על אותו חלק מה-HP שלה. נתון הנזק הוא רק מדריך לקוביות הנזק שלך.',
+    partyPresets: 'הגדרות מראש לקבוצה',
+    bossPresets: 'הגדרות מראש לבוס',
+    presetPlayers: 'שחקנים',
+    presetChanges: 'שינויים',
+    presetExample: 'דוּגמָה',
+    presetHpSet: 'נקבע ל-{hp}',
   },
   report: {
     summary: 'תַקצִיר',

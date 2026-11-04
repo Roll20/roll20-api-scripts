@@ -191,6 +191,39 @@ Damage scaling is tracked as metadata and shown in the status report. It does no
 
 ---
 
+## Preset Reference
+
+What every scaling preset changes. The examples are worked for a monster with **40 HP** and **AC 15** that deals **20 damage**. HP is rounded to the nearest whole number (never below 1), and a wounded monster keeps the same share of its HP: at 20/40 HP, Elite makes it 30/60. The damage figure is only a guide for your damage dice. The same tables are at the end of the Command Deck handout, on its All and Scaling tabs.
+
+### Party Presets
+
+`!ced scale preset <name>` applies one by name. `!ced scale party <size>` picks the preset for that many players, as in the Players column (a size halfway between two presets takes the smaller one).
+
+| Preset           | Players | Changes                     | Example                                 |
+| ---------------- | ------- | --------------------------- | --------------------------------------- |
+| Solo             | 1       | HP 25%, AC −2, damage 75%   | 40 HP → 10, AC 15 → 13, 20 damage → 15  |
+| Duo              | 2       | HP 50%, AC −1, damage 85%   | 40 HP → 20, AC 15 → 14, 20 damage → 17  |
+| Small Party      | 3       | HP 75%, AC 0, damage 90%    | 40 HP → 30, AC 15 → 15, 20 damage → 18  |
+| Standard Party   | 4–5     | HP 100%, AC 0, damage 100%  | No change                               |
+| Large Party      | 6–8     | HP 140%, AC +1, damage 120% | 40 HP → 56, AC 15 → 16, 20 damage → 24  |
+| Convention Table | 9–15    | HP 200%, AC +2, damage 150% | 40 HP → 80, AC 15 → 17, 20 damage → 30  |
+| Massive Table    | 16–30   | HP 300%, AC +3, damage 200% | 40 HP → 120, AC 15 → 18, 20 damage → 40 |
+
+### Boss Presets
+
+`!ced boss <name>` applies one to the selected tokens.
+
+| Preset    | Changes                        | Example                                 |
+| --------- | ------------------------------ | --------------------------------------- |
+| Minion    | HP set to 1, AC −2, damage 50% | 40 HP → 1, AC 15 → 13, 20 damage → 10   |
+| Elite     | HP 150%, AC +1, damage 125%    | 40 HP → 60, AC 15 → 16, 20 damage → 25  |
+| Boss      | HP 300%, AC +2, damage 150%    | 40 HP → 120, AC 15 → 17, 20 damage → 30 |
+| Legendary | HP 500%, AC +3, damage 200%    | 40 HP → 200, AC 15 → 18, 20 damage → 40 |
+
+Every preset works from the token's original values, so applying another one replaces the last instead of adding to it. `!ced reset selected` puts the original values back.
+
+---
+
 ## Credits
 
 Creator: [MidNiteShadow7](https://app.roll20.net/users/16506286/midniteshadow7)
