@@ -4,7 +4,7 @@
  * @Project     Combat Assistant
  * @Description Lightweight Roll20 combat assistance extracted from T&T ideas.
  * @Author      AmadeusVF
- * @Version     1.2.15
+ * @Version     1.2.16
  * =========================================================
  *
  * Design goals:
@@ -39,13 +39,994 @@ const CombatAssistant = (() => {
         SHORT_NAME: 'CA',
         LOG_NAME: 'Combat Assistant',
         CHAT_NAME: 'Combat Assistant',
-        VERSION: '1.2.15',
+        VERSION: '1.2.16',
         SCHEMA_VERSION: 7,
         STATE_KEY: 'COMBAT_ASSISTANT',
         LEGACY_STATE_KEY: 'COMBAT_TRACKER',
     });
 
     const SPELL_CONTROLS_WIDTH = 79;
+
+    /** -----------------------------------------------------------------------
+     * I18N: English keys, built-in Spanish, optional Custom handout translations.
+     * --------------------------------------------------------------------- */
+    const I18N = {
+        HANDOUT_NAME: 'CA Language',
+        // Cache per-dictionary, case-insensitive lookups without changing the
+        // canonical English keys or the exact-case meaning of an entry.
+        caseFoldCache: new WeakMap(),
+        spanish: Object.freeze({
+            "Combat": "Combate",
+            "Special Actions": "Acciones especiales",
+            "Bonus Action": "Acción adicional",
+            "Bonus Actions": "Acciones adicionales",
+            "Reaction": "Reacción",
+            "Reactions": "Reacciones",
+            "Free Action": "Acción libre",
+            "Free Actions": "Acciones libres",
+            "Legendary Action": "Acción legendaria",
+            "Legendary Actions": "Acciones legendarias",
+            "Mythic Action": "Acción mítica",
+            "Mythic Actions": "Acciones míticas",
+            "Combat Log": "Registro de combate",
+            "Healing": "Curación",
+            "Temporary HP": "PG temporales",
+            "Damage": "Daño",
+            "Damage Blocked": "Daño bloqueado",
+            "Healing Blocked": "Curación bloqueada",
+            "Attack": "Ataque",
+            "Attacks": "Ataques",
+            "Hit": "Impacto",
+            "Miss": "Fallo",
+            "Missed": "Falló",
+            "Critical Hit": "Golpe crítico",
+            "Critical": "Crítico",
+            "Success": "Éxito",
+            "Failure": "Fallo",
+            "Warning": "Advertencia",
+            "Info": "Información",
+            "Unknown": "Desconocido",
+            "None": "Ninguno",
+            "Yes": "Sí",
+            "Get": "Obtener",
+            "Set": "Asignar",
+            "Edit": "Editar",
+            "Back": "Volver",
+            "Default": "Predeterminado",
+            "Recommended": "Recomendado",
+            "Language Template": "Plantilla de idioma",
+            "Apply recommended ON/OFF settings only?": "\u00bfAplicar los ajustes recomendados? Solo se cambiar\u00e1n las opciones ON/OFF.",
+            "Apply recommended ON/OFF settings without changing images, markers, language, spell templates, or macros": "Aplica las opciones ON/OFF recomendadas sin modificar im\u00e1genes, marcadores, idioma, plantillas ni macros.",
+            "Recommended settings cancelled. No changes were made.": "No se aplicaron los ajustes recomendados. No se modific\u00f3 nada.",
+            "Recommended settings were applied to {count} ON/OFF options. Images, markers, language, templates, and macros were left unchanged.": "Se aplicaron los ajustes recomendados a {count} opciones ON/OFF. Las im\u00e1genes, los marcadores, el idioma, las plantillas y las macros siguen igual.",
+            "Initiative roll request sent to player-controlled token(s).": "Se solicit\u00f3 a los jugadores que tiren iniciativa con las fichas que controlan.",
+            "Cancel": "Cancelar",
+            "Close": "Cerrar",
+            "Open": "Abrir",
+            "Use": "Usar",
+            "Apply": "Aplicar",
+            "Remove": "Eliminar",
+            "End": "Terminar",
+            "Save": "Salvación",
+            "Roll": "Tirar",
+            "Roll All": "Tirar todos",
+            "Next": "Siguiente",
+            "Previous": "Anterior",
+            "Import": "Importar",
+            "Export": "Exportar",
+            "Created": "Creado",
+            "Updated": "Actualizado",
+            "Loading": "Cargando",
+            "Language": "Idioma",
+            "English": "Inglés",
+            "Custom": "Personalizado",
+            "Languages": "Idiomas",
+            "Language Settings": "Configuración de idioma",
+            "Language imported": "Idioma importado",
+            "Language changed": "Idioma cambiado",
+            "Language handout": "Handout de idioma",
+            "Custom Language": "Idioma personalizado",
+            "Language JSON is invalid.": "El JSON de idioma no es válido.",
+            "No handout named \"CA Language\" was found.": "No se encontró un handout llamado «CA Language».",
+            "The language handout does not contain valid JSON.": "El handout de idioma no contiene JSON válido.",
+            "Custom translations loaded from CA Language.": "Traducciones personalizadas cargadas desde CA Language.",
+            "English (default)": "Inglés (predeterminado)",
+            "Spanish": "Español",
+            "Custom (CA Language handout)": "Personalizado (handout CA Language)",
+            "Use a handout named CA Language containing the translation JSON to activate Custom.": "Para activar Personalizado, usa un handout llamado CA Language con el JSON de traducción.",
+            "Select the language used for Combat Assistant menus and messages.": "Elige el idioma de los menús y mensajes de Combat Assistant.",
+            "Reload Custom Language": "Recargar idioma personalizado",
+            "Reload": "Recargar",
+            "Reload the translation JSON from the CA Language handout.": "Volver a cargar las traducciones JSON del handout CA Language.",
+            "Settings": "Configuración",
+            "Combat Assistant Settings": "Configuración de Combat Assistant",
+            "Privacy": "Privacidad",
+            "Privacy Settings": "Configuración de privacidad",
+            "Combat Settings": "Configuración de combate",
+            "Turn Tracker Settings": "Configuración del gestor de turnos",
+            "Resources Settings": "Configuración de recursos",
+            "Token Markers": "Marcadores de ficha",
+            "Resource": "Recurso",
+            "Resources": "Recursos",
+            "Resource Update": "Actualización de recursos",
+            "Spell Templates": "Plantillas de conjuros",
+            "Templates": "Plantillas",
+            "Spell Template": "Plantilla de conjuro",
+            "Spell Macros": "Macros de conjuros",
+            "Spell Macro": "Macro de conjuro",
+            "Spells": "Conjuros",
+            "Prepared Spells": "Conjuros preparados",
+            "Spell Slots": "Espacios de conjuro",
+            "Slots": "Espacios",
+            "Slots Auto": "Espacios automáticos",
+            "Slots at this level": "Espacios de conjuro de este nivel",
+            "Spell slot auto-consumption is armed for the next leveled spell roll": "El consumo automático de espacios de conjuro está activado para el próximo conjuro de nivel 1 o superior.",
+            "Prepared leveled spells excluding Always Prepared and item spells": "Conjuros preparados de nivel 1 o superior; no incluye los siempre preparados ni los concedidos por objetos.",
+            "PACT MAGIC": "MAGIA DE PACTO",
+            "CAST LV.": "NIV. LANZ.",
+            "Spells Remaining": "Conjuros restantes",
+            "Prepared": "Preparado",
+            "Unprepared": "Sin preparar",
+            "{count} prepared": "{count} preparados",
+            "Prepared spells at this level; the limit is shared across levels": "Conjuros preparados de este nivel; el límite se comparte entre niveles",
+            "Always Prepared": "Siempre preparado",
+            "Cantrips": "Trucos",
+            "Cantrip": "Truco",
+            "Spell": "Conjuro",
+            "Spell Name": "Nombre del conjuro",
+            "Spell Level": "Nivel del conjuro",
+            "Spell Attack": "Ataque de conjuro",
+            "Spell Save": "Salvación contra conjuro",
+            "Character": "Personaje",
+            "Character Sheet": "Hoja del personaje",
+            "Compact Sheet": "Ficha compacta",
+            "CA Sheet": "Ficha CA",
+            "CA Help": "Ayuda CA",
+            "CA Initiative": "Iniciativa CA",
+            "CA Combat": "Combate CA",
+            "CA Spells": "Conjuros CA",
+            "CA Dash": "Correr (CA)",
+            "CA Disengage": "Retirada CA",
+            "CA Dodge": "Esquiva CA",
+            "CA Turn": "Turno CA",
+            "CA Turn Card": "Tarjeta de Turno CA",
+            "CA Turn Next": "Siguiente Turno CA",
+            "CA Turn Focus": "Enfocar turno CA",
+            "CA Resources": "Recursos CA",
+            "CA Concentration": "Concentración CA",
+            "Special": "Especial",
+            "Sheet": "Hoja",
+            "Dash": "Correr",
+            "Disengage": "Retirada",
+            "Dodge": "Esquiva",
+            "Whisper": "Susurrar",
+            "Roll Damage": "Tirar el daño",
+            "Tie Breaker": "Desempate",
+            "Initiative": "Iniciativa",
+            "Initiative Roll": "Tirada de iniciativa",
+            "Initiative Rolls": "Tiradas de iniciativa",
+            "Saving Throw": "Tirada de salvación",
+            "Saving Throws": "Tiradas de salvación",
+            "Ability Check": "Prueba de característica",
+            "Skill Check": "Prueba de habilidad",
+            "Concentration": "Concentración",
+            "Concentration Damage": "Daño de concentración",
+            "Concentration Check": "Salvación de concentración",
+            "Effect Tracker": "Gestor de efectos",
+            "Turn Tracker": "Gestor de turnos",
+            "Turn Marker": "Marcador de turno",
+            "Round Counter": "Contador de rondas",
+            "Round": "Ronda",
+            "Rounds": "Rondas",
+            "Round 1": "Ronda 1",
+            "Turn": "Turno",
+            "Turn Card": "Tarjeta de Turno",
+            "Next Turn": "Siguiente Turno",
+            "Prev Turn": "Turno anterior",
+            "Token": "Ficha",
+            "Target": "Objetivo",
+            "Targets": "Objetivos",
+            "Attacker": "Atacante",
+            "Caster": "Lanzador",
+            "Healer": "Sanador",
+            "Source": "Origen",
+            "Damage Source": "Origen del daño",
+            "Damage Type": "Tipo de daño",
+            "damageType.normal": "Normal",
+            "damageType.acid": "ácido",
+            "damageType.bludgeoning": "contundente",
+            "damageType.cold": "frío",
+            "damageType.fire": "fuego",
+            "damageType.force": "fuerza",
+            "damageType.lightning": "relámpago",
+            "damageType.necrotic": "necrótico",
+            "damageType.piercing": "perforante",
+            "damageType.poison": "veneno",
+            "damageType.psychic": "psíquico",
+            "damageType.radiant": "radiante",
+            "damageType.slashing": "cortante",
+            "damageType.thunder": "trueno",
+            "damageType.healing": "curación",
+            "damageType.temp_healing": "PG temporales",
+            "Hit Points": "Puntos de golpe",
+            "Temporary Hit Points": "Puntos de golpe temporales",
+            "HP": "PG",
+            "Temp HP": "PG temporales",
+            "AC": "CA",
+            "Level": "Nivel",
+            "Actions": "Acciones",
+            "Action": "Acción",
+            "Effect": "Efecto",
+            "Effects": "Efectos",
+            "Condition": "Estado",
+            "Conditions": "Estados",
+            "Area": "Área",
+            "Area Marker": "Marcador de área",
+            "Area Targets": "Objetivos del área",
+            "Out of Range": "Fuera de alcance",
+            "In Range": "Dentro del alcance",
+            "Range": "Alcance",
+            "Distance": "Distancia",
+            "Damage Roll": "Tirada de daño",
+            "Healing Roll": "Tirada de curación",
+            "Magic Resistance": "Resistencia mágica",
+            "Attack Roll": "Tirada de ataque",
+            "Attack Damage": "Daño de ataque",
+            "No damage": "Sin daño",
+            "No Spell Macros configured.": "No hay macros de conjuros configuradas.",
+            "Add Spell Template": "Añadir plantilla de conjuro",
+            "Add Spell Macro": "Añadir macro de conjuro",
+            "Remove this spell template": "Eliminar esta plantilla de conjuro",
+            "Edit this spell template": "Editar esta plantilla de conjuro",
+            "Remove this spell macro": "Eliminar esta macro de conjuro",
+            "Edit this spell macro": "Editar esta macro de conjuro",
+            "Open help": "Abrir ayuda",
+            "Open settings": "Abrir configuración",
+            "Back to Settings": "Volver a Configuración",
+            "Sub Menus": "Submenús",
+            "Main": "Principal",
+            "Extra": "Extras",
+            "Player": "Jugador",
+            "Player Settings": "Configuración de jugador",
+            "Combat Assistant Test": "Prueba de Combat Assistant",
+            "Token Image URL": "URL de la imagen de la ficha",
+            "No selected token.": "No hay ninguna ficha seleccionada.",
+            "No selected token was linked to a character sheet.": "Ninguna de las fichas seleccionadas está vinculada a una hoja de personaje.",
+            "You do not control this token.": "No controlas esta ficha.",
+            "You do not control this character.": "No controlas este personaje.",
+            "Permission Denied": "Permiso denegado",
+            "Target Required": "Objetivo requerido",
+            "Automatic Failure": "Fallo automático",
+            "Choose a target token before pressing the button.": "Elige una ficha objetivo antes de pulsar el botón.",
+            "The requested token was not found.": "No se encontró la ficha solicitada.",
+            "The selected target token could not be found.": "No se encontró la ficha objetivo seleccionada.",
+            "Invalid healing payload.": "Datos de curación no válidos.",
+            "Invalid damage payload.": "Datos de daño no válidos.",
+            "Could not apply healing.": "No se pudo aplicar la curación.",
+            "Could not apply damage.": "No se pudo aplicar el daño.",
+            "Could not apply damage after the saving throw.": "No se pudo aplicar el daño después de la tirada de salvación.",
+            "This action is already being resolved or has no remaining uses.": "Esta acción ya se está resolviendo o no tiene usos restantes.",
+            "This single-use button has already been used or expired.": "Este botón de un solo uso ya se utilizó o caducó.",
+            "This area button has already been used or expired.": "Este botón de área ya se utilizó o caducó.",
+            "This tracked effect expired or was already removed.": "Este efecto registrado caducó o ya se eliminó.",
+            "No active concentration was found.": "No se encontró ninguna concentración activa.",
+            "No active concentration was found for your token.": "No se encontró concentración activa para tu ficha.",
+            "No target tokens were found inside the area marker.": "No se encontraron fichas objetivo dentro del marcador de área.",
+            "Only the GM can stop combat.": "Solo el DM puede detener el combate.",
+            "Only the GM can remove turns.": "Solo el DM puede eliminar turnos.",
+            "Manual Healing": "Curación manual",
+            "Manual Damage": "Daño manual",
+            "Settings Export": "Exportar configuración",
+            "Settings Import": "Importar configuración",
+            "The language setting must be English, Spanish, or Custom.": "El idioma debe ser inglés, español o personalizado.",
+            "Custom language loaded successfully.": "Idioma personalizado cargado correctamente.",
+            "Custom language could not be loaded; English will be used until the handout is fixed.": "No se pudo cargar el idioma personalizado; se usará inglés hasta corregir el handout.",
+            "No translation entries were found in the language handout.": "No se encontraron entradas de traducción en el handout.",
+            "The handout translations must be an object of text keys and translated strings.": "Las traducciones del handout deben ser un objeto con claves de texto y cadenas traducidas.",
+            "The handout contains an unsafe translation value.": "El handout contiene una traducción insegura.",
+            "Chat Tracking": "Seguimiento del chat",
+            "2024 Combat Assistant Rolls Initiative": "CA tira la iniciativa 2024",
+            "2014 Combat Assistant Rolls": "CA realiza tiradas 2014",
+            "Hide Combat Log": "Ocultar registro de combate",
+            "Hide Resistance Details": "Ocultar detalles de resistencia",
+            "Hide Damage Details": "Ocultar detalles de daño",
+            "Reveal Damage Source in Log": "Mostrar origen del daño",
+            "Reveal Token Names in Log": "Mostrar nombres de fichas",
+            "Public Presentation Card": "Tarjeta de presentación pública",
+            "Concentration Tracking": "Seguimiento de la concentración",
+            "GM-Only Concentration Tooltip": "Detalles de concentración solo para el DM",
+            "HP Bar": "Barra de PG",
+            "AC Bar": "Barra de CA",
+            "Temp HP Bar": "Barra de PG temporales",
+            "Damage Round Up": "Redondear el daño hacia arriba",
+            "Require AC for Attack": "Exigir CA para atacar",
+            "Only Damage Card": "Mostrar tarjeta solo de daño",
+            "Read Sheet Resistances": "Leer las resistencias de la hoja",
+            "Show Effects List": "Mostrar lista de efectos",
+            "Player Manual Roll": "Tirada manual del jugador",
+            "Player Healing Button": "Bot\u00f3n de curaci\u00f3n para jugadores",
+            "Player Attack Button": "Bot\u00f3n de ataque para jugadores",
+            "Player Target Range Check": "Comprobar alcance del objetivo",
+            "Player Token Area Mark": "Marcador de área del jugador",
+            "Keep Marker Until Rolls Finish": "Mantener marcador hasta terminar las tiradas",
+            "Marker Free Movement": "Movimiento libre del marcador",
+            "Square Marker Roll20 URL": "URL del marcador cuadrado de Roll20",
+            "Radius Marker Roll20 URL": "URL del marcador circular de Roll20",
+            "Marker Opacity": "Opacidad del marcador",
+            "Combat Visual Effects": "Efectos visuales de combate",
+            "Projectile Effect Name": "Nombre del efecto de proyectil",
+            "Direct Hit Effect Name": "Nombre del efecto de impacto directo",
+            "Area Hit Effect Name": "Nombre del efecto de área",
+            "Apply Condition Marker": "Aplicar marcador de estado",
+            "Force Turn Order Position": "Forzar orden de turnos",
+            "Turn Auto Focus": "Enfoque automático del turno",
+            "Turn Focus For Everyone": "Enfocar turno para todos",
+            "Turn Token Action": "Acciones de ficha por turno",
+            "Turn Movement Tracker": "Seguimiento de movimiento",
+            "Turn Movement Blocker": "Bloquear fuera de turno",
+            "Movement Consumed Blocker": "Bloquear al agotar movimiento",
+            "Conc. Turn Tracker": "Duración de concentración por turnos",
+            "Public Round Counter": "Contador público de rondas",
+            "Remove NPC Dead Tokens": "Quitar fichas de PNJ muertos",
+            "Turn Marker Token Public": "Marcador de turno público",
+            "Turn Marker Token Image": "Imagen del marcador de turno",
+            "Turn Marker Token Size %": "Tamaño del marcador de turno (%)",
+            "Turn Marker Follow": "Hacer que el marcador siga la ficha",
+            "Turn Marker Rotation": "Rotación del marcador",
+            "Turn Marker Rotation Steps": "Pasos de rotación del marcador",
+            "Turn Marker Rotation Speed": "Velocidad de rotación del marcador",
+            "Show Player Resources": "Mostrar recursos de jugadores",
+            "Show NPC Resources": "Mostrar recursos de PNJ",
+            "NPC Resource Management": "Administrar recursos de PNJ",
+            "Consume Spell Slots": "Consumir espacios de conjuro",
+            "Consume Action Resources": "Consumir recursos de acciones",
+            "Block Without Resources": "Bloquear sin recursos",
+            "2024 Prepared Spells Only": "Solo conjuros preparados (2024)",
+            "Player Public Usage": "Uso público de recursos",
+            "Use Roll20 Damage Icon": "Usar icono de daño de Roll20",
+            "Apply Roll20 Icon Damage Color": "Aplicar color al icono de daño",
+            "Debug": "Depuración",
+            "Chat Debug Attacks": "Depurar ataques en el chat",
+            "Chat Debug Spells": "Depurar conjuros en el chat",
+            "Area Radius Debug Draw": "Dibujar radio de área para depuración",
+            "Change Background URL": "Cambiar URL del fondo",
+            "Chat Probe": "Diagnóstico del chat",
+            "Get Token Image URL": "Obtener URL de la imagen de la ficha",
+            "Read Roll20 attack, damage, healing, and related combat rolls.": "Leer las tiradas de ataque, daño, curación y otras tiradas de combate del chat de Roll20.",
+            "ON lets Combat Assistant roll 2024 initiative from sheet data; OFF keeps native Roll20 initiative.": "ON permite que CA tire la iniciativa 2024 desde la hoja; OFF mantiene la iniciativa nativa de Roll20.",
+            "OFF keeps native 2014 saving throws and initiative; ON lets Combat Assistant perform those supported rolls.": "OFF conserva las salvaciones y la iniciativa nativas de 2014; ON permite que CA haga las tiradas compatibles.",
+            "Whisper Combat Logs to the GM instead of publishing them. Healing amounts are controlled separately by Hide Damage Details.": "Enviar los registros de combate en privado al DM. La cantidad curada se controla con Ocultar detalles de daño.",
+            "Keep final damage amount and type visible, but hide resistance, immunity, and vulnerability explanations in public Combat Logs.": "Mostrar el daño final y su tipo, pero ocultar explicaciones de resistencia, inmunidad y vulnerabilidad en el registro público.",
+            "Hide public damage details and healing amounts in Combat Logs, including GM whispers. This also suppresses public resistance-detail text.": "Ocultar los detalles de daño y las cantidades curadas del registro, incluso en mensajes privados al DM. También oculta los detalles de resistencia.",
+            "Show who caused damage or healing and which attack, spell, or ability caused it.": "Mostrar quién causó el daño o la curación y qué ataque, conjuro o habilidad utilizó.",
+            "Show token names in Combat Logs. OFF uses generic Target, Attacker, Caster, or Healer labels.": "Mostrar nombres reales de las fichas en el registro; OFF usa Objetivo, Atacante, Lanzador o Sanador.",
+            "ON shows the startup presentation card publicly. OFF whispers it only to the GM.": "ON muestra la tarjeta de presentación a todos; OFF solo al DM.",
+            "Track concentration spells, area markers, persistent actions, targets, and concentration saves.": "Registrar conjuros de concentración, marcadores de área, acciones persistentes, objetivos y tiradas de salvación de concentración.",
+            "Show Combat Assistant concentration token tooltips only to the GM.": "Mostrar los detalles de concentración de las fichas únicamente al DM.",
+            "Choose the token bar Combat Assistant uses for hit points.": "Selecciona la barra de la ficha utilizada para los puntos de golpe.",
+            "Choose the token bar Combat Assistant uses for armor class.": "Selecciona la barra de la ficha utilizada para la clase de armadura.",
+            "Choose the token bar used for temporary HP, or 0 to disable token-bar Temp HP.": "Elige la barra para PG temporales, o 0 para desactivarla.",
+            "Round halved damage up instead of down.": "Redondear hacia arriba el daño reducido a la mitad.",
+            "Require a valid AC value before resolving attack-roll damage. OFF allows attack damage to continue when the configured AC bar is empty.": "Exigir CA válida antes de resolver daño de ataque. OFF permite continuar cuando la barra de CA esté vacía.",
+            "Show the GM a direct Hit card for standalone Damage rolls with no proven attack, save, or target range.": "Mostrar al DM una tarjeta de impacto para tiradas de daño independientes, sin ataque, salvación ni alcance confirmados.",
+            "Read sheet damage resistances, immunities, and vulnerabilities when applying damage.": "Leer resistencias, inmunidades y vulnerabilidades de la hoja al aplicar daño.",
+            "Show sheet effect toggles at the top of the Combat menu.": "Mostrar interruptores de efectos de la hoja en la parte superior de Combate.",
+            "Ask player-controlled tokens to make their own supported saving throws and initiative rolls when Roll20 exposes a usable native button.": "Permite que los jugadores hagan sus propias tiradas de salvaci\u00f3n e iniciativa desde la hoja de Roll20, cuando est\u00e9 disponible.",
+            "Whisper supported healing controls to the controlling player so they can select a target and apply healing.": "Env\u00eda al jugador los botones para elegir un objetivo y aplicar la curaci\u00f3n. El DM tambi\u00e9n recibe un bot\u00f3n de un solo uso.",
+            "Whisper supported attack controls to the controlling player so they can select a target and resolve the attack.": "Enviar controles de ataque al jugador por privado para elegir objetivo y resolver el ataque.",
+            "Check caster-to-target range before generated player spell controls apply healing or damage.": "Comprobar el alcance entre lanzador y objetivo antes de aplicar curación o daño mediante controles de conjuro.",
+            "Allow generated player area-spell controls to place a movable area marker and resolve tokens inside it.": "Permitir al jugador colocar un marcador de área móvil y resolver las fichas dentro.",
+            "Keep an area marker visible until every affected saving throw and damage resolution is complete.": "Mantener visible el marcador hasta terminar todas las salvaciones y aplicaciones de daño.",
+            "ON lets area markers move freely; OFF snaps them to the Roll20 grid.": "ON permite mover libremente el marcador; OFF lo ajusta a la cuadrícula de Roll20.",
+            "Roll20 uploaded image URL used for square, cube, cone, or line area markers.": "URL de imagen subida a Roll20 para marcadores de cuadrado, cubo, cono o línea.",
+            "Roll20 uploaded image URL used for radius, sphere, cylinder, or emanation area markers.": "URL de imagen subida a Roll20 para marcadores de radio, esfera, cilindro o emanación.",
+            "Set the opacity percentage for player area-marker tokens.": "Establecer el porcentaje de opacidad de los marcadores de área.",
+            "Show automatic Roll20 FX when Combat Assistant applies damage, healing, temporary HP, projectile attacks, or area effects.": "Mostrar efectos FX de Roll20 al aplicar daño, curación, PG temporales, proyectiles o efectos de área.",
+            "Built-in or Custom FX name used from attacker to target for ranged projectile attacks. Leave empty to disable.": "Nombre del FX estándar o personalizado para proyectiles entre atacante y objetivo. Vacío para desactivar.",
+            "Built-in base effect or exact Custom FX name used when damage is applied without a saving throw. Leave empty to disable.": "Nombre del FX estándar o personalizado para daño sin salvación. Vacío para desactivar.",
+            "Built-in base effect or exact Custom FX name used when damage is applied through a saving throw. Leave empty to disable.": "Nombre del FX estándar o personalizado para daño tras una salvación. Vacío para desactivar.",
+            "Apply configured token markers after confirmed failed saving throws. OFF retains narrative-only results.": "Aplicar marcadores de estado al fallar una salvación. OFF solo mantiene la narración.",
+            "Roll20 token marker name/tag used while a token is concentrating. Default: stopwatch.": "Nombre o etiqueta del marcador de concentración. Predeterminado: stopwatch.",
+            "Track combat rounds and current turns from the Roll20 Turn Order.": "Seguir las rondas y turnos actuales desde la lista de iniciativa de Roll20.",
+            "Track temporary save-based conditions and show due repeat-save controls on the affected token Turn Card.": "Registrar estados temporales sujetos a tiradas de salvación y mostrar cuándo repetir la tirada en la tarjeta de turno.",
+            "Keep new Turn Order entries in initiative order while preserving the active turn once combat has started.": "Mantener el orden de iniciativa y preservar el turno actual al añadir participantes.",
+            "Ping and focus eligible users on the current-turn token.": "Hacer ping y enfocar a los usuarios permitidos en la ficha del turno actual.",
+            "ON focuses everyone; OFF focuses only GMs and controllers of the current token or character.": "ON enfoca a todos; OFF solo al DM y controladores del personaje o ficha.",
+            "Show Dash, Special, C. Sheet, Combat, and Spells controls on Turn Cards.": "Mostrar Correr, Especial, Ficha compacta, Combate y Conjuros en las tarjetas de turno.",
+            "Track movement spent by the current-turn token and warn when it exceeds available speed.": "Seguir el movimiento del turno y avisar si se supera la velocidad disponible.",
+            "Lock player-controlled initiative tokens until their turn. Automatically unlock when their turn begins or they leave initiative.": "Bloquea las fichas de jugadores en iniciativa hasta que llegue su turno. Las desbloquea al comenzar su turno o al salir de iniciativa.",
+            "Lock the current player-controlled token after all available movement is spent. Dash restores movement when available.": "Bloquea la ficha del jugador al agotar su movimiento disponible. Correr la desbloquea si añade movimiento.",
+            "Decrease finite concentration duration when the caster reaches its turn and end it automatically at 0.": "Reducir la duración de la concentración al llegar el turno del lanzador y terminarla al llegar a 0.",
+            "Enable the Round Counter card and current-combat token summary.": "Mostrar la tarjeta del contador de rondas y el resumen de participantes.",
+            "Also publish the Round Counter card to players. Round Counter must be ON.": "Publicar también el contador de rondas a los jugadores. Requiere Contador de rondas en ON.",
+            "Automatically remove unlinked NPC turns at 0 HP; OFF leaves a red manual Remove control.": "Quitar automáticamente los turnos de PNJ desvinculados con 0 PG; OFF deja un botón rojo para quitarlos manualmente.",
+            "Spawn a marker token on the current-turn token.": "Crear un marcador alrededor de la ficha del turno actual.",
+            "OFF keeps the turn marker on the GM layer; ON puts it on the map layer and brings it forward.": "OFF mantiene el marcador en la capa del DM; ON lo coloca sobre el mapa.",
+            "Roll20 uploaded image used for the turn marker token.": "Imagen subida a Roll20 para el marcador de turno.",
+            "Percentage added to current token width and height for the Turn Marker. Default 20.": "Porcentaje añadido al ancho y alto de la ficha para el marcador. Predeterminado: 20.",
+            "Keep the Turn Marker centered and scaled when the current token moves or resizes.": "Mantener el marcador centrado y ajustado cuando la ficha se mueve o cambia de tamaño.",
+            "Rotate the Turn Marker while combat is active.": "Girar el marcador de turno durante el combate.",
+            "Degrees applied on every Turn Marker rotation update. Default 1.": "Grados aplicados en cada actualización del marcador. Predeterminado: 1.",
+            "Milliseconds between Turn Marker rotation updates. Default 100 ms.": "Milisegundos entre actualizaciones de rotación del marcador. Predeterminado: 100 ms.",
+            "Show player-controlled token resources and spell slots directly on its Turn Card.": "Mostrar recursos y espacios de conjuro del jugador directamente en su tarjeta de turno.",
+            "Show limited resources and spell slots for non-player-controlled tokens on the GM Turn Card.": "Mostrar recursos limitados y espacios de conjuro de PNJ en la tarjeta de turno del DM.",
+            "Give eligible unlinked NPC tokens independent resource pools stored in Token GM Notes.": "Guardar recursos independientes de los PNJ desvinculados en las notas del DM de sus fichas.",
+            "Automatically consume the confirmed spell cost, preferring an exact linked Beacon spell Resource before a generic spell slot.": "Consumir el coste de conjuro confirmado, priorizando el recurso Beacon vinculado antes de un espacio genérico.",
+            "Automatically consume one matching non-spell resource when a confirmed action with the same normalized name is used.": "Consumir un recurso no mágico coincidente cuando se usa una acción confirmada con el mismo nombre normalizado.",
+            "Hide player Roll, DMG, ATK, Heal, Cast, and Send buttons when the action or spell has a verified resource cost and insufficient uses or spell slots. GM controls and no-cost actions are unaffected.": "Ocultar los botones Tirar, Daño, Ataque, Curar, Lanzar y Enviar a los jugadores cuando falten usos o espacios de conjuro para una acción con coste verificable. El DM y las acciones sin coste no se ven afectados.",
+            "Show only 2024 spells marked Prepared or Always Prepared, including cantrips only when Roll20 marks them prepared.": "Mostrar solo los conjuros de 2024 marcados como Preparado o Siempre preparado, incluidos los trucos si Roll20 los marca como preparados.",
+            "Publish player Resource Update cards instead of whispering them privately.": "Publicar las tarjetas de uso de recursos de jugadores en lugar de enviarlas en privado.",
+            "Use Roll20-style SVG damage icons instead of the default Combat Assistant icons.": "Usar iconos SVG de daño al estilo Roll20 en lugar de los iconos de CA.",
+            "Recolor Roll20-style damage icons using Combat Assistant damage-type colors.": "Colorear los iconos SVG de Roll20 según el tipo de daño de CA.",
+            "Temporary API-console debug logging. Resets to OFF whenever the sandbox restarts.": "Depuración temporal en la consola API. Se restablece a OFF al reiniciar el sandbox.",
+            "Temporarily print full attack diagnostics in chat after opening Combat.": "Mostrar temporalmente diagnósticos completos de ataques al abrir Combate.",
+            "Temporarily print full spell diagnostics in chat after opening Spells.": "Mostrar temporalmente diagnósticos completos de conjuros al abrir Conjuros.",
+            "Draw temporary GM-only reference circles while resolving supported radius area markers.": "Dibujar círculos de referencia temporales solo para el DM al resolver marcadores de área.",
+            "Set the background image used by Combat Assistant cards.": "Establecer la imagen de fondo utilizada por las tarjetas de CA.",
+            "Whisper compact Roll20 chat-message diagnostics to the GM for parser testing.": "Enviar al DM diagnósticos breves de mensajes del chat de Roll20 para probar el analizador.",
+            "Select exactly one token and return its current live token image URL.": "Selecciona una sola ficha para obtener la URL de su imagen actual.",
+            "Roll20 token marker name/tag for ": "Nombre o etiqueta del marcador de Roll20 para ",
+            ". Must exist in the campaign to render.": ". Debe existir en la campaña para mostrarse.",
+            "{source} heals {amount} Hit Points to {target}{using}.": "{source} restaura {amount} puntos de golpe a {target}{using}.",
+            "{source} heals {target}{using}.": "{source} cura a {target}{using}.",
+            "{source} grants {amount} temporary HP to {target}{using}.": "{source} concede {amount} puntos de golpe temporales a {target}{using}.",
+            "{source} grants temporary HP to {target}{using}.": "{source} concede puntos de golpe temporales a {target}{using}.",
+            " using {action}": " mediante {action}",
+            "heals": "cura",
+            "using": "usando",
+            "grants": "concede",
+            "to": "para",
+            "takes": "recibe",
+            "misses": "falla",
+            "attacks": "ataca",
+            "rolls": "hace una tirada",
+            "rolls healing": "realiza una tirada de curación",
+            "Hit Points to": "puntos de golpe a",
+            "temporary HP to": "puntos de golpe temporales a",
+            "Saving Throw DC": "CD de salvación",
+            "must roll a": "debe hacer una",
+            "condition ended.": "ha terminado su estado.",
+            "condition.": "estado.",
+            "conditions.": "estados.",
+            "ends naturally as the spell reaches the end of its duration.": "termina naturalmente al agotarse la duración del conjuro.",
+            "lost concentration": "perdió la concentración",
+            "concentration on": "concentración en",
+            "ended.": "ha terminado.",
+            "was healed.": "recibió curación.",
+            "was affected.": "recibió el efecto.",
+            "uses": "emplea",
+            "uses a special action.": "utiliza una acción especial.",
+            "but misses.": "pero falla.",
+            "and falls unconscious": "y cae inconsciente",
+            "blocked by": "bloqueado por",
+            "reduced by": "reducido por",
+            "increased by": "aumentado por",
+            "immunity": "inmunidad",
+            "resistance": "resistencia",
+            "vulnerability": "vulnerabilidad",
+            "no damage, blocked by": "sin daño, bloqueado por",
+            "and": "y",
+            "on": "en",
+            "from": "de",
+            "with": "con",
+            "Modifier": "Modificador",
+            "Failed": "Fallida",
+            "Passed": "Superada",
+            "Roll for:": "Tirar para:",
+            "Roll initiative": "Tirar iniciativa",
+            "Roll the native": "Usar tirada nativa de",
+            "Apply Healing": "Aplicar curación",
+            "Apply Damage": "Aplicar daño",
+            "Apply to target": "Aplicar al objetivo",
+            "Source Required": "Origen requerido",
+            "Action Busy": "Acción ocupada",
+            "Action Expired": "Acción caducada",
+            "Select one or more linked tokens.": "Selecciona una o más fichas vinculadas.",
+            "Select exactly one linked token before rolling initiative.": "Selecciona una única ficha vinculada antes de tirar iniciativa.",
+            "The selected token is not linked to a character sheet.": "La ficha seleccionada no está vinculada a una hoja.",
+            "No complete area marker was found. Cast the spell again to create a new marker.": "No se encontró un marcador de área completo. Vuelve a lanzar el conjuro para crear otro.",
+            "The selected target is not within range for this action.": "El objetivo seleccionado está fuera del alcance de esta acción.",
+            "Source and target must be on the same page.": "El origen y el objetivo deben estar en la misma página.",
+            "No pending saving throws were found.": "No hay tiradas de salvación pendientes.",
+            "Only the GM can roll grouped 2014 saving throws.": "Solo el DM puede realizar tiradas de salvación agrupadas (2014).",
+            "Only the GM can roll grouped 2014 initiative.": "Solo el DM puede tirar la iniciativa 2014 agrupada.",
+            "This saving throw request expired or was already used.": "Esta solicitud de tirada de salvación caducó o ya se utilizó.",
+            "The pending saving throw target token was not found.": "No se encontró la ficha objetivo de la tirada de salvación pendiente.",
+            "The affected token was not found.": "No se encontró la ficha afectada.",
+            "An error occurred.": "Se produjo un error.",
+            "Created by": "Creado por",
+            "Version": "Versión",
+            "Combat Diagnostic": "Diagnóstico de combate",
+            "Spell Diagnostic": "Diagnóstico de conjuros",
+            "Spell Probe": "Diagnóstico de conjuro",
+            "Character Settings": "Configuración del personaje",
+            "Ability": "Característica",
+            "Abilities": "Características",
+            "Skills": "Habilidades",
+            "Skill": "Habilidad",
+            "Strength": "Fuerza",
+            "Dexterity": "Destreza",
+            "Constitution": "Constitución",
+            "Intelligence": "Inteligencia",
+            "Wisdom": "Sabiduría",
+            "Charisma": "Carisma",
+            "STR": "FUE",
+            "DEX": "DES",
+            "WIS": "SAB",
+            "CHA": "CAR",
+            "Acrobatics": "Acrobacias",
+            "Animal Handling": "Trato con animales",
+            "Arcana": "Arcanos",
+            "Athletics": "Atletismo",
+            "Deception": "Engaño",
+            "History": "Historia",
+            "Insight": "Perspicacia",
+            "Intimidation": "Intimidación",
+            "Investigation": "Investigación",
+            "Medicine": "Medicina",
+            "Nature": "Naturaleza",
+            "Perception": "Percepción",
+            "Performance": "Interpretación",
+            "Persuasion": "Persuasión",
+            "Religion": "Religión",
+            "Sleight of Hand": "Juego de manos",
+            "Stealth": "Sigilo",
+            "Survival": "Supervivencia",
+            "Blinded": "Cegado",
+            "Charmed": "Hechizado",
+            "Deafened": "Ensordecido",
+            "Exhaustion": "Agotamiento",
+            "Frightened": "Asustado",
+            "Grappled": "Agarrado",
+            "Incapacitated": "Incapacitado",
+            "Paralyzed": "Paralizado",
+            "Petrified": "Petrificado",
+            "Poisoned": "Envenenado",
+            "Prone": "Derribado",
+            "Restrained": "Restringido",
+            "Stunned": "Aturdido",
+            "Unconscious": "Inconsciente",
+            "Sleep": "Dormido",
+            "Add": "Añadir",
+            "Add Spell": "Añadir conjuro",
+            "Edit Spell": "Editar conjuro",
+            "Prepared Count": "Total de conjuros preparados",
+            "Known Spells": "Conjuros conocidos",
+            "Current": "Actual",
+            "Maximum": "Máximo",
+            "Remaining": "Restantes",
+            "Spent": "Gastados",
+            "Available": "Disponible",
+            "Unavailable": "No disponible",
+            "Not Available": "No disponible",
+            "No Spells Available": "No hay conjuros disponibles",
+            "No spells found.": "No se encontraron conjuros.",
+            "No attacks found.": "No se encontraron ataques.",
+            "No active effects.": "No hay efectos activos.",
+            "No resources found.": "No se encontraron recursos.",
+            " heals ": " cura ",
+            " grants ": " concede ",
+            " Hit Points to ": " puntos de golpe a ",
+            " temporary HP to ": " puntos de golpe temporales a ",
+            " using ": " usando ",
+            " uses ": " utiliza ",
+            " takes ": " recibe ",
+            " attacks ": " ataca ",
+            " misses.": " falla.",
+            " must roll a ": " debe hacer una ",
+            " saving throw": " tirada de salvación",
+            " saving throws": " tiradas de salvación",
+            " was healed.": " fue curado.",
+            " damage": " daño",
+            " and ": " y ",
+            " on the ": " en el ",
+            " from ": " de ",
+            " with ": " con ",
+            " lost concentration": " perdió la concentración",
+            " condition ended.": " estado terminado.",
+            " but misses.": " pero falla.",
+            " and falls unconscious": " y cae inconsciente",
+            " blocked by ": " bloqueado por ",
+            " reduced by ": " reducido por ",
+            " increased by ": " aumentado por ",
+            " immunity": " inmunidad",
+            " resistance": " resistencia",
+            " vulnerability": " vulnerabilidad",
+            " Save and takes ": " Salvación y recibe ",
+            " to Maintain ": " para mantener ",
+            "Used": "Usado",
+            "Has": "Tiene",
+            "remaining.": "restantes.",
+            "Select target token(s) before pressing any button.": "Selecciona las fichas objetivo antes de pulsar cualquier botón.",
+            "Select target token(s) before pressing a button.": "Selecciona las fichas objetivo antes de pulsar un botón.",
+            "Send": "Enviar",
+            "Stop": "Detener",
+            "Heal": "Curar",
+            "Templates:": "Plantillas:",
+            "Spell Resources": "Recursos de conjuros",
+            "Character Name:": "Nombre del personaje:",
+            "Controller Name:": "Nombre del controlador:",
+            "Caster Name:": "Nombre del lanzador:",
+            "Controller Page:": "Página del controlador:",
+            "Caster Page:": "Página del lanzador:",
+            "Token Page:": "Página de la ficha:",
+            "Tracking:": "Seguimiento:",
+            "Cast": "Lanzar",
+            "Turn Action": "Acción de turno",
+            "Attribute": "Característica",
+            "Stat": "Puntuación",
+            "Apply Macro": "Aplicar macro",
+            "Unknown Command": "Comando desconocido",
+            "Not found": "No encontrado",
+            "Single Use Button. Select a target within": "Botón de un solo uso. Selecciona un objetivo dentro de",
+            "Single Use Button. Press the button, then choose a target when Roll20 asks.": "Botón de un solo uso. Púlsalo y selecciona un objetivo cuando Roll20 lo solicite.",
+            "Apply/End accept plain chat text, HTML markup,": "Aplicar/Terminar aceptan texto normal, marcado HTML,",
+            "API commands,": "comandos API,",
+            "named macros,": "macros con nombre,",
+            "attributes,": "características,",
+            "deferred attributes,": "características diferidas,",
+            "abilities,": "habilidades,",
+            "abilities. Apply delivers a single-use player card when the caster has a player controller plus an unlimited GM card; End keeps the canonical direct/client-required execution path. For multiple resolved targets,": "habilidades. Aplicar entrega una tarjeta de un solo uso al jugador y otra ilimitada al DM; Terminar mantiene la ruta de ejecución correspondiente. Para varios objetivos,",
+            "resolves independently. Fields:": "se resuelve de forma independiente. Campos:",
+            "for more information.": "para más información.",
+            "Main Commands": "Comandos principales",
+            "Roll20 References": "Referencias de Roll20",
+            "Examples": "Ejemplos",
+            "Bar Configuration": "Configuración de barras",
+            "Combat Assistant Help": "Ayuda de Combat Assistant",
+            "- Shows this player help card.": "- Muestra esta tarjeta de ayuda para jugadores.",
+            "- Shows this help card.": "- Muestra esta tarjeta de ayuda.",
+            "- Opens the main Combat Assistant menu.": "- Abre el menú principal de Combat Assistant.",
+            "- Opens the Combat Assistant settings.": "- Abre la configuración de Combat Assistant.",
+            "- Shows the attack list for the selected token.": "- Muestra los ataques de la ficha seleccionada.",
+            "- Shows the spell list for the selected token.": "- Muestra los conjuros de la ficha seleccionada.",
+            "- Shows the attack list for a character sheet you can access.": "- Muestra los ataques de una hoja a la que tienes acceso.",
+            "- Shows the spell list for a character sheet you can access.": "- Muestra los conjuros de una hoja a la que tienes acceso.",
+            "- Shows the attack list for the named character sheet.": "- Muestra los ataques de la hoja del personaje indicado.",
+            "- Shows the spell list for the named character sheet.": "- Muestra los conjuros de la hoja del personaje indicado.",
+            "- Shows resources for the selected token.": "- Muestra los recursos de la ficha seleccionada.",
+            "- Shows resources for a character sheet you can access.": "- Muestra los recursos de una hoja a la que tienes acceso.",
+            "- Shows resources for the named character sheet.": "- Muestra los recursos de la hoja del personaje indicado.",
+            "- Shows the Compact Sheet for the selected token.": "- Abre la ficha compacta del personaje seleccionado.",
+            "- Shows the Compact Sheet for the selected token. A controlled token or character ID can also be supplied manually.": "- Muestra la ficha compacta del personaje seleccionado. También puedes indicar manualmente una ficha o ID que controles.",
+            "- Shows the full Turn Card for the selected controlled character. A character ID can also be supplied manually.": "- Muestra la tarjeta de turno completa del personaje controlado. También puedes indicar su ID.",
+            "- Shows the live Turn Card only when the current token is yours.": "- Muestra la tarjeta de turno en vivo solo si controlas la ficha activa.",
+            "- Shows the normal Turn Card for the token whose turn it currently is.": "- Muestra la tarjeta de turno normal de la ficha activa.",
+            "- Recalls the active concentration controls for a token you control.": "- Recupera los controles de concentración activa de una ficha que controles.",
+            "- Requests the native sheet initiative roll when CA initiative rolls are OFF; otherwise Combat Assistant rolls it. The result is tracked in Turn Order.": "- Si las tiradas de iniciativa de CA est\u00e1n en OFF, solicita la tirada desde la hoja. De lo contrario, CA tira la iniciativa y registra el resultado en el orden de turnos.",
+            "- Declares Dash for the selected token. During its active turn, Dash also increases its Movement Tracker allowance.": "- Usa la acci\u00f3n Correr con la ficha seleccionada. Si es su turno, tambi\u00e9n aumenta el movimiento disponible.",
+            "- Declares Disengage narratively for the selected token, even outside its turn.": "- Narra la acci\u00f3n Retirada de la ficha seleccionada, incluso fuera de su turno.",
+            "- Declares Dodge narratively for the selected token, even outside its turn.": "- Narra la acci\u00f3n Esquiva de la ficha seleccionada, incluso fuera de su turno.",
+            "- Sets the token bar used for Hit Points.": "- Configura la barra de PG de la ficha.",
+            "- Sets the token bar used for Armor Class.": "- Configura la barra de CA de la ficha.",
+            "- Sets the token bar used for Temporary Hit Points. Use 0 to disable it.": "- Configura la barra de PG temporales. Usa 0 para desactivarla.",
+            "- Alias of !ca turncard. !ca turn-card is also accepted.": "- Alias de !ca turncard. También se acepta !ca turn-card.",
+            "- Ends the current turn when you control the active token.": "- Termina el turno actual si controlas la ficha activa.",
+            "It is not your turn.": "No es tu turno.",
+            "No usable combat actions were found on this character sheet.": "Este personaje no tiene acciones de combate disponibles.",
+            "No spell templates configured.": "Todav\u00eda no has configurado plantillas de conjuros.",
+            "Healing roll completed. The GM can apply it.": "La tirada de curaci\u00f3n termin\u00f3. El DM puede aplicarla.",
+            "Active concentration.": "Concentración activa.",
+            "can be used while concentration lasts.": "puede usarse mientras dure la concentración.",
+            "Private concentration result.": "Resultado de concentración privado.",
+            "Token Action": "Acción de ficha",
+            "is already a Token Action for": "ya es una acción de ficha para",
+            "is now visible as a Token Action for": "ahora es visible como acción de ficha para",
+            "was added to": "se añadió a",
+            ". It will appear when a linked token for that character is selected.": ". Aparecerá al seleccionar una ficha vinculada a ese personaje.",
+            "Item Charges": "Cargas del objeto",
+            "not enough charges remain.": "no quedan suficientes cargas.",
+            "does not have enough": "no tiene suficientes",
+            "to perform this action.": "para realizar esta acción.",
+            "Initiative Roll Timeout": "Tiempo de iniciativa agotado",
+            "No initiative result was captured for": "No se registró un resultado de iniciativa para",
+            ". The remaining rolls will continue.": ". Las tiradas restantes continuarán.",
+            "Updated the": "Actualizado el",
+            "Imported": "Importados",
+            "settings,": "ajustes,",
+            "Spell Macros.": "Macros de conjuros.",
+            "is no longer affected by": "ya no está afectado por",
+            "(duration expired)": "(duración agotada)",
+            "Single Target": "Objetivo único",
+            "GM Staging": "Preparación del DM",
+            "Concentration Ended": "Concentración terminada",
+            "Concentration Lost": "Concentración perdida",
+            "Roll20 token marker name/tag for {marker}. Must exist in the campaign to render.": "Nombre o etiqueta del marcador de Roll20 para {marker}. Debe existir en la campaña para mostrarse.",
+            " rolls healing.": " realiza una tirada de curación.",
+            " and rolls healing.": " y realiza una tirada de curación.",
+            "The attack against {target} misses.": "El ataque contra {target} falla.",
+            "The {condition} condition affecting {target} has ended.": "El estado {condition} de {target} ha terminado.",
+            "Save (short)": "Salv.",
+            "Attribute (short)": "Caract.",
+            "Stat (short)": "Punt.",
+            "succeeds": "supera",
+            "fails": "falla",
+            "{target} {outcome} the {ability} saving throw.": "{target} {outcome} la tirada de salvación de {ability}.",
+            "{target} {outcome} the {ability} saving throw and takes {damage}{source}{fainted}.": "{target} {outcome} la tirada de salvación de {ability} y recibe {damage}{source}{fainted}.",
+            " from {source} using {action}": " de {source} mediante {action}",
+            " from {source}": " de {source}",
+            "(Some damage was absorbed by Temporary HP)": "(Parte del daño fue absorbido por los PG temporales)",
+            "Gained the ": "Adquiere el estado ",
+            " condition.": ".",
+            " conditions.": ".",
+            "{amount} points of damage{type}": "{amount} puntos de daño{type}",
+            "No damage{type}.": "Sin daño{type}.",
+            "No damage: immunity ({type})": "Sin daño: inmunidad ({type})",
+            "No damage{type}, blocked by immunity.": "Sin daño{type}, bloqueado por inmunidad.",
+            "blocked by immunity ({type})": "bloqueado por inmunidad ({type})",
+            "reduced by resistance ({type})": "reducido por resistencia ({type})",
+            "increased by vulnerability ({type})": "aumentado por vulnerabilidad ({type})",
+            "Concentration of {caster}{spell} ended.": "La concentración de {caster}{spell} ha terminado.",
+            "Concentration of {caster}{spell} expired.": "La concentración de {caster}{spell} terminó al agotarse su duración.",
+            " on {spell}": " en {spell}",
+            "Dmg": "Daño",
+            "Init": "Iniciar",
+            "Conc.": "Conc.",
+            "Focus this token": "Centrar la vista en esta ficha",
+            "Advantage": "Ventaja",
+            "Disadvantage": "Desventaja",
+            "New token": "Ficha nueva",
+            "Run {name} macro in Roll20": "Ejecutar la macro {name} en Roll20",
+            "Apply {name} macro": "Aplicar la macro {name}",
+            "Apply {name} macro once": "Aplicar una vez la macro {name}",
+            "Edit healing amount": "Editar la cantidad de curación",
+            "Apply damage directly to selected token(s)": "Aplicar daño directamente a las fichas seleccionadas",
+            "Edit damage manually": "Editar el daño manualmente",
+            "Set an NPC area attack: choose source, move the marker, then roll": "Preparar un ataque de área de un PNJ: elige el origen, mueve el marcador y realiza la tirada",
+            "Set an NPC attack: choose source, then target": "Preparar un ataque de PNJ: elige el origen y luego el objetivo",
+            "Take the Disengage action": "Usar la acción Retirada",
+            "Open Special Actions": "Abrir las acciones especiales",
+            "Take the Dodge action": "Usar la acción Esquivar",
+            "Open Compact Sheet": "Abrir la ficha compacta",
+            "Take the Dash action": "Usar la acción Correr",
+            "List attacks from this character sheet": "Mostrar los ataques de esta hoja de personaje",
+            "Open combat spells": "Abrir los conjuros de combate",
+            "Repeat the {ability}{dc} saving throw for {effect}": "Repetir la tirada de salvación de {ability}{dc} por {effect}",
+            "Restore every persistent setting to its default value": "Restablecer todos los ajustes guardados a sus valores predeterminados",
+            "Open {menu}": "Abrir {menu}",
+            "Deal damage to selected token(s)": "Infligir daño a las fichas seleccionadas",
+            "Heal selected token(s)": "Curar a las fichas seleccionadas",
+            "Roll a saving throw for selected token(s)": "Realizar una tirada de salvación para las fichas seleccionadas",
+            "Roll initiative for the selected token(s)": "Tirar iniciativa para las fichas seleccionadas",
+            "Reroll active concentration damage and open controls": "Volver a tirar el daño del conjuro en concentración y abrir sus controles",
+            "Open the Compact Sheet for the selected token": "Abrir la hoja compacta de la ficha seleccionada",
+            "Open Resources for the selected token": "Abrir los recursos de la ficha seleccionada",
+            "Show the Round Counter using its public/GM delivery setting": "Mostrar el contador de rondas según la configuración de envío público o al DM",
+            "Open the Turn Card for the selected token": "Abrir la tarjeta de turno de la ficha seleccionada",
+            "Advance to the next turn": "Pasar al siguiente turno",
+            "Automatically fail this saving throw": "Fallar automáticamente esta tirada de salvación",
+            "Choose a target token and apply this healing once": "Elige una ficha objetivo y aplica esta curación una vez",
+            "Choose a target token and apply this damage once": "Elige una ficha objetivo y aplica este daño una vez",
+            "Choose a target token and apply this attack once": "Elige una ficha objetivo y aplica este ataque una vez",
+            "End combat and clear the Turn Order": "Finalizar el combate y vaciar el orden de turnos",
+            "Round {round}": "Ronda {round}",
+            "Reroll this concentration spell's damage and open its controls": "Volver a tirar el daño de este conjuro en concentración y abrir sus controles",
+            "{count} turn(s) left": "Quedan {count} turnos",
+            "End this turn": "Terminar este turno",
+            "Advance to the next turn, then remove this defeated token from the Turn Order": "Pasar al siguiente turno y quitar esta ficha derrotada del orden de turnos",
+            "Roll the concentration saving throw with Combat Assistant": "Realizar la tirada de salvación de concentración con Combat Assistant",
+            "Roll the concentration saving throw": "Realizar la tirada de salvación de concentración",
+            "Roll all listed 2014 initiatives with Combat Assistant": "Tirar la iniciativa de todas las fichas de 2014 mostradas con Combat Assistant",
+            "Roll all listed 2014 saving throws with Combat Assistant": "Realizar las tiradas de salvación de 2014 para todas las fichas mostradas con Combat Assistant",
+            "Run the literal test command": "Ejecutar el comando literal de prueba",
+            "Use {action}": "Usar {action}",
+            "the persistent concentration action": "la acción de concentración persistente",
+            "Open these concentration controls": "Abrir estos controles de concentración",
+            "Show these concentration controls": "Mostrar estos controles de concentración",
+            "Roll the native {ability} saving throw": "Realizar la tirada de salvación nativa de {ability}",
+            "Roll all listed saving throws": "Realizar todas las tiradas de salvación mostradas",
+            "Roll the {ability} saving throw": "Realizar la tirada de salvación de {ability}",
+            "Roll initiative with Combat Assistant": "Tirar iniciativa con Combat Assistant",
+            "End concentration and remove any linked area marker": "Terminar la concentración y eliminar los marcadores de área vinculados",
+            "Move the area marker, then roll every token inside it": "Mueve el marcador de área y realiza las tiradas para todas las fichas que contiene",
+            "Apply temporary HP to selected token bar(s)": "Aplicar PG temporales a las barras de las fichas seleccionadas",
+            "Apply healing to selected token bar(s)": "Aplicar curación a las barras de las fichas seleccionadas",
+            "Roll selected target save and apply damage": "Tirar la salvación del objetivo seleccionado y aplicar daño",
+            "Apply damage only if attack hits selected target AC": "Aplicar daño solo si el ataque alcanza la CA del objetivo seleccionado",
+            "Always Prepared - locked": "Siempre preparado: bloqueado",
+            "Granted spell - cannot be changed here": "Conjuro concedido: no puede modificarse aquí",
+            "Unprepare this spell": "Dejar de preparar este conjuro",
+            "Prepare this spell": "Preparar este conjuro",
+            "Edit this Spell Macro": "Editar esta macro de conjuro",
+            "Remove this Spell Macro": "Eliminar esta macro de conjuro",
+            "Roll total: {total}": "Total de la tirada: {total}",
+            "Roll damage: {formula}": "Tirar el daño: {formula}",
+            "Focus {name}": "Centrar la vista en {name}",
+            "Roll all listed tokens": "Realizar las tiradas de todas las fichas mostradas",
+            "Roll {name}": "Realizar la tirada de {name}",
+            "Total": "Total",
+            "Mode": "Modo",
+            "Reason": "Motivo",
+            "Roll damage": "Tirar el daño",
+            "Add {action} as a Token Action to the selected character": "Añadir {action} como acción de ficha al personaje seleccionado",
+            "Use the native sheet saving throw.": "Usa la tirada de salvación de la hoja.",
+            "Cast {name}": "Lanzar {name}",
+            "Cast {name} - unavailable": "Lanzar {name} - no disponible",
+            "Add a spell template": "Añadir una plantilla de conjuro",
+            "Add chat text, API commands, Roll20 references, queries, or native ability commands for a spell": "Añadir al conjuro texto de chat, comandos API, referencias o consultas de Roll20, o comandos nativos de habilidades",
+            "Runs even when the target is not affected.": "Se ejecuta aunque el objetivo no resulte afectado.",
+            "Melee Attack": "Ataque cuerpo a cuerpo",
+            "Range Attack": "Ataque a distancia",
+            "Ranged Attack": "Ataque a distancia",
+            "Ranged Save": "Salvación a distancia",
+            "Save Attack": "Ataque con salvación",
+            "No uses remain.": "No quedan usos disponibles.",
+            "Out of resources": "Sin recursos",
+            "Insufficient resources for this action.": "No hay recursos suficientes para realizar esta acción.",
+            "Not enough charges remain.": "No quedan suficientes cargas.",
+            "Not enough {resource} to perform this action.": "No hay suficientes usos de {resource} para realizar esta acción.",
+            "Uses {quantity} of {resource}.": "Gasta {quantity} de {resource}.",
+            "Recovers {quantity} of {resource}.": "Recupera {quantity} de {resource}.",
+            "{current} of {max} remaining.": "Quedan {current} de {max}.",
+            "{character} moves swiftly with {action}.": "{character} acelera el paso mediante la acción {action}.",
+            "{character} withdraws carefully using {action}.": "{character} se retira con cautela mediante la acción {action}.",
+            "{character} adopts a defensive stance using {action}.": "{character} adopta una postura defensiva con la acción {action}.",
+            "No initiative result was captured for {character}. The remaining rolls will continue.": "No se registró la iniciativa de {character}. Las tiradas restantes continuarán.",
+            "{source} attacks {target} with {action}, but misses.": "{source} ataca a {target} con {action}, pero falla.",
+            "{source} attacks {target}, but misses.": "{source} ataca a {target}, pero falla.",
+            "{target} takes {damage}{source}.": "{target} recibe {damage}{source}.",
+            "{target} takes {damage}{source}{fainted}.": "{target} recibe {damage}{source}{fainted}.",
+            "{condition} remains active.": "El estado {condition} sigue activo.",
+            "{conditions} remain active.": "Los estados {conditions} siguen activos.",
+            "{condition} has ended.": "El estado {condition} ha terminado.",
+            "{conditions} have ended.": "Los estados {conditions} han terminado.",
+            "{target} gains the {condition} condition.": "{target} sufre el estado {condition}.",
+            "{target} gains the following conditions: {conditions}.": "{target} sufre los estados {conditions}.",
+            "{source} uses {action}.": "{source} utiliza {action}.",
+            "{source} uses {action} and rolls healing.": "{source} utiliza {action} y realiza una tirada de curación.",
+            "{source} uses a special action.": "{source} utiliza una acción especial.",
+            "{source} rolls healing.": "{source} realiza una tirada de curación."
+        }),
+        fragments: Object.freeze([" and rolls healing.", " rolls healing.", " heals ", " grants ", " Hit Points to ", " temporary HP to ", " using ", " uses ", " takes ", " attacks ", " misses.", " must roll a ", " saving throw", " saving throws", " was healed.", " damage", "Gained the ", " condition.", " conditions.", " and ", " on the ", " from ", " with ", " lost concentration", " condition ended.", " but misses.", " and falls unconscious", " blocked by ", " reduced by ", " increased by ", " immunity", " resistance", " vulnerability", " Save and takes ", " to Maintain "]),
+        custom: null,
+
+        language() {
+            const value = RuntimeConfig.get('LANGUAGE');
+            return value === 'es' || value === 'custom' ? value : 'en';
+        },
+
+        dictionary() {
+            const language = this.language();
+            return language === 'es' ? this.spanish : (language === 'custom' ? this.custom : null);
+        },
+
+        caseFoldIndex(dictionary) {
+            let index = this.caseFoldCache.get(dictionary);
+            if (index) return index;
+            index = Object.create(null);
+            Object.keys(dictionary).forEach((key) => {
+                const folded = key.toLowerCase();
+                // Ambiguous casing such as Attacks (noun) / attacks (verb)
+                // must retain exact-case lookup rather than picking one.
+                index[folded] = Object.prototype.hasOwnProperty.call(index, folded) ? null : key;
+            });
+            this.caseFoldCache.set(dictionary, index);
+            return index;
+        },
+
+        t(key, replacements) {
+            const source = String(key === undefined || key === null ? '' : key);
+            if (source === 'ON' || source === 'OFF' || source === '+' || source === 'X') return source;
+            const dictionary = this.dictionary();
+            let translated = source;
+            if (dictionary && Object.prototype.hasOwnProperty.call(dictionary, source)) {
+                translated = dictionary[source];
+            } else if (dictionary) {
+                const canonical = this.caseFoldIndex(dictionary)[source.toLowerCase()];
+                if (canonical) {
+                    translated = dictionary[canonical];
+                    if (source !== source.toLowerCase() && source === source.toUpperCase()) {
+                        translated = translated.toUpperCase();
+                    } else if (source !== source.toUpperCase() && source === source.toLowerCase()) {
+                        translated = translated.toLowerCase();
+                    } else {
+                        const first = source.match(/[A-Za-zÀ-ÖØ-öø-ÿ]/);
+                        if (first && first[0] === first[0].toUpperCase()) {
+                            translated = translated.replace(/[A-Za-zÀ-ÖØ-öø-ÿ]/, (char) => char.toUpperCase());
+                        }
+                    }
+                }
+            }
+            if (!replacements) return translated;
+            return translated.replace(/\{([a-zA-Z][a-zA-Z0-9_]*)\}/g, (match, name) =>
+                Object.prototype.hasOwnProperty.call(replacements, name) ? String(replacements[name]) : match);
+        },
+
+        // Translate only a displayed damage-type label; all Roll20 parsing,
+        // payloads and resistance calculations keep canonical English identifiers.
+        damageTypeLabel(value, capitalize) {
+            const original = String(value === undefined || value === null ? '' : value).trim();
+            const normalized = original.toLowerCase().replace(/[_-]+/g, ' ').replace(/\s+/g, ' ');
+            const key = /^(?:temporary hp|temporary healing|temp hp)$/.test(normalized) ? 'temp healing' : normalized;
+            // The damage-type registry is authoritative; do not maintain a
+            // second list of the same 16 English identifiers here.
+            if (!Object.prototype.hasOwnProperty.call(DAMAGE_TYPE_COLORS, key)) return original;
+            const english = key === 'temp healing' ? 'Temporary HP' : key.charAt(0).toUpperCase() + key.slice(1);
+            const lookup = 'damageType.' + key.replace(/\s+/g, '_');
+            const localized = this.t(lookup);
+            const display = localized === lookup ? english : localized;
+            return capitalize ? display.charAt(0).toUpperCase() + display.slice(1) : display.toLowerCase();
+        },
+
+        // The outer chat message can contain real character/attack/item names.
+        // Translate only complete known text nodes and carefully scoped prose
+        // connectors; never try to translate arbitrary unknown words.
+        localizeHtml(html) {
+            if (this.language() === 'en' || !this.dictionary()) return html;
+            const dictionary = this.dictionary();
+            const connectors = this.fragments;
+            const original = String(html);
+            const commandPrefix = original.match(/^\/w\s+"[^"]+"\s*|^\/direct\s+/i);
+            const prefix = commandPrefix ? commandPrefix[0] : '';
+            // Never translate native Roll20 rolls, macros, or API script commands.
+            if (/^\s*(?:[!%@]|\/(?:r|roll|me|em|emas|desc|as)\b)/i.test(original.slice(prefix.length))) return html;
+            let skipText = 0;
+            return prefix + original.slice(prefix.length).split(/(<[^>]*>)/g).map((chunk) => {
+                if (chunk.charAt(0) === '<') {
+                    if (/^<(?:strong|b)\b/i.test(chunk)) skipText += 1;
+                    if (/^<\/(?:strong|b)\s*>/i.test(chunk)) skipText = Math.max(0, skipText - 1);
+                    // Translate exact known tooltips; leave commands, URLs and dynamic
+                    // character/item names inside unrelated attributes unchanged.
+                    return chunk.replace(/\b(title|aria-label|alt)="([^"]*)"/gi, (attribute, field, value) => {
+                        const translated = this.t(value);
+                        return translated === value ? attribute : field + '="' + Utils.attrSafe(translated) + '"';
+                    });
+                }
+                if (!chunk || skipText) return chunk;
+                const trimmed = chunk.trim();
+                if (trimmed === 'ON' || trimmed === 'OFF') return chunk;
+                const exact = this.t(chunk);
+                if (exact !== chunk) return exact;
+                const translatedTrimmed = trimmed ? this.t(trimmed) : trimmed;
+                if (translatedTrimmed !== trimmed) {
+                    return chunk.slice(0, chunk.indexOf(trimmed)) + translatedTrimmed + chunk.slice(chunk.indexOf(trimmed) + trimmed.length);
+                }
+                return connectors.reduce((text, phrase) => {
+                    const replacement = dictionary[phrase];
+                    return typeof replacement === 'string' ? text.split(phrase).join(replacement) : text;
+                }, chunk);
+            }).join('');
+        },
+
+        async loadCustomHandout() {
+            const handouts = typeof findObjs === 'function'
+                ? (findObjs({ _type: 'handout', name: this.HANDOUT_NAME }) || []) : [];
+            if (!handouts.length) return { ok: false, message: this.t('No handout named "CA Language" was found.') };
+            const notes = await SettingsTransferService.readNotes(handouts[0]);
+            if (/<(?:script|iframe|svg|object|img)\b|\b(?:onerror|onclick|javascript:)\b/i.test(notes)) {
+                return { ok: false, message: this.t('The handout contains an unsafe translation value.') };
+            }
+            if (notes.length > 250000) return { ok: false, message: this.t('The language handout does not contain valid JSON.') };
+            let payload;
+            const text = Utils.stripHtml(notes);
+            try { payload = JSON.parse(text); }
+            catch (error) {
+                // Roll20 can persist handout Notes in URL-encoded form.
+                try { payload = JSON.parse(decodeURIComponent(text.replace(/\+/g, '%20'))); }
+                catch (decodeError) { return { ok: false, message: this.t('The language handout does not contain valid JSON.') }; }
+            }
+            const records = payload && payload.translations;
+            if (!payload || payload.format !== 'Combat Assistant Language' || !State.isRecord(records)) {
+                return { ok: false, message: this.t('The handout translations must be an object of text keys and translated strings.') };
+            }
+            const keys = Object.keys(records);
+            if (!keys.length || keys.length > 2000) return { ok: false, message: this.t('No translation entries were found in the language handout.') };
+            const candidate = Object.create(null);
+            for (const key of keys) {
+                const value = records[key];
+                const slots = key.match(/\{[a-zA-Z][a-zA-Z0-9_]*\}/g) || [];
+                if (!key || key.length > 400 || typeof value !== 'string' || value.length > 2000 || /[<>]/.test(value) ||
+                    slots.some((slot) => value.indexOf(slot) < 0)) {
+                    return { ok: false, message: this.t('The handout contains an unsafe translation value.') };
+                }
+                candidate[key] = value;
+            }
+            this.custom = candidate;
+            return { ok: true, count: keys.length, name: String(payload.name || payload.language || 'Custom').slice(0, 80),
+                duplicateCount: Math.max(0, handouts.length - 1) };
+        }
+    };
+
 
     const COMMANDS = Object.freeze([
         '!combatassistant',
@@ -314,6 +1295,11 @@ const CombatAssistant = (() => {
     });
 
     const CONFIG_ROW_HEIGHT = 19;
+    // All Settings cards use a flexible text column and a fixed control column.
+    const SETTINGS_CONTROL_WIDTH = 36;
+    const SETTINGS_MARKER_VALUE_WIDTH = 84;
+    // Html.card is 300px wide, with 10px body padding per side and 1px borders.
+    const SETTINGS_LABEL_FIT_WIDTH = CONFIG.DEFAULT_CARD_WIDTH - 22 - SETTINGS_CONTROL_WIDTH - 8;
 
     const CONDITION_NAMES = Object.freeze(['Blinded', 'Charmed', 'Deafened', 'Exhaustion', 'Frightened',
         'Grappled', 'Incapacitated', 'Invisible', 'Paralyzed', 'Petrified', 'Poisoned',
@@ -347,11 +1333,14 @@ const CombatAssistant = (() => {
         TURN_AUTO_FOCUS: false,
         TURN_FOCUS_FOR_EVERYONE: false,
         TURN_MOVEMENT_TRACKER: false,
+        TURN_MOVEMENT_BLOCKER: false,
+        MOVEMENT_CONSUMED_BLOCKER: false,
         SHOW_PLAYER_RESOURCES: false,
         SHOW_NPC_RESOURCES: true,
         NPC_RESOURCE_MANAGEMENT: false,
         CONSUME_SPELL_SLOTS: false,
         CONSUME_ACTION_RESOURCES: false,
+        BLOCK_PLAYER_NO_RESOURCES: false,
         SHOW_PREPARED_SPELLS_ONLY_2024: false,
         PLAYER_PUBLIC_RESOURCE_USAGE: false,
         PUBLIC_PRESENTATION_CARD: true,
@@ -383,6 +1372,7 @@ const CombatAssistant = (() => {
         REVEAL_DAMAGE_SOURCE: true,
         REVEAL_TOKEN_NAMES_IN_LOG: true,
         CHAT_BACKGROUND_IMAGE_URL: DEFAULT_CARD_CONFIG.bodyImageUrl,
+        LANGUAGE: 'en',
         CONCENTRATION_MARKER: 'stopwatch',
         APPLY_CONDITION_MARKER: false
     }, CONDITION_NAMES.reduce((markers, name) => {
@@ -390,6 +1380,62 @@ const CombatAssistant = (() => {
         return markers;
     }, {})));
 
+
+    // Curated 1.2.16 preset. Only boolean Settings are ever changed.
+    const RUNTIME_CONFIG_RECOMMENDED_BOOLEANS = Object.freeze({
+        CHAT_TRACKING: true,
+        CONCENTRATION_TRACKING: true,
+        PLAYER_ATTACK_BUTTON: true,
+        COMBAT_VISUAL_EFFECTS: true,
+        PLAYER_HEALING_BUTTON: true,
+        PLAYER_ACTION_RANGE_CHECK: true,
+        PLAYER_TOKEN_AREA_MARK: true,
+        PLAYER_AREA_MARKER_KEEP_UNTIL_ROLLED: true,
+        PLAYER_MANUAL_ROLL: true,
+        CA_ROLLS_INITIATIVE: true,
+        SHEET_2014_CA_ROLLS: true,
+        USE_ROLL20_DAMAGE_ICON: true,
+        APPLY_ROLL20_ICON_DAMAGE_COLOR: true,
+        TURN_TRACKER: true,
+        TURN_AUTO_FOCUS: true,
+        TURN_MOVEMENT_TRACKER: true,
+        SHOW_PLAYER_RESOURCES: true,
+        SHOW_NPC_RESOURCES: true,
+        NPC_RESOURCE_MANAGEMENT: true,
+        CONSUME_SPELL_SLOTS: true,
+        CONSUME_ACTION_RESOURCES: true,
+        SHOW_PREPARED_SPELLS_ONLY_2024: true,
+        PLAYER_PUBLIC_RESOURCE_USAGE: true,
+        PUBLIC_PRESENTATION_CARD: true,
+        HANDLE_ACTIONS: true,
+        CONC_TURN_TRACKER: true,
+        ROUND_COUNTER: true,
+        REMOVE_NPC_DEAD_TOKENS: true,
+        TURN_MARKER: true,
+        PUBLIC_TURN_MARKER: true,
+        TURN_MARKER_FOLLOW: true,
+        DAMAGE_ROUND_UP: true,
+        REQUIRE_AC_FOR_ATTACK: true,
+        USE_SHEET_DAMAGE_TRAITS: true,
+        REVEAL_DAMAGE_SOURCE: true,
+        REVEAL_TOKEN_NAMES_IN_LOG: true,
+        APPLY_CONDITION_MARKER: true,
+        FORCE_TURN_ORDER_POSITION: true,
+        EFFECT_TRACKER: true,
+        SHOW_EFFECTS_LIST: true,
+        AREA_MARKER_FREE_MOVEMENT: false,
+        TURN_FOCUS_FOR_EVERYONE: false,
+        PUBLIC_ROUND_COUNTER: false,
+        TURN_MARKER_ROTATION: false,
+        ONLY_DAMAGE_CARD: false,
+        CONCENTRATION_TOOLTIP_GM_ONLY: false,
+        HIDE_COMBAT_LOG: false,
+        HIDE_RESISTANCE_DETAILS: false,
+        HIDE_DAMAGE_DETAILS: false,
+        BLOCK_PLAYER_NO_RESOURCES: false,
+        TURN_MOVEMENT_BLOCKER: false,
+        MOVEMENT_CONSUMED_BLOCKER: false,
+    });
 
     const RUNTIME_CONFIG_FIELDS = Object.freeze([
         { key: 'CHAT_TRACKING', page: 'main', label: 'Chat Tracking', type: 'boolean', tip: 'Read Roll20 attack, damage, healing, and related combat rolls.' },
@@ -444,6 +1490,8 @@ const CombatAssistant = (() => {
         { key: 'TURN_FOCUS_FOR_EVERYONE', page: 'turn', label: 'Turn Focus For Everyone', type: 'boolean', tip: 'ON focuses everyone; OFF focuses only GMs and controllers of the current token or character.' },
         { key: 'HANDLE_ACTIONS', page: 'turn', label: 'Turn Token Action', type: 'boolean', tip: 'Show Dash, Special, C. Sheet, Combat, and Spells controls on Turn Cards.' },
         { key: 'TURN_MOVEMENT_TRACKER', page: 'turn', label: 'Turn Movement Tracker', type: 'boolean', tip: 'Track movement spent by the current-turn token and warn when it exceeds available speed.' },
+        { key: 'TURN_MOVEMENT_BLOCKER', page: 'turn', label: 'Turn Movement Blocker', type: 'boolean', tip: 'Lock player-controlled initiative tokens until their turn. Automatically unlock when their turn begins or they leave initiative.' },
+        { key: 'MOVEMENT_CONSUMED_BLOCKER', page: 'turn', label: 'Movement Consumed Blocker', type: 'boolean', tip: 'Lock the current player-controlled token after all available movement is spent. Dash restores movement when available.' },
         { key: 'CONC_TURN_TRACKER', page: 'turn', label: 'Conc. Turn Tracker', type: 'boolean', tip: 'Decrease finite concentration duration when the caster reaches its turn and end it automatically at 0.' },
         { key: 'ROUND_COUNTER', page: 'turn', label: 'Round Counter', type: 'boolean', tip: 'Enable the Round Counter card and current-combat token summary.' },
         { key: 'PUBLIC_ROUND_COUNTER', page: 'turn', label: 'Public Round Counter', type: 'boolean', tip: 'Also publish the Round Counter card to players. Round Counter must be ON.' },
@@ -462,6 +1510,7 @@ const CombatAssistant = (() => {
         { key: 'NPC_RESOURCE_MANAGEMENT', page: 'resources', label: 'NPC Resource Management', type: 'boolean', tip: 'Give eligible unlinked NPC tokens independent resource pools stored in Token GM Notes.' },
         { key: 'CONSUME_SPELL_SLOTS', page: 'resources', label: 'Consume Spell Slots', type: 'boolean', tip: 'Automatically consume the confirmed spell cost, preferring an exact linked Beacon spell Resource before a generic spell slot.' },
         { key: 'CONSUME_ACTION_RESOURCES', page: 'resources', label: 'Consume Action Resources', type: 'boolean', tip: 'Automatically consume one matching non-spell resource when a confirmed action with the same normalized name is used.' },
+        { key: 'BLOCK_PLAYER_NO_RESOURCES', page: 'resources', label: 'Block Without Resources', type: 'boolean', tip: 'Hide player Roll, DMG, ATK, Heal, Cast, and Send buttons when the action or spell has a verified resource cost and insufficient uses or spell slots. GM controls and no-cost actions are unaffected.' },
         { key: 'SHOW_PREPARED_SPELLS_ONLY_2024', page: 'resources', label: '2024 Prepared Spells Only', type: 'boolean', tip: 'Show only 2024 spells marked Prepared or Always Prepared, including cantrips only when Roll20 marks them prepared.' },
         { key: 'PLAYER_PUBLIC_RESOURCE_USAGE', page: 'resources', label: 'Player Public Usage', type: 'boolean', tip: 'Publish player Resource Update cards instead of whispering them privately.' },
 
@@ -473,7 +1522,8 @@ const CombatAssistant = (() => {
         { key: 'AREA_RADIUS_DEBUG_DRAW', page: 'main', label: 'Area Radius Debug Draw', type: 'boolean', temporary: true, advancedOnly: true, tip: 'Draw temporary GM-only reference circles while resolving supported radius area markers.' },
         { key: 'CHAT_BACKGROUND_IMAGE_URL', page: 'main', label: 'Change Background URL', type: 'text', tip: 'Set the background image used by Combat Assistant cards.' },
         { key: 'CHAT_PROBE', page: 'main', label: 'Chat Probe', type: 'boolean', temporary: true, advancedOnly: true, tip: 'Whisper compact Roll20 chat-message diagnostics to the GM for parser testing.' },
-        { key: 'GET_TOKEN_IMAGE_URL', page: 'main', label: 'Get Token Image URL', type: 'action', action: 'gettokenimage', buttonLabel: 'Get', tip: 'Select exactly one token and return its current live token image URL.' }
+        { key: 'GET_TOKEN_IMAGE_URL', page: 'main', label: 'Get Token Image URL', type: 'action', action: 'gettokenimage', buttonLabel: 'Get', tip: 'Select exactly one token and return its current live token image URL.' },
+        { key: 'LANGUAGE', page: 'main', label: 'Language', type: 'language', tip: 'Select the language used for Combat Assistant menus and messages.' }
     ]);
 
 
@@ -537,6 +1587,9 @@ const CombatAssistant = (() => {
                 FOCUS_FOR_EVERYONE: 'TURN_FOCUS_FOR_EVERYONE',
                 MOVEMENT_TRACKER: 'TURN_MOVEMENT_TRACKER',
                 TURN_MOVEMENT: 'TURN_MOVEMENT_TRACKER',
+                TURN_BLOCKER: 'TURN_MOVEMENT_BLOCKER',
+                MOVEMENT_BLOCKER: 'TURN_MOVEMENT_BLOCKER',
+                MOVEMENT_CONSUMED: 'MOVEMENT_CONSUMED_BLOCKER',
                 PLAYER_RESOURCES: 'SHOW_PLAYER_RESOURCES',
                 NPC_RESOURCES: 'SHOW_NPC_RESOURCES',
                 SPELL_SLOT_CONSUMPTION: 'CONSUME_SPELL_SLOTS',
@@ -601,6 +1654,7 @@ const CombatAssistant = (() => {
                     roundProgressTokenIds: [],
                     pendingAddedTokenIds: [],
                     turnMarkerId: '',
+                    managedMovementLocks: {},
                     movement: { tokenId: '', baseSpeed: 0, spent: 0, dashCount: 0, dashBonus: 0, warned: false, lastLeft: null, lastTop: null },
                     turnSequenceStarted: false,
                     active: false
@@ -623,6 +1677,7 @@ const CombatAssistant = (() => {
             tracker.roundProgressTokenIds = Array.isArray(tracker.roundProgressTokenIds) ? tracker.roundProgressTokenIds : [];
             tracker.pendingAddedTokenIds = Array.isArray(tracker.pendingAddedTokenIds) ? tracker.pendingAddedTokenIds : [];
             tracker.turnMarkerId = String(tracker.turnMarkerId || '').trim();
+            tracker.managedMovementLocks = this.isRecord(tracker.managedMovementLocks) ? tracker.managedMovementLocks : {};
             tracker.turnSequenceStarted = Object.prototype.hasOwnProperty.call(tracker, 'turnSequenceStarted')
                 ? Utils.toBoolean(tracker.turnSequenceStarted, false)
                 : (tracker.round > 1 || tracker.roundProgressTokenIds.length > 1);
@@ -1386,6 +2441,9 @@ const CombatAssistant = (() => {
         persistedSettings() {
             const root = State.get();
             root.settings = root.settings || {};
+            // v1.2.16: FR is no longer a native option. Reset campaigns that
+            // selected it to English; French remains available through Custom.
+            if (root.settings.LANGUAGE === 'fr') root.settings.LANGUAGE = 'en';
             // Keep temporary debug flags out of persistent state even if an older
             // schema or a manual edit left them behind.
             Object.keys(TEMP_RUNTIME_CONFIG_DEFAULTS).forEach((key) => delete root.settings[key]);
@@ -1436,6 +2494,7 @@ const CombatAssistant = (() => {
             if (field.type === 'percent') return Utils.clamp(Utils.toInt(value, fallback), 0, 100);
             if (field.type === 'number') return Math.max(0, Utils.toInt(value, fallback));
             if (field.type === 'roll20image') return Utils.extractUrl(value);
+            if (field.type === 'language') return String(value || 'en').trim().toLowerCase();
             if (field.key === 'CHAT_BACKGROUND_IMAGE_URL') {
                 const url = String(value === undefined || value === null ? '' : value).trim();
                 return Utils.isSafeImageUrl(url) ? url : (fallback || '');
@@ -1445,6 +2504,9 @@ const CombatAssistant = (() => {
 
         validateValue(field, value) {
             if (!field) return { ok: false, message: 'Unknown setting.' };
+            if (field.type === 'language' && ['en', 'es', 'custom'].indexOf(String(value || '').trim().toLowerCase()) < 0) {
+                return { ok: false, message: I18N.t('The language setting must be English, Spanish, or Custom.') };
+            }
             if (field.type === 'bar' || field.type === 'bar0') {
                 const raw = String(value === undefined || value === null ? '' : value).trim();
                 const bar = Utils.toInt(raw, null);
@@ -1517,6 +2579,26 @@ const CombatAssistant = (() => {
             return ADVANCED_MODE;
         },
 
+        applyRecommendedBooleanSettings() {
+            const config = this.persistedSettings();
+            let changed = 0;
+            let applied = 0;
+            Object.keys(RUNTIME_CONFIG_RECOMMENDED_BOOLEANS).forEach((key) => {
+                const field = this.getField(key);
+                // Never touch non-boolean values, custom image URLs, markers,
+                // language, spell registries or undocumented settings.
+                if (!field || field.type !== 'boolean' ||
+                    !Object.prototype.hasOwnProperty.call(RUNTIME_CONFIG_DEFAULTS, key)) return;
+                const recommended = RUNTIME_CONFIG_RECOMMENDED_BOOLEANS[key];
+                if (config[key] !== recommended) {
+                    config[key] = recommended;
+                    changed += 1;
+                }
+                applied += 1;
+            });
+            return { applied, changed };
+        },
+
         resetDefaults() {
             const root = State.get();
             root.settings = Object.assign({}, RUNTIME_CONFIG_DEFAULTS);
@@ -1525,6 +2607,17 @@ const CombatAssistant = (() => {
             return this.getAll();
         },
 
+    };
+
+    // Both spell registries share the same safe delete and error contract.
+    const removeSpellRegistryEntry = (store, key, missingMessage) => {
+        const safeKey = String(key || '').trim();
+        if (!safeKey || !Object.prototype.hasOwnProperty.call(store, safeKey)) {
+            return { ok: false, message: missingMessage };
+        }
+        const removed = store[safeKey];
+        delete store[safeKey];
+        return { ok: true, entry: removed };
     };
 
     /** -----------------------------------------------------------------------
@@ -1577,14 +2670,7 @@ const CombatAssistant = (() => {
         },
 
         remove(key) {
-            const safeKey = String(key || '').trim();
-            const store = this.store();
-            if (!safeKey || !Object.prototype.hasOwnProperty.call(store, safeKey)) {
-                return { ok: false, message: 'Spell template was not found.' };
-            }
-            const removed = store[safeKey];
-            delete store[safeKey];
-            return { ok: true, entry: removed };
+            return removeSpellRegistryEntry(this.store(), key, 'Spell template was not found.');
         }
     };
 
@@ -1651,14 +2737,7 @@ const CombatAssistant = (() => {
         },
 
         remove(key) {
-            const safeKey = String(key || '').trim();
-            const store = this.store();
-            if (!safeKey || !Object.prototype.hasOwnProperty.call(store, safeKey)) {
-                return { ok: false, message: 'Spell Macro was not found.' };
-            }
-            const removed = store[safeKey];
-            delete store[safeKey];
-            return { ok: true, entry: removed };
+            return removeSpellRegistryEntry(this.store(), key, 'Spell Macro was not found.');
         },
 
         singleLine(value) {
@@ -1771,7 +2850,7 @@ const CombatAssistant = (() => {
                     label: 'Run',
                     command: clientCommand,
                     width: 50,
-                    tooltip: 'Run ' + spellName + ' macro in Roll20',
+                    tooltip: I18N.t('Run {name} macro in Roll20', { name: spellName }),
                     backgroundColor: 'rgba(65,55,120,0.95)'
                 });
                 R20.whisper(recipient, Html.card({
@@ -1803,7 +2882,7 @@ const CombatAssistant = (() => {
                 label: 'Apply',
                 command: gmCommand,
                 backgroundColor: 'rgba(120,40,40,0.95)',
-                tooltip: 'Apply ' + spellName + ' macro'
+                tooltip: I18N.t('Apply {name} macro', { name: spellName })
             });
             const gmBody = Render.iconButtonTableHtml([gmButton], {
                 columns: 1,
@@ -1824,7 +2903,7 @@ const CombatAssistant = (() => {
                         label: 'Apply',
                         command: oneTime.command,
                         backgroundColor: 'rgba(120,40,40,0.95)',
-                        tooltip: 'Apply ' + spellName + ' macro once'
+                        tooltip: I18N.t('Apply {name} macro once', { name: spellName })
                     });
                     const playerBody = Render.iconButtonTableHtml([playerButton], {
                         columns: 1,
@@ -2650,7 +3729,7 @@ const CombatAssistant = (() => {
                             titleHtml +
                             '<div style="height:1px;background:' + titleLineColor + ';margin:' + titleLineMargin + ';"></div>' +
                         '</div>' +
-                        '<div style="padding:8px 10px 10px 10px;text-align:' + bodyAlign + ';color:' + bodyColor + ';background:' + bodyBgColor + ';">' + body + '</div>' +
+                        '<div style="padding:8px 10px 10px 10px;text-align:' + bodyAlign + ';color:' + bodyColor + ';background:' + bodyBgColor + ';' + (I18N.language() === 'en' ? '' : 'white-space:normal;overflow-wrap:anywhere;') + '">' + body + '</div>' +
                     '</div>' +
                 '</div>'
             );
@@ -2662,8 +3741,9 @@ const CombatAssistant = (() => {
      * --------------------------------------------------------------------- */
     const R20 = {
         send(message, callback) {
-            if (Utils.isFunction(callback)) sendChat(CONFIG.CHAT_NAME, message, callback);
-            else sendChat(CONFIG.CHAT_NAME, message);
+            const outgoing = I18N.localizeHtml(message);
+            if (Utils.isFunction(callback)) sendChat(CONFIG.CHAT_NAME, outgoing, callback);
+            else sendChat(CONFIG.CHAT_NAME, outgoing);
         },
 
         direct(html) {
@@ -4146,12 +5226,12 @@ const CombatAssistant = (() => {
                 Render.sendPublicMessage(
                     'Source Debug',
                     '<div style="text-align:left;font-size:11px;line-height:14px;">' +
-                        '<strong>Character Name:</strong> ' + Render.characterNameHtml(characterName || 'Unknown') + '<br>' +
-                        '<strong>Controller Name:</strong> ' + Utils.escapeHtml(controllerName) + '<br>' +
-                        '<strong>Caster Name:</strong> ' + Render.characterNameHtml(casterName || 'Unknown') + '<br>' +
-                        '<strong>Controller Page:</strong> ' + Utils.escapeHtml(controllerPageName) + '<br>' +
-                        '<strong>Caster Page:</strong> ' + Utils.escapeHtml(casterPageName) + '<br>' +
-                        '<strong>Token Page:</strong> ' + Utils.escapeHtml(tokenPageName) +
+                        '<strong>' + Utils.escapeHtml(I18N.t('Character Name:')) + '</strong> ' + Render.characterNameHtml(characterName || 'Unknown') + '<br>' +
+                        '<strong>' + Utils.escapeHtml(I18N.t('Controller Name:')) + '</strong> ' + Utils.escapeHtml(controllerName) + '<br>' +
+                        '<strong>' + Utils.escapeHtml(I18N.t('Caster Name:')) + '</strong> ' + Render.characterNameHtml(casterName || 'Unknown') + '<br>' +
+                        '<strong>' + Utils.escapeHtml(I18N.t('Controller Page:')) + '</strong> ' + Utils.escapeHtml(controllerPageName) + '<br>' +
+                        '<strong>' + Utils.escapeHtml(I18N.t('Caster Page:')) + '</strong> ' + Utils.escapeHtml(casterPageName) + '<br>' +
+                        '<strong>' + Utils.escapeHtml(I18N.t('Token Page:')) + '</strong> ' + Utils.escapeHtml(tokenPageName) +
                     '</div>',
                     'normal'
                 );
@@ -4364,17 +5444,14 @@ const CombatAssistant = (() => {
             return true;
         },
 
-        getProjectileEffectName() {
-            return String(RuntimeConfig.get('PROJECTILE_EFFECT_NAME') || '').trim();
+        getEffectName(settingKey) {
+            return String(RuntimeConfig.get(settingKey) || '').trim();
         },
 
-        getDirectHitEffectName() {
-            return String(RuntimeConfig.get('DIRECT_HIT_EFFECT_NAME') || '').trim();
-        },
-
-        getAreaHitEffectName() {
-            return String(RuntimeConfig.get('AREA_HIT_EFFECT_NAME') || '').trim();
-        },
+        // Keep the existing method names for external scripts that may call them.
+        getProjectileEffectName() { return this.getEffectName('PROJECTILE_EFFECT_NAME'); },
+        getDirectHitEffectName() { return this.getEffectName('DIRECT_HIT_EFFECT_NAME'); },
+        getAreaHitEffectName() { return this.getEffectName('AREA_HIT_EFFECT_NAME'); },
 
         findCustomEffectReference(effectName) {
             const safeName = String(effectName || '').trim();
@@ -4735,7 +5812,7 @@ const CombatAssistant = (() => {
                 const verticalAlign = String(opts.verticalAlign || '-2px');
                 const marginLeft = String(opts.marginLeft === undefined ? '0' : opts.marginLeft);
                 return url
-                    ? '<img src="' + Utils.attrSafe(url) + '" style="width:' + String(size) + 'px;height:' + String(size) + 'px;display:inline-block;vertical-align:' + Utils.attrSafe(verticalAlign) + ';margin-left:' + Utils.attrSafe(marginLeft) + ';object-fit:contain;" alt="' + Utils.attrSafe(key) + '" />'
+                    ? '<img src="' + Utils.attrSafe(url) + '" style="width:' + String(size) + 'px;height:' + String(size) + 'px;display:inline-block;vertical-align:' + Utils.attrSafe(verticalAlign) + ';margin-left:' + Utils.attrSafe(marginLeft) + ';object-fit:contain;" alt="' + Utils.attrSafe(I18N.damageTypeLabel(key, true)) + '" />'
                     : (CONFIG.DAMAGE_TYPE_ICONS[key] || CONFIG.DAMAGE_TYPE_ICONS.normal);
             }
             return CONFIG.DAMAGE_TYPE_ICONS[key] || CONFIG.DAMAGE_TYPE_ICONS.normal;
@@ -4772,7 +5849,7 @@ const CombatAssistant = (() => {
         },
 
         damageTypeQuery(defaultType) {
-            return this.queryOptionsWithDefault('Damage Type', CombatService.normalizeDamageType(defaultType || 'normal'), [
+            return this.queryOptionsWithDefault(I18N.t('Damage Type'), CombatService.normalizeDamageType(defaultType || 'normal'), [
                 ['Normal', 'normal'],
                 ['Acid', 'acid'],
                 ['Bludgeoning', 'bludgeoning'],
@@ -4787,7 +5864,7 @@ const CombatAssistant = (() => {
                 ['Radiant', 'radiant'],
                 ['Slashing', 'slashing'],
                 ['Thunder', 'thunder']
-            ]);
+            ].map((entry) => [I18N.damageTypeLabel(entry[1], true), entry[1]]));
         },
 
         playerAreaMarkerFooterHtml(areaInfo, payload) {
@@ -4852,34 +5929,58 @@ const CombatAssistant = (() => {
                 .replace(/\?/g, '&#63;');
         },
 
+        fitTextFontSize(text, availableWidth, preferredSize, minimumSize) {
+            const widestLine = Math.max(1, ...String(text || '').split('\n').map((line) =>
+                Array.from(line).reduce((width, char) => width + (
+                    /\s/.test(char) ? 0.33 :
+                    /[ilI1|.,;:'`!]/.test(char) ? 0.32 :
+                    /[MW@%&]/.test(char) ? 0.90 :
+                    /[\u2e80-\u9fff]/.test(char) ? 1.0 :
+                    /[A-ZÁÉÍÓÚÑÜ]/.test(char) ? 0.70 : 0.57
+                ), 0)));
+            return Math.max(minimumSize, Math.min(preferredSize, Math.floor((availableWidth - 4) / widestLine)));
+        },
+
         iconButtonHtml(buildOptions) {
             const options = buildOptions || {};
             const iconHtml = String(options.iconHtml || options.icon || '&#9679;');
-            const label = String(options.label || options.text || 'BTN');
+            const rawLabel = String(options.label || options.text || 'BTN');
+            const label = options.labelIsLocalized === true ? rawLabel : (rawLabel.includes('\n')
+                ? rawLabel.split('\n').map((part) => I18N.t(part)).join('\n') : I18N.t(rawLabel));
             const command = this.sanitizeCommand(options.command || options.callback || '#');
             const width = Math.max(1, Utils.toInt(options.width, 40));
             const height = Math.max(1, Utils.toInt(options.height, 40));
             const iconSize = Math.max(1, Utils.toInt(options.iconSize, 18));
-            const labelSize = Math.max(1, Utils.toInt(options.labelSize, 13));
-            const labelHeight = Math.max(1, Utils.toInt(options.labelHeight, 13));
-            const labelLineHeight = Math.max(1, Utils.toInt(options.labelLineHeight, 12));
+            const preferredLabelSize = Math.max(1, Utils.toInt(options.labelSize, 13));
+            const minLabelSize = Math.min(8, preferredLabelSize);
+            const compactLabelSize = this.fitTextFontSize(label, width - 6, preferredLabelSize, minLabelSize);
+            const labelSize = I18N.language() === 'en' ? preferredLabelSize : compactLabelSize;
+            const wrapLabel = I18N.language() !== 'en' && !options.labelNoWrap && !options.labelPreLine && compactLabelSize <= Math.max(minLabelSize, 9);
             const backgroundColor = String(options.backgroundColor || 'rgba(55,55,55,0.95)');
             const borderColor = String(options.borderColor || 'rgba(255,255,255,0.75)');
             const textColor = String(options.textColor || 'rgb(255,255,255)');
             const margin = String(options.margin || '0 1px');
-            const paddingTop = Math.max(0, Utils.toInt(options.paddingTop, 5));
-            const labelPaddingTop = Math.max(0, Utils.toInt(options.labelPaddingTop, 0));
+            const paddingTop = Math.max(0, Utils.toInt(options.paddingTop, 4));
+            const iconRowHeight = Math.max(14, Utils.toInt(options.iconRowHeight, 19));
+            const labelPaddingTop = Math.max(0, Utils.toInt(options.labelPaddingTop, wrapLabel ? 1 : 0));
             const labelWhiteSpace = options.labelPreLine ? 'pre-line' : (options.labelNoWrap ? 'nowrap' : 'normal');
-            const safeTooltip = String(options.tooltip || '').trim();
+            const safeTooltip = I18N.t(String(options.tooltip || (I18N.language() === 'en' ? '' : label)).trim());
             const titleAttr = safeTooltip ? (' title="' + Utils.attrSafe(safeTooltip) + '"') : '';
+            const labelCellStyle = 'padding:' + labelPaddingTop + 'px 1px 1px 1px;' +
+                'font-size:' + labelSize + 'px;' +
+                'line-height:' + (wrapLabel ? '9px' : String(Utils.toInt(options.labelLineHeight, 11)) + 'px') + ';' +
+                'text-align:center;vertical-align:middle;white-space:' + labelWhiteSpace + ';' +
+                (I18N.language() === 'en' ? 'overflow:hidden;' : 'overflow:hidden;overflow-wrap:anywhere;word-break:break-word;');
             return (
                 '<a href="' + command + '"' + titleAttr + ' style="' +
                     'display:inline-block;width:' + width + 'px;height:' + height + 'px;min-width:' + width + 'px;' +
                     'box-sizing:border-box;text-align:center;text-decoration:none;border:1px solid ' + borderColor + ';border-radius:' + String(options.borderRadius || '4px') + ';' +
                     'background:' + backgroundColor + ';color:' + textColor + ';font-family:Arial,Helvetica,sans-serif;overflow:hidden;vertical-align:middle;margin:' + margin + ';padding:' + paddingTop + 'px 0 0 0;' +
                 '">' +
-                    '<strong><span style="display:block;height:20px;line-height:19px;font-size:' + iconSize + 'px;text-align:center;">' + iconHtml + '</span></strong>' +
-                    '<strong><span style="display:block;height:' + labelHeight + 'px;line-height:' + labelLineHeight + 'px;padding:' + labelPaddingTop + 'px;font-size:' + labelSize + 'px;text-align:center;white-space:' + labelWhiteSpace + ';">' + Utils.escapeHtml(label) + '</span></strong>' +
+                    '<table style="width:100%;height:' + Math.max(1, height - paddingTop) + 'px;border-collapse:collapse;table-layout:fixed;"><tbody>' +
+                        '<tr style="height:' + iconRowHeight + 'px;"><td style="padding:0;text-align:center;vertical-align:middle;line-height:' + iconRowHeight + 'px;"><strong><span style="display:inline-block;font-size:' + iconSize + 'px;line-height:' + iconRowHeight + 'px;">' + iconHtml + '</span></strong></td></tr>' +
+                        '<tr><td style="' + labelCellStyle + '"><strong>' + Utils.escapeHtml(label) + '</strong></td></tr>' +
+                    '</tbody></table>' +
                 '</a>'
             );
         },
@@ -4966,7 +6067,7 @@ const CombatAssistant = (() => {
                 ? (Math.max(1, Utils.toNumber(fontMatch[1], 20) - fontReduction) + 'px')
                 : baseFontSize;
             const paddingRight = Math.max(0, Utils.toInt(options.paddingRight, 0));
-            const tooltip = roll.tooltip || ('Roll [1d20] = [ ' + String(natural) + ' ]');
+            const tooltip = roll.tooltip || (I18N.t('Roll') + ' [1d20] = [ ' + String(natural) + ' ]');
             const markerColor = displayMarker === '&#9650;' ? 'rgb(90,220,120)' : 'rgb(230,80,80)';
             const textColor = isDimmed ? 'rgb(145,145,145)' : (rollStyle.color || 'rgb(255,255,255)');
             const criticalMarkerHtml = isCritical
@@ -5020,7 +6121,7 @@ const CombatAssistant = (() => {
                     modifier,
                     success: !!roll.success,
                     dimmed: states.length > 1 && !state.isChosen,
-                    tooltip: ability + ' Save<br>Roll: ' + String(state.natural) + '<br>Modifier: ' + Utils.formatSigned(modifier) + '<br>Total: ' + String(total) + '<br>DC: ' + String(roll.dc) + (mode !== 'normal' ? ('<br>Mode: ' + mode) : '') + (roll.rollModeReason ? ('<br>Reason: ' + Utils.escapeHtml(String(roll.rollModeReason))) : '')
+                    tooltip: ability + ' ' + I18N.t('Save') + '<br>' + I18N.t('Roll') + ': ' + String(state.natural) + '<br>' + I18N.t('Modifier') + ': ' + Utils.formatSigned(modifier) + '<br>' + I18N.t('Total') + ': ' + String(total) + '<br>DC: ' + String(roll.dc) + (mode !== 'normal' ? ('<br>' + I18N.t('Mode') + ': ' + I18N.t(mode)) : '') + (roll.rollModeReason ? ('<br>' + I18N.t('Reason') + ': ' + Utils.escapeHtml(String(roll.rollModeReason))) : '')
                 }, state.marker, { size: 34, fontSize: '18px', paddingRight: state.paddingRight });
             }).reverse().join('');
             return '<div style="display:inline-block;text-align:right;white-space:nowrap;">' + badges + '</div>';
@@ -5031,7 +6132,7 @@ const CombatAssistant = (() => {
             return this.rollBadgeHtml({
                 natural: Utils.toInt(total, 0),
                 total: Utils.toInt(total, 0),
-                tooltip: String(tooltip || 'Roll total: ' + String(total || 0)),
+                tooltip: String(tooltip || I18N.t('Roll total: {total}', { total: String(total || 0) })),
                 success: options.success
             }, options.marker || '', { size: options.size || 40, fontSize: options.fontSize || '20px' });
         },
@@ -5080,7 +6181,7 @@ const CombatAssistant = (() => {
             }
             const damageIconCells = damageIconSlots.map((type) => {
                 const icon = type ? (this.getDamageTypeIcon(type) || '&#9679;') : '';
-                const tooltip = type ? Utils.attrSafe(type) : '';
+                const tooltip = type ? Utils.attrSafe(I18N.damageTypeLabel(type, true)) : '';
                 return '<td' + (tooltip ? (' title="' + tooltip + '"') : '') + ' style="width:12px;height:12px;padding:0;text-align:center;vertical-align:middle;font-size:11px;line-height:12px;font-weight:900;white-space:nowrap;">' + icon + '</td>';
             }).join('');
             const isSaveAttack = Utils.toBoolean(result.isSaveAttack, false) || !!result.saveAbility;
@@ -5316,33 +6417,38 @@ const CombatAssistant = (() => {
             const buttonW = Math.max(1, Utils.toInt(options.width, 32));
             const buttonWidth = String(options.widthCss || '').trim() || (buttonW + 'px');
             const command = this.sanitizeCommand(options.command || '#');
-            const label = Utils.escapeHtml(String(options.label === undefined || options.label === null ? '' : options.label));
-            const tooltip = String(options.tooltip || '').trim();
-            const fontSize = Math.max(1, Utils.toInt(options.fontSize, label === 'EDIT' ? 11 : 13));
+            const rawLabel = String(options.label === undefined || options.label === null ? '' : options.label);
+            const translatedLabel = I18N.t(rawLabel);
+            // In 50px save controls, keep the translated term readable; the
+            // tooltip retains the full localised wording.
+            const visibleLabel = rawLabel === 'Save' && I18N.language() !== 'en' && buttonW <= 50
+                ? I18N.t('Save (short)') : translatedLabel;
+            const label = Utils.escapeHtml(visibleLabel);
+            const tooltip = I18N.t(String(options.tooltip || translatedLabel).trim());
+            const preferredFontSize = Math.max(1, Utils.toInt(options.fontSize, rawLabel === 'EDIT' ? 11 : 13));
+            const fontSize = rawLabel === 'ON' || rawLabel === 'OFF' || rawLabel === '+' || rawLabel === 'X' || I18N.language() === 'en' ? preferredFontSize :
+                this.fitTextFontSize(visibleLabel, buttonW - 2, preferredFontSize, Math.min(7, preferredFontSize));
             const labelOffsetY = Object.prototype.hasOwnProperty.call(options, 'labelOffsetY')
                 ? Utils.toInt(options.labelOffsetY, 0)
-                : (label === 'EDIT' ? 2 : 0);
+                : (rawLabel === 'EDIT' ? 2 : 0);
             const displayLabel = labelOffsetY
                 ? '<span style="position:relative;top:' + labelOffsetY + 'px;">' + label + '</span>'
                 : label;
+            const contentHtml = '<table style="width:100%;height:100%;border-collapse:collapse;table-layout:fixed;"><tbody><tr><td style="padding:0;text-align:center;vertical-align:middle;line-height:1.05;">' + displayLabel + '</td></tr></tbody></table>';
             const disabled = options.disabled === true;
-            // Locked controls must be non-links: Roll20 sizes anchors without href
-            // differently from command links, even with the same CSS width.
             const tag = disabled ? 'span' : 'a';
             return (
                 '<' + tag + (disabled ? ' aria-disabled="true"' : ' href="' + command + '"') +
                 (tooltip ? (' title="' + Utils.attrSafe(tooltip) + '"') : '') +
                 ' style="' +
-                'display:' + (disabled ? 'inline-block' : 'inline-flex') + ';' +
+                'display:inline-block;' +
                 'vertical-align:middle;' +
-                'align-items:center;' +
-                'justify-content:center;' +
                 'width:' + buttonWidth + ';' +
                 'min-width:' + buttonWidth + ';' +
                 'height:' + buttonH + 'px;' +
                 'padding:0;' +
                 'margin:0;' +
-                'line-height:' + String(options.lineHeight || (disabled ? (buttonH - 2) + 'px' : 'normal')) + ';' +
+                'line-height:' + String(options.lineHeight || 'normal') + ';' +
                 'text-align:center;' +
                 'text-decoration:none;' +
                 'border:1px solid ' + String(options.borderColor || 'rgba(255,255,255,0.65)') + ';' +
@@ -5350,10 +6456,12 @@ const CombatAssistant = (() => {
                 'color:' + String(options.textColor || 'rgb(255,255,255)') + ';' +
                 'font-size:' + fontSize + 'px;' +
                 'font-weight:900;' +
+                'font-family:Arial,Helvetica,sans-serif;' +
                 'box-sizing:border-box;' +
+                'overflow:hidden;' +
                 'background:' + String(options.backgroundColor || 'rgba(0,105,160,0.95)') + ';' +
                 (disabled ? 'cursor:not-allowed;' : '') + '">' +
-                    displayLabel +
+                    contentHtml +
                 '</' + tag + '>'
             );
         },
@@ -5421,7 +6529,7 @@ const CombatAssistant = (() => {
                     : R20.buttonAbilityCommand(characterId, Utils.normalizeAbilityName(effect.saveAbility || '') + '_save');
                 const button = this.turnCardButtonHtml(info.tokenId, 'Save', 'effectsave', {
                     command: nativeSaveCommand || ('!combatAssistant effectsave ' + Utils.attrSafe(effect.id)),
-                    tooltip: 'Repeat ' + ability + (dc ? (' DC ' + String(dc)) : '') + ' saving throw for ' + effectName,
+                    tooltip: I18N.t('Repeat the {ability}{dc} saving throw for {effect}', { ability, dc: dc ? (' DC ' + String(dc)) : '', effect: effectName }),
                     backgroundColor: 'rgba(115,75,145,0.92)'
                 });
                 return '<table style="width:100%;border-collapse:collapse;table-layout:fixed;padding:0;margin:0;"><tbody><tr>' +
@@ -5437,8 +6545,10 @@ const CombatAssistant = (() => {
         namedCharacterTitleTextHtml(name, subtitle) {
             const safeName = String(name || 'Character').trim() || 'Character';
             const safeSubtitle = String(subtitle || '').trim();
+            const translatedSubtitle = I18N.t(safeSubtitle);
+            const subtitleSize = I18N.language() === 'en' ? 14 : this.fitTextFontSize(translatedSubtitle, 188, 14, 10);
             return '<div style="font-size:18px;line-height:20px;overflow-wrap:anywhere;">' + this.characterNameHtml(safeName) + '</div>' +
-                '<div style="color:rgb(255,255,255);font-size:14px;line-height:16px;font-weight:700;">' + Utils.escapeHtml(safeSubtitle) + '</div>';
+                '<div style="color:rgb(255,255,255);font-size:' + subtitleSize + 'px;line-height:16px;font-weight:700;' + (I18N.language() === 'en' ? '' : 'overflow-wrap:anywhere;') + '">' + Utils.escapeHtml(translatedSubtitle) + '</div>';
         },
 
         namedCharacterTitleHtml(name, subtitle, token, character, imageSize, rightControlHtml) {
@@ -5502,7 +6612,15 @@ const CombatAssistant = (() => {
         },
 
         characterSheetAbilityHeaderHtml() {
-            const cell = (label, align, width) => '<td style="width:' + width + ';height:14px;padding:2px;text-align:' + align + ';vertical-align:middle;color:rgb(155,155,155);font-size:10px;line-height:10px;font-weight:700;white-space:nowrap;">' + label + '</td>';
+            const cell = (label, align, width) => {
+                const translated = I18N.t(label);
+                // Keep compact headings readable without abbreviating tooltips.
+                const shortKey = (label === 'Attribute' || label === 'Stat' || label === 'Save') ? label + ' (short)' : '';
+                const shortLabel = shortKey && I18N.language() !== 'en' ? I18N.t(shortKey) : shortKey;
+                const visible = shortKey && shortLabel !== shortKey ? shortLabel : translated;
+                const fontSize = this.fitTextFontSize(visible, 242 * parseFloat(width) / 100 - 4, 10, 8);
+                return '<td title="' + Utils.attrSafe(translated) + '" style="width:' + width + ';height:14px;padding:2px;text-align:' + align + ';vertical-align:middle;color:rgb(155,155,155);font-size:' + fontSize + 'px;line-height:10px;font-weight:700;white-space:normal;overflow-wrap:anywhere;">' + Utils.escapeHtml(visible) + '</td>';
+            };
             return '<tr>' +
                 cell('Attribute', 'left', '40%') +
                 cell('Stat', 'center', '20%') +
@@ -5583,7 +6701,7 @@ const CombatAssistant = (() => {
                 label: String(entry && entry.label || ''),
                 command: '!combatAssistant sheetsetting ' + Utils.attrSafe(tokenId) + ' ' + Utils.attrSafe(entry && entry.key || '') + ' ' + (entry && entry.enabled ? '0' : '1'),
                 tooltip: String(entry && entry.tip || entry && entry.label || '').trim(),
-                widthCss: '30%',
+                width: 80, widthCss: '30%',
                 backgroundColor: entry && entry.enabled ? 'rgba(35,110,65,0.95)' : 'rgba(125,35,35,0.95)'
             }));
             return '<div style="text-align:center;white-space:nowrap;line-height:normal;margin-top:3px;">' +
@@ -5689,7 +6807,7 @@ const CombatAssistant = (() => {
             const allDamage = damageEntries.map((entry) => {
                 const formula = String(entry.formula || '').trim();
                 const damageType = String(entry.damageType || 'Damage').trim() || 'Damage';
-                return formula + ' ' + damageType;
+                return formula + ' ' + I18N.damageTypeLabel(damageType, true);
             }).join(' | ');
             const visible = damageEntries.slice(0, 2);
             const multiple = visible.length > 1;
@@ -5702,7 +6820,7 @@ const CombatAssistant = (() => {
                 '</span>';
             }).join('');
             const style = 'display:block;width:50px;height:25px;min-width:50px;min-height:25px;padding:0;margin:0;box-sizing:border-box;border:1px solid rgba(255,255,255,0.55);border-radius:4px;background:rgba(85,20,20,0.70);color:rgb(255,255,255);text-align:center;vertical-align:middle;overflow:hidden;font-family:Arial,Helvetica,sans-serif;text-decoration:none;';
-            return '<a href="' + Utils.attrSafe(command) + '" title="' + Utils.attrSafe('Roll damage: ' + allDamage) + '" style="' + style + '">' + rows + '</a>';
+            return '<a href="' + Utils.attrSafe(command) + '" title="' + Utils.attrSafe(I18N.t('Roll damage: {formula}', { formula: allDamage })) + '" style="' + style + '">' + rows + '</a>';
         },
 
         combatSmallActionButtonHtml(topText, bottomText, command, title, options) {
@@ -5712,15 +6830,16 @@ const CombatAssistant = (() => {
             const href = safeCommand ? (' href="' + Utils.attrSafe(safeCommand) + '"') : '';
             const safeTitle = String(title || '').trim() || String(bottomText || 'Action');
             const topFontSize = Math.max(8, Utils.toInt(opts.topFontSize, 15));
-            const bottomFontSize = Math.max(7, Utils.toInt(opts.bottomFontSize, 10));
-            return '<' + tag + href + ' title="' + Utils.attrSafe(safeCommand ? safeTitle : (safeTitle + ' - unavailable')) + '" style="' +
+            const rawBottomText = I18N.t(String(bottomText || ''));
+            const bottomFontSize = this.fitTextFontSize(rawBottomText, 24, Math.max(7, Utils.toInt(opts.bottomFontSize, 10)), 7);
+            return '<' + tag + href + ' title="' + Utils.attrSafe(safeCommand ? safeTitle : (safeTitle + ' - ' + I18N.t('Unavailable').toLowerCase())) + '" style="' +
                 'display:inline-flex;flex-direction:column;align-items:center;justify-content:center;' +
                 'width:25px;height:25px;min-width:25px;min-height:25px;padding:0;margin:0;' +
                 'box-sizing:border-box;border:1px solid rgba(255,255,255,0.70);border-radius:4px;' +
                 'background:rgba(54,54,54,0.50);color:rgb(255,255,255);text-decoration:none;' +
                 'text-align:center;vertical-align:middle;overflow:hidden;font-family:Arial,Helvetica,sans-serif;">' +
                     '<b><span style="display:block;height:15px;line-height:15px;font-size:' + String(topFontSize) + 'px;font-weight:900;white-space:nowrap;color:rgb(255,255,255);">' + Utils.escapeHtml(String(topText || '')) + '</span></b>' +
-                    '<b><span style="display:block;height:9px;line-height:9px;font-size:' + String(bottomFontSize) + 'px;font-weight:900;white-space:nowrap;color:rgb(255,255,255);">' + Utils.escapeHtml(String(bottomText || '')) + '</span></b>' +
+                    '<b><span style="display:block;height:9px;line-height:9px;font-size:' + String(bottomFontSize) + 'px;font-weight:900;white-space:nowrap;' + (I18N.language() === 'en' ? '' : 'overflow:hidden;') + 'color:rgb(255,255,255);">' + Utils.escapeHtml(rawBottomText) + '</span></b>' +
             '</' + tag + '>';
         },
 
@@ -5769,6 +6888,12 @@ const CombatAssistant = (() => {
             return Utils.stripHtml(String(value || '')).replace(/\s+/g, ' ').trim();
         },
 
+        unavailableResourceHtml() {
+            return '<span title="' + Utils.attrSafe(I18N.t('Insufficient resources for this action.')) +
+                '" style="color:rgb(235,110,110);font-size:9px;font-weight:700;">' +
+                Utils.escapeHtml(I18N.t('Out of resources')) + '</span>';
+        },
+
         combatMenuRowHtml(name, detailsHtml, middleControlHtml, rightControlHtml, hasSeparator, nameColor, description) {
             const safeNameColor = String(nameColor || 'rgb(232,220,180)').trim() || 'rgb(232,220,180)';
             const tooltip = this.descriptionTooltipText(description);
@@ -5806,8 +6931,8 @@ const CombatAssistant = (() => {
             const actionName = String(source.attackName || 'Special Action').trim() || 'Special Action';
             const actionHtml = Html.span(Utils.escapeHtml(actionName), 'color:rgb(245,220,80);font-weight:900;');
             const lead = revealSource
-                ? (sourceHtml + ' uses ' + actionHtml + (opts.healing ? ' and rolls healing.' : '.'))
-                : (sourceHtml + (opts.healing ? ' rolls healing.' : ' uses a special action.'));
+                ? I18N.t(opts.healing ? '{source} uses {action} and rolls healing.' : '{source} uses {action}.', { source: sourceHtml, action: actionHtml })
+                : I18N.t(opts.healing ? '{source} rolls healing.' : '{source} uses a special action.', { source: sourceHtml });
             const tooltip = this.descriptionTooltipText(description);
             const desc = revealSource && tooltip
                 ? '<div style="padding-top:3px;color:rgb(205,205,205);font-size:10px;line-height:12px;">' + Utils.escapeHtml(tooltip) + '</div>'
@@ -5820,7 +6945,7 @@ const CombatAssistant = (() => {
             this.sendCombatLogMessage('Special Action', this.specialActionNarrativeHtml(source, description, { healing: false }), 'normal', { titleHtml: this.specialActionTitleHtml(source, 'Special Action') });
         },
 
-        combatSpecialSectionHtml(definition, entries, tokenId) {
+        combatSpecialSectionHtml(definition, entries, tokenId, resourceGate) {
             const safeDefinition = definition && typeof definition === 'object' ? definition : {};
             const safeEntries = (Array.isArray(entries) ? entries : []).filter((entry) => entry && String(entry.name || '').trim());
             if (!safeEntries.length) return '';
@@ -5829,21 +6954,25 @@ const CombatAssistant = (() => {
                 const hasEffect = !hasAttackRoll && this.combatAttackHasDamage(action);
                 let middleControl = '';
                 let rightControl = '';
+                const unavailable = !!(resourceGate && resourceGate.enabled && ResourceService.playerActionUnavailable(action.name, resourceGate.entries));
                 let detailLabel = String(action.detailLabel || '').trim();
                 if (hasAttackRoll) {
-                    middleControl = this.combatAttackRollButtonHtml(action);
+                    middleControl = unavailable ? '' : this.combatAttackRollButtonHtml(action);
                     detailLabel = String(action.attackTypeLabel || action.attackType || 'Attack').trim() || 'Attack';
                 } else if (hasEffect) {
-                    middleControl = this.combatAttackDamageButtonHtml(action, { tokenId });
+                    middleControl = unavailable ? '' : this.combatAttackDamageButtonHtml(action, { tokenId });
                     if (!detailLabel) detailLabel = String(action.effectLabel || 'Damage').trim() || 'Damage';
                 } else {
-                    rightControl = this.combatActionSendButtonHtml(action, { tokenId });
+                    rightControl = unavailable ? '' : this.combatActionSendButtonHtml(action, { tokenId });
                     if (!detailLabel) detailLabel = String(action.actionType || 'Action').trim() || 'Action';
                 }
-                const details = Utils.escapeHtml(detailLabel) +
+                const details = Utils.escapeHtml(detailLabel.split(/\s+\+\s+/).map((part) => {
+                    const localized = I18N.t(part);
+                    return localized === part ? I18N.damageTypeLabel(part, true) : localized;
+                }).join(' + ')) +
                     (action.abilityLabel ? (' <span style="color:rgb(155,155,155);font-weight:700;">[' + Utils.escapeHtml(String(action.abilityLabel)) + ']</span>') : '') +
                     (hasAttackRoll && action.rangeLabel ? (' <span style="color:rgb(155,155,155);font-weight:700;">[' + Utils.escapeHtml(String(action.rangeLabel)) + ']</span>') : '');
-                return this.combatMenuRowHtml(action.name, details, middleControl, rightControl, index < safeEntries.length - 1, safeDefinition.nameColor, action.description);
+                return this.combatMenuRowHtml(action.name, details + (unavailable ? (' ' + this.unavailableResourceHtml()) : ''), middleControl, rightControl, index < safeEntries.length - 1, safeDefinition.nameColor, action.description);
             }).join('');
             return '<div style="padding-top:5px;">' +
                 '<div style="padding:0 0 2px 0;text-align:center;color:' + Utils.attrSafe(safeDefinition.nameColor) + ';font-size:11px;line-height:13px;font-weight:900;">' + Utils.escapeHtml(safeDefinition.title || 'Actions') + '</div>' +
@@ -5889,6 +7018,7 @@ const CombatAssistant = (() => {
             const opts = options && typeof options === 'object' ? options : {};
             const viewKey = normalizeCombatViewKey(opts.view);
             const safeAttacks = (Array.isArray(data.attacks) ? data.attacks : []).filter((attack) => attack && String(attack.name || '').trim());
+            const resourceGate = { enabled: !!opts.restrictPlayerActions, entries: opts.resourceEntries };
 
             const attackRows = viewKey === 'combat' ? safeAttacks.map((attack, index) => {
                 const ability = String(attack.abilityLabel || '').trim();
@@ -5897,15 +7027,16 @@ const CombatAssistant = (() => {
                     ? (String(attack.detailLabel || attack.actionType || 'Action').trim() || 'Action')
                     : (String(attack.attackTypeLabel || attack.attackType || 'Attack').trim() || 'Attack');
                 const rangeLabel = !actionOnly && /^(?:Ranged Attack|Ranged Save)$/i.test(attackType) ? String(attack.rangeLabel || '').trim() : '';
-                const details = Utils.escapeHtml(attackType) +
+                const details = Utils.escapeHtml(I18N.t(attackType)) +
                     (ability ? (' <span style="color:rgb(155,155,155);font-weight:700;">[' + Utils.escapeHtml(ability) + ']</span>') : '') +
                     (rangeLabel ? (' <span style="color:rgb(155,155,155);font-weight:700;">[' + Utils.escapeHtml(rangeLabel) + ']</span>') : '');
                 const hasDamage = this.combatAttackHasDamage(attack);
+                const unavailable = resourceGate.enabled && ResourceService.playerActionUnavailable(attack.name, resourceGate.entries);
                 return this.combatMenuRowHtml(
                     attack.name,
-                    details,
-                    hasDamage ? this.combatAttackDamageButtonHtml(attack) : '',
-                    actionOnly && !hasDamage ? this.combatActionSendButtonHtml(attack) : this.combatAttackRollButtonHtml(attack),
+                    details + (unavailable ? (' ' + this.unavailableResourceHtml()) : ''),
+                    unavailable ? '' : (hasDamage ? this.combatAttackDamageButtonHtml(attack) : ''),
+                    unavailable ? '' : (actionOnly && !hasDamage ? this.combatActionSendButtonHtml(attack) : this.combatAttackRollButtonHtml(attack)),
                     index < safeAttacks.length - 1,
                     '',
                     attack.description
@@ -5915,7 +7046,7 @@ const CombatAssistant = (() => {
             const specialSections = viewKey === 'combat-special'
                 ? COMBAT_SPECIAL_SECTION_KEYS.map((sectionKey) => {
                     const definition = COMBAT_SPECIAL_SECTIONS[sectionKey];
-                    return this.combatSpecialSectionHtml(definition, data[definition.dataKey], opts.tokenId);
+                    return this.combatSpecialSectionHtml(definition, data[definition.dataKey], opts.tokenId, resourceGate);
                 }).filter(Boolean).join('')
                 : '';
             const content = viewKey === 'combat' ? attackRows : specialSections;
@@ -5930,7 +7061,7 @@ const CombatAssistant = (() => {
 
         spellLevelTitle(level) {
             const safeLevel = Math.max(0, Math.min(9, Utils.toInt(level, 0)));
-            return safeLevel === 0 ? 'CANTRIPS' : ('LEVEL ' + String(safeLevel));
+            return (safeLevel === 0 ? I18N.t('Cantrips') : I18N.t('Level') + ' ' + String(safeLevel)).toUpperCase();
         },
 
         resourceBalanceHtml(current, max) {
@@ -6008,7 +7139,9 @@ const CombatAssistant = (() => {
             const tag = command ? 'a' : 'span';
             const href = command ? (' href="' + Utils.attrSafe(command) + '"') : '';
             const name = String(spell && spell.name || 'Spell').trim() || 'Spell';
-            const title = command ? ('Cast ' + name) : ('Cast ' + name + ' - unavailable');
+            const title = I18N.t(command ? 'Cast {name}' : 'Cast {name} - unavailable', { name });
+            const castLabel = I18N.t('Cast');
+            const castFontSize = this.fitTextFontSize(castLabel, 24, 8, 7);
             return '<' + tag + href + ' title="' + Utils.attrSafe(title) + '" style="' +
                 'display:inline-flex;flex-direction:column;align-items:center;justify-content:center;' +
                 'width:25px;height:25px;min-width:25px;min-height:25px;padding:0;margin:0;' +
@@ -6016,11 +7149,12 @@ const CombatAssistant = (() => {
                 'background:rgba(76,58,125,0.72);color:rgb(255,255,255);text-decoration:none;' +
                 'text-align:center;vertical-align:middle;overflow:hidden;font-family:Arial,Helvetica,sans-serif;">' +
                     '<b><span style="display:block;height:15px;line-height:15px;font-size:13px;font-weight:900;white-space:nowrap;">&#129668;</span></b>' +
-                    '<b><span style="display:block;height:9px;line-height:9px;font-size:8px;font-weight:900;white-space:nowrap;">Cast</span></b>' +
+                    '<b><span style="display:block;height:9px;line-height:9px;font-size:' + castFontSize + 'px;font-weight:900;white-space:nowrap;' + (I18N.language() === 'en' ? '' : 'overflow:hidden;') + '">' + Utils.escapeHtml(castLabel) + '</span></b>' +
             '</' + tag + '>';
         },
 
-        spellCombatControlsHtml(spell) {
+        spellCombatControlsHtml(spell, unavailable) {
+            if (unavailable) return this.unavailableResourceHtml();
             const action = spell && spell.combat && typeof spell.combat === 'object' ? spell.combat : null;
             const hasDamage = !!(action && this.combatAttackHasDamage(action));
             const rightControl = action ? this.combatAttackRollButtonHtml(action) : this.spellCastButtonHtml(spell);
@@ -6040,9 +7174,11 @@ const CombatAssistant = (() => {
                 : (prepared
                     ? { text: 'Prepared', label: 'Prepared', color: 'rgb(235,205,75)' }
                     : { text: 'Unprepared', label: 'Unprepared', color: 'rgb(220,45,45)' });
-            return '<span title="' + Utils.attrSafe(status.label) + '" aria-label="' +
-                Utils.attrSafe(status.label) + '" style="color:' + status.color +
-                ';font-weight:900;white-space:nowrap;cursor:help;">' + status.text + '</span>';
+            const statusLabel = I18N.t(status.label);
+            const statusText = I18N.t(status.text);
+            return '<span title="' + Utils.attrSafe(statusLabel) + '" aria-label="' +
+                Utils.attrSafe(statusLabel) + '" style="color:' + status.color +
+                ';font-weight:900;' + (I18N.language() === 'en' ? 'white-space:nowrap;' : 'white-space:normal;overflow-wrap:anywhere;') + 'cursor:help;">' + Utils.escapeHtml(statusText) + '</span>';
         },
 
 
@@ -6087,11 +7223,11 @@ const CombatAssistant = (() => {
             if (abilityLabel) profileBits.push('<span style="color:rgb(160,160,160);">' + Utils.escapeHtml(abilityLabel) + '</span> <b style="color:rgb(235,235,235);">' + Utils.escapeHtml(signed(abilityModifier)) + '</b>');
             if (abilityLabel || attackBonus) profileBits.push('<span style="color:rgb(160,160,160);">ATK</span> <b style="color:rgb(235,235,235);">' + Utils.escapeHtml(signed(attackBonus)) + '</b>');
             if (saveDc > 0) profileBits.push('<span style="color:rgb(160,160,160);">DC</span> <b style="color:rgb(235,235,235);">' + Utils.escapeHtml(String(saveDc)) + '</b>');
-            if (Utils.toBoolean(data.consumeSpellSlots, false)) profileBits.push('<span title="Spell slot auto-consumption is armed for the next leveled spell roll" style="color:rgb(235,205,75);font-weight:900;">Slots Auto</span>');
+            if (Utils.toBoolean(data.consumeSpellSlots, false)) profileBits.push('<span title="' + Utils.attrSafe(I18N.t('Spell slot auto-consumption is armed for the next leveled spell roll')) + '" style="color:rgb(235,205,75);font-weight:900;">' + Utils.escapeHtml(I18N.t('Slots Auto')) + '</span>');
             if (data.preparedManager) {
                 const count = spells.filter(countsTowardPreparation).length;
                 const max = data.preparedCapacity;
-                profileBits.push('<span title="Prepared leveled spells excluding Always Prepared and item spells" style="color:rgb(205,190,235);font-weight:900;">Prepared</span> ' +
+                profileBits.push('<span title="' + Utils.attrSafe(I18N.t('Prepared leveled spells excluding Always Prepared and item spells')) + '" style="color:rgb(205,190,235);font-weight:900;">' + Utils.escapeHtml(I18N.t('Prepared')) + '</span> ' +
                     (typeof max === 'number' && Number.isFinite(max) ? this.spellSlotValueHtml(count, max) : '<b>' + String(count) + '</b>'));
             }
             const profileHtml = profileBits.length
@@ -6105,9 +7241,9 @@ const CombatAssistant = (() => {
                 const pactLevel = Math.max(0, Utils.toInt(data.pactSlotLevel, 0));
                 pactHtml = '<div style="margin:0 0 5px 0;padding:4px 6px;border:1px solid rgba(145,120,210,0.55);border-radius:4px;background:rgba(65,55,120,0.35);font-size:10px;line-height:13px;">' +
                     '<table style="width:100%;border-collapse:collapse;table-layout:fixed;"><tbody><tr>' +
-                        '<td style="text-align:left;color:rgb(205,190,235);font-weight:900;">PACT MAGIC</td>' +
+                        '<td style="text-align:left;color:rgb(205,190,235);font-weight:900;">' + Utils.escapeHtml(I18N.t('PACT MAGIC')) + '</td>' +
                         '<td style="text-align:center;">' + this.spellSlotValueHtml(pactCurrent, pactMax) + '</td>' +
-                        '<td style="text-align:right;color:rgb(205,190,235);font-weight:900;white-space:nowrap;">CAST LV. ' + Utils.escapeHtml(String(pactLevel || '-')) + '</td>' +
+                        '<td style="text-align:right;color:rgb(205,190,235);font-weight:900;white-space:nowrap;">' + Utils.escapeHtml(I18N.t('CAST LV.')) + ' ' + Utils.escapeHtml(String(pactLevel || '-')) + '</td>' +
                     '</tr></tbody></table>' +
                 '</div>';
             }
@@ -6128,9 +7264,9 @@ const CombatAssistant = (() => {
             const groupsHtml = levels.map((level) => {
                 const slot = !data.preparedManager && !data.isPact && level > 0 ? slotByLevel[level] : null;
                 const slotHtml = data.preparedManager && level > 0
-                    ? '<span title="Prepared spells at this level; the limit is shared across levels">' +
-                      String(grouped[level].filter(countsTowardPreparation).length) + ' prepared</span>'
-                    : (slot ? this.spellSlotValueHtml(slot.current, slot.max) : '');
+                    ? '<span title="' + Utils.attrSafe(I18N.t('Prepared spells at this level; the limit is shared across levels')) + '">' +
+                      Utils.escapeHtml(I18N.t('{count} prepared', { count: grouped[level].filter(countsTowardPreparation).length })) + '</span>'
+                    : (slot ? '<span title="' + Utils.attrSafe(I18N.t('Slots at this level')) + '">' + this.spellSlotValueHtml(slot.current, slot.max) + '</span>' : '');
                 const heading = '<div style="margin-top:' + (level === levels[0] ? '0' : '5px') + ';padding:2px 4px;border-bottom:1px solid rgba(155,130,215,0.45);color:rgb(205,190,235);font-size:9px;line-height:12px;font-weight:900;">' +
                     '<span>' + Utils.escapeHtml(this.spellLevelTitle(level)) + '</span>' +
                     (slotHtml ? ('<span style="float:right;">' + slotHtml + '</span>') : '') +
@@ -6148,6 +7284,7 @@ const CombatAssistant = (() => {
                     //   Range - Instant/Conc./Duration - School - Preparation
                     const dot = '<span style="color:rgb(95,95,95);padding:0 3px;">&middot;</span>';
                     const preparationStatus = this.spellPreparationStatusHtml(spell, data.sheetVersion);
+                    const unavailable = !!(!data.preparedManager && data.restrictPlayerActions && ResourceService.playerSpellUnavailable(spell, data));
                     const spellDescription = this.descriptionTooltipText(spell.description);
                     const spellNameHtml = spellDescription
                         ? ('<span title="' + Utils.attrSafe(spellDescription) + '" style="cursor:help;">' + Utils.escapeHtml(String(spell.name || 'Spell')) + '</span>')
@@ -6175,7 +7312,7 @@ const CombatAssistant = (() => {
                             '<div style="color:rgb(232,220,180);font-size:11px;line-height:13px;font-weight:700;white-space:nowrap;overflow:visible;position:relative;z-index:1;">' + row1 + '</div>' +
                             '<div title="' + Utils.attrSafe(metaTitle) + '" style="padding-top:1px;font-size:8px;line-height:10px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + row2Parts.join(dot) + '</div>' +
                         '</td>' +
-                        '<td style="width:' + String(SPELL_CONTROLS_WIDTH + 4) + 'px;text-align:right;vertical-align:middle;padding:0 0 0 4px;position:relative;z-index:2;">' + (data.preparedManager ? this.spellPreparationToggleHtml(spell, data) : this.spellCombatControlsHtml(spell)) + '</td>' +
+                        '<td style="width:' + String(SPELL_CONTROLS_WIDTH + 4) + 'px;text-align:right;vertical-align:middle;padding:0 0 0 4px;position:relative;z-index:2;">' + (data.preparedManager ? this.spellPreparationToggleHtml(spell, data) : this.spellCombatControlsHtml(spell, unavailable)) + '</td>' +
                     '</tr></tbody></table>';
                 }).join('');
                 return heading + rows;
@@ -6378,28 +7515,37 @@ const CombatAssistant = (() => {
         },
 
         settingsTitleControlHtml(command, tooltip, iconHtml) {
-            return '<a href="' + Utils.attrSafe(command) + '" title="' + Utils.attrSafe(tooltip) + '" style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;padding:0;margin:0;border:0;background:transparent;text-decoration:none;color:rgb(235,235,235);font-size:18px;line-height:18px;">' + String(iconHtml || '') + '</a>';
+            return '<a href="' + Utils.attrSafe(command) + '" title="' + Utils.attrSafe(I18N.t(tooltip)) + '" style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;padding:0;margin:0;border:0;background:transparent;text-decoration:none;color:rgb(235,235,235);font-size:18px;line-height:18px;">' + String(iconHtml || '') + '</a>';
         },
 
         settingsTitleHtml(title, leftControlHtml, rightControlHtml) {
+            const translated = I18N.t(title);
+            const titleStyle = I18N.language() === 'en' ? '' :
+                'font-size:' + this.fitTextFontSize(translated, 228, 18, 11) + 'px;line-height:19px;overflow-wrap:anywhere;';
             const cellStyle = 'width:18px;text-align:center;vertical-align:middle;white-space:nowrap;';
             return '<table style="width:100%;border-collapse:collapse;table-layout:fixed;"><tbody><tr>' +
                 '<td style="' + cellStyle + '">' + String(leftControlHtml || '') + '</td>' +
-                '<td style="text-align:center;vertical-align:middle;">' + Utils.escapeHtml(title) + '</td>' +
+                '<td style="text-align:center;vertical-align:middle;' + titleStyle + '">' + Utils.escapeHtml(translated) + '</td>' +
                 '<td style="' + cellStyle + '">' + String(rightControlHtml || '') + '</td>' +
             '</tr></tbody></table>';
         },
 
         settingsSectionRowHtml(title, columnCount) {
             const colspan = Math.max(1, Utils.toInt(columnCount, 2));
-            return '<tr style="height:' + CONFIG_ROW_HEIGHT + 'px;"><td colspan="' + colspan + '" style="height:' + CONFIG_ROW_HEIGHT + 'px;padding:0 2px;line-height:' + CONFIG_ROW_HEIGHT + 'px;box-sizing:border-box;border-bottom:1px solid rgba(125,125,125,0.55);text-align:center;vertical-align:middle;color:rgb(245,220,80);font-size:10px;font-weight:700;">' + Utils.escapeHtml(title) + '</td></tr>';
+            const translated = I18N.t(title);
+            const fontSize = this.fitTextFontSize(translated, 274, 10, 8);
+            return '<tr style="height:' + CONFIG_ROW_HEIGHT + 'px;"><td colspan="' + colspan + '" style="height:' + CONFIG_ROW_HEIGHT + 'px;padding:0 2px;line-height:13px;box-sizing:border-box;border-bottom:1px solid rgba(125,125,125,0.55);text-align:center;vertical-align:middle;color:rgb(245,220,80);font-size:' + fontSize + 'px;font-weight:700;white-space:normal;overflow-wrap:anywhere;">' + Utils.escapeHtml(translated) + '</td></tr>';
         },
 
         settingsValueRowHtml(label, buttonHtml, tooltip) {
-            const safeLabel = String(label || '').trim();
+            const safeLabel = I18N.t(String(label || '').trim());
+            const fontSize = this.fitTextFontSize(safeLabel, SETTINGS_LABEL_FIT_WIDTH, 12, 10);
+            // A translated label must not reduce the table's available width.
+            // The same font-fitting and natural wrapping rules apply in every language.
+            const labelStyle = 'font-size:' + fontSize + 'px;font-weight:700;white-space:normal;overflow-wrap:break-word;word-break:normal;line-height:13px;';
             return '<tr style="height:' + CONFIG_ROW_HEIGHT + 'px;">' +
-                '<td title="' + Utils.attrSafe(tooltip || safeLabel) + '" style="width:90%;height:' + CONFIG_ROW_HEIGHT + 'px;text-align:left;vertical-align:middle;padding:0 2px;box-sizing:border-box;color:rgb(225,225,225);font-size:12px;font-weight:700;white-space:nowrap;line-height:' + CONFIG_ROW_HEIGHT + 'px;cursor:help;">' + Utils.escapeHtml(safeLabel) + '</td>' +
-                '<td style="width:10%;height:' + CONFIG_ROW_HEIGHT + 'px;text-align:right;vertical-align:middle;padding:0;line-height:0;box-sizing:border-box;">' + String(buttonHtml || '') + '</td>' +
+                '<td title="' + Utils.attrSafe(I18N.t(tooltip || safeLabel)) + '" style="height:' + CONFIG_ROW_HEIGHT + 'px;text-align:left;vertical-align:middle;padding:0 4px 0 2px;box-sizing:border-box;color:rgb(225,225,225);' + labelStyle + 'cursor:help;">' + Utils.escapeHtml(safeLabel) + '</td>' +
+                '<td width="' + SETTINGS_CONTROL_WIDTH + '" style="width:' + SETTINGS_CONTROL_WIDTH + 'px;height:' + CONFIG_ROW_HEIGHT + 'px;text-align:right;vertical-align:middle;padding:0;line-height:0;box-sizing:border-box;">' + String(buttonHtml || '') + '</td>' +
             '</tr>';
         },
 
@@ -6430,63 +7576,101 @@ const CombatAssistant = (() => {
             const renderRows = (fields) => fields.map((field) => {
                 const value = settings[field.key];
                 const sectionRow = field.section ? this.settingsSectionRowHtml(field.section, pageKey === 'markers' ? 3 : 2) : '';
+                const tooltip = pageKey === 'markers' && field.key.indexOf('CONDITION_MARKER_') === 0
+                    ? I18N.t('Roll20 token marker name/tag for {marker}. Must exist in the campaign to render.', { marker: I18N.t(field.label) })
+                    : I18N.t(field.tip || field.label);
                 let button = '';
                 if (field.type === 'action') {
                     button = this.compactSettingButtonHtml({
                         label: String(field.buttonLabel || 'Get'),
                         command: '!combatAssistant ' + Utils.attrSafe(field.action || ''),
-                        tooltip: field.tip || field.label,
+                        tooltip,
                         backgroundColor: 'rgba(0,86,145,0.95)'
                     });
                 } else if (field.type === 'boolean') {
                     button = this.compactSettingButtonHtml({
                         label: value ? 'ON' : 'OFF',
                         command: '!combatAssistant toggle ' + Utils.attrSafe(field.key),
-                        tooltip: field.tip || ('Toggle ' + field.label),
+                        tooltip,
                         backgroundColor: value ? 'rgba(20,115,55,0.95)' : 'rgba(120,40,40,0.95)'
+                    });
+                } else if (field.type === 'language') {
+                    const current = value === 'es' ? 'Español' : (value === 'custom' ? 'Custom' : 'English');
+                    button = this.compactSettingButtonHtml({
+                        label: value === 'es' ? 'ES' : (value === 'custom' ? 'CUS' : 'EN'),
+                        command: '!combatAssistant set LANGUAGE &#63;{' + Utils.attrSafe(I18N.t('Language')) +
+                            '|' + Utils.attrSafe(I18N.t('English')) + ',en|' + Utils.attrSafe(I18N.t('Español')) +
+                            ',es|' + Utils.attrSafe(I18N.t('Custom')) + ',custom}',
+                        tooltip: tooltip + ' (' + I18N.t(current) + ')'
                     });
                 } else if (field.type === 'bar' || field.type === 'bar0') {
                     const opts = field.type === 'bar0' ? '0|1|2|3|4' : '1|2|3|4';
                     button = this.compactSettingButtonHtml({
                         label: value,
-                        command: '!combatAssistant set ' + Utils.attrSafe(field.key) + ' &#63;{' + Utils.attrSafe(field.label) + '|' + opts + '}',
-                        tooltip: field.tip || ('Edit ' + field.label)
+                        command: '!combatAssistant set ' + Utils.attrSafe(field.key) + ' &#63;{' + Utils.attrSafe(I18N.t(field.label)) + '|' + opts + '}',
+                        tooltip
                     });
                 } else if (field.type === 'percent' || field.type === 'number') {
                     button = this.compactSettingButtonHtml({
                         label: String(value || 0),
-                        command: '!combatAssistant set ' + Utils.attrSafe(field.key) + ' &#63;{' + Utils.attrSafe(field.label) + '|' + Utils.attrSafe(String(value || 0)) + '}',
-                        tooltip: field.tip || ('Edit ' + field.label)
+                        command: '!combatAssistant set ' + Utils.attrSafe(field.key) + ' &#63;{' + Utils.attrSafe(I18N.t(field.label)) + '|' + Utils.attrSafe(String(value || 0)) + '}',
+                        tooltip
                     });
                 } else {
                     button = this.compactSettingButtonHtml({
                         label: 'EDIT',
-                        command: '!combatAssistant set ' + Utils.attrSafe(field.key) + ' &#63;{' + Utils.attrSafe(field.label) + '|' + Utils.attrSafe(String(value || '').replace(/\|/g, ' ')) + '}',
-                        tooltip: field.tip || ('Edit ' + field.label)
+                        command: '!combatAssistant set ' + Utils.attrSafe(field.key) + ' &#63;{' + Utils.attrSafe(I18N.t(field.label)) + '|' + Utils.attrSafe(String(value || '').replace(/\|/g, ' ')) + '}',
+                        tooltip
                     });
                 }
                 if (pageKey === 'markers') {
-                    const labelCell = '<td title="' + Utils.attrSafe(field.tip || field.label) + '" style="' +
-                        'width:50%;height:' + CONFIG_ROW_HEIGHT + 'px;text-align:left;vertical-align:middle;padding:0 2px;box-sizing:border-box;color:rgb(225,225,225);font-size:12px;font-weight:700;white-space:nowrap;line-height:' + CONFIG_ROW_HEIGHT + 'px;cursor:help;">' +
-                        Utils.escapeHtml(field.label) + '</td>';
+                    const translatedLabel = I18N.t(field.label);
+                    const markerFontSize = this.fitTextFontSize(translatedLabel, SETTINGS_LABEL_FIT_WIDTH - SETTINGS_MARKER_VALUE_WIDTH, 12, 9);
+                    const markerStyle = 'font-size:' + markerFontSize + 'px;font-weight:700;white-space:normal;overflow-wrap:break-word;word-break:normal;line-height:13px;';
+                    const labelCell = '<td title="' + Utils.attrSafe(tooltip) + '" style="' +
+                        'height:' + CONFIG_ROW_HEIGHT + 'px;text-align:left;vertical-align:middle;padding:0 4px 0 2px;box-sizing:border-box;color:rgb(225,225,225);' + markerStyle + 'cursor:help;">' +
+                        Utils.escapeHtml(translatedLabel) + '</td>';
                     return sectionRow + '<tr style="height:' + CONFIG_ROW_HEIGHT + 'px;">' + labelCell +
-                        '<td style="width:40%;height:' + CONFIG_ROW_HEIGHT + 'px;text-align:right;vertical-align:middle;padding:0 2px;line-height:' + CONFIG_ROW_HEIGHT + 'px;box-sizing:border-box;color:rgb(235,215,140);font-size:11px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">' +
+                        '<td width="' + SETTINGS_MARKER_VALUE_WIDTH + '" style="width:' + SETTINGS_MARKER_VALUE_WIDTH + 'px;height:' + CONFIG_ROW_HEIGHT + 'px;text-align:right;vertical-align:middle;padding:0 2px;line-height:' + CONFIG_ROW_HEIGHT + 'px;box-sizing:border-box;color:rgb(235,215,140);font-size:11px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">' +
                             (field.type === 'marker' ? Utils.escapeHtml(String(value || '')) : '') + '</td>' +
-                        '<td style="width:10%;height:' + CONFIG_ROW_HEIGHT + 'px;text-align:center;vertical-align:middle;padding:0;line-height:0;box-sizing:border-box;">' + button + '</td>' +
+                        '<td width="' + SETTINGS_CONTROL_WIDTH + '" style="width:' + SETTINGS_CONTROL_WIDTH + 'px;height:' + CONFIG_ROW_HEIGHT + 'px;text-align:center;vertical-align:middle;padding:0;line-height:0;box-sizing:border-box;">' + button + '</td>' +
                     '</tr>';
                 }
                 return sectionRow + this.settingsValueRowHtml(field.label, button, field.tip || field.label);
             }).join('');
-            const settingsTableOpen = '<table style="width:100%;border-collapse:collapse;table-layout:fixed;"><colgroup><col style="width:90%;"><col style="width:10%;"></colgroup><tbody>';
-            const markerTableOpen = '<table style="width:100%;border-collapse:collapse;table-layout:fixed;"><colgroup><col style="width:50%;"><col style="width:40%;"><col style="width:10%;"></colgroup><tbody>';
+            const settingsTableOpen = '<table style="width:100%;border-collapse:collapse;table-layout:auto;"><tbody>';
+            const markerTableOpen = '<table style="width:100%;border-collapse:collapse;table-layout:auto;"><tbody>';
             const navigationTableOpen = '<table style="width:100%;border-collapse:collapse;table-layout:fixed;"><colgroup><col style="width:50%;"><col style="width:50%;"></colgroup><tbody>';
             const tableClose = '</tbody></table>';
+            const footerButtonWidth = 90;
             const defaultButton = this.compactSettingButtonHtml({
                 label: 'Default',
-                width: 66,
+                width: footerButtonWidth,
+                widthCss: '100%',
                 command: '!combatAssistant defaults &#63;{Reset all Combat Assistant settings to default?|No,no|Yes,yes}',
                 tooltip: 'Restore every persistent setting to its default value',
                 backgroundColor: 'rgba(70,70,70,0.95)'
+            });
+            const recommendedButton = this.compactSettingButtonHtml({
+                label: 'Recommended',
+                width: footerButtonWidth,
+                widthCss: '100%',
+                fontSize: 10,
+                command: '!combatAssistant recommended &#63;{' + Utils.attrSafe(I18N.t('Apply recommended ON/OFF settings only?')) +
+                    '|' + Utils.attrSafe(I18N.t('No')) + ',no|' + Utils.attrSafe(I18N.t('Yes')) + ',yes}',
+                tooltip: 'Apply recommended ON/OFF settings without changing images, markers, language, spell templates, or macros',
+                backgroundColor: 'rgba(95,160,203,0.95)',
+                borderColor: 'rgba(172,219,244,0.96)'
+            });
+            const languageTemplateButton = this.compactSettingButtonHtml({
+                label: 'Language Template',
+                width: footerButtonWidth,
+                widthCss: '100%',
+                fontSize: 9,
+                command: 'https://amadeusvf.s.gy/combat-assistant-language-template-latest',
+                backgroundColor: 'rgba(160,205,165,0.95)',
+                borderColor: 'rgba(208,237,204,0.95)',
+                textColor: 'rgb(25,65,30)'
             });
             if (pageKey === 'main') {
                 const mainFields = RuntimeConfig.fields('main');
@@ -6511,8 +7695,8 @@ const CombatAssistant = (() => {
                     const command = entry.command || ('!combatAssistant config ' + entry.page);
                     return '<td style="width:50%;height:' + CONFIG_ROW_HEIGHT + 'px;text-align:center;vertical-align:middle;padding:2px 1px;line-height:0;box-sizing:border-box;white-space:nowrap;">' +
                         this.compactSettingButtonHtml({
-                            label: entry.label, command, tooltip: 'Open ' + (pageTitles[entry.page] || 'Spell Templates'),
-                            widthCss: '76.8%', backgroundColor: entry.backgroundColor, borderColor: entry.borderColor
+                            label: entry.label, command, tooltip: I18N.t('Open {menu}', { menu: I18N.t(pageTitles[entry.page] || 'Spell Templates') }),
+                            width: 128, widthCss: '94%', backgroundColor: entry.backgroundColor, borderColor: entry.borderColor
                         }) + '</td>';
                 }).join('') + '</tr>').join('');
                 const body =
@@ -6520,7 +7704,10 @@ const CombatAssistant = (() => {
                     settingsTableOpen + this.settingsSectionRowHtml('Main', 2) + primaryRows + tableClose +
                     settingsTableOpen + extraRows + tableClose +
                     '<div style="height:1px;background:rgba(125,125,125,0.65);margin:7px 0 6px 0;"></div>' +
-                    '<div style="text-align:center;padding:0 0 2px 0;">' + defaultButton + '</div>';
+                    '<table style="width:100%;border-collapse:collapse;table-layout:fixed;"><tbody><tr>' +
+                        [defaultButton, recommendedButton, languageTemplateButton].map((button) =>
+                            '<td style="width:33.333%;padding:0 2px;text-align:center;vertical-align:middle;">' + button + '</td>'
+                        ).join('') + '</tr></tbody></table>';
                 const importControl = this.settingsTitleControlHtml('!combatAssistant config-import', 'Import', '&#128229;');
                 const exportControl = this.settingsTitleControlHtml('!combatAssistant config-export', 'Export', '&#128228;');
                 R20.whisper(target || 'GM', Html.card({
@@ -6530,7 +7717,7 @@ const CombatAssistant = (() => {
                 }));
                 return;
             }
-            const title = pageTitles[pageKey] || (META.NAME + ' Settings');
+            const title = I18N.t(pageTitles[pageKey] || (META.NAME + ' Settings'));
             const body = (pageKey === 'markers' ? markerTableOpen : settingsTableOpen) + renderRows(RuntimeConfig.fields(pageKey)) + tableClose;
             const backControl = this.settingsTitleControlHtml('!combatAssistant config', 'Back to Settings', '&#128281;');
             R20.whisper(target || 'GM', Html.card({
@@ -6548,8 +7735,10 @@ const CombatAssistant = (() => {
                 command, tooltip, backgroundColor: 'rgba(20,115,55,0.95)'
             });
             const panelHtml = (label, count, button, rows, emptyText, footerHtml) => {
+                const translatedLabel = I18N.t(label);
+                const labelFontSize = this.fitTextFontSize(translatedLabel, 130, 12, 9);
                 const header = '<table style="width:100%;border-collapse:collapse;table-layout:fixed;"><colgroup><col style="width:50%;"><col style="width:50%;"></colgroup><tbody><tr style="height:' + CONFIG_ROW_HEIGHT + 'px;">' +
-                    '<td style="height:' + CONFIG_ROW_HEIGHT + 'px;padding:0 3px;line-height:' + CONFIG_ROW_HEIGHT + 'px;box-sizing:border-box;text-align:left;vertical-align:middle;color:rgb(150,150,150);font-size:12px;white-space:nowrap;"><b>' + Utils.escapeHtml(label) + ':</b> <b style="color:rgb(235,215,140);">' + Utils.escapeHtml(String(count)) + '</b></td>' +
+                    '<td style="height:' + CONFIG_ROW_HEIGHT + 'px;padding:0 3px;line-height:' + CONFIG_ROW_HEIGHT + 'px;box-sizing:border-box;text-align:left;vertical-align:middle;color:rgb(150,150,150);font-size:' + labelFontSize + 'px;white-space:normal;overflow-wrap:anywhere;"><b>' + Utils.escapeHtml(translatedLabel) + ':</b> <b style="color:rgb(235,215,140);">' + Utils.escapeHtml(String(count)) + '</b></td>' +
                     '<td style="height:' + CONFIG_ROW_HEIGHT + 'px;padding:0 2px 0 0;text-align:right;vertical-align:middle;line-height:0;box-sizing:border-box;">' + button + '</td>' +
                 '</tr></tbody></table>';
                 const list = rows || '<div style="height:' + CONFIG_ROW_HEIGHT + 'px;line-height:' + CONFIG_ROW_HEIGHT + 'px;text-align:center;color:rgb(145,145,145);font-size:10px;">' + Utils.escapeHtml(emptyText) + '</div>';
@@ -6596,10 +7785,10 @@ const CombatAssistant = (() => {
                     tooltip: 'Remove this Spell Macro', backgroundColor: 'rgba(125,35,35,0.95)'
                 });
                 const applyFlag = entry.command
-                    ? '<span title="' + Utils.attrSafe('Apply: ' + entry.command + (entry.applyOnFailure ? ' | Runs even when the target is not affected.' : '')) + '" style="display:inline-block;color:rgb(90,220,120);font-size:11px;font-weight:900;line-height:' + CONFIG_ROW_HEIGHT + 'px;">A</span>'
+                    ? '<span title="' + Utils.attrSafe(I18N.t('Apply') + ': ' + entry.command + (entry.applyOnFailure ? (' | ' + I18N.t('Runs even when the target is not affected.')) : '')) + '" style="display:inline-block;color:rgb(90,220,120);font-size:11px;font-weight:900;line-height:' + CONFIG_ROW_HEIGHT + 'px;">A</span>'
                     : '';
                 const endFlag = entry.endCommand
-                    ? '<span title="' + Utils.attrSafe('End: ' + entry.endCommand) + '" style="display:inline-block;margin-left:' + (entry.command ? '2' : '0') + 'px;color:rgb(230,150,70);font-size:11px;font-weight:900;line-height:' + CONFIG_ROW_HEIGHT + 'px;">E</span>'
+                    ? '<span title="' + Utils.attrSafe(I18N.t('End') + ': ' + entry.endCommand) + '" style="display:inline-block;margin-left:' + (entry.command ? '2' : '0') + 'px;color:rgb(230,150,70);font-size:11px;font-weight:900;line-height:' + CONFIG_ROW_HEIGHT + 'px;">E</span>'
                     : '';
                 const controls = '<span style="display:inline-block;vertical-align:middle;">' + applyFlag + endFlag + '</span>' +
                     '<span style="display:inline-block;vertical-align:middle;margin-left:2px;">' + editButton + '</span>' +
@@ -6620,12 +7809,27 @@ const CombatAssistant = (() => {
         },
 
         showMenu(target) {
-            const damageTypes = '-,normal|Acid,acid|Bludgeoning,bludgeoning|Cold,cold|Fire,fire|Force,force|Lightning,lightning|Necrotic,necrotic|Piercing,piercing|Poison,poison|Psychic,psychic|Radiant,radiant|Slashing,slashing|Thunder,thunder';
+            // Balance the translated two-line caption within a fixed 40px button.
+            // The icon row retains its original position; tooltips show full text.
+            const compactTurnLabel = (key) => {
+                const words = I18N.t(key).trim().split(/\s+/).filter(Boolean);
+                if (words.length < 2) return words.join('');
+                let split = 1;
+                let smallest = Infinity;
+                for (let i = 1; i < words.length; i += 1) {
+                    const left = words.slice(0, i).join(' ');
+                    const right = words.slice(i).join(' ');
+                    const score = Math.max(left.length, right.length) + Math.abs(left.length - right.length) * 0.02;
+                    if (score < smallest) { smallest = score; split = i; }
+                }
+                return words.slice(0, split).join(' ') + '\n' + words.slice(split).join(' ');
+            };
+            const damageTypes = '-,normal|' + ['acid', 'bludgeoning', 'cold', 'fire', 'force', 'lightning', 'necrotic', 'piercing', 'poison', 'psychic', 'radiant', 'slashing', 'thunder'].map((type) => I18N.damageTypeLabel(type, true) + ',' + type).join('|');
             const abilities = 'No,no|Strength,strength|Dexterity,dexterity|Constitution,constitution|Intelligence,intelligence|Wisdom,wisdom|Charisma,charisma';
             const dmgButton = this.iconButtonHtml({
                 iconHtml: '&#128165;',
                 label: 'Dmg',
-                command: '!combatAssistant deal manual &#63;{Damage|0} &#63;{Type|' + damageTypes + '} &#63;{DC|0} &#63;{Save|' + abilities + '} &#63;{Half on Success|no|yes}' +
+                command: '!combatAssistant deal manual &#63;{Damage|0} &#63;{' + Utils.attrSafe(I18N.t('Damage Type')) + '|' + damageTypes + '} &#63;{DC|0} &#63;{Save|' + abilities + '} &#63;{Half on Success|no|yes}' +
                     (RuntimeConfig.get('SHEET_2014_CA_ROLLS') ? ' &#63;{2014 Roll Mode|Normal,normal|Advantage,advantage|Disadvantage,disadvantage}' : ''),
                 backgroundColor: 'rgba(135,35,35,0.95)',
                 tooltip: 'Deal damage to selected token(s)'
@@ -6666,8 +7870,8 @@ const CombatAssistant = (() => {
                 { iconHtml: '&#129706;', label: 'Sheet', command: '!ca sheet', labelSize: 10, backgroundColor: 'rgba(150,135,90,0.85)', tooltip: 'Open the Compact Sheet for the selected token' },
                 { iconHtml: '&#128209;', label: 'Resource', command: '!ca resources', labelSize: 8, backgroundColor: 'rgba(80,120,150,0.85)', tooltip: 'Open Resources for the selected token' },
                 { iconHtml: '&#129518;', label: 'Turn\nRound', command: '!ca turnRound', backgroundColor: 'rgba(145,85,85,0.85)', tooltip: 'Show the Round Counter using its public/GM delivery setting' },
-                { iconHtml: '&#128203;', label: 'Turn\nCard', command: '!ca turnCard', backgroundColor: 'rgba(80,135,95,0.85)', tooltip: 'Open the Turn Card for the selected token' },
-                { iconHtml: '&#10145;&#65039;', label: 'Turn\nNext', command: '!ca turnNext', tooltip: 'Advance to the next turn' }
+                { iconHtml: '&#128203;', label: compactTurnLabel('Turn Card'), labelIsLocalized: true, labelSize: 8, command: '!ca turnCard', backgroundColor: 'rgba(80,135,95,0.85)', tooltip: 'Open the Turn Card for the selected token' },
+                { iconHtml: '&#10145;&#65039;', label: compactTurnLabel('Next Turn'), labelIsLocalized: true, labelSize: 8, command: '!ca turnNext', tooltip: 'Advance to the next turn' }
             ].map((button) => this.iconButtonHtml(Object.assign({
                 iconSize: 15,
                 labelSize: 9,
@@ -6692,15 +7896,15 @@ const CombatAssistant = (() => {
 
         showHelp(target, isGM) {
             const separator = '<div style="height:1px;background:rgba(125,125,125,0.55);margin:7px 0 6px 0;"></div>';
-            const sectionTitle = (title) => '<b style="color:rgb(245,220,80);font-size:12px;">' + Utils.escapeHtml(title) + '</b><br>';
+            const sectionTitle = (title) => '<b style="color:rgb(245,220,80);font-size:12px;">' + Utils.escapeHtml(I18N.t(title)) + '</b><br>';
             const commandHtml = (command, tokenActionId) => {
                 const action = PLAYER_TOKEN_ACTIONS[String(tokenActionId || '').trim().toLowerCase()];
                 if (!action) return '<code style="font-size:12px;line-height:15px;">' + command + '</code>';
                 const installCommand = this.sanitizeCommand('!ca tokenaction ' + String(tokenActionId || '').trim().toLowerCase());
-                return '<a href="' + installCommand + '" title="Add ' + Utils.attrSafe(action.name) + ' as a Token Action to the selected character" style="display:inline-block;padding:0;margin:0;border:0;background:transparent;color:rgb(85,205,135);font-family:monospace;font-size:12px;line-height:15px;font-weight:700;text-decoration:none;vertical-align:baseline;">' + command + '</a>';
+                return '<a href="' + installCommand + '" title="' + Utils.attrSafe(I18N.t('Add {action} as a Token Action to the selected character', { action: action.name })) + '" style="display:inline-block;padding:0;margin:0;border:0;background:transparent;color:rgb(85,205,135);font-family:monospace;font-size:12px;line-height:15px;font-weight:700;text-decoration:none;vertical-align:baseline;">' + command + '</a>';
             };
-            const descriptionHtml = (text) => '<span style="font-size:10px;line-height:13px;color:rgb(190,190,190);">' + Utils.escapeHtml(text) + '</span>';
-            const helpLine = (command, description, tokenActionId) => commandHtml(command, tokenActionId) + (description ? (' <span style="font-size:10px;line-height:13px;color:rgb(190,190,190);">- ' + Utils.escapeHtml(description) + '</span>') : '') + '<br>';
+            const descriptionHtml = (text) => '<span style="font-size:10px;line-height:13px;color:rgb(190,190,190);">' + Utils.escapeHtml(I18N.t(text)) + '</span>';
+            const helpLine = (command, description, tokenActionId) => commandHtml(command, tokenActionId) + (description ? (' <span style="font-size:10px;line-height:13px;color:rgb(190,190,190);">- ' + Utils.escapeHtml(I18N.t(description)) + '</span>') : '') + '<br>';
             const tokenActionNote = '<div style="font-size:9px;line-height:12px;color:rgb(155,155,155);padding:2px 0 4px 0;">Player command links add that command as a Token Action to the character linked to exactly one selected token. Existing actions are not duplicated.</div>';
 
             if (!isGM) {
@@ -6831,25 +8035,33 @@ const CombatAssistant = (() => {
         buildDamageNarrative(result) {
             result = result || {};
             const hideNames = !RuntimeConfig.get('REVEAL_TOKEN_NAMES_IN_LOG');
-            const targetLabel = hideNames ? 'Target' : String(result.tokenName || 'Target');
+            const targetLabel = hideNames ? I18N.t('Target') : String(result.tokenName || I18N.t('Target'));
             const targetName = this.characterNameHtml(targetLabel);
             const sourceName = String(result.sourceName || '').trim();
             const sourceAction = String(result.sourceAction || '').trim();
             const isManualSource = /^manual$/i.test(sourceName) || /^manual(?:\s+damage)?$/i.test(sourceAction);
             const revealSource = RuntimeConfig.get('REVEAL_DAMAGE_SOURCE') && !isManualSource;
-            const sourceLabel = hideNames ? 'Attacker' : sourceName;
+            const sourceLabel = hideNames ? I18N.t('Attacker') : sourceName;
             const sourceNameHtml = sourceName ? this.characterNameHtml(sourceLabel) : '';
             const sourceActionHtml = sourceAction
                 ? Html.span(Utils.escapeHtml(sourceAction), 'color:rgb(245,220,80);font-weight:900;')
                 : '';
-            const sourcePhrase = revealSource && sourceActionHtml
-                ? (' from ' + (sourceNameHtml ? (sourceNameHtml + '&#39;s ') : '') + sourceActionHtml)
-                : (revealSource && sourceNameHtml ? (' from ' + sourceNameHtml) : '');
+            const sourcePhrase = I18N.language() !== 'en' && revealSource
+                ? (sourceActionHtml
+                    ? I18N.t(' from {source} using {action}', { source: sourceNameHtml || I18N.t('Attacker'), action: sourceActionHtml })
+                    : (sourceNameHtml ? I18N.t(' from {source}', { source: sourceNameHtml }) : ''))
+                : (revealSource && sourceActionHtml
+                    ? (' from ' + (sourceNameHtml ? (sourceNameHtml + '&#39;s ') : '') + sourceActionHtml)
+                    : (revealSource && sourceNameHtml ? (' from ' + sourceNameHtml) : ''));
 
             if (result.missed) {
                 return revealSource && sourceActionHtml
-                    ? (sourceNameHtml ? (sourceNameHtml + ' ') : '') + 'attacks ' + targetName + ' with ' + sourceActionHtml + ' but misses.'
-                    : (revealSource && sourceNameHtml ? (sourceNameHtml + ' attacks ' + targetName + ' but misses.') : 'The attack against ' + targetName + ' misses.');
+                    ? I18N.t('{source} attacks {target} with {action}, but misses.', {
+                        source: sourceNameHtml || I18N.t('Attacker'), target: targetName, action: sourceActionHtml
+                    })
+                    : (revealSource && sourceNameHtml
+                        ? I18N.t('{source} attacks {target}, but misses.', { source: sourceNameHtml, target: targetName })
+                        : I18N.t('The attack against {target} misses.', { target: targetName }));
             }
             if (result.save && result.save.used) {
                 const roll = result.save;
@@ -6861,27 +8073,43 @@ const CombatAssistant = (() => {
                 const joinedSourcePhrase = hasDamageAdjustment && sourcePhrase ? (',' + sourcePhrase) : sourcePhrase;
                 const conditionNames = !roll.success && result.saveConsequences && Array.isArray(result.saveConsequences.conditions)
                     ? result.saveConsequences.conditions.filter((name) => CONDITION_NAMES.indexOf(name) >= 0) : [];
+                const conditionHtml = (names) => names.map((name) => '<span style="color:rgb(235,215,140);font-weight:700;">' +
+                    Utils.escapeHtml(I18N.t(name)) + '</span>').join(', ');
                 const conditionLine = result.effectOnly && conditionNames.length && !result.effectTrackerRepeat
-                    ? '<div style="text-align:center;padding-top:3px;color:rgb(170,170,170);font-size:12px;">Gained the ' +
-                        conditionNames.map((name) => '<span style="color:rgb(235,215,140);font-weight:700;">' + Utils.escapeHtml(name) + '</span>').join(', ') +
-                        (conditionNames.length === 1 ? ' condition.' : ' conditions.') + '</div>'
+                    ? '<div style="text-align:center;padding-top:3px;color:rgb(170,170,170);font-size:12px;">' +
+                        I18N.t(conditionNames.length === 1 ? '{target} gains the {condition} condition.' : '{target} gains the following conditions: {conditions}.', {
+                            target: targetName, condition: conditionHtml(conditionNames), conditions: conditionHtml(conditionNames)
+                        }) + '</div>'
                     : '';
                 const trackedConditionNames = Array.isArray(result.effectTrackerConditions)
                     ? result.effectTrackerConditions.filter((name) => CONDITION_NAMES.indexOf(name) >= 0)
                     : [];
                 const repeatLine = result.effectTrackerRepeat && trackedConditionNames.length
                     ? '<div style="text-align:center;padding-top:3px;color:rgb(170,170,170);font-size:12px;">' +
-                        trackedConditionNames.map((name) => '<span style="color:rgb(235,215,140);font-weight:700;">' + Utils.escapeHtml(name) + '</span>').join(', ') +
-                        (result.effectTrackerEnded ? (trackedConditionNames.length === 1 ? ' ended.' : ' ended.') : (trackedConditionNames.length === 1 ? ' remains.' : ' remain.')) +
-                        '</div>'
+                        I18N.t(result.effectTrackerEnded
+                            ? (trackedConditionNames.length === 1 ? '{condition} has ended.' : '{conditions} have ended.')
+                            : (trackedConditionNames.length === 1 ? '{condition} remains active.' : '{conditions} remain active.'), {
+                            condition: conditionHtml(trackedConditionNames), conditions: conditionHtml(trackedConditionNames)
+                        }) + '</div>'
                     : '';
                 const effectLine = !result.effectOnly && conditionNames.length
                     ? '<div style="text-align:center;padding-top:2px;">' + this.conditionBadgesHtml(conditionNames) + '</div>' : '';
                 const abilityFull = Utils.normalizeAbilityName(roll.ability) || ability;
                 const abilityLabel = abilityFull.charAt(0).toUpperCase() + abilityFull.slice(1);
-                const phrase = result.effectOnly
-                    ? targetName + (roll.success ? ' succeeds' : ' fails') + ' on the ' + Utils.escapeHtml(abilityLabel) + ' saving throw.'
-                    : targetName + outcome + ' on the ' + ability + ' Save and takes ' + (damageParts || 'no damage') + joinedSourcePhrase + (result.fainted ? ' and falls unconscious' : '') + '.';
+                const phrase = I18N.language() === 'en'
+                    ? (result.effectOnly
+                        ? targetName + (roll.success ? ' succeeds' : ' fails') + ' on the ' + Utils.escapeHtml(abilityLabel) + ' saving throw.'
+                        : targetName + outcome + ' on the ' + ability + ' Save and takes ' + (damageParts || 'no damage') + joinedSourcePhrase + (result.fainted ? ' and falls unconscious' : '') + '.')
+                    : I18N.t(result.effectOnly
+                        ? '{target} {outcome} the {ability} saving throw.'
+                        : '{target} {outcome} the {ability} saving throw and takes {damage}{source}{fainted}.', {
+                            target: targetName,
+                            outcome: I18N.t(roll.success ? 'succeeds' : 'fails'),
+                            ability: I18N.t(abilityLabel),
+                            damage: damageParts || I18N.t('no damage'),
+                            source: joinedSourcePhrase,
+                            fainted: result.fainted ? I18N.t(' and falls unconscious') : ''
+                        });
                 const tempLine = result.tempAbsorbed > 0 && !(RuntimeConfig.get('HIDE_DAMAGE_DETAILS') && !RuntimeConfig.get('HIDE_COMBAT_LOG'))
                     ? '<div style="padding-top:2px;color:rgb(52,203,116);font-size:10px;line-height:12px;text-align:center;">(Some damage was absorbed by Temporary HP)</div>'
                     : '';
@@ -6891,7 +8119,7 @@ const CombatAssistant = (() => {
                 const damageParts = this.buildDamagePartsHtml(result);
                 const hasDamageAdjustment = damageParts && /\b(?:blocked by|reduced by|increased by)\b/i.test(damageParts);
                 const joinedSourcePhrase = hasDamageAdjustment && sourcePhrase ? (',' + sourcePhrase) : sourcePhrase;
-                return targetName + ' takes ' + (damageParts || 'no damage') + joinedSourcePhrase + '.';
+                return I18N.t('{target} takes {damage}{source}.', { target: targetName, damage: damageParts || I18N.t('no damage'), source: joinedSourcePhrase });
             }
 
             const damageParts = this.buildDamagePartsHtml(result);
@@ -6900,7 +8128,10 @@ const CombatAssistant = (() => {
             const tempLine = result.tempAbsorbed > 0 && !(RuntimeConfig.get('HIDE_DAMAGE_DETAILS') && !RuntimeConfig.get('HIDE_COMBAT_LOG'))
                 ? '<div style="padding-top:2px;color:rgb(52,203,116);font-size:10px;line-height:12px;text-align:center;">(Some damage was absorbed by Temporary HP)</div>'
                 : '';
-            return targetName + ' takes ' + (damageParts || '0 damage') + joinedSourcePhrase + (result.fainted ? ' and falls unconscious' : '') + '.' + tempLine;
+            return I18N.t('{target} takes {damage}{source}{fainted}.', {
+                target: targetName, damage: damageParts || I18N.t('0 damage'), source: joinedSourcePhrase,
+                fainted: result.fainted ? I18N.t(' and falls unconscious') : ''
+            }) + tempLine;
         },
 
         chatTokenImageHtml(imgsrc, size, fallbackImgsrc, radius) {
@@ -6979,9 +8210,9 @@ const CombatAssistant = (() => {
             const total = Math.max(0, Utils.toInt(result.total, 0));
             const diceValues = Array.isArray(result.diceValues) ? result.diceValues.map((value) => Utils.toInt(value, 0)).filter((value) => value > 0) : [];
             const modifier = Utils.toInt(result.modifier, 0);
-            const tooltip = 'Roll:(' + (diceValues.length ? diceValues.join('+') : String(total - modifier)) + ')' +
-                '<br>Modifier:' + Utils.formatSigned(modifier) +
-                '<br>Total:' + String(total);
+            const tooltip = I18N.t('Roll') + ':(' + (diceValues.length ? diceValues.join('+') : String(total - modifier)) + ')' +
+                '<br>' + I18N.t('Modifier') + ':' + Utils.formatSigned(modifier) +
+                '<br>' + I18N.t('Total') + ':' + String(total);
             const body =
                 '<table style="width:100%;border-collapse:collapse;table-layout:fixed;"><tbody><tr>' +
                     '<td style="text-align:left;vertical-align:middle;font-size:14px;line-height:16px;">' +
@@ -7003,8 +8234,10 @@ const CombatAssistant = (() => {
                 if (!condition) return '';
                 const targetHtml = this.characterNameHtml(targetLabel);
                 const conditionHtml = Html.span(Utils.escapeHtml(condition), 'color:rgb(245,245,245);font-weight:700;');
-                return '<div style="margin-top:2px;color:rgb(235,220,170);font-size:12px;line-height:15px;">' +
-                    targetHtml + "'s " + conditionHtml + ' condition ended.</div>';
+                const description = I18N.language() === 'en'
+                    ? targetHtml + "'s " + conditionHtml + ' condition ended.'
+                    : I18N.t('The {condition} condition affecting {target} has ended.', { condition: conditionHtml, target: targetHtml });
+                return '<div style="margin-top:2px;color:rgb(235,220,170);font-size:12px;line-height:15px;">' + description + '</div>';
             }).join('');
         },
 
@@ -7013,7 +8246,7 @@ const CombatAssistant = (() => {
             const eventType = String(type || 'ended').trim().toLowerCase();
             const revealNames = RuntimeConfig.get('REVEAL_TOKEN_NAMES_IN_LOG');
             const revealSource = RuntimeConfig.get('REVEAL_DAMAGE_SOURCE');
-            const casterLabel = revealNames ? String(result.casterName || 'Caster') : 'Caster';
+            const casterLabel = revealNames ? String(result.casterName || I18N.t('Caster')) : I18N.t('Caster');
             const spellName = String(result.spellName || '').trim();
             const casterHtml = this.characterNameHtml(casterLabel);
             const visibleSpell = spellName && revealSource
@@ -7038,7 +8271,7 @@ const CombatAssistant = (() => {
                         rolls: roll.rolls,
                         mode: roll.mode || 'normal',
                         success: false,
-                        tooltip: 'CON Save<br>Total: ' + String(total) + '<br>DC: ' + String(dc)
+                        tooltip: 'CON ' + I18N.t('Save') + '<br>' + I18N.t('Total') + ': ' + String(total) + '<br>DC: ' + String(dc)
                     }, '', { size: 40, fontSize: '20px' });
                 body = '<table style="width:100%;border-collapse:collapse;table-layout:fixed;"><tbody><tr>' +
                     '<td style="text-align:left;vertical-align:middle;font-size:14px;line-height:16px;">' +
@@ -7047,10 +8280,18 @@ const CombatAssistant = (() => {
                     '<td style="width:54px;text-align:right;vertical-align:middle;">' + rollBox + '</td>' +
                 '</tr></tbody></table>';
             } else if (eventType === 'expired') {
-                body = casterHtml + "'s concentration on " + (visibleSpell || 'the spell') + ' ends naturally as the spell reaches the end of its duration.';
+                body = I18N.language() === 'en'
+                    ? casterHtml + "'s concentration on " + (visibleSpell || 'the spell') + ' ends naturally as the spell reaches the end of its duration.'
+                    : I18N.t('Concentration of {caster}{spell} expired.', {
+                        caster: casterHtml, spell: visibleSpell ? I18N.t(' on {spell}', { spell: visibleSpell }) : ''
+                    });
             } else {
-                body = '<div style="font-size:14px;line-height:16px;">' + casterHtml + "'s concentration" +
-                    (visibleSpell ? (' on ' + visibleSpell) : '') + ' ended.</div>';
+                const text = I18N.language() === 'en'
+                    ? casterHtml + "'s concentration" + (visibleSpell ? (' on ' + visibleSpell) : '') + ' ended.'
+                    : I18N.t('Concentration of {caster}{spell} ended.', {
+                        caster: casterHtml, spell: visibleSpell ? I18N.t(' on {spell}', { spell: visibleSpell }) : ''
+                    });
+                body = '<div style="font-size:14px;line-height:16px;">' + text + '</div>';
             }
             body += this.concentrationConditionEndedRowsHtml(result.endedConditions);
             this.sendCombatLogMessage(title, body, style, {
@@ -7078,23 +8319,34 @@ const CombatAssistant = (() => {
 
             const parts = visibleParts.map((part) => {
                 const type = CombatService.normalizeDamageType(part.damageType);
-                const typeLabel = type && type !== 'normal' ? type : '';
+                const typeLabel = type && type !== 'normal' ? I18N.damageTypeLabel(type) : '';
                 const color = this.getDamageTypeColor(type);
                 const typed = typeLabel ? Html.span(Utils.escapeHtml(typeLabel), 'color:' + color + ';font-weight:900;') : '';
                 const traitLabel = typed || 'damage';
+                const localized = I18N.language() !== 'en';
+                const typedSuffix = typed ? ' (' + typed + ')' : '';
+                const formatAmount = (amount) => localized
+                    ? I18N.t('{amount} points of damage{type}', { amount, type: typedSuffix })
+                    : amount + (typed ? (' ' + typed) : '') + ' damage';
                 if (part.immune && Utils.toInt(part.finalDamage, 0) <= 0 && hadPendingDamage(part)) {
+                    if (localized) {
+                        if (hideResistanceDetails) return I18N.t('No damage{type}.', { type: typedSuffix });
+                        return allVisibleDamageBlockedByImmunity && visibleParts.length === 1
+                            ? I18N.t('No damage: immunity ({type})', { type: traitLabel })
+                            : I18N.t('No damage{type}, blocked by immunity.', { type: typedSuffix });
+                    }
                     if (hideResistanceDetails) return typed ? ('no ' + typed + ' damage') : 'no damage';
                     return allVisibleDamageBlockedByImmunity && visibleParts.length === 1
                         ? 'no damage, blocked by ' + traitLabel + ' immunity'
                         : 'no ' + (typed ? (typed + ' ') : '') + 'damage, blocked by ' + traitLabel + ' immunity';
                 }
                 const amount = Html.span(Utils.escapeHtml(String(part.finalDamage)), 'color:' + color + ';font-weight:900;');
-                if (hideResistanceDetails) return amount + (typed ? (' ' + typed) : '') + ' damage';
+                if (hideResistanceDetails) return formatAmount(amount);
                 const adjustments = [];
-                if (part.immune) adjustments.push('blocked by ' + traitLabel + ' immunity');
-                if (part.resistant) adjustments.push('reduced by ' + traitLabel + ' resistance');
-                if (part.vulnerable) adjustments.push('increased by ' + traitLabel + ' vulnerability');
-                return amount + (typed ? (' ' + typed) : '') + ' damage' + (adjustments.length ? (', ' + adjustments.join(' and ')) : '');
+                if (part.immune) adjustments.push(localized ? I18N.t('blocked by immunity ({type})', { type: traitLabel }) : 'blocked by ' + traitLabel + ' immunity');
+                if (part.resistant) adjustments.push(localized ? I18N.t('reduced by resistance ({type})', { type: traitLabel }) : 'reduced by ' + traitLabel + ' resistance');
+                if (part.vulnerable) adjustments.push(localized ? I18N.t('increased by vulnerability ({type})', { type: traitLabel }) : 'increased by ' + traitLabel + ' vulnerability');
+                return formatAmount(amount) + (adjustments.length ? (', ' + adjustments.join(' and ')) : '');
             });
             return parts.join(', ');
         },
@@ -7102,20 +8354,25 @@ const CombatAssistant = (() => {
         buildHealNarrative(result, showAmount) {
             result = result || {};
             const hideNames = !RuntimeConfig.get('REVEAL_TOKEN_NAMES_IN_LOG');
-            const targetName = this.characterNameHtml(hideNames ? 'Target' : String(result.tokenName || 'Target'));
+            const targetName = this.characterNameHtml(hideNames ? I18N.t('Target') : String(result.tokenName || I18N.t('Target')));
             const displayedAmount = result.effectiveAmount !== undefined && result.effectiveAmount !== null ? result.effectiveAmount : (result.amount || 0);
-            const amount = showAmount ? (' ' + Html.span(Utils.escapeHtml(String(displayedAmount)), 'color:' + (result.mode === 'temp' ? 'rgb(255,105,180)' : CONFIG.DEFAULT_TEXT_HEAL_COLOR) + ';font-weight:900;')) : '';
+            const amount = showAmount ? Html.span(Utils.escapeHtml(String(displayedAmount)), 'color:' + (result.mode === 'temp' ? 'rgb(255,105,180)' : CONFIG.DEFAULT_TEXT_HEAL_COLOR) + ';font-weight:900;') : '';
             const sourceNameRaw = String(result.sourceName || '').trim();
             const sourceActionRaw = String(result.sourceAction || '').trim();
             const isManualSource = /^manual$/i.test(sourceNameRaw) || /^manual(?:\s+healing)?$/i.test(sourceActionRaw);
             const revealSource = RuntimeConfig.get('REVEAL_DAMAGE_SOURCE') && !isManualSource;
-            const sourceName = this.characterNameHtml(revealSource && sourceNameRaw && !hideNames ? sourceNameRaw : 'Healer');
-            const sourceAction = revealSource && sourceActionRaw
-                ? Html.span(Utils.escapeHtml(sourceActionRaw), 'color:rgb(245,220,80);font-weight:900;')
-                : '';
-            const usingText = sourceAction ? (' using ' + sourceAction) : '';
-            if (result.mode === 'temp') return sourceName + ' grants' + amount + ' temporary HP to ' + targetName + usingText + '.';
-            return sourceName + ' heals' + (showAmount ? (amount + ' Hit Points to ') : ' ') + targetName + usingText + '.';
+            const sourceName = this.characterNameHtml(revealSource && sourceNameRaw && !hideNames ? sourceNameRaw : I18N.t('Healer'));
+            const action = revealSource && sourceActionRaw
+                ? Html.span(Utils.escapeHtml(sourceActionRaw), 'color:rgb(245,220,80);font-weight:900;') : '';
+            const using = action ? I18N.t(' using {action}', { action }) : '';
+            if (result.mode === 'temp') {
+                return showAmount
+                    ? I18N.t('{source} grants {amount} temporary HP to {target}{using}.', { source: sourceName, amount, target: targetName, using })
+                    : I18N.t('{source} grants temporary HP to {target}{using}.', { source: sourceName, target: targetName, using });
+            }
+            return showAmount
+                ? I18N.t('{source} heals {amount} Hit Points to {target}{using}.', { source: sourceName, amount, target: targetName, using })
+                : I18N.t('{source} heals {target}{using}.', { source: sourceName, target: targetName, using });
         },
 
         conditionBadgesHtml(conditions) {
@@ -7149,14 +8406,14 @@ const CombatAssistant = (() => {
                 : (request.effectOnly ? '' : (
                     '<br><span style="color:rgb(190,190,190);font-size:12px;">Damage: </span>' +
                     '<strong style="color:' + damageColor + ';">' + damageIcon + ' ' + Utils.escapeHtml(String(request.damage || 0)) +
-                    (damageType === 'normal' ? '' : (' ' + Utils.escapeHtml(damageType))) + '</strong>'
+                    (damageType === 'normal' ? '' : (' ' + Utils.escapeHtml(I18N.damageTypeLabel(damageType)))) + '</strong>'
                 )));
             const button = this.iconButtonHtml({
                 iconHtml: '&#127922;',
                 label: ability,
                 command: String(request.command || '#'),
                 backgroundColor: 'rgba(45,45,45,0.95)',
-                tooltip: 'Roll ' + ability + ' saving throw'
+                tooltip: I18N.t('Roll the {ability} saving throw', { ability })
             });
             const failCommand = String(request.failCommand || '').trim();
             const failButton = failCommand ? this.compactSettingButtonHtml({
@@ -7266,7 +8523,7 @@ const CombatAssistant = (() => {
                         total,
                         modifier,
                         dimmed: states.length > 1 && !state.isChosen,
-                        tooltip: label + (initiative ? '' : ' Save') + '<br>Roll: (' + String(state.natural) + ')<br>Modifier: ' + modifierText + '<br>Total: ' + (initiative ? RollParser.formatInitiativeValue(total) : String(total)) + (mode !== 'normal' ? ('<br>Mode: ' + mode) : '')
+                        tooltip: label + (initiative ? '' : (' ' + I18N.t('Save'))) + '<br>' + I18N.t('Roll') + ': (' + String(state.natural) + ')<br>' + I18N.t('Modifier') + ': ' + modifierText + '<br>' + I18N.t('Total') + ': ' + (initiative ? RollParser.formatInitiativeValue(total) : String(total)) + (mode !== 'normal' ? ('<br>' + I18N.t('Mode') + ': ' + I18N.t(mode)) : '')
                     };
                     if (initiative) badge.displayTotal = RollParser.formatInitiativeValue(total);
                     return this.rollBadgeHtml(badge, state.marker, { size: rollSize, fontSize: '18px', paddingRight: state.paddingRight });
@@ -8766,7 +10023,7 @@ const CombatAssistant = (() => {
                         this.removePendingNativeInitiativeById(next.requestId);
                         R20.whisper('GM', Html.card({
                             title: 'Initiative Roll Timeout',
-                            body: '<div style="font-size:12px;line-height:15px;">No initiative result was captured for ' + Render.characterNameHtml(next.tokenName || 'Token') + '. The remaining rolls will continue.</div>'
+                            body: '<div style="font-size:12px;line-height:15px;">' + I18N.t('No initiative result was captured for {character}. The remaining rolls will continue.', { character: Render.characterNameHtml(next.tokenName || 'Token') }) + '</div>'
                         }));
                         this.advanceNativeInitiativeAutoQueue(batchId);
                     }, 5000);
@@ -8862,6 +10119,8 @@ const CombatAssistant = (() => {
 
             const firstPageId = String((orderedResults.find((result) => String(result.pageId || '').trim()) || {}).pageId || R20.getTokenPageId(orderedResults[0].tokenId) || '').trim();
             Campaign().set('turnorder', JSON.stringify(turnOrder));
+            // Lock newly added off-turn players now, even if Roll20's event is delayed.
+            TurnTracker.syncMovementLocks();
             if (firstPageId) Campaign().set('initiativepage', firstPageId);
             this.debugTurnOrderWrite('Native Initiative Update', before, turnOrder);
             return true;
@@ -9582,19 +10841,41 @@ const CombatAssistant = (() => {
         },
 
         sendPlayerPrompt(result) {
-            const isHealing = !!result.isHealing;
+            // The player's unavailable action has no resolution controls. GM still
+            // receives the independent review card from sendAttackDamagePrompts().
+            const sourceToken = R20.resolveRollSourceToken(result || {}, result && result.playerId || '');
+            const sourceCharacter = sourceToken ? R20.getCharacterFromToken(sourceToken) : null;
+            const isHealing = !!(result && result.isHealing);
+            // An explicitly rejected spend always blocks player controls. When
+            // this particular cast was authorized before its LAST slot was spent,
+            // keep its already-rolled target action available to the player.
+            const playerResourceBlocked = !!(result && result._blockPlayerResourceControls) ||
+                !(result && result._resourceSpendAuthorized) &&
+                ResourceService.playerPromptUnavailable(result, sourceToken, sourceCharacter);
+            // Damage has its own GM resolution card. Healing needs an extra GM
+            // single-use target card, even when player controls are blocked.
+            if (playerResourceBlocked && !isHealing) return false;
             const genericOnlyDamageCard = !!(!isHealing && result.onlyDamageCard);
             const playerActionEnabled = isHealing
                 ? RuntimeConfig.get('PLAYER_HEALING_BUTTON')
                 : (!genericOnlyDamageCard && RuntimeConfig.get('PLAYER_ATTACK_BUTTON'));
             const concentrationTracking = !!(result && result.isConcentration && RuntimeConfig.get('CONCENTRATION_TRACKING'));
-            if (!playerActionEnabled && !concentrationTracking) return false;
-            const token = R20.resolveRollSourceToken(result, result.playerId || '');
-            const character = token ? R20.getCharacterFromToken(token) : null;
-            const playerRecipients = R20.getTokenControllers(null, character, { expandAll: true }).names;
+            // PLAYER_HEALING_BUTTON only controls delivery to players. The GM
+            // keeps a separate single-use Heal/Temp HP control for a valid caster
+            // token even if no player controls it or the player option is OFF.
+            const gmHealingControl = isHealing && !!sourceToken;
+            if (!playerActionEnabled && !concentrationTracking && !gmHealingControl) return false;
+            const token = sourceToken;
+            const character = sourceCharacter;
+            const playerRecipients = R20.getTokenControllers(token, character, { expandAll: true, excludeGm: true }).names;
             const hasPlayerRecipients = playerRecipients.length > 0;
-            if (!hasPlayerRecipients && !concentrationTracking) return false;
-            const recipients = isHealing ? playerRecipients : Utils.uniqueNames(['GM'].concat(playerRecipients));
+            if (!hasPlayerRecipients && !concentrationTracking && !gmHealingControl) return false;
+            // Healing sends its single-use control to the GM in addition to the
+            // general GM Healing card. A rejected cast never whispers the target
+            // selection control to the player's account.
+            const recipients = isHealing
+                ? Utils.uniqueNames(['GM'].concat(playerActionEnabled && !playerResourceBlocked ? playerRecipients : []))
+                : Utils.uniqueNames(['GM'].concat(playerRecipients));
             const casterTokenId = R20.getTokenId(token);
             const casterCharacterId = character ? String(character.id || token.get('represents') || '').trim() : '';
             const casterPageId = R20.getTokenPageId(token);
@@ -9660,6 +10941,12 @@ const CombatAssistant = (() => {
                 casterPageId,
                 nativeActionRowId: String(result.nativeActionRowId || '').trim(),
             };
+            // Preserve a one-use, already-paid cast through target selection,
+            // even when its last resource reached zero after the authorized roll.
+            if (result && result._resourceSpendAuthorized) payloadObject.resourceSpendAuthorized = true;
+            // A denied cast remains GM-only even when another resource is added
+            // after the card was generated; the action ID is not a permission.
+            if (playerResourceBlocked) payloadObject.playerResourceDenied = true;
             const activeConcentration = !isHealing && result.autoHitSpell && payloadObject.isConcentration && casterTokenId
                 ? State.getConcentrationByTokenId(casterTokenId)
                 : null;
@@ -9728,7 +11015,7 @@ const CombatAssistant = (() => {
             // Concentration tracking is independent of whether player ATK/Heal buttons
             // can be delivered. If the action button is disabled or the caster has no
             // player recipients, retain the request solely as concentration state.
-            if (!playerActionEnabled || !hasPlayerRecipients) return concentrationStarted;
+            if ((!playerActionEnabled || !hasPlayerRecipients) && !gmHealingControl) return concentrationStarted;
             const command = useAreaMarker
                 ? ('!combatAssistant usearea ' + actionId)
                 : ('!combatAssistant use ' + actionId + ' &#64;{target|token_id}');
@@ -9760,7 +11047,10 @@ const CombatAssistant = (() => {
                 body,
                 buildOptions: { titleHtml: Render.attackPromptTitleHtml(titleResult) }
             })));
-            return true;
+            // The return value is consumed by deliverCombatHealingResult to
+            // decide whether the player still needs the read-only roll result.
+            // An extra GM-only button must NOT suppress that player message.
+            return !isHealing || (playerActionEnabled && !playerResourceBlocked && hasPlayerRecipients);
         },
 
         shouldOfferAttackAndSavePrompts(result) {
@@ -9847,6 +11137,7 @@ const CombatAssistant = (() => {
             if (await this.handlePendingNativeInitiativeCapture(parsed, msg)) return;
             if (await this.handlePendingNativeSaveCapture(msg)) return;
             if (!parsed) return;
+            parsed._blockPlayerResourceControls = ResourceService.playerRollUnavailable(parsed, msg);
             Logger.debug('[Roll capture]', JSON.stringify({ name: parsed.attackName, char: parsed.characterName, attack: parsed.isAttack, isDamage: parsed.isDamage, healing: parsed.isHealing, action: parsed.isActionUsage, total: parsed.attackTotal, damage: parsed.damageTotal }));
             // An active concentration's subsequent action is not a new cast.
             // Handle it before either spell or action-resource consumption.
@@ -9854,7 +11145,7 @@ const CombatAssistant = (() => {
                 if (parsed.isDamage) await this.tryApplyLinkedConcentrationDamage(parsed);
                 return;
             }
-            await ResourceService.consumeMatchingActionResource(parsed, msg);
+            if (!parsed._blockPlayerResourceControls) await ResourceService.consumeMatchingActionResource(parsed, msg);
 
             // Utility/native Spell Details cards confirm a cast even when the spell
             // has no attack, save, damage, or healing payload (for example Shield or
@@ -9946,6 +11237,7 @@ const CombatAssistant = (() => {
                     ? this.parseAreaInfo({}, { rangeText: autoHitSpell.rangeText || '' }, autoHitSpell.description || '')
                     : { isArea: false };
                 const result = Object.assign({}, parsed, {
+                    _blockPlayerResourceControls: prior ? !!prior._blockPlayerResourceControls : !!parsed._blockPlayerResourceControls,
                     tokenName: (prior && prior.tokenName) || parsed.tokenName,
                     tokenImgsrc: (prior && prior.tokenImgsrc) || parsed.tokenImgsrc,
                     attackName: (prior && prior.attackName) || (autoHitSpell && autoHitSpell.name) || parsed.attackName,
@@ -9996,7 +11288,59 @@ const CombatAssistant = (() => {
         },
 
         isMovementEnabled() {
-            return this.isEnabled() && RuntimeConfig.get('TURN_MOVEMENT_TRACKER');
+            // Movement-spent blocking needs the same distance and Dash accounting,
+            // even when the optional movement counter is not displayed.
+            return this.isEnabled() && (RuntimeConfig.get('TURN_MOVEMENT_TRACKER') || RuntimeConfig.get('MOVEMENT_CONSUMED_BLOCKER'));
+        },
+
+        releaseManagedMovementLocks() {
+            const locks = this.getState().managedMovementLocks;
+            Object.keys(locks).forEach((tokenId) => {
+                const token = R20.getTokenById(tokenId);
+                if (token && token.get('lockMovement') === true) token.set('lockMovement', false);
+                delete locks[tokenId];
+            });
+        },
+
+        syncMovementLocks() {
+            const locks = this.getState().managedMovementLocks;
+            const turnBlocking = this.isEnabled() && RuntimeConfig.get('TURN_MOVEMENT_BLOCKER');
+            const spentBlocking = this.isEnabled() && RuntimeConfig.get('MOVEMENT_CONSUMED_BLOCKER');
+            const entries = (turnBlocking || spentBlocking) ? this.tokenEntries(this.getCurrentTurnOrder()) : [];
+            const currentId = String(entries[0] && entries[0].id || '');
+            const movement = this.getMovementState();
+            const spent = !!(spentBlocking && currentId && String(movement.tokenId || '') === currentId &&
+                this.movementRemaining(movement) <= 0.001);
+            const desired = Object.create(null);
+            entries.forEach((entry) => {
+                const tokenId = String(entry && entry.id || '').trim();
+                const token = tokenId ? R20.getTokenById(tokenId) : null;
+                const character = token ? R20.getCharacterFromToken(token) : null;
+                // A represented character overrides token-controlledby in Roll20.
+                if (!token || !R20.getTokenControllers(character ? null : token, character,
+                    { expandAll: true, excludeGm: true }).ids.length) return;
+                if ((turnBlocking && tokenId !== currentId) || (spent && tokenId === currentId)) {
+                    desired[tokenId] = token;
+                }
+            });
+            Object.keys(locks).forEach((tokenId) => {
+                if (desired[tokenId]) return;
+                const token = R20.getTokenById(tokenId);
+                if (token && token.get('lockMovement') === true) token.set('lockMovement', false);
+                delete locks[tokenId];
+            });
+            Object.keys(desired).forEach((tokenId) => {
+                const token = desired[tokenId];
+                if (locks[tokenId]) {
+                    // Reassert the setting if the token was manually unlocked while
+                    // CA still owns its lock; never claim a pre-existing GM lock.
+                    if (token.get('lockMovement') !== true) token.set('lockMovement', true);
+                } else if (token.get('lockMovement') !== true) {
+                    token.set('lockMovement', true);
+                    locks[tokenId] = true;
+                }
+            });
+            return Object.keys(desired).length;
         },
 
         getMovementState() {
@@ -10078,6 +11422,7 @@ const CombatAssistant = (() => {
             movement.baseSpeed = resolvedBase;
             movement.dashBonus = resolvedBase * Math.max(0, Utils.toInt(movement.dashCount, 0));
             if (movement.spent <= this.movementAvailable(movement) + 0.001) movement.warned = false;
+            if (RuntimeConfig.get('MOVEMENT_CONSUMED_BLOCKER')) this.syncMovementLocks();
             return movement;
         },
 
@@ -10191,12 +11536,13 @@ const CombatAssistant = (() => {
             if (!(distance > 0)) return false;
             movement.spent = Math.max(0, Utils.toNumber(movement.spent, 0)) + distance;
             const exceeded = movement.spent > this.movementAvailable(movement) + 0.001;
-            if (exceeded && !movement.warned) {
+            if (exceeded && !movement.warned && RuntimeConfig.get('TURN_MOVEMENT_TRACKER')) {
                 movement.warned = true;
                 this.sendMovementExceededWarning(token);
                 const current = this.tokenEntries(this.getCurrentTurnOrder())[0] || null;
                 if (current) this.sendTurnCard(current);
             }
+            if (RuntimeConfig.get('MOVEMENT_CONSUMED_BLOCKER')) this.syncMovementLocks();
             return true;
         },
 
@@ -10211,6 +11557,7 @@ const CombatAssistant = (() => {
             movement.dashCount = Math.max(0, Utils.toInt(movement.dashCount, 0)) + 1;
             movement.dashBonus = Math.max(0, Utils.toNumber(movement.baseSpeed, 0)) * movement.dashCount;
             if (movement.spent <= this.movementAvailable(movement) + 0.001) movement.warned = false;
+            if (RuntimeConfig.get('MOVEMENT_CONSUMED_BLOCKER')) this.syncMovementLocks();
             return {
                 ok: true,
                 enabled: true,
@@ -10353,10 +11700,12 @@ const CombatAssistant = (() => {
             else this.clearMovementState();
             NPCResourceService.ensureForTurnEntry(this.tokenEntries(entries)[0] || null);
             this.updateCurrentTurnPresentation(this.tokenEntries(entries)[0] || null, { sendCard: false, focus: false });
+            this.syncMovementLocks();
             return true;
         },
 
         resetState() {
+            this.releaseManagedMovementLocks();
             const state = this.getState();
             state.round = 0;
             state.pivotTokenId = '';
@@ -10582,7 +11931,7 @@ const CombatAssistant = (() => {
                     backgroundColor: 'rgba(120,40,40,0.95)'
                 })
                 : '';
-            const roundBox = Render.rollBadgeHtml({ total: round, natural: 0, tooltip: 'Round ' + String(round) }, '', {
+            const roundBox = Render.rollBadgeHtml({ total: round, natural: 0, tooltip: I18N.t('Round {round}', { round }) }, '', {
                 size: 40,
                 fontSize: '20px',
                 bgColor: 'rgba(55,55,55,0.95)'
@@ -10662,7 +12011,7 @@ const CombatAssistant = (() => {
                     height: 38,
                     iconSize: 16,
                     labelSize: 9,
-                    tooltip: "Reroll this concentration spell's damage and open its controls" + (concentrationTurnsLeft !== null ? (' - ' + String(concentrationTurnsLeft) + ' turn(s) left') : ''),
+                    tooltip: I18N.t("Reroll this concentration spell's damage and open its controls") + (concentrationTurnsLeft !== null ? (' - ' + I18N.t('{count} turn(s) left', { count: String(concentrationTurnsLeft) })) : ''),
                     backgroundColor: 'rgba(80,80,120,0.95)',
                     margin: '0'
                 })
@@ -10767,7 +12116,7 @@ const CombatAssistant = (() => {
             const label = String(info && info.name || 'Token').trim();
             const image = this.tokenImageHtml(info, size, false, 'Focus ' + label);
             if (!tokenId) return image;
-            return '<a href="!combatAssistant turnfocus ' + Utils.attrSafe(tokenId) + '" title="' + Utils.attrSafe('Focus ' + label) + '" style="display:inline-block;width:' + size + 'px;height:' + size + 'px;padding:0;margin:0;border:0;background:transparent;text-decoration:none;line-height:' + size + 'px;vertical-align:middle;">' + image + '</a>';
+            return '<a href="!combatAssistant turnfocus ' + Utils.attrSafe(tokenId) + '" title="' + Utils.attrSafe(I18N.t('Focus {name}', { name: label })) + '" style="display:inline-block;width:' + size + 'px;height:' + size + 'px;padding:0;margin:0;border:0;background:transparent;text-decoration:none;line-height:' + size + 'px;vertical-align:middle;">' + image + '</a>';
         },
 
         setPivotFromOrder(order) {
@@ -11219,6 +12568,7 @@ const CombatAssistant = (() => {
             if (!token) return false;
             const tokenId = R20.getTokenId(token);
             const state = this.getState();
+            if (tokenId && state.managedMovementLocks[tokenId]) delete state.managedMovementLocks[tokenId];
             if (tokenId && tokenId === String(state.turnMarkerId || '').trim()) {
                 this.stopTurnMarkerRotation();
                 state.turnMarkerId = '';
@@ -11391,6 +12741,7 @@ const CombatAssistant = (() => {
                 state.currentTokenId = safeTokenId;
                 state.roundProgressTokenIds = [safeTokenId];
                 if (this.isMovementEnabled()) this.resetMovementForEntry(current);
+                this.syncMovementLocks();
                 NPCResourceService.ensureForTurnEntry(current);
                 EffectTracker.processTurnPhase(safeTokenId, 'start');
                 this.processConcentrationTurnStart(current);
@@ -11428,6 +12779,7 @@ const CombatAssistant = (() => {
                 this.processConcentrationTurnStart(next);
             }
             Campaign().set('turnorder', JSON.stringify(rotated));
+            this.syncMovementLocks();
 
             if (startsNewRound) {
                 this.sendRoundCounter({ order: rotated, includeStop: true, round: state.round });
@@ -14471,11 +15823,17 @@ const CombatAssistant = (() => {
             }
 
             const revealNames = RuntimeConfig.get('REVEAL_TOKEN_NAMES_IN_LOG');
-            const displayName = revealNames ? info.characterName : 'Character';
+            const displayName = revealNames ? info.characterName : I18N.t('Character');
             const nameHtml = Render.characterNameHtml(displayName);
+            const narrativeKeys = {
+                dash: '{character} moves swiftly with {action}.',
+                disengage: '{character} withdraws carefully using {action}.',
+                dodge: '{character} adopts a defensive stance using {action}.'
+            };
+            const actionHtml = '<strong>' + Utils.escapeHtml(I18N.t(labels[normalized])) + '</strong>';
             Render.sendCombatLogMessage(
                 'Turn Action',
-                nameHtml + ' takes the <strong>' + labels[normalized] + '</strong> action.',
+                I18N.t(narrativeKeys[normalized], { character: nameHtml, action: actionHtml }),
                 'normal',
                 { titleHtml: Render.tokenStatusTitleHtml('Turn Action', info.token, info.character) }
             );
@@ -17028,6 +18386,11 @@ const CombatAssistant = (() => {
             }
             const characterName = String(character.get('name') || 'Character').trim() || 'Character';
             const actionName = String(row.name || 'Special Action').trim() || 'Special Action';
+            if (!ctx.isGM && RuntimeConfig.get('BLOCK_PLAYER_NO_RESOURCES') &&
+                ResourceService.playerActionUnavailable(actionName, ResourceService.getEntriesForToken(token, characterId))) {
+                Render.sendWhisperMessage(recipient, 'Resources', I18N.t('Insufficient resources for this action.'), 'warning');
+                return false;
+            }
             const description = String(row.description || '').trim();
             const baseResult = {
                 attackName: actionName,
@@ -17112,6 +18475,15 @@ const CombatAssistant = (() => {
                 Render.sendWhisperMessage(recipient, 'Healing', 'That special action is not a CA-managed healing-only action.', 'warning');
                 return false;
             }
+            const boundToken = tokenId ? R20.getTokenById(tokenId) : null;
+            const token = boundToken && String(boundToken.get('represents') || '').trim() === characterId
+                ? boundToken
+                : R20.findTokenByCharacterIdOnPlayerPage(characterId, ctx && ctx.playerId || '');
+            if (!ctx.isGM && RuntimeConfig.get('BLOCK_PLAYER_NO_RESOURCES') &&
+                ResourceService.playerActionUnavailable(action.name, ResourceService.getEntriesForToken(token, characterId))) {
+                Render.sendWhisperMessage(recipient, 'Resources', I18N.t('Insufficient resources for this action.'), 'warning');
+                return false;
+            }
 
             const rolledEffects = [];
             for (let i = 0; i < healingEffects.length; i += 1) {
@@ -17129,10 +18501,6 @@ const CombatAssistant = (() => {
                 });
             }
             const healTotal = rolledEffects.reduce((sum, entry) => sum + Math.max(0, Utils.toInt(entry.total, 0)), 0);
-            const boundToken = tokenId ? R20.getTokenById(tokenId) : null;
-            const token = boundToken && String(boundToken.get('represents') || '').trim() === characterId
-                ? boundToken
-                : R20.findTokenByCharacterIdOnPlayerPage(characterId, ctx && ctx.playerId || '');
             const characterName = String(character.get('name') || 'Character').trim() || 'Character';
             const healResult = {
                 isHealing: true,
@@ -17194,8 +18562,11 @@ const CombatAssistant = (() => {
                 ? this.getCombatEffects(info.characterId, root, snapshot && snapshot.attrs)
                 : [];
             // One canonical reader feeds either the primary attack list or the consolidated special-action view.
+            const restrictPlayerActions = !!(RuntimeConfig.get('BLOCK_PLAYER_NO_RESOURCES') && !(ctx && ctx.isGM));
+            const resourceEntries = restrictPlayerActions ? ResourceService.getEntriesForToken(info.token, info.characterId) : [];
             R20.whisper(recipient, Render.buildCombatCard(info.characterName, combatData, {
                 view: viewKey,
+                restrictPlayerActions, resourceEntries,
                 tokenId: info.tokenId,
                 characterId: info.characterId,
                 playerId: ctx && ctx.playerId || '',
@@ -17374,6 +18745,11 @@ const CombatAssistant = (() => {
             const spellCount = spellList && Array.isArray(spellList.spells) ? spellList.spells.length : 0;
             const renderSpellList = isBeacon ? spellList : this.prepareLegacySpellListForSharedRenderer(spellList);
             renderSpellList.consumeSpellSlots = !!RuntimeConfig.get('CONSUME_SPELL_SLOTS');
+            renderSpellList.restrictPlayerActions = !!(RuntimeConfig.get('BLOCK_PLAYER_NO_RESOURCES') && !(ctx && ctx.isGM));
+            if (renderSpellList.restrictPlayerActions) {
+                renderSpellList.resourceEntries = ResourceService.getEntriesForToken(info.token, info.characterId);
+                renderSpellList.resourceIntegrants = isBeacon ? Utils.getBeaconIntegrants(root) : null;
+            }
             renderSpellList.characterId = info.characterId;
             renderSpellList.tokenId = info.tokenId;
             renderSpellList.playerId = ctx && ctx.playerId || '';
@@ -17812,6 +19188,7 @@ const CombatAssistant = (() => {
         },
 
         async consumeTrackedSpellSlot(parsed, msg) {
+            if (parsed && parsed._blockPlayerResourceControls) return false;
             if (!RuntimeConfig.get('CONSUME_SPELL_SLOTS') || !parsed) return false;
             const tracked = this.findTrackedSpellCast(parsed, msg);
             if (!tracked) return false;
@@ -17912,7 +19289,10 @@ const CombatAssistant = (() => {
             const followup = !(exactCast && exactCast.autoHit) && parsed.isDamage &&
                 (parsed.nativeActionPhase === 'damage' || !parsed.hasAttackRoll) &&
                 previous && (previous.phase === 'attack' || previous.phase === 'cast') && now - previous.at <= 8000;
-            if (followup) return false;
+            if (followup) {
+                if (previous.authorized) parsed._resourceSpendAuthorized = true;
+                return false;
+            }
             const who = pending.who || String(msg && msg.who || 'GM').replace(/\s+\(GM\)$/i, '').trim() || 'GM';
             if (exactCast && exactCast.autoHit && level <= 0) {
                 Render.sendWhisperMessage(who, 'Spell Resources', 'The native damage roll did not reveal a verifiable cast level for ' +
@@ -18014,6 +19394,8 @@ const CombatAssistant = (() => {
             if (!exactCast?.itemCast && beaconPc && changedSlots.length) {
                 if (oneNativeSlot === refKey) {
                     this.sendResourceUpdate(token, R20.getCharacterFromToken(token), entry.label, 'use', 1, entry.current, entry.max, syntheticCtx);
+                    parsed._resourceSpendAuthorized = true;
+                    pending.recentCasts[castKey].authorized = true;
                     updateSlotBaseline();
                     return true;
                 }
@@ -18026,6 +19408,15 @@ const CombatAssistant = (() => {
             const spent = await this.adjust(syntheticCtx, [
                 'use', R20.getTokenId(token), Utils.encodeJsonPayload(entry.ref), String(amount)
             ]);
+            if (spent) {
+                parsed._resourceSpendAuthorized = true;
+                pending.recentCasts[castKey].authorized = true;
+            } else if (RuntimeConfig.get('BLOCK_PLAYER_NO_RESOURCES')) {
+                // The debit failed, so this cast was not authorized even if a
+                // stale balance showed one use before the async sheet write.
+                // No player target-selection control may follow a failed spend.
+                parsed._blockPlayerResourceControls = true;
+            }
             updateSlotBaseline();
             if (spent && exactCast && exactCast.itemCast && amount >= priorCount &&
                 /\blast charge\b/i.test(String(Utils.getBeaconIntegrants(R20.getCharacterStoreRoot(characterId) || {})[exactCast.itemId]?.description || ''))) {
@@ -18045,6 +19436,139 @@ const CombatAssistant = (() => {
             Object.keys(RECENT_ACTION_RESOURCE_USES).forEach((key) => {
                 if (stamp - Utils.toInt(RECENT_ACTION_RESOURCE_USES[key], 0) > 2500) delete RECENT_ACTION_RESOURCE_USES[key];
             });
+        },
+
+        playerActionUnavailable(actionName, entries) {
+            const normalized = Utils.normalizeName(actionName || '');
+            if (!normalized || !Array.isArray(entries)) return false;
+            const matches = entries.filter((entry) => {
+                const kind = String(entry && entry.ref && entry.ref.kind || '').trim();
+                return ['legacy-spell', 'beacon-spell', 'beacon-pact'].indexOf(kind) < 0 &&
+                    Utils.normalizeName(entry && entry.label || '') === normalized;
+            });
+            // Ambiguous or untracked resources cannot safely be used to block.
+            return matches.length === 1 && this.toResourceInt(matches[0].current, 0) < 1;
+        },
+
+        playerSpellUnavailable(spell, data) {
+            const source = spell && typeof spell === 'object' ? spell : {};
+            const context = data && typeof data === 'object' ? data : {};
+            const level = Math.max(0, Math.min(9, this.toResourceInt(source.level, 0)));
+            const entries = Array.isArray(context.resourceEntries) ? context.resourceEntries : [];
+            const sourceType = String(source.source || '').trim().toLowerCase();
+            const integrants = context.resourceIntegrants && typeof context.resourceIntegrants === 'object'
+                ? context.resourceIntegrants : null;
+            if (integrants) {
+                const byId = Object.create(null);
+                entries.forEach((entry) => {
+                    if (entry && entry.ref && entry.ref.kind === 'beacon-resource' && entry.ref.id) byId[String(entry.ref.id)] = entry;
+                });
+                const linkedRef = this.beaconSpellResourceRef(source, integrants, byId);
+                const linked = linkedRef && entries.find((entry) => entry && entry.ref &&
+                    entry.ref.kind === 'beacon-resource' && String(entry.ref.id) === String(linkedRef.id));
+                if (sourceType === 'item') {
+                    const item = integrants[String(source.sourceID || '')] || null;
+                    const options = linked && item ? this.itemSpellChargeOptions(item.description, source.name, level, linked.max) : [];
+                    const choice = options.find((candidate) => candidate.level === level);
+                    // Only gate item casts with an explicitly identified charge cost.
+                    return !!(choice && linked && this.toResourceInt(linked.current, 0) < choice.cost);
+                }
+                if (linked && this.toResourceInt(linked.current, 0) > 0) return false;
+                // A spell linked exclusively to a class feature may have no
+                // conventional spell slots; a depleted linked resource still matters.
+                if (linked && !entries.some((entry) => entry && entry.ref &&
+                    ['legacy-spell', 'beacon-spell', 'beacon-pact'].indexOf(entry.ref.kind) >= 0)) return true;
+            } else if (sourceType === 'item') {
+                return false; // Never guess the price of a magic-item spell.
+            }
+            if (['species', 'race', 'feat', 'background'].indexOf(sourceType) >= 0) {
+                return false; // Racial or feat spells may have independent free casts.
+            }
+            // Cantrips and rituals can be cast without a slot, except for the
+            // explicit item/feature costs evaluated above.
+            if (level === 0 || source.ritual) return false;
+            const slots = entries.filter((entry) => {
+                const ref = entry && entry.ref || {};
+                return ['legacy-spell', 'beacon-spell', 'beacon-pact'].indexOf(ref.kind) >= 0;
+            });
+            if (slots.length) {
+                return !slots.some((entry) => this.toResourceInt(entry.ref.level, 0) >= level &&
+                    this.toResourceInt(entry.current, 0) > 0);
+            }
+            // Pact profiles can expose their counter without a separate resource row.
+            if (context.isPact && this.toResourceInt(context.pactSlotMax, 0) > 0) {
+                return this.toResourceInt(context.pactSlotLevel, 0) < level ||
+                    this.toResourceInt(context.pactSlotsCurrent, 0) < 1;
+            }
+            return false; // An unknown sheet cost is not proof of exhaustion.
+        },
+
+        playerPromptUnavailable(result, token, character) {
+            if (!RuntimeConfig.get('BLOCK_PLAYER_NO_RESOURCES') || !result) return false;
+            const sourceToken = token || R20.resolveRollSourceToken(result, result.playerId || '');
+            const sourceCharacter = character || (sourceToken ? R20.getCharacterFromToken(sourceToken) : null);
+            if (!sourceToken || !R20.getTokenControllers(sourceCharacter ? null : sourceToken, sourceCharacter,
+                { expandAll: true, excludeGm: true }).ids.length) return false;
+            const characterId = String(sourceToken.get('represents') || result.characterId || result.rolledByCharacterId || '').trim();
+            if (!characterId) return false;
+            const entries = this.getEntriesForToken(sourceToken, characterId);
+            const name = String(result.attackName || result.sourceAction || '').trim();
+            if (this.playerActionUnavailable(name, entries)) return true;
+            if (!result.isSpellAction && !result.hasSpellContext) return false;
+            const tracked = this.findTrackedSpellCast(result, { playerid: result.playerId || '' });
+            const pending = tracked && tracked.pending;
+            const nativeId = String(result.nativeActionRowId || '').trim();
+            const exact = pending && nativeId && pending.spellCastsByActionId[nativeId];
+            const normalized = Utils.normalizeName(name);
+            const level = this.toResourceInt(result.castLevelExplicit || result.spellLevel ||
+                (exact && exact.level) || (pending && pending.spellLevelsByName && pending.spellLevelsByName[normalized]), 0);
+            const source = String(result.source || (exact && exact.itemCast ? 'item' : '')).trim();
+            const sourceID = String(result.sourceID || (exact && exact.itemId) || '').trim();
+            // 2024 Item spells can use independent charges rather than slots.
+            // Resolve the same linked charge costs as the Spells menu when the
+            // native cast identifies a unique Spell/Item record.
+            const store = sourceID || (exact && exact.spellId) ? R20.getCharacterStoreRoot(characterId) : null;
+            const integrants = store ? Utils.getBeaconIntegrants(store) : null;
+            const spell = { id: String(result.spellId || (exact && exact.spellId) || '').trim(),
+                name, level, source, sourceID, ritual: !!result.ritual };
+            if (source.toLowerCase() !== 'item' && !level) return false; // Cantrips have no ordinary slot cost.
+            return this.playerSpellUnavailable(spell, { resourceEntries: entries, resourceIntegrants: integrants });
+        },
+
+        playerRollUnavailable(parsed, msg) {
+            if (!RuntimeConfig.get('BLOCK_PLAYER_NO_RESOURCES') || !parsed) return false;
+            const playerId = String(msg && msg.playerid || parsed.playerId || '').trim();
+            if (!playerId || playerId === 'API' || (msg && msg.type === 'api') ||
+                (typeof playerIsGM === 'function' && playerIsGM(playerId))) return false;
+            if (!parsed.isSpellAction && !parsed.hasSpellContext && !parsed.hasExplicitAttackName) return false;
+            const characterId = String(parsed.characterId || parsed.rolledByCharacterId || '').trim();
+            const token = R20.resolveRollSourceToken(parsed, playerId) ||
+                (characterId ? R20.findTokenByCharacterIdOnPlayerPage(characterId, playerId) : null);
+            const casterId = String(token && token.get('represents') || characterId).trim();
+            if (!casterId) return false;
+            const entries = this.getEntriesForToken(token, casterId);
+            if (parsed.isSpellAction || parsed.hasSpellContext) {
+                const tracked = this.findTrackedSpellCast(parsed, msg);
+                const pending = tracked && tracked.pending;
+                const id = String(parsed.nativeActionRowId || '').trim();
+                const exact = pending && id && pending.spellCastsByActionId[id];
+                const normalized = Utils.normalizeName(parsed.attackName || '');
+                const knownLevel = this.toResourceInt(parsed.castLevelExplicit || parsed.spellLevel ||
+                    (exact && exact.level) || pending && pending.spellLevelsByName && pending.spellLevelsByName[normalized], 0);
+                if (!knownLevel || (exact && exact.itemCast)) return false;
+                const relevant = entries.filter((entry) => entry && entry.ref &&
+                    ['legacy-spell', 'beacon-spell', 'beacon-pact'].indexOf(entry.ref.kind) >= 0 &&
+                    this.toResourceInt(entry.ref.level, 0) >= knownLevel);
+                if (!relevant.length) return false;
+                if (relevant.some((entry) => this.toResourceInt(entry.current, 0) > 0)) return false;
+                // Native 2024 rolls may have spent the final slot BEFORE reaching CA.
+                // Preserve the roll resolution whenever the armed baseline had a slot.
+                const baseline = pending && pending.spellSlotBalances || null;
+                if (!baseline) return false;
+                return !relevant.some((entry) => this.toResourceInt(
+                    baseline[entry.ref.kind + ':' + String(entry.ref.level)], 0) > 0);
+            }
+            return !!(parsed.hasExplicitAttackName && this.playerActionUnavailable(parsed.attackName, entries));
         },
 
         findMatchingActionResource(token, characterId, actionName) {
@@ -18789,12 +20313,14 @@ const CombatAssistant = (() => {
         sendResourceChangeFailure(ctx, character, label, change) {
             const safeLabel = String(label || 'Resource').trim() || 'Resource';
             const message = String(change && change.message || 'Resource update failed.').trim();
-            Render.sendWhisperMessage(ctx && ctx.who || 'GM', 'Resources', Utils.escapeHtml(safeLabel + ': ' + message), 'warning');
+            Render.sendWhisperMessage(ctx && ctx.who || 'GM', 'Resources', Utils.escapeHtml(safeLabel + ': ' + I18N.t(message)), 'warning');
             if (ctx && ctx.notifySpellSlotFailureToGM && !ctx.isGM && message === 'No uses remain.') {
                 const characterName = character && Utils.isFunction(character.get) ? String(character.get('name') || 'Character').trim() : 'Character';
+                const coloredResource = '<span style="color:rgb(235,215,140);font-weight:900;">' + Utils.escapeHtml(safeLabel) + '</span>';
                 const body = '<table style="width:100%;border-collapse:collapse;table-layout:fixed;"><tbody>' +
                     '<tr><td style="text-align:center;vertical-align:middle;padding:0 0 3px 0;font-size:12px;line-height:15px;">' + Render.characterNameHtml(characterName) + '</td></tr>' +
-                    '<tr><td style="text-align:center;vertical-align:middle;padding:0;color:rgb(225,225,225);font-size:12px;line-height:15px;">does not have enough <span style="color:rgb(235,215,140);font-weight:900;">' + Utils.escapeHtml(safeLabel) + '</span> to perform this action.</td></tr>' +
+                    '<tr><td style="text-align:center;vertical-align:middle;padding:0;color:rgb(225,225,225);font-size:12px;line-height:15px;">' +
+                        I18N.t('Not enough {resource} to perform this action.', { resource: coloredResource }) + '</td></tr>' +
                 '</tbody></table>';
                 R20.whisper('GM', Html.card({ title: 'Resources', body, buildOptions: { bodyAlign: 'center' } }));
             }
@@ -18812,13 +20338,15 @@ const CombatAssistant = (() => {
                 '<td style="text-align:center;vertical-align:middle;font-weight:900;color:rgb(235,235,235);padding-right:34px;">Resource Update</td>' +
                 '</tr></tbody></table>';
             const currentColor = current > 0 ? 'rgb(52,203,116)' : 'rgb(220,45,45)';
-            const verb = direction === 'use' ? 'Used' : 'Recovered';
+            const quantityHtml = '<span style="color:rgb(52,203,116);font-weight:900;">' + Utils.escapeHtml(String(quantity)) + 'x</span>';
+            const resourceHtml = '<span style="color:rgb(245,220,80);font-weight:900;">' + Utils.escapeHtml(label) + '</span>';
+            const currentHtml = '<span style="color:' + currentColor + ';font-weight:900;">' + Utils.escapeHtml(String(current)) + '</span>';
+            const maxHtml = '<span style="color:rgb(52,203,116);font-weight:900;">' + Utils.escapeHtml(String(max)) + '</span>';
+            const lineKey = direction === 'use' ? 'Uses {quantity} of {resource}.' : 'Recovers {quantity} of {resource}.';
             const body = '<div style="text-align:center;font-size:12px;line-height:17px;color:rgb(225,225,225);">' +
                 '<div>' + Render.characterNameHtml(characterName) + '</div>' +
-                '<div>' + Utils.escapeHtml(verb) + ' <span style="color:rgb(52,203,116);font-weight:900;">' + Utils.escapeHtml(String(quantity)) + 'x</span> ' +
-                    '<span style="color:rgb(245,220,80);font-weight:900;">' + Utils.escapeHtml(label) + '</span></div>' +
-                '<div>Has <span style="color:' + currentColor + ';font-weight:900;">' + Utils.escapeHtml(String(current)) + '</span> <span style="color:rgb(225,225,225);font-weight:900;">/</span> ' +
-                    '<span style="color:rgb(52,203,116);font-weight:900;">' + Utils.escapeHtml(String(max)) + '</span> remaining.</div>' +
+                '<div>' + I18N.t(lineKey, { quantity: quantityHtml, resource: resourceHtml }) + '</div>' +
+                '<div>' + I18N.t('{current} of {max} remaining.', { current: currentHtml, max: maxHtml }) + '</div>' +
                 '</div>';
             return Html.card({ title: 'Resource Update', body, buildOptions: { titleHtml } });
         },
@@ -19420,7 +20948,7 @@ const CombatAssistant = (() => {
                         label: plan.options.label || 'Roll',
                         iconHtml: plan.options.iconHtml || '&#127922;',
                         command: playerCommand,
-                        tooltip: plan.options.tooltip || ('Roll ' + plan.safeMacroName)
+                        tooltip: plan.options.tooltip || I18N.t('Roll {name}', { name: plan.safeMacroName })
                     })
                 });
                 plan.individual += 1;
@@ -19602,9 +21130,12 @@ const CombatAssistant = (() => {
                 if (result.value) TurnTracker.initializeFromCurrentTurnOrder();
                 else TurnTracker.resetState();
             }
-            if (result.key === 'TURN_MOVEMENT_TRACKER') {
-                if (result.value) TurnTracker.resetMovementForCurrentTurn({ resolveAsync: true });
+            if (result.key === 'TURN_MOVEMENT_TRACKER' || result.key === 'MOVEMENT_CONSUMED_BLOCKER') {
+                if (TurnTracker.isMovementEnabled()) TurnTracker.resetMovementForCurrentTurn({ resolveAsync: true });
                 else TurnTracker.clearMovementState();
+            }
+            if (result.key === 'TURN_MOVEMENT_BLOCKER' || result.key === 'MOVEMENT_CONSUMED_BLOCKER' || result.key === 'TURN_MOVEMENT_TRACKER') {
+                TurnTracker.syncMovementLocks();
             }
             if (/^TURN_MARKER|^PUBLIC_TURN_MARKER|^TURN_AUTO_FOCUS/.test(result.key || '')) {
                 TurnTracker.refreshCurrentTurnPresentation({ sendCard: false, focus: false });
@@ -19693,6 +21224,10 @@ const CombatAssistant = (() => {
                     else TurnTracker.resetState();
                     TurnTracker.refreshCurrentTurnPresentation({ sendCard: false, focus: false });
                     CombatService.repairConcentrationTooltips();
+                    if (RuntimeConfig.get('LANGUAGE') === 'custom') {
+                        const customResult = await I18N.loadCustomHandout();
+                        if (!customResult.ok) Render.sendWhisperMessage(ctx.who, 'Language', Utils.escapeHtml(customResult.message), 'warning');
+                    }
                     const duplicateNote = result.duplicateCount ? ' The first matching CA Settings handout was used.' : '';
                     Render.sendWhisperMessage(ctx.who, 'Settings Import', 'Imported <strong>' + result.settingsCount + '</strong> settings, <strong>' + result.templateCount + '</strong> Spell Templates, and <strong>' + result.macroCount + '</strong> Spell Macros.' + duplicateNote, 'normal');
                 }
@@ -19715,6 +21250,29 @@ const CombatAssistant = (() => {
                 this.handleSpellConfigMutation(ctx, action, args);
                 return;
             }
+            if (action === 'recommended') {
+                if (String(args[1] || '').trim().toLowerCase() !== 'yes') {
+                    Render.sendWhisperMessage(ctx.who, 'Settings', 'Recommended settings cancelled. No changes were made.', 'normal');
+                    Render.showConfigMenu(ctx.who);
+                    return;
+                }
+                const outcome = RuntimeConfig.applyRecommendedBooleanSettings();
+                // Reconcile services affected by several switches at once.
+                // Persistent spell templates, macros, image URLs, markers, and
+                // language are deliberately untouched.
+                TurnTracker.clearMovementState();
+                if (RuntimeConfig.get('TURN_TRACKER')) TurnTracker.initializeFromCurrentTurnOrder();
+                else TurnTracker.resetState();
+                TurnTracker.syncMovementLocks();
+                TurnTracker.refreshCurrentTurnPresentation({ sendCard: false, focus: false });
+                CombatService.repairConcentrationTooltips();
+                Render.sendWhisperMessage(ctx.who, 'Settings', I18N.t(
+                    'Recommended settings were applied to {count} ON/OFF options. Images, markers, language, templates, and macros were left unchanged.',
+                    { count: outcome.applied }
+                ), 'normal');
+                Render.showConfigMenu(ctx.who);
+                return;
+            }
             if (action === 'default' || action === 'defaults') {
                 const confirmed = String(args[1] || '').trim().toLowerCase() === 'yes';
                 if (!confirmed) {
@@ -19732,7 +21290,17 @@ const CombatAssistant = (() => {
                 return;
             }
             if (action === 'set') {
-                this.applyConfigMutationResult(ctx, RuntimeConfig.set(args[1] || '', args.slice(2).join(' ')));
+                const fieldKey = RuntimeConfig.normalizeKey(args[1] || '');
+                if (fieldKey === 'LANGUAGE' && String(args[2] || '').trim().toLowerCase() === 'custom') {
+                    const load = await I18N.loadCustomHandout();
+                    if (!load.ok) {
+                        Render.sendWhisperMessage(ctx.who, 'Language', Utils.escapeHtml(load.message), 'failure');
+                        Render.showConfigMenu(ctx.who);
+                        return;
+                    }
+                }
+                const updated = RuntimeConfig.set(args[1] || '', args.slice(2).join(' '));
+                this.applyConfigMutationResult(ctx, updated);
                 return;
             }
             if (action === 'toggle') {
@@ -20015,7 +21583,7 @@ const CombatAssistant = (() => {
                         label: 'Use',
                         command: followup.command,
                         backgroundColor: 'rgba(55,105,170,0.95)',
-                        tooltip: 'Use ' + String(followup.actionName || 'the persistent concentration action')
+                        tooltip: I18N.t('Use {action}', { action: String(followup.actionName || I18N.t('the persistent concentration action')) })
                     }));
                 }
                 buttons.push(Render.concentrationEndButtonHtml(entry.actionId, entry.casterTokenId, 'End concentration'));
@@ -20103,7 +21671,7 @@ const CombatAssistant = (() => {
                     label: token ? CombatService.getTokenName(token) : (entry.spellName || 'Con'),
                     command: '!combatAssistant concopen ' + Utils.attrSafe(entry.casterTokenId),
                     backgroundColor: 'rgba(80,80,120,0.95)',
-                    tooltip: 'Open this concentration controls'
+                    tooltip: 'Open these concentration controls'
                 });
             });
             R20.whisper(ctx.who, Html.card({
@@ -20148,7 +21716,7 @@ const CombatAssistant = (() => {
                     label: token ? CombatService.getTokenName(token) : (entry.spellName || 'Con'),
                     command: '!combatAssistant conc ' + Utils.attrSafe(entry.casterTokenId),
                     backgroundColor: 'rgba(80,80,120,0.95)',
-                    tooltip: 'Show this concentration controls'
+                    tooltip: 'Show these concentration controls'
                 });
             });
             R20.whisper(ctx.who, Html.card({
@@ -20363,6 +21931,14 @@ const CombatAssistant = (() => {
                 return;
             }
             const sourceToken = CombatService.resolvePlayerActionSourceOnTargetPage(request, target);
+            if (!ctx.isGM && ((request.payload && request.payload.playerResourceDenied) ||
+                (!(request.payload && request.payload.resourceSpendAuthorized) &&
+                ResourceService.playerPromptUnavailable(Object.assign({}, request.payload || {}, {
+                    attackName: request.attackName || (request.payload && request.payload.sourceAction) || ''
+                }), sourceToken)))) {
+                Render.sendWhisperMessage(ctx.who, 'Resources', I18N.t('Insufficient resources for this action.'), 'warning');
+                return;
+            }
             const rangeCheck = CombatService.validatePlayerActionRange(request, target);
             if (!rangeCheck.ok) {
                 Render.sendWhisperMessage(ctx.who, 'Out of Range', rangeCheck.message || 'The selected target is not within range for this action.', 'failure');
@@ -20426,6 +22002,17 @@ const CombatAssistant = (() => {
             if (!marker) {
                 Render.sendWhisperMessage(ctx.who, 'Area Marker Missing', 'The selected area marker token could not be found.', 'failure');
                 return;
+            }
+            if (!ctx.isGM && !concentrationAreaActive) {
+                const sourceToken = CombatService.resolvePlayerActionSourceOnTargetPage(request, marker) || R20.getAreaMarkerSourceToken(request);
+                if ((request.payload && request.payload.playerResourceDenied) ||
+                    (!(request.payload && request.payload.resourceSpendAuthorized) &&
+                    ResourceService.playerPromptUnavailable(Object.assign({}, request.payload || {}, {
+                        attackName: request.attackName || (request.payload && request.payload.sourceAction) || ''
+                    }), sourceToken))) {
+                    Render.sendWhisperMessage(ctx.who, 'Resources', I18N.t('Insufficient resources for this action.'), 'warning');
+                    return;
+                }
             }
             const rangeCheck = CombatService.validatePlayerAreaMarkerRange(request, marker);
             if (!rangeCheck.ok) {
@@ -20585,7 +22172,7 @@ const CombatAssistant = (() => {
                     label: 'Save',
                     command: queued.command,
                     width: 50,
-                    tooltip: 'Roll the native ' + ability + ' saving throw',
+                    tooltip: I18N.t('Roll the native {ability} saving throw', { ability }),
                     backgroundColor: 'rgba(115,75,145,0.92)'
                 });
                 R20.whisper(ctx.who || 'GM', Html.card({
@@ -21078,7 +22665,7 @@ const CombatAssistant = (() => {
                 batchTitle: abilityLabel + ' Saving Throws',
                 batchIntro: 'Roll <strong>' + Utils.escapeHtml(abilityLabel) + '</strong> saving throws:',
                 iconHtml: '&#128735;',
-                tooltip: 'Roll ' + abilityLabel + ' saving throw',
+                tooltip: I18N.t('Roll the {ability} saving throw', { ability: abilityLabel }),
                 batchTooltip: 'Roll all listed ' + abilityLabel + ' saving throws',
                 rollMode
             });
@@ -21243,12 +22830,13 @@ const CombatAssistant = (() => {
             return TurnTracker.focusMapTokenForRequester(token, ctx);
         },
 
-        async handleSheetSetting(ctx, args) {
+        async handleSheetToggle(ctx, args, effect) {
             const token = R20.getTokenById(args && args[0]);
-            const key = String(args && args[1] || '').trim().toLowerCase();
+            const rawKey = String(args && args[1] || '').trim();
             const enabled = String(args && args[2] || '').trim() === '1';
+            const title = effect ? 'Combat Effects' : 'Compact Sheet';
             if (!token) {
-                Render.sendWhisperMessage(ctx.who, 'Compact Sheet', 'The requested token was not found.', 'warning');
+                Render.sendWhisperMessage(ctx.who, title, 'The requested token was not found.', 'warning');
                 return false;
             }
             if (!this.canUseTokenButton(ctx, token)) {
@@ -21256,37 +22844,27 @@ const CombatAssistant = (() => {
                 return false;
             }
             const characterId = String(token.get('represents') || '').trim();
-            const result = await ActionService.setCompactSheetSetting(characterId, key, enabled);
+            const result = effect
+                ? await ActionService.setCombatEffect(characterId, rawKey, enabled)
+                : await ActionService.setCompactSheetSetting(characterId, rawKey.toLowerCase(), enabled);
             if (!result || !result.ok) {
-                Render.sendWhisperMessage(ctx.who, 'Compact Sheet', result && result.message || 'The sheet setting could not be updated.', 'warning');
+                Render.sendWhisperMessage(ctx.who, title, result && result.message ||
+                    (effect ? 'The effect could not be updated.' : 'The sheet setting could not be updated.'), 'warning');
                 return false;
             }
-            this.handleCharacterSheet(ctx, [R20.getTokenId(token)]);
+            const tokenId = R20.getTokenId(token);
+            if (effect) await ActionService.showCombatForContext(ctx, [tokenId], 'combat');
+            else this.handleCharacterSheet(ctx, [tokenId]);
             return true;
+        },
+
+        async handleSheetSetting(ctx, args) {
+            return this.handleSheetToggle(ctx, args, false);
         },
 
         async handleSheetEffect(ctx, args) {
-            const token = R20.getTokenById(args && args[0]);
-            const encodedRef = String(args && args[1] || '').trim();
-            const enabled = String(args && args[2] || '').trim() === '1';
-            if (!token) {
-                Render.sendWhisperMessage(ctx.who, 'Combat Effects', 'The requested token was not found.', 'warning');
-                return false;
-            }
-            if (!this.canUseTokenButton(ctx, token)) {
-                Render.sendWhisperMessage(ctx.who, 'Permission Denied', 'You do not control this token.', 'failure');
-                return false;
-            }
-            const characterId = String(token.get('represents') || '').trim();
-            const result = await ActionService.setCombatEffect(characterId, encodedRef, enabled);
-            if (!result || !result.ok) {
-                Render.sendWhisperMessage(ctx.who, 'Combat Effects', result && result.message || 'The effect could not be updated.', 'warning');
-                return false;
-            }
-            await ActionService.showCombatForContext(ctx, [R20.getTokenId(token)], 'combat');
-            return true;
+            return this.handleSheetToggle(ctx, args, true);
         },
-
 
 
         handleGetTokenImageUrl(ctx) {
@@ -21358,7 +22936,7 @@ const CombatAssistant = (() => {
                 if (this.whisperCombatAssistantInitiativeButton(token, visibility)) requested += 1;
             });
             if (requested) {
-                Render.sendWhisperMessage(ctx.who, 'Initiative', 'Initiative roll request sent to player-controlled token(s).', 'normal');
+                Render.sendWhisperMessage(ctx.who, 'Initiative', I18N.t('Initiative roll request sent to player-controlled token(s).'), 'normal');
             }
             if (failed.length) Render.sendWhisperMessage(ctx.who, 'Initiative', Utils.escapeHtml(failed.join(' ')), 'warning');
         },
@@ -21633,6 +23211,9 @@ const CombatAssistant = (() => {
             try {
                 if (!SCRIPT_ACTIVE) return;
                 TurnTracker.handleTurnOrderChange(campaign, previous || {});
+                // Several turn-order branches return early (adds, rewinds,
+                // deletions); every transition must release stale token locks.
+                TurnTracker.syncMovementLocks();
             } catch (error) {
                 Logger.debug('[change:campaign:turnorder]', error && error.message ? error.message : String(error));
             }
@@ -21677,6 +23258,7 @@ const CombatAssistant = (() => {
             R20.cleanupBatchAbilities(20, PLAYER_ACTION_TTL_MS, { noCreate: true, removeWhenEmpty: true, removeAll: true });
             SCRIPT_ACTIVE = true;
             TurnTracker.initializeFromCurrentTurnOrder();
+            TurnTracker.syncMovementLocks();
 
             if (!capabilities.sheetWriter) {
                 Render.sendWhisperMessage(
@@ -21689,7 +23271,12 @@ const CombatAssistant = (() => {
                 );
             }
 
-            Render.showBootstrapCard();
+            if (RuntimeConfig.get('LANGUAGE') === 'custom') {
+                I18N.loadCustomHandout().then((result) => {
+                    if (!result.ok) Render.sendWhisperMessage('GM', 'Language', Utils.escapeHtml(result.message), 'warning');
+                    Render.showBootstrapCard();
+                }).catch((error) => Logger.error('[i18n:handout]', String(error)));
+            } else Render.showBootstrapCard();
             Logger.info('Ready v' + META.VERSION + '. Use !ca menu or !ca help');
         }
     };
@@ -21707,6 +23294,7 @@ const CombatAssistant = (() => {
         CONFIG,
         State,
         RuntimeConfig,
+        I18N,
         SpellTemplateService,
         SpellMacroService,
         EffectTracker,
