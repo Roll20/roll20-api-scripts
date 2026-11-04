@@ -3186,6 +3186,8 @@ Thanks to: The Aaron for helping with figuring out the statblock parsing. Vince 
                             character.get('_defaulttoken',(raw)=>{
                                 var dt;
                                 try{ dt = !_.isEmpty(raw) ? JSON.parse(raw) : {}; }catch(e){ dt = {}; }
+                                // no default token: Roll20 returns the string "null", which JSON.parse turns into null
+                                if(!dt || typeof dt!=='object') dt = {};
                                 if(!_.every([1,2,3],(n)=>{return _.isEmpty(dt['bar'+n+'_link'])})) return;
                                 var tokenNames = _.chain(findObjs({type:'graphic',represents:character.id,pageid:token.get('pageid')}))
                                     .reject((t)=>{return t.id===token.id})
