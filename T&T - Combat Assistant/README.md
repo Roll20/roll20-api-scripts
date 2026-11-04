@@ -1,7 +1,7 @@
 # T&T - Combat Assistant
 
 **Author:** [AmadeusVF](https://app.roll20.net/users/15900768/amadeusvf)  
-**Version:** 1.2.15  
+**Version:** 1.2.16  
 **System:** Dungeons & Dragons 5E — Roll20 D&D 2014 & D&D 2024
 
 Combat Assistant is a Roll20 Mod script designed to automate combat bookkeeping while keeping the GM in control.
@@ -10,7 +10,40 @@ It reads attacks, damage, healing, saving throws, initiative, spells, resources,
 Instead of replacing Roll20's normal combat system, Combat Assistant works around it: players can continue rolling from their character sheets while the script handles many of the repetitive tasks that normally follow those rolls.
 
 ---
-## What's New in v1.2.15
+## What's New in v1.2.16
+
+- **Settings footer:** Default, Recommended, and the pale-green **Language Template** each occupy an equal third of the available footer width. Language Template opens the [current language template](https://amadeusvf.s.gy/combat-assistant-language-template-latest).
+- **Recommended Settings preset:** a pale-blue **Recommended / Recomendado** button beside Default requests confirmation and applies only 52 requested ON/OFF flags (40 ON, 12 OFF), preserving image URLs, handout language, marker names, numbers, spell templates and macros. The exact provided preset sets the optional resource gate and both movement blockers to OFF.
+- **Healing recipient fix:** a failed resource deduction suppresses the player's Heal/Temp HP target-selection button, including stale sheet balances. A valid cast that spent its final slot can finish its already-paid resolution once. Players cannot run denied action IDs manually. The GM also receives a separate **Single Use Heal / Temp HP** target card, in addition to the normal GM review card; players with the button setting OFF still get their read-only healing roll result.
+- **Spanish localization:** the initiative-request success message is explicitly translated, Settings and help phrasing are more natural for Latin American Spanish, and Spanish GM-related wording consistently uses **DM**.
+- **Three language choices:** English (EN), Spanish (ES) and Custom (CUS) from Settings → Extra → Language. French can be loaded using the supplied JSON in the `CA Language` handout under Custom.
+- **Narrative localization:** Dash, Disengage and Dodge actions, resource depletion (`No uses remain.`), combat misses, conditions and resource usage now use complete translated sentences rather than ambiguous word substitutions.
+- **Attack descriptions:** Melee Attack, Ranged Attack, and Range Attack display in the selected language without changing underlying attack classifications or Roll20 commands.
+- **Optional resource gate:** Settings > Resources > **Block Without Resources** (Spanish: **Bloquear sin recursos**, default OFF) hides depleted-resource Roll/ATK/Heal player controls, including prompts from captured native rolls. GM review/resolution cards remain available; rejected casts do not expose player ATK/Heal buttons; valid once-paid final-slot casts can still be resolved.
+- **Turn Tracker movement locks:** **Turn Movement Blocker** and **Movement Consumed Blocker** (both default OFF) use individual token `lockMovement` for player-controlled initiative tokens outside their turn or after spending their speed. CA applies off-turn locks as soon as it writes native initiative results to Turn Order; manual Turn Order changes use the Roll20 event handler. Dash can restore available movement; CA locks are cleared when tokens leave initiative, settings are disabled or combat ends. Does not pause campaign movement globally.
+- **Compatibility:** Persistent schema **7**, original gameplay logic and existing ON/OFF/+ /X button geometry are unchanged. The French JSON is included as a reference, not a required installation step.
+
+### Block Without Resources
+
+In **`!ca settings` → Resources**, enable **Block Without Resources** to replace CA's unavailable player Roll/DMG/ATK/Heal/Cast/Send controls with a short localized “Out of resources” notice. This checks sheet resource balances, appropriate spell slots (including upcasting and Pact Magic), and known item charge costs. The setting defaults **OFF**, operates independently from automatic consumption, and never restricts GM controls. It does not disable buttons native to the Roll20 character sheet or already-rendered chat buttons; refresh CA cards after changing resource totals. A cast that legally spent its final slot retains its resulting target-resolution controls for one authorized use. The GM receives an independent Heal/Temp HP single-use card as well as their general healing review card.
+
+## Languages (English, Spanish, and Custom JSON)
+
+- English is the default and **Spanish is built in**. French and other languages use the **Custom** handout.
+- Open **`!ca settings` → Extra → Language**, and select `English`, `Español`, or `Custom` using the compact `EN`/`ES`/`CUS` control.
+- For French or another language, create a Roll20 Journal handout named **`CA Language`**, place a valid translation JSON in **Notes**, and choose **Custom**. The supplied French JSON can be used directly in the handout. If a campaign previously selected built-in FR, it defaults to EN until a supported language is selected.
+- To reload an edited handout, select **Custom** again; it also reloads on sandbox startup. Invalid JSON leaves the previous language intact.
+- External translations use native English text keys; preserve `{source}`, `{target}`, `{amount}` and other placeholders. Unknown translations fall back to English.
+- User-supplied character, player, attack, spell, item and macro names, as well as Roll20 commands, remain untranslated.
+- Translated buttons, Settings and titles adapt font size to their available space, with wrapping for longer labels. **ON/OFF remain universal and untranslated** (32×15 px); English retains its existing layout.
+- Spell preparation labels (`Level`, `Prepared`, `Unprepared`, `Slots`) and standard D&D damage types are localized in cards, tooltips and selectors; the values passed to Roll20 remain the canonical English identifiers.
+- Spanish terminology was reviewed for D&D usage (`Save` is a saving throw, not an instruction to save a file), with natural spell and combat narratives. Narrow columns display readable abbreviations and full translated tooltips; the supplied French JSON follows the same rules.
+- All Settings menus use flexible label columns and a fixed 36px control cell, avoiding premature text wrapping in translated languages. Marker settings reserve a separate value cell.
+- Main-menu controls also localize **Dmg → Daño**, **Init → Iniciar**, **Sheet → Hoja**, **Turn Card → Tarjeta de Turno** and **Next Turn → Siguiente Turno** (Spanish); `Conc.` stays `Conc.`. Icons and button sizes remain fixed.
+- Expanded CA-owned tooltip translations in built-in Spanish and Custom French, including contextual prompts and dice-roll details. Player/character/spell/attack names remain native.
+
+
+## Changes Since the Earlier One-Click Release
 
 This update builds on the previously published **v1.2.8**. All improvements between those versions are included; versions 1.2.9–1.2.14 were not published as separate One-Click entries in the upstream Roll20 repository.
 
@@ -81,6 +114,8 @@ Combat Assistant supports:
 - Healing multiple selected targets.
 - Player-controlled healing buttons when enabled.
 - Public or private healing results.
+
+**Healing privacy:** Combat Logs never reveal a target's previous/current/maximum HP or Temporary HP totals. With **Settings → Privacy → Hide Damage Details** OFF, they show the effective healing amount (e.g. *Healer heals 8 Hit Points to Target using Healing Word*); ON hides the amount. **Reveal Damage Source in Log** controls the healer/ability, and **Hide Combat Log** only changes delivery to a GM whisper. Public logs never include a healing rollbox; private GM rollboxes appear only when details are visible. GM-only manual healing summaries remain private. This does not suppress native Roll20 chat messages generated by the character sheet.
 
 ---
 ## Saving Throws
@@ -542,7 +577,7 @@ Most features can be individually enabled or disabled, allowing the GM to decide
 - **Ambiguous casts:** Automatic spell-slot or item-charge deductions are intentionally skipped when cast source, cost, or level cannot be verified. Review the GM warning and adjust resources manually if necessary.
 - **Beacon updates:** Sheet-worker timing and Experimental API Sandbox differences may affect linked 2024 resources. Always test upgrades in a copy of your game.
 - **Permissions:** Player controls are restricted to supported characters and tokens the player controls; GM-only settings and actions remain GM-only.
-- **One-Click upgrades:** v1.2.8 remains available as the last published version before v1.2.15. The persistent state schema stays at version 7. Changing script versions is not a campaign-state backup.
+- **One-Click upgrades:** Earlier published versions should be preserved in the Roll20 repository. The persistent state schema stays at version 7. Changing script versions is not a campaign-state backup.
 
 ---
 # Trinkets & Trackers
@@ -558,3 +593,11 @@ For updates, development information, and other Trinkets & Trackers projects:
 
 - [Combat Assistant — Roll20 Forum](https://app.roll20.net/forum/post/12797865/script-combat-assistant-animated-combat-automated-attacks-and-spells-aoe-concentration-track-damage-and-healing-d-and-d-2014-slash-2024)
 - [AmadeusVF on Patreon](https://www.patreon.com/cw/AmadeusVF/home)
+
+### Final recommended/recipient update (v1.2.16)
+
+The **Recommended** button is on the main Settings page next to Default. Confirm Yes to apply only the boolean values of the provided preset; all non-boolean settings, macros and spell templates are preserved. The supplied preset intentionally disables the optional resource and movement blocking flags.
+
+The player resource gate and GM one-use healing controls are independent. When blocked, a player never receives a Heal/Temp HP targeting button, but a healing roll from a CA-generated action can still show a read-only result. The GM receives a dedicated one-use Heal/Temp HP control alongside the existing GM card. A legitimate final-slot cast remains usable once.
+
+The project includes a new focused regression test, bringing the total to **17 suites**. Validate with actual Roll20 chat and native 2014/2024 sheets before submitting the PR.
