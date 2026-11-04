@@ -5,7 +5,6 @@ const TRANSLATION = {
     scalingPresetReady: 'スケーリングプリセット対応',
     hpUpdated: 'HPスケーリングが更新されました',
     acUpdated: 'AC スケーリングが更新されました',
-    damageUpdated: 'ダメージスケーリングが更新されました',
     bossPreset: 'ボスプリセット: {preset}',
     partySize: 'パーティーの規模: {size}',
     reinforcementsCreated: '増援が作成されました',
@@ -35,7 +34,7 @@ const TRANSLATION = {
     unknownCommandHint: 'コマンドのリストを表示するには、「!ced help」と入力します。',
     noTokensSelected: 'トークンが選択されていません。まずマップ上のトークンを選択します。',
     unknownScaleAction: '不明なスケール アクション: "{action}"。',
-    scaleActionHint: '有効なアクション: プリセット、パーティー、HP、AC、ダメージ、適用',
+    scaleActionHint: '有効なアクション: プリセット、パーティー、HP、AC、適用',
     unknownPartyPreset: '不明なパーティのプリセット:「{preset}」。',
     partyPresetHint: '有効なプリセット: {presets}',
     missingBossPreset: 'ボスのプリセット名がありません。',
@@ -76,8 +75,8 @@ const TRANSLATION = {
     invalidHpPercent:
       'HP パーセンテージは 1 ～ 1000 でなければなりません (「{value}」を取得)。例: 150',
     invalidAcModifier: 'AC 修飾子は -10 ～ +10 でなければなりません (「{value}」を取得)。例: +2',
-    invalidDamagePercent:
-      'ダメージの割合は 1 ～ 1000 でなければなりません (「{value}」を取得)。例: 125',
+    damageScalingRemoved:
+      'ダメージ スケーリングはトークンに何も変更を加えなかったため、バージョン 1.0.2 で削除されました。プリセットは HP と AC のみをスケールするようになりました。クリーチャーの攻撃を強くしたい場合は、ダメージロールを自分で調整してください。',
     invalidDuplicateCount: '重複数は 1 ～ 50 である必要があります (「{value}」を取得)。例: 3',
     invalidEncounterName:
       '無効なエンカウント名:「{name}」。名前には文字、数字、スペース、ハイフン、アンダースコアを含めることができます (最大 64 文字)。',
@@ -102,7 +101,6 @@ const TRANSLATION = {
     hp: 'HP',
     ac: '交流',
     acModifier: 'ACモディファイアー',
-    damage: 'ダメージ',
     appliedTo: '適用対象',
     copiesPerToken: 'トークンあたりのコピー数',
     totalCreated: '作成された合計',
@@ -181,7 +179,6 @@ const TRANSLATION = {
     partySizeLabel: 'パーティーの規模:',
     hpPercentLabel: 'HP %:',
     acModLabel: 'AC モディファイア:',
-    damagePercentLabel: 'ダメージ ％：',
     load: '負荷',
     delete: '消去',
     quickActions: 'クイックアクション',
@@ -213,7 +210,7 @@ const TRANSLATION = {
     disableAc: 'ACを無効にする',
     presetReference: 'プリセット一覧',
     presetReferenceDesc:
-      '各プリセットの変更内容。例は、{hp} の HP と {ac} の AC を持ち、{damage} のダメージを与えるモンスターの場合です。 HP は最も近い整数に四捨五入され、負傷したモンスターはその HP の同じ割合を維持します。ダメージ数値はダメージダイスの目安にすぎません。',
+      '各プリセットの変更内容。例は、HP {hp} および AC {ac} を持つモンスターの場合です。 HP は最も近い整数に四捨五入され、負傷したモンスターはその HP の同じ割合を維持します。',
     partyPresets: 'パーティープリセット',
     bossPresets: 'ボスプリセット',
     presetPlayers: 'プレイヤー数',
@@ -235,7 +232,6 @@ const TRANSLATION = {
     layerCol: '層',
     hpCol: 'HP',
     acCol: '交流',
-    dmgCol: 'ダメージ',
     presetCol: 'プリセット',
   },
 };

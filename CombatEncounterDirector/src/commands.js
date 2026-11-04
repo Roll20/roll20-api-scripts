@@ -56,7 +56,6 @@ import {
   applyScalingToSelected,
   isValidPartyPreset,
   parseAcModifier,
-  parseDamagePercent,
   parseHpPercent,
   parsePartySize,
   resolvePartyPreset,
@@ -77,25 +76,25 @@ import { escapeHtml, formatMod, getGraphicToken, getPlayerPageId } from './utils
 // Pending scaling state (per-player session state — not persisted)
 // ---------------------------------------------------------------------------
 
-/** @type {Map<string, { hp: number, ac: number, damage: number }>} */
+/** @type {Map<string, { hp: number, ac: number }>} */
 const pendingScaling = new Map();
 
 /**
- * Returns the pending scaling profile for a player, defaulting to 100/0/100.
+ * Returns the pending scaling profile for a player, defaulting to 100/0.
  *
  * @param {string} playerId Player ID.
- * @returns {{ hp: number, ac: number, damage: number }} Pending scaling.
+ * @returns {{ hp: number, ac: number }} Pending scaling.
  */
 function getPendingScaling(playerId) {
-  return pendingScaling.get(playerId) || { hp: 100, ac: 0, damage: 100 };
+  return pendingScaling.get(playerId) || { hp: 100, ac: 0 };
 }
 
 /**
  * Updates one or more fields in the pending scaling profile for a player.
  *
  * @param {string} playerId Player ID.
- * @param {object} updates Partial update ({ hp, ac, damage }).
- * @returns {{ hp: number, ac: number, damage: number }} Updated pending scaling.
+ * @param {object} updates Partial update ({ hp, ac }).
+ * @returns {{ hp: number, ac: number }} Updated pending scaling.
  */
 function updatePendingScaling(playerId, updates) {
   const current = getPendingScaling(playerId);
@@ -304,7 +303,8 @@ function handleScale(msg, args, playerId) {
     party: () => handleScaleParty(msg, playerId, lang, value),
     hp: () => handleScaleHp(msg, playerId, lang, value),
     ac: () => handleScaleAc(msg, playerId, lang, value),
-    damage: () => handleScaleDamage(msg, playerId, lang, value),
+    // Damage scaling was removed in 1.0.2; explain rather than report an unknown action.
+    damage: () => whisperWarning(playerId, t('errors.damageScalingRemoved', lang)),
     apply: () => handleScaleApply(msg, playerId, lang),
   };
 
@@ -340,7 +340,7 @@ function handleScalePreset(msg, playerId, lang, presetKey) {
   }
 
   const preset = resolvePartyPreset(presetKey);
-  updatePendingScaling(playerId, { hp: preset.hp, ac: preset.ac, damage: preset.damage });
+  updatePendingScaling(playerId, { hp: preset.hp, ac: preset.ac });
   const tokens = getSelectedTokens(msg);
 
   if (tokens.length > 0) {
@@ -352,7 +352,6 @@ function handleScalePreset(msg, playerId, lang, presetKey) {
         buildRow(t('labels.preset', lang), preset.label),
         buildRow(t('labels.hp', lang), `${preset.hp}%`),
         buildRow(t('labels.ac', lang), formatMod(preset.ac)),
-        buildRow(t('labels.damage', lang), `${preset.damage}%`),
         buildDivider(),
         buildRow(t('labels.appliedTo', lang), `${result.applied.length}`),
       ].join('')
@@ -366,7 +365,6 @@ function handleScalePreset(msg, playerId, lang, presetKey) {
     [
       buildRow(t('labels.hp', lang), `${preset.hp}%`),
       buildRow(t('labels.ac', lang), formatMod(preset.ac)),
-      buildRow(t('labels.damage', lang), `${preset.damage}%`),
       buildDivider(),
       `<div style="font-size:0.85em">${escapeHtml(t('confirm.scalingPresetPending', lang))}</div>`,
       buildButton(t('ui.applyScalingButton', lang), `${COMMAND} scale apply`),
@@ -395,7 +393,7 @@ function handleScaleParty(msg, playerId, lang, partySizeRaw) {
   }
 
   const preset = resolvePartyPresetBySize(parsed.value);
-  updatePendingScaling(playerId, { hp: preset.hp, ac: preset.ac, damage: preset.damage });
+  updatePendingScaling(playerId, { hp: preset.hp, ac: preset.ac });
   const tokens = getSelectedTokens(msg);
 
   if (tokens.length > 0) {
@@ -407,7 +405,6 @@ function handleScaleParty(msg, playerId, lang, partySizeRaw) {
         buildRow(t('labels.nearestPreset', lang), preset.label),
         buildRow(t('labels.hp', lang), `${preset.hp}%`),
         buildRow(t('labels.ac', lang), formatMod(preset.ac)),
-        buildRow(t('labels.damage', lang), `${preset.damage}%`),
         buildDivider(),
         buildRow(t('labels.appliedTo', lang), `${result.applied.length}`),
       ].join('')
@@ -422,7 +419,6 @@ function handleScaleParty(msg, playerId, lang, partySizeRaw) {
       buildRow(t('labels.nearestPreset', lang), preset.label),
       buildRow(t('labels.hp', lang), `${preset.hp}%`),
       buildRow(t('labels.ac', lang), formatMod(preset.ac)),
-      buildRow(t('labels.damage', lang), `${preset.damage}%`),
       buildDivider(),
       `<div style="font-size:0.85em">${escapeHtml(t('confirm.scalingPresetPending', lang))}</div>`,
       buildButton(t('ui.applyScalingButton', lang), `${COMMAND} scale apply`),
@@ -479,37 +475,6 @@ function handleScaleAc(msg, playerId, lang, acRaw) {
 }
 
 /**
- * Updates pending damage percentage and applies/queues scaling.
- *
- * @param {object} msg Roll20 chat message.
- * @param {string} playerId GM player ID.
- * @param {string} lang Locale code.
- * @param {string} damageRaw Raw damage percentage argument.
- * @returns {void}
- */
-function handleScaleDamage(msg, playerId, lang, damageRaw) {
-  const parsed = parseDamagePercent(damageRaw);
-  if (!parsed.valid) {
-    whisperError(
-      playerId,
-      t('errors.invalidDamagePercent', lang, { value: damageRaw }),
-      `Example: ${COMMAND} scale damage 125`
-    );
-    return;
-  }
-
-  const next = updatePendingScaling(playerId, { damage: parsed.value });
-  reportScaleProfileUpdate(
-    msg,
-    playerId,
-    lang,
-    next,
-    t('titles.damageUpdated', lang),
-    'scale:damage'
-  );
-}
-
-/**
  * Applies the player's pending scaling profile to selected tokens.
  *
  * @param {object} msg Roll20 chat message.
@@ -532,7 +497,6 @@ function handleScaleApply(msg, playerId, lang) {
     [
       buildRow(t('labels.hp', lang), `${profile.hp}%`),
       buildRow(t('labels.ac', lang), formatMod(profile.ac)),
-      buildRow(t('labels.damage', lang), `${profile.damage}%`),
       buildDivider(),
       buildRow(t('labels.appliedTo', lang), `${result.applied.length}`),
     ].join('')
@@ -546,7 +510,7 @@ function handleScaleApply(msg, playerId, lang) {
  * @param {object} msg Roll20 chat message.
  * @param {string} playerId GM player ID.
  * @param {string} lang Locale code.
- * @param {{ hp: number, ac: number, damage: number }} profile Scaling profile.
+ * @param {{ hp: number, ac: number }} profile Scaling profile.
  * @param {string} pendingTitle Card title used when no tokens are selected.
  * @param {string} operation Operation label stored in token records.
  * @returns {void}
@@ -561,7 +525,6 @@ function reportScaleProfileUpdate(msg, playerId, lang, profile, pendingTitle, op
       [
         buildRow(t('labels.hp', lang), `${profile.hp}%`),
         buildRow(t('labels.ac', lang), formatMod(profile.ac)),
-        buildRow(t('labels.damage', lang), `${profile.damage}%`),
         buildDivider(),
         buildRow(t('labels.appliedTo', lang), `${result.applied.length}`),
       ].join('')
@@ -575,7 +538,6 @@ function reportScaleProfileUpdate(msg, playerId, lang, profile, pendingTitle, op
     [
       buildRow(t('labels.hp', lang), `${profile.hp}%`),
       buildRow(t('labels.ac', lang), formatMod(profile.ac)),
-      buildRow(t('labels.damage', lang), `${profile.damage}%`),
       buildDivider(),
       buildButton(t('ui.applyScalingButton', lang), `${COMMAND} scale apply`),
     ].join('')
@@ -630,7 +592,6 @@ function handleBoss(msg, args, playerId) {
         preset.hpMode === 'set' ? `Set to ${preset.hp}` : `${preset.hp}%`
       ),
       buildRow(t('labels.acModifier', lang), preset.ac >= 0 ? `+${preset.ac}` : String(preset.ac)),
-      buildRow(t('labels.damage', lang), `${preset.damage}%`),
       buildDivider(),
       buildRow(t('labels.appliedTo', lang), `${result.applied.length}`),
     ].join('')
@@ -1372,7 +1333,6 @@ export function showHelp(playerId) {
     ['Scale by party size', `${COMMAND} scale party 6`],
     ['Set HP %', `${COMMAND} scale hp 150`],
     ['Set AC modifier', `${COMMAND} scale ac +2`],
-    ['Set Damage %', `${COMMAND} scale damage 125`],
     ['Apply pending scaling', `${COMMAND} scale apply`],
     ['Boss preset', `${COMMAND} boss boss`],
     ['Elite / Minion', `${COMMAND} boss elite`],

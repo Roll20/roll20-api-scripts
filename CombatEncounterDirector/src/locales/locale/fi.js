@@ -5,7 +5,6 @@ const TRANSLATION = {
     scalingPresetReady: 'Skaalaus valmiiksi asetettu',
     hpUpdated: 'HP:n skaalaus päivitetty',
     acUpdated: 'AC-skaalaus päivitetty',
-    damageUpdated: 'Vahinkojen skaalaus päivitetty',
     bossPreset: 'Pomon esiasetus: {preset}',
     partySize: 'Juhlan koko: {size}',
     reinforcementsCreated: 'Vahvikkeet luotu',
@@ -35,7 +34,7 @@ const TRANSLATION = {
     unknownCommandHint: 'Kirjoita komentoluettelo !ced help.',
     noTokensSelected: 'Tunnuksia ei ole valittu. Valitse ensin tunnukset kartalta.',
     unknownScaleAction: 'Tuntematon mittakaavatoiminto: "{action}".',
-    scaleActionHint: 'Kelvolliset toiminnot: esiasetus, juhla, hp, ac, vahinko, käytä',
+    scaleActionHint: 'Kelvolliset toiminnot: esiasetus, juhla, hp, ac, käytä',
     unknownPartyPreset: 'Tuntemattoman osapuolen esiasetus: "{preset}".',
     partyPresetHint: 'Kelvolliset esiasetukset: {presets}',
     missingBossPreset: 'Esiasetetun pomon nimi puuttuu.',
@@ -75,8 +74,8 @@ const TRANSLATION = {
     invalidPartySize: 'Ryhmän koon on oltava väliltä 1–30 (saat "{value}").',
     invalidHpPercent: 'HP-prosentin on oltava välillä 1–1000 (saat "{value}"). Esimerkki: 150',
     invalidAcModifier: 'AC-muuntimen on oltava välillä -10 ja +10 (saat "{value}"). Esimerkki: +2',
-    invalidDamagePercent:
-      'Vahinkoprosentin on oltava välillä 1–1 000 (saat "{value}"). Esimerkki: 125',
+    damageScalingRemoved:
+      'Vaurioiden skaalaus poistettiin versiossa 1.0.2, koska se ei koskaan muuttanut mitään pelimerkissä. Esiasetukset skaalaavat nyt vain HP:n ja AC:n; säädä vahinkoheitot itse, jos haluat olennon iskevän kovemmin.',
     invalidDuplicateCount: 'Kopioiden määrän on oltava 1–50 (saat "{value}"). Esimerkki: 3',
     invalidEncounterName:
       'Virheellinen kohtaamisen nimi: "{name}". Nimet voivat sisältää kirjaimia, numeroita, välilyöntejä, yhdysmerkkejä ja alaviivoja (enintään 64 merkkiä).',
@@ -100,7 +99,6 @@ const TRANSLATION = {
     hp: 'HP',
     ac: 'AC',
     acModifier: 'AC muuntaja',
-    damage: 'Vahingoittaa',
     appliedTo: 'Sovellettu',
     copiesPerToken: 'Kopioita per merkki',
     totalCreated: 'Luotu yhteensä',
@@ -179,7 +177,6 @@ const TRANSLATION = {
     partySizeLabel: 'Juhlan koko:',
     hpPercentLabel: 'HP %:',
     acModLabel: 'AC-muunnin:',
-    damagePercentLabel: 'Vahinko %:',
     load: 'Ladata',
     delete: 'Poistaa',
     quickActions: 'Nopeat toiminnot',
@@ -214,7 +211,7 @@ const TRANSLATION = {
     disableAc: 'Poista AC käytöstä',
     presetReference: 'Esiasetusten viite',
     presetReferenceDesc:
-      'Mitä kukin esiasetus muuttaa. Esimerkit koskevat hirviötä, jolla on {hp} HP ja AC {ac}, joka aiheuttaa {damage} vahinkoa. HP pyöristetään lähimpään kokonaislukuun, ja haavoittunut hirviö säilyttää saman osuuden HP:staan. Vahinkoluku on vain suuntaa antava vahinkonopillesi.',
+      'Mitä kukin esiasetus muuttaa. Esimerkit koskevat hirviötä, jossa on {hp} HP ja AC {ac}. HP pyöristetään lähimpään kokonaislukuun, ja haavoittunut hirviö säilyttää saman osuuden HP:staan.',
     partyPresets: 'Seurueen esiasetukset',
     bossPresets: 'Pomojen esiasetukset',
     presetPlayers: 'Pelaajat',
@@ -236,7 +233,6 @@ const TRANSLATION = {
     layerCol: 'Kerros',
     hpCol: 'HP',
     acCol: 'AC',
-    dmgCol: 'Dmg',
     presetCol: 'Esiasetus',
   },
 };

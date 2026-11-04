@@ -5,7 +5,6 @@ const TRANSLATION = {
     scalingPresetReady: 'Scaling Preset Ready',
     hpUpdated: 'HP Scaling Updated',
     acUpdated: 'AC Scaling Updated',
-    damageUpdated: 'Damage Scaling Updated',
     bossPreset: 'Boss Preset: {preset}',
     partySize: 'Party Size: {size}',
     reinforcementsCreated: 'Reinforcements Created',
@@ -35,7 +34,7 @@ const TRANSLATION = {
     unknownCommandHint: 'Type !ced help for a list of commands.',
     noTokensSelected: 'No tokens selected. Select tokens on the map first.',
     unknownScaleAction: 'Unknown scale action: "{action}".',
-    scaleActionHint: 'Valid actions: preset, party, hp, ac, damage, apply',
+    scaleActionHint: 'Valid actions: preset, party, hp, ac, apply',
     unknownPartyPreset: 'Unknown party preset: "{preset}".',
     partyPresetHint: 'Valid presets: {presets}',
     missingBossPreset: 'Missing boss preset name.',
@@ -75,8 +74,8 @@ const TRANSLATION = {
     invalidPartySize: 'Party size must be a number between 1 and 30 (got "{value}").',
     invalidHpPercent: 'HP percentage must be between 1 and 1000 (got "{value}"). Example: 150',
     invalidAcModifier: 'AC modifier must be between -10 and +10 (got "{value}"). Example: +2',
-    invalidDamagePercent:
-      'Damage percentage must be between 1 and 1000 (got "{value}"). Example: 125',
+    damageScalingRemoved:
+      'Damage scaling was removed in version 1.0.2 because it never changed anything on the token. Presets now scale HP and AC only; adjust damage rolls yourself if you want a creature to hit harder.',
     invalidDuplicateCount: 'Duplicate count must be between 1 and 50 (got "{value}"). Example: 3',
     invalidEncounterName:
       'Invalid encounter name: "{name}". Names may contain letters, digits, spaces, hyphens and underscores (max 64 characters).',
@@ -101,7 +100,6 @@ const TRANSLATION = {
     hp: 'HP',
     ac: 'AC',
     acModifier: 'AC modifier',
-    damage: 'Damage',
     appliedTo: 'Applied to',
     copiesPerToken: 'Copies per token',
     totalCreated: 'Total created',
@@ -180,7 +178,6 @@ const TRANSLATION = {
     partySizeLabel: 'Party size:',
     hpPercentLabel: 'HP %:',
     acModLabel: 'AC modifier:',
-    damagePercentLabel: 'Damage %:',
     load: 'Load',
     delete: 'Delete',
     quickActions: 'Quick Actions',
@@ -212,7 +209,7 @@ const TRANSLATION = {
     disableAc: 'Disable AC',
     presetReference: 'Preset Reference',
     presetReferenceDesc:
-      'What each preset changes. The examples are for a monster with {hp} HP and AC {ac} that deals {damage} damage. HP is rounded to the nearest whole number, and a wounded monster keeps the same share of its HP. The damage figure is only a guide for your damage dice.',
+      'What each preset changes. The examples are for a monster with {hp} HP and AC {ac}. HP is rounded to the nearest whole number, and a wounded monster keeps the same share of its HP.',
     partyPresets: 'Party presets',
     bossPresets: 'Boss presets',
     presetPlayers: 'Players',
@@ -234,7 +231,6 @@ const TRANSLATION = {
     layerCol: 'Layer',
     hpCol: 'HP',
     acCol: 'AC',
-    dmgCol: 'Dmg',
     presetCol: 'Preset',
   },
 };

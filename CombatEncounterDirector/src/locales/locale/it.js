@@ -5,7 +5,6 @@ const TRANSLATION = {
     scalingPresetReady: 'Preimpostazione ridimensionamento pronta',
     hpUpdated: 'Ridimensionamento HP aggiornato',
     acUpdated: 'Ridimensionamento CA aggiornato',
-    damageUpdated: 'Ridimensionamento dei danni aggiornato',
     bossPreset: 'Preimpostazione Boss: {preset}',
     partySize: 'Dimensioni della festa: {size}',
     reinforcementsCreated: 'Rinforzi creati',
@@ -35,7 +34,7 @@ const TRANSLATION = {
     unknownCommandHint: 'Digitare !ced help per un elenco di comandi.',
     noTokensSelected: 'Nessun token selezionato. Seleziona prima i token sulla mappa.',
     unknownScaleAction: 'Azione scala sconosciuta: "{action}".',
-    scaleActionHint: 'Azioni valide: preset, party, hp, ac, danno, applica',
+    scaleActionHint: 'Azioni valide: preset, party, hp, ac, applica',
     unknownPartyPreset: 'Preimpostazione gruppo sconosciuto: "{preset}".',
     partyPresetHint: 'Preimpostazioni valide: {presets}',
     missingBossPreset: 'Nome preimpostato del boss mancante.',
@@ -80,8 +79,8 @@ const TRANSLATION = {
       'La percentuale di HP deve essere compresa tra 1 e 1000 (ottenuto "{value}"). Esempio: 150',
     invalidAcModifier:
       'Il modificatore CA deve essere compreso tra -10 e +10 (ottenuto "{value}"). Esempio: +2',
-    invalidDamagePercent:
-      'La percentuale di danno deve essere compresa tra 1 e 1000 (ottenuto "{value}"). Esempio: 125',
+    damageScalingRemoved:
+      'Il ridimensionamento del danno è stato rimosso nella versione 1.0.2 perché non ha mai cambiato nulla sul token. Le preimpostazioni ora scalano solo HP e AC; modifica tu stesso i tiri per i danni se vuoi che una creatura colpisca più duramente.',
     invalidDuplicateCount:
       'Il conteggio dei duplicati deve essere compreso tra 1 e 50 (ottenuto "{value}"). Esempio: 3',
     invalidEncounterName:
@@ -107,7 +106,6 @@ const TRANSLATION = {
     hp: 'HP',
     ac: 'AC',
     acModifier: 'Modificatore CA',
-    damage: 'Danno',
     appliedTo: 'Applicato a',
     copiesPerToken: 'Copie per token',
     totalCreated: 'Totale creato',
@@ -186,7 +184,6 @@ const TRANSLATION = {
     partySizeLabel: 'Dimensione del gruppo:',
     hpPercentLabel: '% HP:',
     acModLabel: 'Modificatore CA:',
-    damagePercentLabel: 'Danno %:',
     load: 'Carico',
     delete: 'Eliminare',
     quickActions: 'Azioni rapide',
@@ -221,7 +218,7 @@ const TRANSLATION = {
     disableAc: 'Disabilita AC',
     presetReference: 'Riepilogo dei preset',
     presetReferenceDesc:
-      'Ciò che cambia ogni preimpostazione. Gli esempi riguardano un mostro con {hp} HP e AC {ac} che infligge {damage} danni. Gli HP vengono arrotondati al numero intero più vicino e un mostro ferito mantiene la stessa quota dei suoi HP. La cifra del danno è solo una guida per i tuoi dadi di danno.',
+      'Ciò che cambia ogni preimpostazione. Gli esempi sono per un mostro con {hp} HP e AC {ac}. Gli HP vengono arrotondati al numero intero più vicino e un mostro ferito mantiene la stessa quota dei suoi HP.',
     partyPresets: 'Preset per il gruppo',
     bossPresets: 'Preset per i boss',
     presetPlayers: 'Giocatori',
@@ -243,7 +240,6 @@ const TRANSLATION = {
     layerCol: 'Strato',
     hpCol: 'HP',
     acCol: 'AC',
-    dmgCol: 'Accidenti',
     presetCol: 'Preimpostato',
   },
 };

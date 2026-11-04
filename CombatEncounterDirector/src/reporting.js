@@ -73,7 +73,6 @@ function buildTokenRow(record, token, lang) {
 
   const hpChanged = record.hpModifier !== 100;
   const acChanged = record.acModifier !== 0;
-  const dmgChanged = record.damageModifier !== 100;
 
   // Minions are flagged with -999: their hit points are set to 1, not scaled
   const hpText = record.hpModifier === -999 ? '= 1' : formatPct(record.hpModifier);
@@ -83,10 +82,6 @@ function buildTokenRow(record, token, lang) {
 
   const acCell = acChanged
     ? `<td style="${TD_CHANGED_STYLE}">${formatMod(record.acModifier)}</td>`
-    : `<td style="${TD_MUTED_STYLE}">—</td>`;
-
-  const dmgCell = dmgChanged
-    ? `<td style="${TD_CHANGED_STYLE}">${formatPct(record.damageModifier)}</td>`
     : `<td style="${TD_MUTED_STYLE}">—</td>`;
 
   const presetCell = record.preset
@@ -99,7 +94,6 @@ function buildTokenRow(record, token, lang) {
     `<td style="${TD_MUTED_STYLE}">${token ? escapeHtml(layer) : layer}</td>`,
     hpCell,
     acCell,
-    dmgCell,
     presetCell,
     '</tr>',
   ].join('');
@@ -117,7 +111,7 @@ export function buildStatusReportHtml(records, meta) {
 
   const trackedCount = records.length;
   const changedCount = records.filter(
-    (r) => r.hpModifier !== 100 || r.acModifier !== 0 || r.damageModifier !== 100 || r.preset
+    (r) => r.hpModifier !== 100 || r.acModifier !== 0 || r.preset
   ).length;
   const hiddenCount = records.filter((r) => {
     const token = getGraphicToken(r.tokenId);
@@ -159,7 +153,6 @@ export function buildStatusReportHtml(records, meta) {
     `<th style="${TH_STYLE}">${escapeHtml(t('report.layerCol', lang))}</th>`,
     `<th style="${TH_STYLE}">${escapeHtml(t('report.hpCol', lang))}</th>`,
     `<th style="${TH_STYLE}">${escapeHtml(t('report.acCol', lang))}</th>`,
-    `<th style="${TH_STYLE}">${escapeHtml(t('report.dmgCol', lang))}</th>`,
     `<th style="${TH_STYLE}">${escapeHtml(t('report.presetCol', lang))}</th>`,
     '</tr></thead>',
     '<tbody>',
@@ -275,9 +268,7 @@ export function reportSelectedTokens(msg, pageId) {
  * @returns {{ tokenCount: number }} Result summary.
  */
 export function reportChangedTokens(pageId) {
-  const records = filterTokenRecords(
-    (r) => r.hpModifier !== 100 || r.acModifier !== 0 || r.damageModifier !== 100 || r.preset
-  );
+  const records = filterTokenRecords((r) => r.hpModifier !== 100 || r.acModifier !== 0 || r.preset);
   writeFilteredReport(records, pageId);
   return { tokenCount: records.length };
 }

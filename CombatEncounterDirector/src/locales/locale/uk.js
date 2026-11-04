@@ -5,7 +5,6 @@ const TRANSLATION = {
     scalingPresetReady: 'Попереднє налаштування масштабування готове',
     hpUpdated: 'Оновлено масштабування HP',
     acUpdated: 'Масштабування змінного струму оновлено',
-    damageUpdated: 'Оновлено шкалу пошкоджень',
     bossPreset: 'Попереднє налаштування боса: {preset}',
     partySize: 'Розмір групи: {size}',
     reinforcementsCreated: 'Підкріплення створено',
@@ -35,7 +34,7 @@ const TRANSLATION = {
     unknownCommandHint: 'Введіть !ced help, щоб отримати список команд.',
     noTokensSelected: 'Токенів не вибрано. Спочатку виберіть жетони на карті.',
     unknownScaleAction: 'Невідома дія масштабу: "{action}".',
-    scaleActionHint: 'Допустимі дії: preset, party, hp, ac, damage, apply',
+    scaleActionHint: 'Допустимі дії: preset, party, hp, ac, apply',
     unknownPartyPreset: 'Налаштування невідомої сторони: "{preset}".',
     partyPresetHint: 'Дійсні попередні налаштування: {presets}',
     missingBossPreset: 'Відсутня назва боса.',
@@ -76,8 +75,8 @@ const TRANSLATION = {
     invalidPartySize: 'Розмір групи має бути числом від 1 до 30 (отримано "{value}").',
     invalidHpPercent: 'Відсоток HP має бути від 1 до 1000 (отримано "{value}"). Приклад: 150',
     invalidAcModifier: 'Модифікатор AC має бути від -10 до +10 (отримано "{value}"). Приклад: +2',
-    invalidDamagePercent:
-      'Відсоток шкоди має бути від 1 до 1000 (отримано «{value}»). Приклад: 125',
+    damageScalingRemoved:
+      'Масштабування пошкоджень було видалено у версії 1.0.2, оскільки воно ніколи нічого не змінювало на маркері. Попередні налаштування тепер масштабують лише HP і AC; налаштуйте кидки шкоди самостійно, якщо хочете, щоб істота завдавала сильніших ударів.',
     invalidDuplicateCount:
       'Кількість дублікатів має бути від 1 до 50 (отримано "{value}"). Приклад: 3',
     invalidEncounterName:
@@ -103,7 +102,6 @@ const TRANSLATION = {
     hp: 'HP',
     ac: 'AC',
     acModifier: 'Модифікатор змінного струму',
-    damage: 'Пошкодження',
     appliedTo: 'Застосовується до',
     copiesPerToken: 'Копії на токен',
     totalCreated: 'Всього створено',
@@ -182,7 +180,6 @@ const TRANSLATION = {
     partySizeLabel: 'Розмір партії:',
     hpPercentLabel: 'HP %:',
     acModLabel: 'Модифікатор змінного струму:',
-    damagePercentLabel: 'Пошкодження %:',
     load: 'навантаження',
     delete: 'Видалити',
     quickActions: 'Швидкі дії',
@@ -214,7 +211,7 @@ const TRANSLATION = {
     disableAc: 'Вимкнути AC',
     presetReference: 'Довідка з пресетів',
     presetReferenceDesc:
-      'Що змінює кожен пресет. Приклади стосуються монстра з {hp} HP і AC {ac}, який завдає {damage} шкоди. HP округлюється до найближчого цілого числа, і поранений монстр зберігає ту саму частку свого HP. Показник шкоди є лише орієнтиром для кубиків шкоди.',
+      'Що змінює кожен пресет. Приклади для монстра з {hp} HP і AC {ac}. HP округлюється до найближчого цілого числа, і поранений монстр зберігає ту саму частку свого HP.',
     partyPresets: 'Пресети для групи',
     bossPresets: 'Пресети босів',
     presetPlayers: 'Гравці',
@@ -236,7 +233,6 @@ const TRANSLATION = {
     layerCol: 'Шар',
     hpCol: 'HP',
     acCol: 'AC',
-    dmgCol: 'Dmg',
     presetCol: 'Попереднє налаштування',
   },
 };

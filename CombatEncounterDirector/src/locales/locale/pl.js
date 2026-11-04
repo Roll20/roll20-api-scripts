@@ -5,7 +5,6 @@ const TRANSLATION = {
     scalingPresetReady: 'Gotowe ustawienie wstępne skalowania',
     hpUpdated: 'Zaktualizowano skalowanie HP',
     acUpdated: 'Zaktualizowano skalowanie AC',
-    damageUpdated: 'Zaktualizowano skalowanie obrażeń',
     bossPreset: 'Ustawienie szefa: {preset}',
     partySize: 'Rozmiar imprezy: {size}',
     reinforcementsCreated: 'Utworzono posiłki',
@@ -35,8 +34,7 @@ const TRANSLATION = {
     unknownCommandHint: 'Wpisz !ced help, aby wyświetlić listę poleceń.',
     noTokensSelected: 'Nie wybrano tokenów. Najpierw wybierz żetony na mapie.',
     unknownScaleAction: 'Nieznana akcja skali: „{action}”.',
-    scaleActionHint:
-      'Prawidłowe akcje: ustawienie wstępne, impreza, hp, ac, obrażenia, zastosowanie',
+    scaleActionHint: 'Prawidłowe akcje: ustawienie wstępne, impreza, hp, ac, zastosowanie',
     unknownPartyPreset: 'Nieznane ustawienie grupy: „{preset}”.',
     partyPresetHint: 'Prawidłowe ustawienia wstępne: {presets}',
     missingBossPreset: 'Brakuje wstępnie ustawionej nazwy szefa.',
@@ -78,8 +76,8 @@ const TRANSLATION = {
       'Procent HP musi mieścić się w przedziale od 1 do 1000 (otrzymano „{value}”). Przykład: 150',
     invalidAcModifier:
       'Modyfikator AC musi mieścić się w przedziale od -10 do +10 (otrzymano „{value}”). Przykład: +2',
-    invalidDamagePercent:
-      'Procent obrażeń musi mieścić się w przedziale od 1 do 1000 (otrzymano „{value}”). Przykład: 125',
+    damageScalingRemoved:
+      'Skalowanie obrażeń zostało usunięte w wersji 1.0.2, ponieważ nigdy nie zmieniało niczego na tokenie. Ustawienia wstępne skalują teraz tylko HP i AC; samodzielnie dostosuj rzuty na obrażenia, jeśli chcesz, aby stworzenie uderzało mocniej.',
     invalidDuplicateCount:
       'Liczba duplikatów musi mieścić się w przedziale od 1 do 50 (otrzymano „{value}”). Przykład: 3',
     invalidEncounterName:
@@ -105,7 +103,6 @@ const TRANSLATION = {
     hp: 'HP',
     ac: 'AC',
     acModifier: 'Modyfikator AC',
-    damage: 'Szkoda',
     appliedTo: 'Zastosowano do',
     copiesPerToken: 'Kopie na token',
     totalCreated: 'Razem utworzono',
@@ -184,7 +181,6 @@ const TRANSLATION = {
     partySizeLabel: 'Rozmiar imprezy:',
     hpPercentLabel: '% HP:',
     acModLabel: 'Modyfikator AC:',
-    damagePercentLabel: 'Szkoda %:',
     load: 'Obciążenie',
     delete: 'Usuwać',
     quickActions: 'Szybkie działania',
@@ -218,7 +214,7 @@ const TRANSLATION = {
     disableAc: 'Wyłącz klimatyzację',
     presetReference: 'Przegląd ustawień wstępnych',
     presetReferenceDesc:
-      'Co zmienia każde ustawienie wstępne. Przykłady dotyczą potwora z {hp} HP i KP {ac}, który zadaje {damage} obrażeń. HP jest zaokrąglane do najbliższej liczby całkowitej, a ranny potwór zachowuje tę samą część swojego HP. Liczba obrażeń jest jedynie wskazówką dla twoich kości obrażeń.',
+      'Co zmienia każde ustawienie wstępne. Przykłady dotyczą potwora z {hp} HP i KP {ac}. HP jest zaokrąglane do najbliższej liczby całkowitej, a ranny potwór zachowuje tę samą część swojego HP.',
     partyPresets: 'Ustawienia dla drużyny',
     bossPresets: 'Ustawienia dla bossów',
     presetPlayers: 'Gracze',
@@ -240,7 +236,6 @@ const TRANSLATION = {
     layerCol: 'Warstwa',
     hpCol: 'HP',
     acCol: 'AC',
-    dmgCol: 'DMG',
     presetCol: 'Wstępnie ustawione',
   },
 };

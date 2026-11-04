@@ -5,7 +5,6 @@ const TRANSLATION = {
     scalingPresetReady: 'Ölçeklendirme Ön Ayarı Hazır',
     hpUpdated: 'HP Ölçeklendirme Güncellendi',
     acUpdated: 'AC Ölçeklendirme Güncellendi',
-    damageUpdated: 'Hasar Ölçeklendirmesi Güncellendi',
     bossPreset: 'Patron Ön Ayarı: {preset}',
     partySize: 'Parti Boyutu: {size}',
     reinforcementsCreated: 'Takviyeler Oluşturuldu',
@@ -35,7 +34,7 @@ const TRANSLATION = {
     unknownCommandHint: 'Komutların listesi için !ced help yazın.',
     noTokensSelected: 'Hiçbir jeton seçilmedi. Önce haritada jetonları seçin.',
     unknownScaleAction: 'Bilinmeyen ölçek eylemi: "{action}".',
-    scaleActionHint: 'Geçerli eylemler: ön ayar, parti, hp, ac, hasar, uygulama',
+    scaleActionHint: 'Geçerli eylemler: ön ayar, parti, hp, ac, uygulama',
     unknownPartyPreset: 'Bilinmeyen taraf ön ayarı: "{preset}".',
     partyPresetHint: 'Geçerli ön ayarlar: {presets}',
     missingBossPreset: 'Patronun ön ayar adı eksik.',
@@ -77,8 +76,8 @@ const TRANSLATION = {
       'Parti büyüklüğü 1 ile 30 arasında bir sayı olmalıdır ("{value}" değerini alır).',
     invalidHpPercent: 'HP yüzdesi 1 ile 1000 arasında olmalıdır ("{value}" aldı). Örnek: 150',
     invalidAcModifier: 'AC değiştirici -10 ile +10 arasında olmalıdır ("{value}" alır). Örnek: +2',
-    invalidDamagePercent:
-      'Hasar yüzdesi 1 ile 1000 arasında olmalıdır ("{value}" aldı). Örnek: 125',
+    damageScalingRemoved:
+      "Hasar ölçeklendirmesi sürüm 1.0.2'de kaldırıldı çünkü token üzerinde hiçbir şeyi değiştirmiyordu. Ön ayarlar artık yalnızca HP ve AC'yi ölçeklendiriyor; bir yaratığın daha sert vurmasını istiyorsanız hasar atışlarını kendiniz ayarlayın.",
     invalidDuplicateCount:
       'Yinelenen kopya sayısı 1 ile 50 arasında olmalıdır ("{value}" aldı). Örnek: 3',
     invalidEncounterName:
@@ -103,7 +102,6 @@ const TRANSLATION = {
     hp: 'HP',
     ac: 'klima',
     acModifier: 'AC değiştirici',
-    damage: 'Zarar',
     appliedTo: 'Uygulanan',
     copiesPerToken: 'Belirteç başına kopya sayısı',
     totalCreated: 'Toplam oluşturulan',
@@ -182,7 +180,6 @@ const TRANSLATION = {
     partySizeLabel: 'Parti büyüklüğü:',
     hpPercentLabel: "HP %'si:",
     acModLabel: 'AC değiştirici:',
-    damagePercentLabel: 'Zarar %:',
     load: 'Yük',
     delete: 'Silmek',
     quickActions: 'Hızlı Eylemler',
@@ -217,7 +214,7 @@ const TRANSLATION = {
     disableAc: "AC'yi devre dışı bırak",
     presetReference: 'Ön Ayar Başvurusu',
     presetReferenceDesc:
-      "Her ön ayarın neleri değiştirdiği. Örnekler, {hp} HP ve AC {ac} olan ve {damage} hasar veren bir canavar içindir. HP, en yakın tam sayıya yuvarlanır ve yaralı bir canavar, HP'sinin aynı payını korur. Hasar rakamı yalnızca hasar zarlarınız için bir kılavuzdur.",
+      "Her ön ayarın neleri değiştirdiği. Örnekler {hp} HP ve AC {ac} olan bir canavar içindir. HP, en yakın tam sayıya yuvarlanır ve yaralı bir canavar, HP'sinin aynı payını korur.",
     partyPresets: 'Grup ön ayarları',
     bossPresets: 'Boss ön ayarları',
     presetPlayers: 'Oyuncular',
@@ -239,7 +236,6 @@ const TRANSLATION = {
     layerCol: 'Katman',
     hpCol: 'HP',
     acCol: 'klima',
-    dmgCol: 'hasar',
     presetCol: 'Ön ayar',
   },
 };

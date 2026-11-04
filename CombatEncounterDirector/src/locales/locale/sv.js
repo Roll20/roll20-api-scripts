@@ -5,7 +5,6 @@ const TRANSLATION = {
     scalingPresetReady: 'Skalningsförinställning redo',
     hpUpdated: 'HP Scaling uppdaterad',
     acUpdated: 'AC-skalning uppdaterad',
-    damageUpdated: 'Skadeskalning uppdaterad',
     bossPreset: 'Boss Preset: {preset}',
     partySize: 'Feststorlek: {size}',
     reinforcementsCreated: 'Förstärkningar skapade',
@@ -35,7 +34,7 @@ const TRANSLATION = {
     unknownCommandHint: 'Skriv !ced help för en lista med kommandon.',
     noTokensSelected: 'Inga tokens har valts. Välj tokens på kartan först.',
     unknownScaleAction: 'Okänd skalåtgärd: "{action}".',
-    scaleActionHint: 'Giltiga åtgärder: förinställd, fest, hp, ac, skada, tillämpa',
+    scaleActionHint: 'Giltiga åtgärder: förinställd, fest, hp, ac, tillämpa',
     unknownPartyPreset: 'Okänd part förinställning: "{preset}".',
     partyPresetHint: 'Giltiga förinställningar: {presets}',
     missingBossPreset: 'Förinställningsnamn för chef saknas.',
@@ -76,8 +75,8 @@ const TRANSLATION = {
     invalidHpPercent: 'HP-procenten måste vara mellan 1 och 1000 (fick "{value}"). Exempel: 150',
     invalidAcModifier:
       'AC-modifieraren måste vara mellan -10 och +10 (fick "{value}"). Exempel: +2',
-    invalidDamagePercent:
-      'Skadeprocenten måste vara mellan 1 och 1000 (fick "{value}"). Exempel: 125',
+    damageScalingRemoved:
+      'Skadeskalning togs bort i version 1.0.2 eftersom det aldrig ändrade något på token. Förinställningar skalar nu endast HP och AC; justera skadeslag själv om du vill att en varelse ska slå hårdare.',
     invalidDuplicateCount:
       'Dubblettantalet måste vara mellan 1 och 50 (fick "{value}"). Exempel: 3',
     invalidEncounterName:
@@ -102,7 +101,6 @@ const TRANSLATION = {
     hp: 'HP',
     ac: 'AC',
     acModifier: 'AC modifierare',
-    damage: 'Skada',
     appliedTo: 'Tillämpas på',
     copiesPerToken: 'Kopior per token',
     totalCreated: 'Totalt skapat',
@@ -181,7 +179,6 @@ const TRANSLATION = {
     partySizeLabel: 'Feststorlek:',
     hpPercentLabel: 'HP %:',
     acModLabel: 'AC modifierare:',
-    damagePercentLabel: 'Skador %:',
     load: 'Ladda',
     delete: 'Radera',
     quickActions: 'Snabba åtgärder',
@@ -214,7 +211,7 @@ const TRANSLATION = {
     disableAc: 'Inaktivera AC',
     presetReference: 'Översikt över förinställningar',
     presetReferenceDesc:
-      'Vad varje förinställning ändrar. Exemplen är för ett monster med {hp} HP och AC {ac} som ger {damage} skada. HP avrundas till närmaste heltal, och ett skadat monster behåller samma andel av sin HP. Skadesiffran är endast en vägledning för dina skadetärningar.',
+      'Vad varje förinställning ändrar. Exemplen är för ett monster med {hp} HP och AC {ac}. HP avrundas till närmaste heltal, och ett skadat monster behåller samma andel av sin HP.',
     partyPresets: 'Gruppförinställningar',
     bossPresets: 'Bossförinställningar',
     presetPlayers: 'Spelare',
@@ -236,7 +233,6 @@ const TRANSLATION = {
     layerCol: 'Lager',
     hpCol: 'HP',
     acCol: 'AC',
-    dmgCol: 'Dmg',
     presetCol: 'Förinställa',
   },
 };

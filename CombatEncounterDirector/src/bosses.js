@@ -87,7 +87,6 @@ export function applyBossPresetToToken(token, preset, presetKey) {
     record.acModifier = preset.ac;
   }
 
-  record.damageModifier = preset.damage;
   record.preset = presetKey;
   record.lastModified = Date.now();
   record.lastOperation = `boss:${presetKey}`;

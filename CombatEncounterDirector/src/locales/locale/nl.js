@@ -5,7 +5,6 @@ const TRANSLATION = {
     scalingPresetReady: 'Schaalvoorinstelling gereed',
     hpUpdated: 'HP-schaalverdeling bijgewerkt',
     acUpdated: 'AC-schaling bijgewerkt',
-    damageUpdated: 'Schadeschaal bijgewerkt',
     bossPreset: 'Boss-voorinstelling: {preset}',
     partySize: 'Partijgrootte: {size}',
     reinforcementsCreated: 'Versterkingen gemaakt',
@@ -35,7 +34,7 @@ const TRANSLATION = {
     unknownCommandHint: 'Typ !ced help voor een lijst met opdrachten.',
     noTokensSelected: 'Geen tokens geselecteerd. Selecteer eerst tokens op de kaart.',
     unknownScaleAction: 'Onbekende schaalactie: "{action}".',
-    scaleActionHint: 'Geldige acties: preset, party, hp, ac, damage, apply',
+    scaleActionHint: 'Geldige acties: preset, party, hp, ac, apply',
     unknownPartyPreset: "Onbekende partijvoorinstelling: '{preset}'.",
     partyPresetHint: 'Geldige voorinstellingen: {presets}',
     missingBossPreset: 'Ontbrekende vooraf ingestelde naam van de baas.',
@@ -77,8 +76,8 @@ const TRANSLATION = {
     invalidHpPercent:
       'Het HP-percentage moet tussen 1 en 1000 liggen (kreeg "{value}"). Voorbeeld: 150',
     invalidAcModifier: 'AC-modifier moet tussen -10 en +10 liggen (kreeg "{value}"). Voorbeeld: +2',
-    invalidDamagePercent:
-      'Het schadepercentage moet tussen 1 en 1000 liggen (kreeg "{value}"). Voorbeeld: 125',
+    damageScalingRemoved:
+      'Schaling van schade is in versie 1.0.2 verwijderd omdat het nooit iets aan het token veranderde. Voorinstellingen schalen nu alleen HP en AC; pas de schadeworpen zelf aan als je wilt dat een wezen harder slaat.',
     invalidDuplicateCount:
       'Het dubbele aantal moet tussen 1 en 50 liggen (kreeg "{value}"). Voorbeeld: 3',
     invalidEncounterName:
@@ -104,7 +103,6 @@ const TRANSLATION = {
     hp: 'PK',
     ac: 'AC',
     acModifier: 'AC-modificator',
-    damage: 'Schade',
     appliedTo: 'Toegepast op',
     copiesPerToken: 'Kopieën per token',
     totalCreated: 'Totaal gemaakt',
@@ -183,7 +181,6 @@ const TRANSLATION = {
     partySizeLabel: 'Partijgrootte:',
     hpPercentLabel: 'PK%:',
     acModLabel: 'AC-modificator:',
-    damagePercentLabel: 'Schade %:',
     load: 'Laden',
     delete: 'Verwijderen',
     quickActions: 'Snelle acties',
@@ -217,7 +214,7 @@ const TRANSLATION = {
     disableAc: 'Schakel AC uit',
     presetReference: 'Overzicht van voorinstellingen',
     presetReferenceDesc:
-      'Wat elke preset verandert. De voorbeelden zijn voor een monster met {hp} HP en AC {ac} dat {damage} schade aanricht. HP wordt afgerond op het dichtstbijzijnde gehele getal, en een gewond monster behoudt hetzelfde deel van zijn HP. Het schadecijfer is slechts een leidraad voor uw schadedobbelstenen.',
+      'Wat elke preset verandert. De voorbeelden zijn voor een monster met {hp} HP en AC {ac}. HP wordt afgerond op het dichtstbijzijnde gehele getal, en een gewond monster behoudt hetzelfde deel van zijn HP.',
     partyPresets: 'Groepsvoorinstellingen',
     bossPresets: 'Boss-voorinstellingen',
     presetPlayers: 'Spelers',
@@ -239,7 +236,6 @@ const TRANSLATION = {
     layerCol: 'Laag',
     hpCol: 'PK',
     acCol: 'AC',
-    dmgCol: 'Dmg',
     presetCol: 'Voorinstelling',
   },
 };

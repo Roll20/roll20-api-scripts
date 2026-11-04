@@ -5,7 +5,6 @@ const TRANSLATION = {
     scalingPresetReady: "Mise à l'échelle prédéfinie prête",
     hpUpdated: "Mise à l'échelle HP mise à jour",
     acUpdated: "Mise à l'échelle AC mise à jour",
-    damageUpdated: 'Échelle des dégâts mise à jour',
     bossPreset: 'Préréglage du patron : {preset}',
     partySize: 'Taille du groupe : {size}',
     reinforcementsCreated: 'Renforts créés',
@@ -35,7 +34,7 @@ const TRANSLATION = {
     unknownCommandHint: 'Tapez !ced help pour une liste de commandes.',
     noTokensSelected: 'Aucun jeton sélectionné. Sélectionnez d’abord les jetons sur la carte.',
     unknownScaleAction: 'Action d\'échelle inconnue : "{action}".',
-    scaleActionHint: 'Actions valides : préréglage, fête, hp, ac, dégâts, appliquer',
+    scaleActionHint: 'Actions valides : préréglage, fête, hp, ac, appliquer',
     unknownPartyPreset: 'Préréglage de fête inconnu : "{preset}".',
     partyPresetHint: 'Préréglages valides : {presets}',
     missingBossPreset: 'Nom prédéfini du boss manquant.',
@@ -79,8 +78,8 @@ const TRANSLATION = {
       'Le pourcentage de HP doit être compris entre 1 et 1000 (obtenu "{value}"). Exemple : 150',
     invalidAcModifier:
       'Le modificateur AC doit être compris entre -10 et +10 (obtenu "{value}"). Exemple : +2',
-    invalidDamagePercent:
-      'Le pourcentage de dégâts doit être compris entre 1 et 1 000 (obtenu "{value}"). Exemple : 125',
+    damageScalingRemoved:
+      "La mise à l'échelle des dégâts a été supprimée dans la version 1.0.2 car elle n'a jamais rien changé sur le jeton. Les préréglages mettent désormais à l'échelle HP et AC uniquement ; ajustez vous-même les jets de dégâts si vous voulez qu'une créature frappe plus fort.",
     invalidDuplicateCount:
       'Le nombre de doublons doit être compris entre 1 et 50 (obtenu "{value}"). Exemple : 3',
     invalidEncounterName:
@@ -107,7 +106,6 @@ const TRANSLATION = {
     hp: 'HP',
     ac: 'CA',
     acModifier: 'Modificateur AC',
-    damage: 'Dommage',
     appliedTo: 'Appliqué à',
     copiesPerToken: 'Copies par jeton',
     totalCreated: 'Total créé',
@@ -186,7 +184,6 @@ const TRANSLATION = {
     partySizeLabel: 'Taille du groupe :',
     hpPercentLabel: '% de PV :',
     acModLabel: 'Modificateur AC :',
-    damagePercentLabel: 'Dommage %:',
     load: 'Charger',
     delete: 'Supprimer',
     quickActions: 'Actions rapides',
@@ -221,7 +218,7 @@ const TRANSLATION = {
     disableAc: 'Désactiver la climatisation',
     presetReference: 'Référence des préréglages',
     presetReferenceDesc:
-      "Ce que chaque préréglage change. Les exemples concernent un monstre avec {hp} HP et AC {ac} qui inflige {damage} dégâts. Les PV sont arrondis à l'entier le plus proche, et un monstre blessé conserve la même part de ses PV. Le chiffre des dégâts n'est qu'un guide pour vos dés de dégâts.",
+      "Ce que chaque préréglage change. Les exemples concernent un monstre avec {hp} HP et AC {ac}. Les PV sont arrondis à l'entier le plus proche, et un monstre blessé conserve la même part de ses PV.",
     partyPresets: 'Préréglages de groupe',
     bossPresets: 'Préréglages de boss',
     presetPlayers: 'Joueurs',
@@ -243,7 +240,6 @@ const TRANSLATION = {
     layerCol: 'Couche',
     hpCol: 'HP',
     acCol: 'CA',
-    dmgCol: 'Dmg',
     presetCol: 'Préréglage',
   },
 };

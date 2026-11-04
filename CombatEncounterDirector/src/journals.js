@@ -194,7 +194,7 @@ function buildPartyScalingSection(lang) {
 }
 
 /**
- * Builds the custom scaling section for HP/AC/damage adjustments.
+ * Builds the custom scaling section for HP/AC adjustments.
  *
  * @param {string} lang Locale code.
  * @returns {string} HTML string.
@@ -207,9 +207,6 @@ function buildCustomScalingSection(lang) {
     const label = mod >= 0 ? `+${mod}` : String(mod);
     return btn(label, `${COMMAND} scale ac ${mod}`, mod === 0);
   });
-  const damageButtons = [50, 75, 100, 125, 150, 200].map((pct) =>
-    btn(`${pct}%`, `${COMMAND} scale damage ${pct}`, pct === 100)
-  );
 
   return [
     section(t('ui.customScaling', lang)),
@@ -220,9 +217,6 @@ function buildCustomScalingSection(lang) {
     '</div>',
     `<div style="color:${COLOR_MUTED};font-size:0.8em;margin-top:3px">${escapeHtml(t('ui.acModLabel', lang))}</div><div>`,
     ...acButtons,
-    '</div>',
-    `<div style="color:${COLOR_MUTED};font-size:0.8em;margin-top:3px">${escapeHtml(t('ui.damagePercentLabel', lang))}</div><div>`,
-    ...damageButtons,
     '</div>',
     '</div>',
   ].join('');
@@ -505,7 +499,6 @@ function buildHelpSection(lang) {
 // so the tables show exactly what the presets write to a token.
 const EXAMPLE_HP = 40;
 const EXAMPLE_AC = 15;
-const EXAMPLE_DAMAGE = 20;
 
 /**
  * Formats an AC modifier with its sign, using a true minus sign.
@@ -539,7 +532,7 @@ function partySizeRanges() {
 
 /**
  * Builds the Changes and Example cells for one preset. HP follows the same rounding as
- * scaling (nearest whole number, at least 1); damage is a guide for the GM's rolls.
+ * scaling (nearest whole number, at least 1).
  *
  * @param {object} preset Party or boss preset.
  * @param {string} lang Locale code.
@@ -548,24 +541,17 @@ function partySizeRanges() {
 function presetCells(preset, lang) {
   const hpLabel = escapeHtml(t('labels.hp', lang));
   const acLabel = escapeHtml(t('labels.ac', lang));
-  const damageLabel = escapeHtml(t('labels.damage', lang));
   const setHp = preset.hpMode === 'set';
   const hpChange = setHp
     ? escapeHtml(t('ui.presetHpSet', lang, { hp: preset.hp }))
     : `${preset.hp}%`;
   const newHp = setHp ? preset.hp : roundAtLeastOne((EXAMPLE_HP * preset.hp) / 100);
-  const newDamage = Math.round((EXAMPLE_DAMAGE * preset.damage) / 100);
   const lines = (rows) => rows.join('<br>');
   return [
-    lines([
-      `${hpLabel} ${hpChange}`,
-      `${acLabel} ${signed(preset.ac)}`,
-      `${damageLabel} ${preset.damage}%`,
-    ]),
+    lines([`${hpLabel} ${hpChange}`, `${acLabel} ${signed(preset.ac)}`]),
     lines([
       `${hpLabel} ${EXAMPLE_HP} → ${newHp}`,
       `${acLabel} ${EXAMPLE_AC} → ${EXAMPLE_AC + preset.ac}`,
-      `${damageLabel} ${EXAMPLE_DAMAGE} → ${newDamage}`,
     ]),
   ];
 }
@@ -603,9 +589,7 @@ function buildPresetReferenceSection(lang) {
 
   return [
     section(t('ui.presetReference', lang)),
-    desc(
-      t('ui.presetReferenceDesc', lang, { hp: EXAMPLE_HP, ac: EXAMPLE_AC, damage: EXAMPLE_DAMAGE })
-    ),
+    desc(t('ui.presetReferenceDesc', lang, { hp: EXAMPLE_HP, ac: EXAMPLE_AC })),
     `<div style="${SECTION_BODY}">`,
     subheading(t('ui.partyPresets', lang)),
     partyTable,

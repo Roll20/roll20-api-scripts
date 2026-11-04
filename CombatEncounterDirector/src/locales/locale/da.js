@@ -5,7 +5,6 @@ const TRANSLATION = {
     scalingPresetReady: 'Forudindstillet skalering er klar',
     hpUpdated: 'HP Scaling opdateret',
     acUpdated: 'AC-skalering opdateret',
-    damageUpdated: 'Skadeskalering opdateret',
     bossPreset: 'Boss Preset: {preset}',
     partySize: 'Feststørrelse: {size}',
     reinforcementsCreated: 'Forstærkninger oprettet',
@@ -35,7 +34,7 @@ const TRANSLATION = {
     unknownCommandHint: 'Skriv !ced help for at få en liste over kommandoer.',
     noTokensSelected: 'Ingen tokens valgt. Vælg tokens på kortet først.',
     unknownScaleAction: 'Ukendt skalahandling: "{action}".',
-    scaleActionHint: 'Gyldige handlinger: forudindstillet, fest, hp, ac, skade, anvende',
+    scaleActionHint: 'Gyldige handlinger: forudindstillet, fest, hp, ac, anvende',
     unknownPartyPreset: 'Ukendt parti forudindstilling: "{preset}".',
     partyPresetHint: 'Gyldige forudindstillinger: {presets}',
     missingBossPreset: 'Mangler forudindstillet chefnavn.',
@@ -75,8 +74,8 @@ const TRANSLATION = {
     invalidPartySize: 'Partistørrelsen skal være et tal mellem 1 og 30 (fik "{value}").',
     invalidHpPercent: 'HP-procenten skal være mellem 1 og 1000 (fik "{value}"). Eksempel: 150',
     invalidAcModifier: 'AC-modifikator skal være mellem -10 og +10 (fik "{value}"). Eksempel: +2',
-    invalidDamagePercent:
-      'Skadeprocenten skal være mellem 1 og 1000 (fik "{value}"). Eksempel: 125',
+    damageScalingRemoved:
+      'Skadeskalering blev fjernet i version 1.0.2, fordi den aldrig ændrede noget på tokenet. Forudindstillinger skalerer nu kun HP og AC; juster selv skadeslag, hvis du vil have et væsen til at slå hårdere.',
     invalidDuplicateCount: 'Duplikatantal skal være mellem 1 og 50 (fik "{value}"). Eksempel: 3',
     invalidEncounterName:
       'Ugyldigt mødenavn: "{name}". Navne kan indeholde bogstaver, cifre, mellemrum, bindestreger og understregninger (maks. 64 tegn).',
@@ -100,7 +99,6 @@ const TRANSLATION = {
     hp: 'HP',
     ac: 'AC',
     acModifier: 'AC modifikator',
-    damage: 'Skade',
     appliedTo: 'Anvendt til',
     copiesPerToken: 'Kopier pr. token',
     totalCreated: 'Samlet oprettet',
@@ -179,7 +177,6 @@ const TRANSLATION = {
     partySizeLabel: 'Feststørrelse:',
     hpPercentLabel: 'HP %:',
     acModLabel: 'AC modifikator:',
-    damagePercentLabel: 'Skade %:',
     load: 'Indlæs',
     delete: 'Slet',
     quickActions: 'Hurtige handlinger',
@@ -210,7 +207,7 @@ const TRANSLATION = {
     disableAc: 'Deaktiver AC',
     presetReference: 'Oversigt over forudindstillinger',
     presetReferenceDesc:
-      'Hvad hver forudindstilling ændrer. Eksemplerne er for et monster med {hp} HP og AC {ac}, der giver {damage} skade. HP afrundes til nærmeste hele tal, og et såret monster beholder den samme andel af sin HP. Skadetallet er kun vejledende for dine skadesterninger.',
+      'Hvad hver forudindstilling ændrer. Eksemplerne er for et monster med {hp} HP og AC {ac}. HP afrundes til nærmeste hele tal, og et såret monster beholder den samme andel af sin HP.',
     partyPresets: 'Gruppe-forudindstillinger',
     bossPresets: 'Boss-forudindstillinger',
     presetPlayers: 'Spillere',
@@ -232,7 +229,6 @@ const TRANSLATION = {
     layerCol: 'Lag',
     hpCol: 'HP',
     acCol: 'AC',
-    dmgCol: 'Dmg',
     presetCol: 'Forudindstillet',
   },
 };

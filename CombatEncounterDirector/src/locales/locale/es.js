@@ -5,7 +5,6 @@ const TRANSLATION = {
     scalingPresetReady: 'Escala preestablecida lista',
     hpUpdated: 'Escalado de HP actualizado',
     acUpdated: 'Escalado de CA actualizado',
-    damageUpdated: 'Escala de daños actualizada',
     bossPreset: 'Preajuste de jefe: {preset}',
     partySize: 'Tamaño del grupo: {size}',
     reinforcementsCreated: 'Refuerzos creados',
@@ -35,7 +34,7 @@ const TRANSLATION = {
     unknownCommandHint: 'Escriba !ced help para obtener una lista de comandos.',
     noTokensSelected: 'No hay tokens seleccionados. Primero selecciona fichas en el mapa.',
     unknownScaleAction: 'Acción de escala desconocida: "{action}".',
-    scaleActionHint: 'Acciones válidas: preestablecer, fiesta, hp, ac, dañar, aplicar',
+    scaleActionHint: 'Acciones válidas: preestablecer, fiesta, hp, ac, aplicar',
     unknownPartyPreset: 'Preajuste de grupo desconocido: "{preset}".',
     partyPresetHint: 'Ajustes preestablecidos válidos: {presets}',
     missingBossPreset: 'Falta el nombre preestablecido del jefe.',
@@ -78,8 +77,8 @@ const TRANSLATION = {
       'El porcentaje de HP debe estar entre 1 y 1000 (obtuvo "{value}"). Ejemplo: 150',
     invalidAcModifier:
       'El modificador AC debe estar entre -10 y +10 (obtuvo "{value}"). Ejemplo: +2',
-    invalidDamagePercent:
-      'El porcentaje de daño debe estar entre 1 y 1000 (obtuvo "{value}"). Ejemplo: 125',
+    damageScalingRemoved:
+      'La escala de daño se eliminó en la versión 1.0.2 porque nunca cambió nada en el token. Los ajustes preestablecidos ahora escalan HP y AC únicamente; ajusta las tiradas de daño tú mismo si quieres que una criatura golpee más fuerte.',
     invalidDuplicateCount:
       'El recuento de duplicados debe estar entre 1 y 50 (obtuvo "{value}"). Ejemplo: 3',
     invalidEncounterName:
@@ -105,7 +104,6 @@ const TRANSLATION = {
     hp: 'caballos de fuerza',
     ac: 'C.A.',
     acModifier: 'modificador de CA',
-    damage: 'Daño',
     appliedTo: 'Aplicado a',
     copiesPerToken: 'Copias por token',
     totalCreated: 'Total creado',
@@ -184,7 +182,6 @@ const TRANSLATION = {
     partySizeLabel: 'Tamaño del grupo:',
     hpPercentLabel: '% de vida:',
     acModLabel: 'Modificador de CA:',
-    damagePercentLabel: 'Daño %:',
     load: 'Carga',
     delete: 'Borrar',
     quickActions: 'Acciones Rápidas',
@@ -219,7 +216,7 @@ const TRANSLATION = {
     disableAc: 'Desactivar aire acondicionado',
     presetReference: 'Referencia de preajustes',
     presetReferenceDesc:
-      'Qué cambia cada preset. Los ejemplos son para un monstruo con {hp} HP y AC {ac} que causa {damage} de daño. Los HP se redondean al número entero más cercano y un monstruo herido conserva la misma proporción de sus HP. La cifra de daño es sólo una guía para tus dados de daño.',
+      'Qué cambia cada preset. Los ejemplos son para un monstruo con {hp} HP y AC {ac}. Los HP se redondean al número entero más cercano y un monstruo herido conserva la misma proporción de sus HP.',
     partyPresets: 'Preajustes de grupo',
     bossPresets: 'Preajustes de jefe',
     presetPlayers: 'Jugadores',
@@ -241,7 +238,6 @@ const TRANSLATION = {
     layerCol: 'Capa',
     hpCol: 'caballos de fuerza',
     acCol: 'C.A.',
-    dmgCol: 'Daño',
     presetCol: 'Programar',
   },
 };

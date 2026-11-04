@@ -5,7 +5,6 @@ const TRANSLATION = {
     scalingPresetReady: 'Předvolba škálování připravena',
     hpUpdated: 'HP Scaling aktualizováno',
     acUpdated: 'AC Scaling aktualizováno',
-    damageUpdated: 'Měřítko poškození aktualizováno',
     bossPreset: 'Předvolba šéfa: {preset}',
     partySize: 'Velikost party: {size}',
     reinforcementsCreated: 'Posílení vytvořeno',
@@ -35,7 +34,7 @@ const TRANSLATION = {
     unknownCommandHint: 'Pro seznam příkazů napište !ced help.',
     noTokensSelected: 'Nejsou vybrány žádné tokeny. Nejprve vyberte žetony na mapě.',
     unknownScaleAction: 'Neznámá akce měřítka: "{action}".',
-    scaleActionHint: 'Platné akce: přednastavení, párty, hp, ac, poškození, použít',
+    scaleActionHint: 'Platné akce: přednastavení, párty, hp, ac, použít',
     unknownPartyPreset: 'Neznámá předvolba party: „{preset}“.',
     partyPresetHint: 'Platné předvolby: {presets}',
     missingBossPreset: 'Chybí přednastavený název šéfa.',
@@ -75,8 +74,8 @@ const TRANSLATION = {
     invalidPartySize: 'Velikost skupiny musí být číslo mezi 1 a 30 (získáno „{value}“).',
     invalidHpPercent: 'Procento HP musí být mezi 1 a 1000 (získáno „{value}“). Příklad: 150',
     invalidAcModifier: 'Modifikátor AC musí být mezi -10 a +10 (získáno "{value}"). Příklad: +2',
-    invalidDamagePercent:
-      'Procento poškození musí být mezi 1 a 1000 (získáno „{value}“). Příklad: 125',
+    damageScalingRemoved:
+      'Škálování poškození bylo ve verzi 1.0.2 odstraněno, protože na tokenu nikdy nic nezměnilo. Předvolby nyní škálují pouze HP a AC; upravte si házení na poškození sami, pokud chcete, aby stvoření zasáhlo tvrději.',
     invalidDuplicateCount: 'Počet duplicit musí být mezi 1 a 50 (získáno „{value}“). Příklad: 3',
     invalidEncounterName:
       'Neplatný název setkání: "{name}". Jména mohou obsahovat písmena, číslice, mezery, pomlčky a podtržítka (max. 64 znaků).',
@@ -100,7 +99,6 @@ const TRANSLATION = {
     hp: 'HP',
     ac: 'AC',
     acModifier: 'AC modifikátor',
-    damage: 'Poškození',
     appliedTo: 'Aplikováno na',
     copiesPerToken: 'Počet kopií na token',
     totalCreated: 'Celkem vytvořeno',
@@ -179,7 +177,6 @@ const TRANSLATION = {
     partySizeLabel: 'Velikost party:',
     hpPercentLabel: '% HP:',
     acModLabel: 'AC modifikátor:',
-    damagePercentLabel: '% poškození:',
     load: 'Zatížení',
     delete: 'Vymazat',
     quickActions: 'Rychlé akce',
@@ -211,7 +208,7 @@ const TRANSLATION = {
     disableAc: 'Zakázat AC',
     presetReference: 'Přehled předvoleb',
     presetReferenceDesc:
-      'Co každá předvolba mění. Příklady jsou pro monstrum s {hp} HP a AC {ac}, které způsobí poškození {damage}. HP se zaokrouhlí na nejbližší celé číslo a zraněné monstrum si ponechá stejný podíl svých HP. Hodnota poškození je jen vodítkem pro vaše kostky poškození.',
+      'Co každá předvolba mění. Příklady jsou pro monstrum s {hp} HP a AC {ac}. HP se zaokrouhlí na nejbližší celé číslo a zraněné monstrum si ponechá stejný podíl svých HP.',
     partyPresets: 'Předvolby družiny',
     bossPresets: 'Předvolby bossů',
     presetPlayers: 'Hráči',
@@ -233,7 +230,6 @@ const TRANSLATION = {
     layerCol: 'Vrstva',
     hpCol: 'HP',
     acCol: 'AC',
-    dmgCol: 'Dmg',
     presetCol: 'Přednastaveno',
   },
 };

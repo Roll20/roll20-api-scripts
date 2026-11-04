@@ -5,7 +5,6 @@ const TRANSLATION = {
     scalingPresetReady: 'Dimensionamento predefinido pronto',
     hpUpdated: 'Dimensionamento HP atualizado',
     acUpdated: 'Escala AC atualizada',
-    damageUpdated: 'Escala de dano atualizada',
     bossPreset: 'Predefinição de chefe: {preset}',
     partySize: 'Tamanho do grupo: {size}',
     reinforcementsCreated: 'Reforços criados',
@@ -35,7 +34,7 @@ const TRANSLATION = {
     unknownCommandHint: 'Digite !ced help para obter uma lista de comandos.',
     noTokensSelected: 'Nenhum token selecionado. Selecione os tokens no mapa primeiro.',
     unknownScaleAction: 'Ação de escala desconhecida: "{action}".',
-    scaleActionHint: 'Ações válidas: predefinição, grupo, hp, ac, dano, aplicar',
+    scaleActionHint: 'Ações válidas: predefinição, grupo, hp, ac, aplicar',
     unknownPartyPreset: 'Predefinição de grupo desconhecido: "{preset}".',
     partyPresetHint: 'Predefinições válidas: {presets}',
     missingBossPreset: 'Nome predefinido do chefe ausente.',
@@ -77,8 +76,8 @@ const TRANSLATION = {
       'A porcentagem de HP deve estar entre 1 e 1000 (obteve "{value}"). Exemplo: 150',
     invalidAcModifier:
       'O modificador AC deve estar entre -10 e +10 (obteve "{value}"). Exemplo: +2',
-    invalidDamagePercent:
-      'A porcentagem de dano deve estar entre 1 e 1000 (obteve "{value}"). Exemplo: 125',
+    damageScalingRemoved:
+      'A escala de dano foi removida na versão 1.0.2 porque nunca mudou nada no token. As predefinições agora dimensionam apenas HP e AC; ajuste você mesmo as jogadas de dano se quiser que uma criatura atinja com mais força.',
     invalidDuplicateCount:
       'A contagem de duplicatas deve estar entre 1 e 50 (obtido "{value}"). Exemplo: 3',
     invalidEncounterName:
@@ -104,7 +103,6 @@ const TRANSLATION = {
     hp: 'HP',
     ac: 'AC',
     acModifier: 'Modificador AC',
-    damage: 'Dano',
     appliedTo: 'Aplicado a',
     copiesPerToken: 'Cópias por token',
     totalCreated: 'Total criado',
@@ -183,7 +181,6 @@ const TRANSLATION = {
     partySizeLabel: 'Tamanho da festa:',
     hpPercentLabel: '% de HP:',
     acModLabel: 'Modificador AC:',
-    damagePercentLabel: 'Dano %:',
     load: 'Carregar',
     delete: 'Excluir',
     quickActions: 'Ações rápidas',
@@ -217,7 +214,7 @@ const TRANSLATION = {
     disableAc: 'Desativar CA',
     presetReference: 'Referência de predefinições',
     presetReferenceDesc:
-      'O que cada predefinição muda. Os exemplos são para um monstro com {hp} HP e AC {ac} que causa {damage} de dano. O HP é arredondado para o número inteiro mais próximo, e um monstro ferido mantém a mesma parcela de seu HP. O número de dano é apenas um guia para seus dados de dano.',
+      'O que cada predefinição muda. Os exemplos são para um monstro com {hp} HP e AC {ac}. O HP é arredondado para o número inteiro mais próximo, e um monstro ferido mantém a mesma parcela de seu HP.',
     partyPresets: 'Predefinições de grupo',
     bossPresets: 'Predefinições de chefe',
     presetPlayers: 'Jogadores',
@@ -239,7 +236,6 @@ const TRANSLATION = {
     layerCol: 'Camada',
     hpCol: 'HP',
     acCol: 'AC',
-    dmgCol: 'Dano',
     presetCol: 'Predefinido',
   },
 };

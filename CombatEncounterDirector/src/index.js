@@ -3,7 +3,13 @@ import { handleInput, handleLegacyInput, showMainMenu } from './commands.js';
 import { SCRIPT_LAST_UPDATED, SCRIPT_NAME, SCRIPT_VERSION } from './constants.js';
 import { t } from './i18n.js';
 import { installControlPanelHandout, installStatusHandout } from './journals.js';
-import { applyGlobalConfig, ensureState, getConfig, getDeckView } from './state.js';
+import {
+  applyGlobalConfig,
+  dropLegacyDamageModifiers,
+  ensureState,
+  getConfig,
+  getDeckView,
+} from './state.js';
 import { escapeHtml, getGmPlayerIds } from './utils.js';
 
 /**
@@ -15,6 +21,7 @@ function checkInstall() {
   log(`${SCRIPT_NAME}: Starting up.`);
 
   ensureState();
+  dropLegacyDamageModifiers();
   applyGlobalConfig();
   installControlPanelHandout(getDeckView());
   installStatusHandout();

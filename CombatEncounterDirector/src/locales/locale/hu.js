@@ -5,7 +5,6 @@ const TRANSLATION = {
     scalingPresetReady: 'Méretezési előbeállítás kész',
     hpUpdated: 'A HP méretezés frissítve',
     acUpdated: 'AC skálázás frissítve',
-    damageUpdated: 'A sérülések skálázása frissítve',
     bossPreset: 'Főnök előbeállítása: {preset}',
     partySize: 'Parti mérete: {size}',
     reinforcementsCreated: 'Erősítések létrehozva',
@@ -35,7 +34,7 @@ const TRANSLATION = {
     unknownCommandHint: 'Írja be a !ced help parancsot a parancsok listájához.',
     noTokensSelected: 'Nincs kiválasztva token. Először válassza ki a tokeneket a térképen.',
     unknownScaleAction: 'Ismeretlen léptékművelet: „{action}”.',
-    scaleActionHint: 'Érvényes műveletek: előre beállított, party, hp, ac, kár, alkalmaz',
+    scaleActionHint: 'Érvényes műveletek: előre beállított, party, hp, ac, alkalmaz',
     unknownPartyPreset: 'Ismeretlen fél előbeállítása: "{preset}".',
     partyPresetHint: 'Érvényes előbeállítások: {presets}',
     missingBossPreset: 'Hiányzik a főnök előre beállított neve.',
@@ -79,8 +78,8 @@ const TRANSLATION = {
       'A HP százalékának 1 és 1000 között kell lennie (a "{value}" értéket kapta). Példa: 150',
     invalidAcModifier:
       'Az AC módosítónak -10 és +10 között kell lennie (a "{value}" értéket kapta). Példa: +2',
-    invalidDamagePercent:
-      'A kár százalékának 1 és 1000 között kell lennie (a "{value}" érték). Példa: 125',
+    damageScalingRemoved:
+      'A sérülések méretezését eltávolították az 1.0.2-es verzióban, mert soha nem változtatott semmit a tokenen. Az előbeállítások most csak a HP-t és az AC-t skálázzák; állítsa be maga a sebzésdobásokat, ha azt szeretné, hogy egy lény erősebben üssön.',
     invalidDuplicateCount:
       'Az ismétlődések számának 1 és 50 között kell lennie (a következőt kapta: „{value}”). Példa: 3',
     invalidEncounterName:
@@ -107,7 +106,6 @@ const TRANSLATION = {
     hp: 'HP',
     ac: 'AC',
     acModifier: 'AC módosító',
-    damage: 'Kár',
     appliedTo: 'Alkalmazva',
     copiesPerToken: 'Példányok tokenenként',
     totalCreated: 'Összesen létrehozva',
@@ -186,7 +184,6 @@ const TRANSLATION = {
     partySizeLabel: 'A társaság mérete:',
     hpPercentLabel: 'HP %:',
     acModLabel: 'AC módosító:',
-    damagePercentLabel: 'Sebzés %:',
     load: 'Terhelés',
     delete: 'Töröl',
     quickActions: 'Gyors műveletek',
@@ -221,7 +218,7 @@ const TRANSLATION = {
     disableAc: 'Az AC letiltása',
     presetReference: 'Előbeállítások áttekintése',
     presetReferenceDesc:
-      'Mit változtatnak az egyes előbeállítások. A példák egy {hp} HP-s, AC {ac} értékű szörnyre vonatkoznak, amely {damage} sebzést okoz. A HP-t a legközelebbi egész számra kerekítik, és a megsebesült szörny HP-jának ugyanazt az arányát megtartja. A sebzésérték csak útmutató a sebzéskockáidhoz.',
+      'Mit változtatnak az egyes előbeállítások. A példák egy {hp} HP-s, AC {ac} értékű szörnyre vonatkoznak. A HP-t a legközelebbi egész számra kerekítjük, és a sebesült szörny HP-jának ugyanakkora hányadát tartja meg.',
     partyPresets: 'Csapat-előbeállítások',
     bossPresets: 'Boss-előbeállítások',
     presetPlayers: 'Játékosok',
@@ -243,7 +240,6 @@ const TRANSLATION = {
     layerCol: 'Réteg',
     hpCol: 'HP',
     acCol: 'AC',
-    dmgCol: 'Dmg',
     presetCol: 'Előre beállított',
   },
 };
