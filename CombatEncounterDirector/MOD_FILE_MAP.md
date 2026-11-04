@@ -20,13 +20,13 @@ A quick reference for where to find each feature in the source.
 
 ## Party Scaling
 
-| Task                             | File              | Key function                                              |
-| -------------------------------- | ----------------- | --------------------------------------------------------- |
-| Resolve party preset             | `src/scaling.js`  | `resolvePartyPreset`                                      |
-| Resolve preset by party size     | `src/scaling.js`  | `resolvePartyPresetBySize`                                |
-| Apply scaling to selected tokens | `src/scaling.js`  | `applyScalingToSelected`                                  |
-| Validate HP %, AC modifier, etc. | `src/scaling.js`  | `parseHpPercent`, `parseAcModifier`, `parseDamagePercent` |
-| Pending scaling session state    | `src/commands.js` | `pendingScaling` (Map)                                    |
+| Task                             | File              | Key function                        |
+| -------------------------------- | ----------------- | ----------------------------------- |
+| Resolve party preset             | `src/scaling.js`  | `resolvePartyPreset`                |
+| Resolve preset by party size     | `src/scaling.js`  | `resolvePartyPresetBySize`          |
+| Apply scaling to selected tokens | `src/scaling.js`  | `applyScalingToSelected`            |
+| Validate HP %, AC modifier, etc. | `src/scaling.js`  | `parseHpPercent`, `parseAcModifier` |
+| Pending scaling session state    | `src/commands.js` | `pendingScaling` (Map)              |
 
 ## Boss Tools
 

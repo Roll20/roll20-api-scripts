@@ -54,8 +54,8 @@ Place one or more NPC tokens on the token layer with bar1 and bar2 values set.
 
 - [ ] `!ced scale hp 200` → pending HP set to 200%.
 - [ ] `!ced scale ac +3` → pending AC set to +3.
-- [ ] `!ced scale damage 150` → pending damage set to 150%.
-- [ ] `!ced scale apply` with tokens selected → applies all three.
+- [ ] `!ced scale damage 150` → whispers a warning that damage scaling was removed; nothing changes.
+- [ ] `!ced scale apply` with tokens selected → applies both.
 - [ ] `!ced scale hp 0` → whispers a validation error.
 - [ ] `!ced scale ac +15` → whispers a validation error.
 - [ ] `!ced scale hp 150abc` → whispers a validation error (partial input rejected).
