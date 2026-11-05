@@ -48,861 +48,994 @@ const CombatAssistant = (() => {
     const SPELL_CONTROLS_WIDTH = 79;
 
     /** -----------------------------------------------------------------------
-     * I18N: English keys, built-in Spanish, optional Custom handout translations.
+     * I18N: stable dotted IDs, English base dictionary and CA Language handout.
+     * A single keyed engine also resolves older English phrases while migrating
+     * cards that still contain human-readable text nodes.
      * --------------------------------------------------------------------- */
     const I18N = {
         HANDOUT_NAME: 'CA Language',
-        // Cache per-dictionary, case-insensitive lookups without changing the
-        // canonical English keys or the exact-case meaning of an entry.
-        caseFoldCache: new WeakMap(),
-        spanish: Object.freeze({
-            "Reset CA State": "Restablecer estado de CA",
-            "This permanently deletes all CA settings, Spell Templates, Spell Macros, and tracked combat data. Other scripts and Roll20 handouts are not affected. Export CA Settings first if you need a backup.": "Esto elimina permanentemente los ajustes, plantillas y macros de hechizos, y los datos de combate registrados por CA. No afecta a otros scripts ni a los handouts de Roll20. Exporta CA Settings primero si necesitas una copia de seguridad.",
-            "Combat Assistant data was cleared and default settings restored. Restart the Roll20 Mod sandbox to clear temporary in-memory data.": "Se borraron los datos de Combat Assistant y se restauraron los ajustes predeterminados. Reinicia el sandbox Mod de Roll20 para limpiar los datos temporales en memoria.",
-            "Some CA-managed map locks or markers could not be released; check them manually.": "No se pudieron liberar algunos bloqueos o marcadores del mapa administrados por CA; revísalos manualmente.",
-            "GM only: permanently clear CA state after typing CONFIRM. Export CA Settings first.": "Solo el DM: borra permanentemente el estado de CA después de escribir CONFIRM. Exporta CA Settings primero.",
-            "Combat": "Combate",
-            "Special Actions": "Acciones especiales",
-            "Bonus Action": "Acción adicional",
-            "Bonus Actions": "Acciones adicionales",
-            "Reaction": "Reacción",
-            "Reactions": "Reacciones",
-            "Free Action": "Acción libre",
-            "Free Actions": "Acciones libres",
-            "Legendary Action": "Acción legendaria",
-            "Legendary Actions": "Acciones legendarias",
-            "Mythic Action": "Acción mítica",
-            "Mythic Actions": "Acciones míticas",
-            "Combat Log": "Registro de combate",
-            "Healing": "Curación",
-            "Temporary HP": "PG temporales",
-            "Damage": "Daño",
-            "Damage Blocked": "Daño bloqueado",
-            "Healing Blocked": "Curación bloqueada",
-            "Attack": "Ataque",
-            "Attacks": "Ataques",
-            "Hit": "Impacto",
-            "Miss": "Fallo",
-            "Missed": "Falló",
-            "Critical Hit": "Golpe crítico",
-            "Critical": "Crítico",
-            "Success": "Éxito",
-            "Failure": "Fallo",
-            "Warning": "Advertencia",
-            "Info": "Información",
-            "Unknown": "Desconocido",
-            "None": "Ninguno",
-            "Yes": "Sí",
-            "Get": "Obtener",
-            "Set": "Asignar",
-            "Edit": "Editar",
-            "Update Macro": "Actualizar macro",
-            "Copy the text above to edit it. In the next prompt, replace [keep] to change a field, leave [keep] to preserve it, or erase it to clear that field.": "Copia el texto de arriba para editarlo. En la siguiente ventana, reemplaza [keep] para cambiar un campo, déjalo para conservarlo o bórralo para vaciar ese campo.",
-            "Back": "Volver",
-            "Default": "Predeterminado",
-            "Recommended": "Recomendado",
-            "Language Template": "Plantilla de idioma",
-            "Apply recommended ON/OFF settings only?": "\u00bfAplicar los ajustes recomendados? Solo se cambiar\u00e1n las opciones ON/OFF.",
-            "Apply recommended ON/OFF settings without changing images, markers, language, spell templates, or macros": "Aplica las opciones ON/OFF recomendadas sin modificar im\u00e1genes, marcadores, idioma, plantillas ni macros.",
-            "Recommended settings cancelled. No changes were made.": "No se aplicaron los ajustes recomendados. No se modific\u00f3 nada.",
-            "Recommended settings were applied to {count} ON/OFF options. Images, markers, language, templates, and macros were left unchanged.": "Se aplicaron los ajustes recomendados a {count} opciones ON/OFF. Las im\u00e1genes, los marcadores, el idioma, las plantillas y las macros siguen igual.",
-            "Initiative roll request sent to player-controlled token(s).": "Se solicit\u00f3 a los jugadores que tiren iniciativa con las fichas que controlan.",
-            "Cancel": "Cancelar",
-            "Close": "Cerrar",
-            "Open": "Abrir",
-            "Use": "Usar",
-            "Apply": "Aplicar",
-            "Remove": "Eliminar",
-            "End": "Terminar",
-            "Save": "Salvación",
-            "Roll": "Tirar",
-            "Roll All": "Tirar todos",
-            "Next": "Siguiente",
-            "Previous": "Anterior",
-            "Import": "Importar",
-            "Export": "Exportar",
-            "Created": "Creado",
-            "Updated": "Actualizado",
-            "Loading": "Cargando",
-            "Language": "Idioma",
-            "English": "Inglés",
-            "Custom": "Personalizado",
-            "Languages": "Idiomas",
-            "Language Settings": "Configuración de idioma",
-            "Language imported": "Idioma importado",
-            "Language changed": "Idioma cambiado",
-            "Language handout": "Handout de idioma",
-            "Custom Language": "Idioma personalizado",
-            "Language JSON is invalid.": "El JSON de idioma no es válido.",
-            "No handout named \"CA Language\" was found.": "No se encontró un handout llamado «CA Language».",
-            "The language handout does not contain valid JSON.": "El handout de idioma no contiene JSON válido.",
-            "Custom translations loaded from CA Language.": "Traducciones personalizadas cargadas desde CA Language.",
-            "English (default)": "Inglés (predeterminado)",
-            "Spanish": "Español",
-            "Custom (CA Language handout)": "Personalizado (handout CA Language)",
-            "Use a handout named CA Language containing the translation JSON to activate Custom.": "Para activar Personalizado, usa un handout llamado CA Language con el JSON de traducción.",
-            "Select the language used for Combat Assistant menus and messages.": "Elige el idioma de los menús y mensajes de Combat Assistant.",
-            "Reload Custom Language": "Recargar idioma personalizado",
-            "Reload": "Recargar",
-            "Reload the translation JSON from the CA Language handout.": "Volver a cargar las traducciones JSON del handout CA Language.",
-            "Settings": "Configuración",
-            "Combat Assistant Settings": "Configuración de Combat Assistant",
-            "Privacy": "Privacidad",
-            "Privacy Settings": "Configuración de privacidad",
-            "Combat Settings": "Configuración de combate",
-            "Turn Tracker Settings": "Configuración del gestor de turnos",
-            "Resources Settings": "Configuración de recursos",
-            "Token Markers": "Marcadores de ficha",
-            "Resource": "Recurso",
-            "Resources": "Recursos",
-            "Resource Update": "Actualización de recursos",
-            "Spell Templates": "Plantillas de conjuros",
-            "Templates": "Plantillas",
-            "Spell Template": "Plantilla de conjuro",
-            "Spell Macros": "Macros de conjuros",
-            "Spell Macro": "Macro de conjuro",
-            "Deleted \"{name}\".": "Se eliminó \"{name}\".",
-            "Spells": "Conjuros",
-            "Prepared Spells": "Conjuros preparados",
-            "Spell Slots": "Espacios de conjuro",
-            "Slots": "Espacios",
-            "Slots Auto": "Espacios automáticos",
-            "Slots at this level": "Espacios de conjuro de este nivel",
-            "Spell slot auto-consumption is armed for the next leveled spell roll": "El consumo automático de espacios de conjuro está activado para el próximo conjuro de nivel 1 o superior.",
-            "Prepared leveled spells excluding Always Prepared and item spells": "Conjuros preparados de nivel 1 o superior; no incluye los siempre preparados ni los concedidos por objetos.",
-            "PACT MAGIC": "MAGIA DE PACTO",
-            "CAST LV.": "NIV. LANZ.",
-            "Spells Remaining": "Conjuros restantes",
-            "Prepared": "Preparado",
-            "Unprepared": "Sin preparar",
-            "{count} prepared": "{count} preparados",
-            "Prepared spells at this level; the limit is shared across levels": "Conjuros preparados de este nivel; el límite se comparte entre niveles",
-            "Always Prepared": "Siempre preparado",
-            "Cantrips": "Trucos",
-            "Cantrip": "Truco",
-            "Spell": "Conjuro",
-            "Spell Name": "Nombre del conjuro",
-            "Spell Level": "Nivel del conjuro",
-            "Spell Attack": "Ataque de conjuro",
-            "Spell Save": "Salvación contra conjuro",
-            "Character": "Personaje",
-            "Character Sheet": "Hoja del personaje",
-            "Compact Sheet": "Ficha compacta",
-            "CA Sheet": "Ficha CA",
-            "CA Help": "Ayuda CA",
-            "CA Initiative": "Iniciativa CA",
-            "CA Combat": "Combate CA",
-            "CA Spells": "Conjuros CA",
-            "CA Dash": "Correr (CA)",
-            "CA Disengage": "Retirada CA",
-            "CA Dodge": "Esquiva CA",
-            "CA Turn": "Turno CA",
-            "CA Turn Card": "Tarjeta de Turno CA",
-            "CA Turn Next": "Siguiente Turno CA",
-            "CA Turn Focus": "Enfocar turno CA",
-            "CA Resources": "Recursos CA",
-            "CA Concentration": "Concentración CA",
-            "Special": "Especial",
-            "Sheet": "Hoja",
-            "Dash": "Correr",
-            "Disengage": "Retirada",
-            "Dodge": "Esquiva",
-            "Whisper": "Susurrar",
-            "Roll Damage": "Tirar el daño",
-            "Tie Breaker": "Desempate",
-            "Initiative": "Iniciativa",
-            "Initiative Roll": "Tirada de iniciativa",
-            "Initiative Rolls": "Tiradas de iniciativa",
-            "Saving Throw": "Tirada de salvación",
-            "Saving Throws": "Tiradas de salvación",
-            "Ability Check": "Prueba de característica",
-            "Skill Check": "Prueba de habilidad",
-            "Concentration": "Concentración",
-            "Concentration Damage": "Daño de concentración",
-            "Concentration Check": "Salvación de concentración",
-            "Effect Tracker": "Gestor de efectos",
-            "Turn Tracker": "Gestor de turnos",
-            "Turn Marker": "Marcador de turno",
-            "Round Counter": "Contador de rondas",
-            "Round": "Ronda",
-            "Rounds": "Rondas",
-            "Round 1": "Ronda 1",
-            "Turn": "Turno",
-            "Turn Card": "Tarjeta de Turno",
-            "Next Turn": "Siguiente Turno",
-            "Prev Turn": "Turno anterior",
-            "Token": "Ficha",
-            "Target": "Objetivo",
-            "Targets": "Objetivos",
-            "Attacker": "Atacante",
-            "Caster": "Lanzador",
-            "Healer": "Sanador",
-            "Source": "Origen",
-            "Damage Source": "Origen del daño",
-            "Damage Type": "Tipo de daño",
-            "damageType.normal": "Normal",
-            "damageType.acid": "ácido",
-            "damageType.bludgeoning": "contundente",
-            "damageType.cold": "frío",
-            "damageType.fire": "fuego",
-            "damageType.force": "fuerza",
-            "damageType.lightning": "relámpago",
-            "damageType.necrotic": "necrótico",
-            "damageType.piercing": "perforante",
-            "damageType.poison": "veneno",
-            "damageType.psychic": "psíquico",
-            "damageType.radiant": "radiante",
-            "damageType.slashing": "cortante",
-            "damageType.thunder": "trueno",
-            "damageType.healing": "curación",
-            "damageType.temp_healing": "PG temporales",
-            "Hit Points": "Puntos de golpe",
-            "Temporary Hit Points": "Puntos de golpe temporales",
-            "HP": "PG",
-            "Temp HP": "PG temporales",
-            "AC": "CA",
-            "Level": "Nivel",
-            "Actions": "Acciones",
-            "Action": "Acción",
-            "Effect": "Efecto",
-            "Effects": "Efectos",
-            "Condition": "Estado",
-            "Conditions": "Estados",
-            "Area": "Área",
-            "Area Marker": "Marcador de área",
-            "Area Targets": "Objetivos del área",
-            "Out of Range": "Fuera de alcance",
-            "In Range": "Dentro del alcance",
-            "Range": "Alcance",
-            "Distance": "Distancia",
-            "Damage Roll": "Tirada de daño",
-            "Healing Roll": "Tirada de curación",
-            "Magic Resistance": "Resistencia mágica",
-            "Attack Roll": "Tirada de ataque",
-            "Attack Damage": "Daño de ataque",
-            "No damage": "Sin daño",
-            "No Spell Macros configured.": "No hay macros de conjuros configuradas.",
-            "Add Spell Template": "Añadir plantilla de conjuro",
-            "Add Spell Macro": "Añadir macro de conjuro",
-            "Remove this spell template": "Eliminar esta plantilla de conjuro",
-            "Edit this spell template": "Editar esta plantilla de conjuro",
-            "Remove this spell macro": "Eliminar esta macro de conjuro",
-            "Edit this spell macro": "Editar esta macro de conjuro",
-            "Open help": "Abrir ayuda",
-            "Open settings": "Abrir configuración",
-            "Back to Settings": "Volver a Configuración",
-            "Sub Menus": "Submenús",
-            "Main": "Principal",
-            "Extra": "Extras",
-            "Player": "Jugador",
-            "Player Settings": "Configuración de jugador",
-            "Combat Assistant Test": "Prueba de Combat Assistant",
-            "Token Image URL": "URL de la imagen de la ficha",
-            "No selected token.": "No hay ninguna ficha seleccionada.",
-            "No selected token was linked to a character sheet.": "Ninguna de las fichas seleccionadas está vinculada a una hoja de personaje.",
-            "You do not control this token.": "No controlas esta ficha.",
-            "You do not control this character.": "No controlas este personaje.",
-            "Permission Denied": "Permiso denegado",
-            "Target Required": "Objetivo requerido",
-            "Automatic Failure": "Fallo automático",
-            "Choose a target token before pressing the button.": "Elige una ficha objetivo antes de pulsar el botón.",
-            "The requested token was not found.": "No se encontró la ficha solicitada.",
-            "The selected target token could not be found.": "No se encontró la ficha objetivo seleccionada.",
-            "Invalid healing payload.": "Datos de curación no válidos.",
-            "Invalid damage payload.": "Datos de daño no válidos.",
-            "Could not apply healing.": "No se pudo aplicar la curación.",
-            "Could not apply damage.": "No se pudo aplicar el daño.",
-            "Could not apply damage after the saving throw.": "No se pudo aplicar el daño después de la tirada de salvación.",
-            "This action is already being resolved or has no remaining uses.": "Esta acción ya se está resolviendo o no tiene usos restantes.",
-            "This single-use button has already been used or expired.": "Este botón de un solo uso ya se utilizó o caducó.",
-            "This area button has already been used or expired.": "Este botón de área ya se utilizó o caducó.",
-            "This tracked effect expired or was already removed.": "Este efecto registrado caducó o ya se eliminó.",
-            "No active concentration was found.": "No se encontró ninguna concentración activa.",
-            "No active concentration was found for your token.": "No se encontró concentración activa para tu ficha.",
-            "No target tokens were found inside the area marker.": "No se encontraron fichas objetivo dentro del marcador de área.",
-            "Only the GM can stop combat.": "Solo el DM puede detener el combate.",
-            "Only the GM can remove turns.": "Solo el DM puede eliminar turnos.",
-            "Manual Healing": "Curación manual",
-            "Manual Damage": "Daño manual",
-            "Settings Export": "Exportar configuración",
-            "Settings Import": "Importar configuración",
-            "The language setting must be English, Spanish, or Custom.": "El idioma debe ser inglés, español o personalizado.",
-            "Custom language loaded successfully.": "Idioma personalizado cargado correctamente.",
-            "Custom language could not be loaded; English will be used until the handout is fixed.": "No se pudo cargar el idioma personalizado; se usará inglés hasta corregir el handout.",
-            "No translation entries were found in the language handout.": "No se encontraron entradas de traducción en el handout.",
-            "The handout translations must be an object of text keys and translated strings.": "Las traducciones del handout deben ser un objeto con claves de texto y cadenas traducidas.",
-            "The handout contains an unsafe translation value.": "El handout contiene una traducción insegura.",
-            "Chat Tracking": "Seguimiento del chat",
-            "2024 Combat Assistant Rolls Initiative": "CA tira la iniciativa 2024",
-            "2014 Combat Assistant Rolls": "CA realiza tiradas 2014",
-            "Hide Combat Log": "Ocultar registro de combate",
-            "Hide Resistance Details": "Ocultar detalles de resistencia",
-            "Hide Damage Details": "Ocultar detalles de daño",
-            "Reveal Damage Source in Log": "Mostrar origen del daño",
-            "Reveal Token Names in Log": "Mostrar nombres de fichas",
-            "Public Presentation Card": "Tarjeta de presentación pública",
-            "Concentration Tracking": "Seguimiento de la concentración",
-            "GM-Only Concentration Tooltip": "Detalles de concentración solo para el DM",
-            "HP Bar": "Barra de PG",
-            "AC Bar": "Barra de CA",
-            "Temp HP Bar": "Barra de PG temporales",
-            "Damage Round Up": "Redondear el daño hacia arriba",
-            "Require AC for Attack": "Exigir CA para atacar",
-            "Only Damage Card": "Mostrar tarjeta solo de daño",
-            "Read Sheet Resistances": "Leer las resistencias de la hoja",
-            "Show Effects List": "Mostrar lista de efectos",
-            "Player Manual Roll": "Tirada manual del jugador",
-            "Player Healing Button": "Bot\u00f3n de curaci\u00f3n para jugadores",
-            "Player Attack Button": "Bot\u00f3n de ataque para jugadores",
-            "Player Target Range Check": "Comprobar alcance del objetivo",
-            "Player Token Area Mark": "Marcador de área del jugador",
-            "Keep Marker Until Rolls Finish": "Mantener marcador hasta terminar las tiradas",
-            "Marker Free Movement": "Movimiento libre del marcador",
-            "Square Marker Roll20 URL": "URL del marcador cuadrado de Roll20",
-            "Radius Marker Roll20 URL": "URL del marcador circular de Roll20",
-            "Marker Opacity": "Opacidad del marcador",
-            "Combat Visual Effects": "Efectos visuales de combate",
-            "Projectile Effect Name": "Nombre del efecto de proyectil",
-            "Direct Hit Effect Name": "Nombre del efecto de impacto directo",
-            "Area Hit Effect Name": "Nombre del efecto de área",
-            "Apply Condition Marker": "Aplicar marcador de estado",
-            "Force Turn Order Position": "Forzar orden de turnos",
-            "Turn Auto Focus": "Enfoque automático del turno",
-            "Turn Focus For Everyone": "Enfocar turno para todos",
-            "Turn Token Action": "Acciones de ficha por turno",
-            "Turn Movement Tracker": "Seguimiento de movimiento",
-            "Turn Movement Blocker": "Bloquear fuera de turno",
-            "Movement Consumed Blocker": "Bloquear al agotar movimiento",
-            "Conc. Turn Tracker": "Duración de concentración por turnos",
-            "Public Round Counter": "Contador público de rondas",
-            "Remove NPC Dead Tokens": "Quitar fichas de PNJ muertos",
-            "Turn Marker Token Public": "Marcador de turno público",
-            "Turn Marker Token Image": "Imagen del marcador de turno",
-            "Turn Marker Token Size %": "Tamaño del marcador de turno (%)",
-            "Turn Marker Follow": "Hacer que el marcador siga la ficha",
-            "Turn Marker Rotation": "Rotación del marcador",
-            "Turn Marker Rotation Steps": "Pasos de rotación del marcador",
-            "Turn Marker Rotation Speed": "Velocidad de rotación del marcador",
-            "Show Player Resources": "Mostrar recursos de jugadores",
-            "Show NPC Resources": "Mostrar recursos de PNJ",
-            "NPC Resource Management": "Administrar recursos de PNJ",
-            "Consume Spell Slots": "Consumir espacios de conjuro",
-            "Consume Action Resources": "Consumir recursos de acciones",
-            "Block Without Resources": "Bloquear sin recursos",
-            "2024 Prepared Spells Only": "Solo conjuros preparados (2024)",
-            "Player Public Usage": "Uso público de recursos",
-            "Use Roll20 Damage Icon": "Usar icono de daño de Roll20",
-            "Apply Roll20 Icon Damage Color": "Aplicar color al icono de daño",
-            "Debug": "Depuración",
-            "Chat Debug Attacks": "Depurar ataques en el chat",
-            "Chat Debug Spells": "Depurar conjuros en el chat",
-            "Area Radius Debug Draw": "Dibujar radio de área para depuración",
-            "Change Background URL": "Cambiar URL del fondo",
-            "Chat Probe": "Diagnóstico del chat",
-            "Get Token Image URL": "Obtener URL de la imagen de la ficha",
-            "Read Roll20 attack, damage, healing, and related combat rolls.": "Leer las tiradas de ataque, daño, curación y otras tiradas de combate del chat de Roll20.",
-            "ON lets Combat Assistant roll 2024 initiative from sheet data; OFF keeps native Roll20 initiative.": "ON permite que CA tire la iniciativa 2024 desde la hoja; OFF mantiene la iniciativa nativa de Roll20.",
-            "OFF keeps native 2014 saving throws and initiative; ON lets Combat Assistant perform those supported rolls.": "OFF conserva las salvaciones y la iniciativa nativas de 2014; ON permite que CA haga las tiradas compatibles.",
-            "Whisper Combat Logs to the GM instead of publishing them. Healing amounts are controlled separately by Hide Damage Details.": "Enviar los registros de combate en privado al DM. La cantidad curada se controla con Ocultar detalles de daño.",
-            "Keep final damage amount and type visible, but hide resistance, immunity, and vulnerability explanations in public Combat Logs.": "Mostrar el daño final y su tipo, pero ocultar explicaciones de resistencia, inmunidad y vulnerabilidad en el registro público.",
-            "Hide public damage details and healing amounts in Combat Logs, including GM whispers. This also suppresses public resistance-detail text.": "Ocultar los detalles de daño y las cantidades curadas del registro, incluso en mensajes privados al DM. También oculta los detalles de resistencia.",
-            "Show who caused damage or healing and which attack, spell, or ability caused it.": "Mostrar quién causó el daño o la curación y qué ataque, conjuro o habilidad utilizó.",
-            "Show token names in Combat Logs. OFF uses generic Target, Attacker, Caster, or Healer labels.": "Mostrar nombres reales de las fichas en el registro; OFF usa Objetivo, Atacante, Lanzador o Sanador.",
-            "ON shows the startup presentation card publicly. OFF whispers it only to the GM.": "ON muestra la tarjeta de presentación a todos; OFF solo al DM.",
-            "Track concentration spells, area markers, persistent actions, targets, and concentration saves.": "Registrar conjuros de concentración, marcadores de área, acciones persistentes, objetivos y tiradas de salvación de concentración.",
-            "Show Combat Assistant concentration token tooltips only to the GM.": "Mostrar los detalles de concentración de las fichas únicamente al DM.",
-            "Choose the token bar Combat Assistant uses for hit points.": "Selecciona la barra de la ficha utilizada para los puntos de golpe.",
-            "Choose the token bar Combat Assistant uses for armor class.": "Selecciona la barra de la ficha utilizada para la clase de armadura.",
-            "Choose the token bar used for temporary HP, or 0 to disable token-bar Temp HP.": "Elige la barra para PG temporales, o 0 para desactivarla.",
-            "Round halved damage up instead of down.": "Redondear hacia arriba el daño reducido a la mitad.",
-            "Require a valid AC value before resolving attack-roll damage. OFF allows attack damage to continue when the configured AC bar is empty.": "Exigir CA válida antes de resolver daño de ataque. OFF permite continuar cuando la barra de CA esté vacía.",
-            "Show the GM a direct Hit card for standalone Damage rolls with no proven attack, save, or target range.": "Mostrar al DM una tarjeta de impacto para tiradas de daño independientes, sin ataque, salvación ni alcance confirmados.",
-            "Read sheet damage resistances, immunities, and vulnerabilities when applying damage.": "Leer resistencias, inmunidades y vulnerabilidades de la hoja al aplicar daño.",
-            "Show sheet effect toggles at the top of the Combat menu.": "Mostrar interruptores de efectos de la hoja en la parte superior de Combate.",
-            "Ask player-controlled tokens to make their own supported saving throws and initiative rolls when Roll20 exposes a usable native button.": "Permite que los jugadores hagan sus propias tiradas de salvaci\u00f3n e iniciativa desde la hoja de Roll20, cuando est\u00e9 disponible.",
-            "Whisper supported healing controls to the controlling player so they can select a target and apply healing.": "Env\u00eda al jugador los botones para elegir un objetivo y aplicar la curaci\u00f3n. El DM tambi\u00e9n recibe un bot\u00f3n de un solo uso.",
-            "Whisper supported attack controls to the controlling player so they can select a target and resolve the attack.": "Enviar controles de ataque al jugador por privado para elegir objetivo y resolver el ataque.",
-            "Check caster-to-target range before generated player spell controls apply healing or damage.": "Comprobar el alcance entre lanzador y objetivo antes de aplicar curación o daño mediante controles de conjuro.",
-            "Allow generated player area-spell controls to place a movable area marker and resolve tokens inside it.": "Permitir al jugador colocar un marcador de área móvil y resolver las fichas dentro.",
-            "Keep an area marker visible until every affected saving throw and damage resolution is complete.": "Mantener visible el marcador hasta terminar todas las salvaciones y aplicaciones de daño.",
-            "ON lets area markers move freely; OFF snaps them to the Roll20 grid.": "ON permite mover libremente el marcador; OFF lo ajusta a la cuadrícula de Roll20.",
-            "Roll20 uploaded image URL used for square, cube, cone, or line area markers.": "URL de imagen subida a Roll20 para marcadores de cuadrado, cubo, cono o línea.",
-            "Roll20 uploaded image URL used for radius, sphere, cylinder, or emanation area markers.": "URL de imagen subida a Roll20 para marcadores de radio, esfera, cilindro o emanación.",
-            "Set the opacity percentage for player area-marker tokens.": "Establecer el porcentaje de opacidad de los marcadores de área.",
-            "Show automatic Roll20 FX when Combat Assistant applies damage, healing, temporary HP, projectile attacks, or area effects.": "Mostrar efectos FX de Roll20 al aplicar daño, curación, PG temporales, proyectiles o efectos de área.",
-            "Built-in or Custom FX name used from attacker to target for ranged projectile attacks. Leave empty to disable.": "Nombre del FX estándar o personalizado para proyectiles entre atacante y objetivo. Vacío para desactivar.",
-            "Built-in base effect or exact Custom FX name used when damage is applied without a saving throw. Leave empty to disable.": "Nombre del FX estándar o personalizado para daño sin salvación. Vacío para desactivar.",
-            "Built-in base effect or exact Custom FX name used when damage is applied through a saving throw. Leave empty to disable.": "Nombre del FX estándar o personalizado para daño tras una salvación. Vacío para desactivar.",
-            "Apply configured token markers after confirmed failed saving throws. OFF retains narrative-only results.": "Aplicar marcadores de estado al fallar una salvación. OFF solo mantiene la narración.",
-            "Roll20 token marker name/tag used while a token is concentrating. Default: stopwatch.": "Nombre o etiqueta del marcador de concentración. Predeterminado: stopwatch.",
-            "Track combat rounds and current turns from the Roll20 Turn Order.": "Seguir las rondas y turnos actuales desde la lista de iniciativa de Roll20.",
-            "Track temporary save-based conditions and show due repeat-save controls on the affected token Turn Card.": "Registrar estados temporales sujetos a tiradas de salvación y mostrar cuándo repetir la tirada en la tarjeta de turno.",
-            "Keep new Turn Order entries in initiative order while preserving the active turn once combat has started.": "Mantener el orden de iniciativa y preservar el turno actual al añadir participantes.",
-            "Ping and focus eligible users on the current-turn token.": "Hacer ping y enfocar a los usuarios permitidos en la ficha del turno actual.",
-            "ON focuses everyone; OFF focuses only GMs and controllers of the current token or character.": "ON enfoca a todos; OFF solo al DM y controladores del personaje o ficha.",
-            "Show Dash, Special, C. Sheet, Combat, and Spells controls on Turn Cards.": "Mostrar Correr, Especial, Ficha compacta, Combate y Conjuros en las tarjetas de turno.",
-            "Track movement spent by the current-turn token and warn when it exceeds available speed.": "Seguir el movimiento del turno y avisar si se supera la velocidad disponible.",
-            "Lock player-controlled initiative tokens until their turn. Automatically unlock when their turn begins or they leave initiative.": "Bloquea las fichas de jugadores en iniciativa hasta que llegue su turno. Las desbloquea al comenzar su turno o al salir de iniciativa.",
-            "Lock the current player-controlled token after all available movement is spent. Dash restores movement when available.": "Bloquea la ficha del jugador al agotar su movimiento disponible. Correr la desbloquea si añade movimiento.",
-            "Decrease finite concentration duration when the caster reaches its turn and end it automatically at 0.": "Reducir la duración de la concentración al llegar el turno del lanzador y terminarla al llegar a 0.",
-            "Enable the Round Counter card and current-combat token summary.": "Mostrar la tarjeta del contador de rondas y el resumen de participantes.",
-            "Also publish the Round Counter card to players. Round Counter must be ON.": "Publicar también el contador de rondas a los jugadores. Requiere Contador de rondas en ON.",
-            "Automatically remove unlinked NPC turns at 0 HP; OFF leaves a red manual Remove control.": "Quitar automáticamente los turnos de PNJ desvinculados con 0 PG; OFF deja un botón rojo para quitarlos manualmente.",
-            "Spawn a marker token on the current-turn token.": "Crear un marcador alrededor de la ficha del turno actual.",
-            "OFF keeps the turn marker on the GM layer; ON puts it on the map layer and brings it forward.": "OFF mantiene el marcador en la capa del DM; ON lo coloca sobre el mapa.",
-            "Roll20 uploaded image used for the turn marker token.": "Imagen subida a Roll20 para el marcador de turno.",
-            "Percentage added to current token width and height for the Turn Marker. Default 20.": "Porcentaje añadido al ancho y alto de la ficha para el marcador. Predeterminado: 20.",
-            "Keep the Turn Marker centered and scaled when the current token moves or resizes.": "Mantener el marcador centrado y ajustado cuando la ficha se mueve o cambia de tamaño.",
-            "Rotate the Turn Marker while combat is active.": "Girar el marcador de turno durante el combate.",
-            "Degrees applied on every Turn Marker rotation update. Default 1.": "Grados aplicados en cada actualización del marcador. Predeterminado: 1.",
-            "Milliseconds between Turn Marker rotation updates. Default 100 ms.": "Milisegundos entre actualizaciones de rotación del marcador. Predeterminado: 100 ms.",
-            "Show player-controlled token resources and spell slots directly on its Turn Card.": "Mostrar recursos y espacios de conjuro del jugador directamente en su tarjeta de turno.",
-            "Show limited resources and spell slots for non-player-controlled tokens on the GM Turn Card.": "Mostrar recursos limitados y espacios de conjuro de PNJ en la tarjeta de turno del DM.",
-            "Give eligible unlinked NPC tokens independent resource pools stored in Token GM Notes.": "Guardar recursos independientes de los PNJ desvinculados en las notas del DM de sus fichas.",
-            "Automatically consume the confirmed spell cost, preferring an exact linked Beacon spell Resource before a generic spell slot.": "Consumir el coste de conjuro confirmado, priorizando el recurso Beacon vinculado antes de un espacio genérico.",
-            "Automatically consume one matching non-spell resource when a confirmed action with the same normalized name is used.": "Consumir un recurso no mágico coincidente cuando se usa una acción confirmada con el mismo nombre normalizado.",
-            "Hide player Roll, DMG, ATK, Heal, Cast, and Send buttons when the action or spell has a verified resource cost and insufficient uses or spell slots. GM controls and no-cost actions are unaffected.": "Ocultar los botones Tirar, Daño, Ataque, Curar, Lanzar y Enviar a los jugadores cuando falten usos o espacios de conjuro para una acción con coste verificable. El DM y las acciones sin coste no se ven afectados.",
-            "Show only 2024 spells marked Prepared or Always Prepared, including cantrips only when Roll20 marks them prepared.": "Mostrar solo los conjuros de 2024 marcados como Preparado o Siempre preparado, incluidos los trucos si Roll20 los marca como preparados.",
-            "Publish player Resource Update cards instead of whispering them privately.": "Publicar las tarjetas de uso de recursos de jugadores en lugar de enviarlas en privado.",
-            "Use Roll20-style SVG damage icons instead of the default Combat Assistant icons.": "Usar iconos SVG de daño al estilo Roll20 en lugar de los iconos de CA.",
-            "Recolor Roll20-style damage icons using Combat Assistant damage-type colors.": "Colorear los iconos SVG de Roll20 según el tipo de daño de CA.",
-            "Temporary API-console debug logging. Resets to OFF whenever the sandbox restarts.": "Depuración temporal en la consola API. Se restablece a OFF al reiniciar el sandbox.",
-            "Temporarily print full attack diagnostics in chat after opening Combat.": "Mostrar temporalmente diagnósticos completos de ataques al abrir Combate.",
-            "Temporarily print full spell diagnostics in chat after opening Spells.": "Mostrar temporalmente diagnósticos completos de conjuros al abrir Conjuros.",
-            "Draw temporary GM-only reference circles while resolving supported radius area markers.": "Dibujar círculos de referencia temporales solo para el DM al resolver marcadores de área.",
-            "Set the background image used by Combat Assistant cards.": "Establecer la imagen de fondo utilizada por las tarjetas de CA.",
-            "Whisper compact Roll20 chat-message diagnostics to the GM for parser testing.": "Enviar al DM diagnósticos breves de mensajes del chat de Roll20 para probar el analizador.",
-            "Select exactly one token and return its current live token image URL.": "Selecciona una sola ficha para obtener la URL de su imagen actual.",
-            "Roll20 token marker name/tag for ": "Nombre o etiqueta del marcador de Roll20 para ",
-            ". Must exist in the campaign to render.": ". Debe existir en la campaña para mostrarse.",
-            "{source} heals {amount} Hit Points to {target}{using}.": "{source} restaura {amount} puntos de golpe a {target}{using}.",
-            "{source} heals {target}{using}.": "{source} cura a {target}{using}.",
-            "{source} grants {amount} temporary HP to {target}{using}.": "{source} concede {amount} puntos de golpe temporales a {target}{using}.",
-            "{source} grants temporary HP to {target}{using}.": "{source} concede puntos de golpe temporales a {target}{using}.",
-            " using {action}": " mediante {action}",
-            "heals": "cura",
-            "using": "usando",
-            "grants": "concede",
-            "to": "para",
-            "takes": "recibe",
-            "misses": "falla",
-            "attacks": "ataca",
-            "rolls": "hace una tirada",
-            "rolls healing": "realiza una tirada de curación",
-            "Hit Points to": "puntos de golpe a",
-            "temporary HP to": "puntos de golpe temporales a",
-            "Saving Throw DC": "CD de salvación",
-            "must roll a": "debe hacer una",
-            "condition ended.": "ha terminado su estado.",
-            "condition.": "estado.",
-            "conditions.": "estados.",
-            "ends naturally as the spell reaches the end of its duration.": "termina naturalmente al agotarse la duración del conjuro.",
-            "lost concentration": "perdió la concentración",
-            "concentration on": "concentración en",
-            "ended.": "ha terminado.",
-            "was healed.": "recibió curación.",
-            "was affected.": "recibió el efecto.",
-            "uses": "emplea",
-            "uses a special action.": "utiliza una acción especial.",
-            "but misses.": "pero falla.",
-            "and falls unconscious": "y cae inconsciente",
-            "blocked by": "bloqueado por",
-            "reduced by": "reducido por",
-            "increased by": "aumentado por",
-            "immunity": "inmunidad",
-            "resistance": "resistencia",
-            "vulnerability": "vulnerabilidad",
-            "no damage, blocked by": "sin daño, bloqueado por",
-            "and": "y",
-            "on": "en",
-            "from": "de",
-            "with": "con",
-            "Modifier": "Modificador",
-            "Failed": "Fallida",
-            "Passed": "Superada",
-            "Roll for:": "Tirar para:",
-            "Roll initiative": "Tirar iniciativa",
-            "Roll the native": "Usar tirada nativa de",
-            "Apply Healing": "Aplicar curación",
-            "Apply Damage": "Aplicar daño",
-            "Apply to target": "Aplicar al objetivo",
-            "Source Required": "Origen requerido",
-            "Action Busy": "Acción ocupada",
-            "Action Expired": "Acción caducada",
-            "Select one or more linked tokens.": "Selecciona una o más fichas vinculadas.",
-            "Select exactly one linked token before rolling initiative.": "Selecciona una única ficha vinculada antes de tirar iniciativa.",
-            "The selected token is not linked to a character sheet.": "La ficha seleccionada no está vinculada a una hoja.",
-            "No complete area marker was found. Cast the spell again to create a new marker.": "No se encontró un marcador de área completo. Vuelve a lanzar el conjuro para crear otro.",
-            "The selected target is not within range for this action.": "El objetivo seleccionado está fuera del alcance de esta acción.",
-            "Source and target must be on the same page.": "El origen y el objetivo deben estar en la misma página.",
-            "No pending saving throws were found.": "No hay tiradas de salvación pendientes.",
-            "Only the GM can roll grouped 2014 saving throws.": "Solo el DM puede realizar tiradas de salvación agrupadas (2014).",
-            "Only the GM can roll grouped 2014 initiative.": "Solo el DM puede tirar la iniciativa 2014 agrupada.",
-            "This saving throw request expired or was already used.": "Esta solicitud de tirada de salvación caducó o ya se utilizó.",
-            "The pending saving throw target token was not found.": "No se encontró la ficha objetivo de la tirada de salvación pendiente.",
-            "The affected token was not found.": "No se encontró la ficha afectada.",
-            "An error occurred.": "Se produjo un error.",
-            "Created by": "Creado por",
-            "Version": "Versión",
-            "Combat Diagnostic": "Diagnóstico de combate",
-            "Spell Diagnostic": "Diagnóstico de conjuros",
-            "Spell Probe": "Diagnóstico de conjuro",
-            "Character Settings": "Configuración del personaje",
-            "Ability": "Característica",
-            "Abilities": "Características",
-            "Skills": "Habilidades",
-            "Skill": "Habilidad",
-            "Strength": "Fuerza",
-            "Dexterity": "Destreza",
-            "Constitution": "Constitución",
-            "Intelligence": "Inteligencia",
-            "Wisdom": "Sabiduría",
-            "Charisma": "Carisma",
-            "STR": "FUE",
-            "DEX": "DES",
-            "WIS": "SAB",
-            "CHA": "CAR",
-            "Acrobatics": "Acrobacias",
-            "Animal Handling": "Trato con animales",
-            "Arcana": "Arcanos",
-            "Athletics": "Atletismo",
-            "Deception": "Engaño",
-            "History": "Historia",
-            "Insight": "Perspicacia",
-            "Intimidation": "Intimidación",
-            "Investigation": "Investigación",
-            "Medicine": "Medicina",
-            "Nature": "Naturaleza",
-            "Perception": "Percepción",
-            "Performance": "Interpretación",
-            "Persuasion": "Persuasión",
-            "Religion": "Religión",
-            "Sleight of Hand": "Juego de manos",
-            "Stealth": "Sigilo",
-            "Survival": "Supervivencia",
-            "Blinded": "Cegado",
-            "Charmed": "Hechizado",
-            "Deafened": "Ensordecido",
-            "Exhaustion": "Agotamiento",
-            "Frightened": "Asustado",
-            "Grappled": "Agarrado",
-            "Incapacitated": "Incapacitado",
-            "Paralyzed": "Paralizado",
-            "Petrified": "Petrificado",
-            "Poisoned": "Envenenado",
-            "Prone": "Derribado",
-            "Restrained": "Restringido",
-            "Stunned": "Aturdido",
-            "Unconscious": "Inconsciente",
-            "Sleep": "Dormido",
-            "Add": "Añadir",
-            "Add Spell": "Añadir conjuro",
-            "Edit Spell": "Editar conjuro",
-            "Prepared Count": "Total de conjuros preparados",
-            "Known Spells": "Conjuros conocidos",
-            "Current": "Actual",
-            "Maximum": "Máximo",
-            "Remaining": "Restantes",
-            "Spent": "Gastados",
-            "Available": "Disponible",
-            "Unavailable": "No disponible",
-            "Not Available": "No disponible",
-            "No Spells Available": "No hay conjuros disponibles",
-            "No spells found.": "No se encontraron conjuros.",
-            "No attacks found.": "No se encontraron ataques.",
-            "No active effects.": "No hay efectos activos.",
-            "No resources found.": "No se encontraron recursos.",
-            " heals ": " cura ",
-            " grants ": " concede ",
-            " Hit Points to ": " puntos de golpe a ",
-            " temporary HP to ": " puntos de golpe temporales a ",
-            " using ": " usando ",
-            " uses ": " utiliza ",
-            " takes ": " recibe ",
-            " attacks ": " ataca ",
-            " misses.": " falla.",
-            " must roll a ": " debe hacer una ",
-            " saving throw": " tirada de salvación",
-            " saving throws": " tiradas de salvación",
-            " was healed.": " fue curado.",
-            " damage": " daño",
-            " and ": " y ",
-            " on the ": " en el ",
-            " from ": " de ",
-            " with ": " con ",
-            " lost concentration": " perdió la concentración",
-            " condition ended.": " estado terminado.",
-            " but misses.": " pero falla.",
-            " and falls unconscious": " y cae inconsciente",
-            " blocked by ": " bloqueado por ",
-            " reduced by ": " reducido por ",
-            " increased by ": " aumentado por ",
-            " immunity": " inmunidad",
-            " resistance": " resistencia",
-            " vulnerability": " vulnerabilidad",
-            " Save and takes ": " Salvación y recibe ",
-            " to Maintain ": " para mantener ",
-            "Used": "Usado",
-            "Has": "Tiene",
-            "remaining.": "restantes.",
-            "Select target token(s) before pressing any button.": "Selecciona las fichas objetivo antes de pulsar cualquier botón.",
-            "Select target token(s) before pressing a button.": "Selecciona las fichas objetivo antes de pulsar un botón.",
-            "Send": "Enviar",
-            "Stop": "Detener",
-            "Heal": "Curar",
-            "Templates:": "Plantillas:",
-            "Spell Resources": "Recursos de conjuros",
-            "Character Name:": "Nombre del personaje:",
-            "Controller Name:": "Nombre del controlador:",
-            "Caster Name:": "Nombre del lanzador:",
-            "Controller Page:": "Página del controlador:",
-            "Caster Page:": "Página del lanzador:",
-            "Token Page:": "Página de la ficha:",
-            "Tracking:": "Seguimiento:",
-            "Cast": "Lanzar",
-            "Turn Action": "Acción de turno",
-            "Attribute": "Característica",
-            "Stat": "Puntuación",
-            "Apply Macro": "Aplicar macro",
-            "Unknown Command": "Comando desconocido",
-            "Not found": "No encontrado",
-            "Single Use Button. Select a target within": "Botón de un solo uso. Selecciona un objetivo dentro de",
-            "Single Use Button. Press the button, then choose a target when Roll20 asks.": "Botón de un solo uso. Púlsalo y selecciona un objetivo cuando Roll20 lo solicite.",
-            "Apply/End accept plain chat text, HTML markup,": "Aplicar/Terminar aceptan texto normal, marcado HTML,",
-            "API commands,": "comandos API,",
-            "named macros,": "macros con nombre,",
-            "attributes,": "características,",
-            "deferred attributes,": "características diferidas,",
-            "abilities,": "habilidades,",
-            "abilities. Apply delivers a single-use player card when the caster has a player controller plus an unlimited GM card; End keeps the canonical direct/client-required execution path. For multiple resolved targets,": "habilidades. Aplicar entrega una tarjeta de un solo uso al jugador y otra ilimitada al DM; Terminar mantiene la ruta de ejecución correspondiente. Para varios objetivos,",
-            "resolves independently. Fields:": "se resuelve de forma independiente. Campos:",
-            "for more information.": "para más información.",
-            "Main Commands": "Comandos principales",
-            "Roll20 References": "Referencias de Roll20",
-            "Examples": "Ejemplos",
-            "Bar Configuration": "Configuración de barras",
-            "Combat Assistant Help": "Ayuda de Combat Assistant",
-            "- Shows this player help card.": "- Muestra esta tarjeta de ayuda para jugadores.",
-            "- Shows this help card.": "- Muestra esta tarjeta de ayuda.",
-            "- Opens the main Combat Assistant menu.": "- Abre el menú principal de Combat Assistant.",
-            "- Opens the Combat Assistant settings.": "- Abre la configuración de Combat Assistant.",
-            "- Shows the attack list for the selected token.": "- Muestra los ataques de la ficha seleccionada.",
-            "- Shows the spell list for the selected token.": "- Muestra los conjuros de la ficha seleccionada.",
-            "- Shows the attack list for a character sheet you can access.": "- Muestra los ataques de una hoja a la que tienes acceso.",
-            "- Shows the spell list for a character sheet you can access.": "- Muestra los conjuros de una hoja a la que tienes acceso.",
-            "- Shows the attack list for the named character sheet.": "- Muestra los ataques de la hoja del personaje indicado.",
-            "- Shows the spell list for the named character sheet.": "- Muestra los conjuros de la hoja del personaje indicado.",
-            "- Shows resources for the selected token.": "- Muestra los recursos de la ficha seleccionada.",
-            "- Shows resources for a character sheet you can access.": "- Muestra los recursos de una hoja a la que tienes acceso.",
-            "- Shows resources for the named character sheet.": "- Muestra los recursos de la hoja del personaje indicado.",
-            "- Shows the Compact Sheet for the selected token.": "- Abre la ficha compacta del personaje seleccionado.",
-            "- Shows the Compact Sheet for the selected token. A controlled token or character ID can also be supplied manually.": "- Muestra la ficha compacta del personaje seleccionado. También puedes indicar manualmente una ficha o ID que controles.",
-            "- Shows the full Turn Card for the selected controlled character. A character ID can also be supplied manually.": "- Muestra la tarjeta de turno completa del personaje controlado. También puedes indicar su ID.",
-            "- Shows the live Turn Card only when the current token is yours.": "- Muestra la tarjeta de turno en vivo solo si controlas la ficha activa.",
-            "- Shows the normal Turn Card for the token whose turn it currently is.": "- Muestra la tarjeta de turno normal de la ficha activa.",
-            "- Recalls the active concentration controls for a token you control.": "- Recupera los controles de concentración activa de una ficha que controles.",
-            "- Requests the native sheet initiative roll when CA initiative rolls are OFF; otherwise Combat Assistant rolls it. The result is tracked in Turn Order.": "- Si las tiradas de iniciativa de CA est\u00e1n en OFF, solicita la tirada desde la hoja. De lo contrario, CA tira la iniciativa y registra el resultado en el orden de turnos.",
-            "- Declares Dash for the selected token. During its active turn, Dash also increases its Movement Tracker allowance.": "- Usa la acci\u00f3n Correr con la ficha seleccionada. Si es su turno, tambi\u00e9n aumenta el movimiento disponible.",
-            "- Declares Disengage narratively for the selected token, even outside its turn.": "- Narra la acci\u00f3n Retirada de la ficha seleccionada, incluso fuera de su turno.",
-            "- Declares Dodge narratively for the selected token, even outside its turn.": "- Narra la acci\u00f3n Esquiva de la ficha seleccionada, incluso fuera de su turno.",
-            "- Sets the token bar used for Hit Points.": "- Configura la barra de PG de la ficha.",
-            "- Sets the token bar used for Armor Class.": "- Configura la barra de CA de la ficha.",
-            "- Sets the token bar used for Temporary Hit Points. Use 0 to disable it.": "- Configura la barra de PG temporales. Usa 0 para desactivarla.",
-            "- Alias of !ca turncard. !ca turn-card is also accepted.": "- Alias de !ca turncard. También se acepta !ca turn-card.",
-            "- Ends the current turn when you control the active token.": "- Termina el turno actual si controlas la ficha activa.",
-            "It is not your turn.": "No es tu turno.",
-            "No usable combat actions were found on this character sheet.": "Este personaje no tiene acciones de combate disponibles.",
-            "No spell templates configured.": "Todav\u00eda no has configurado plantillas de conjuros.",
-            "Healing roll completed. The GM can apply it.": "La tirada de curaci\u00f3n termin\u00f3. El DM puede aplicarla.",
-            "Active concentration.": "Concentración activa.",
-            "can be used while concentration lasts.": "puede usarse mientras dure la concentración.",
-            "Private concentration result.": "Resultado de concentración privado.",
-            "Token Action": "Acción de ficha",
-            "is already a Token Action for": "ya es una acción de ficha para",
-            "is now visible as a Token Action for": "ahora es visible como acción de ficha para",
-            "was added to": "se añadió a",
-            ". It will appear when a linked token for that character is selected.": ". Aparecerá al seleccionar una ficha vinculada a ese personaje.",
-            "Item Charges": "Cargas del objeto",
-            "not enough charges remain.": "no quedan suficientes cargas.",
-            "does not have enough": "no tiene suficientes",
-            "to perform this action.": "para realizar esta acción.",
-            "Initiative Roll Timeout": "Tiempo de iniciativa agotado",
-            "No initiative result was captured for": "No se registró un resultado de iniciativa para",
-            ". The remaining rolls will continue.": ". Las tiradas restantes continuarán.",
-            "Updated the": "Actualizado el",
-            "Imported": "Importados",
-            "settings,": "ajustes,",
-            "Spell Macros.": "Macros de conjuros.",
-            "is no longer affected by": "ya no está afectado por",
-            "(duration expired)": "(duración agotada)",
-            "Single Target": "Objetivo único",
-            "GM Staging": "Preparación del DM",
-            "Concentration Ended": "Concentración terminada",
-            "Concentration Lost": "Concentración perdida",
-            "Roll20 token marker name/tag for {marker}. Must exist in the campaign to render.": "Nombre o etiqueta del marcador de Roll20 para {marker}. Debe existir en la campaña para mostrarse.",
-            " rolls healing.": " realiza una tirada de curación.",
-            " and rolls healing.": " y realiza una tirada de curación.",
-            "The attack against {target} misses.": "El ataque contra {target} falla.",
-            "The {condition} condition affecting {target} has ended.": "El estado {condition} de {target} ha terminado.",
-            "Save (short)": "Salv.",
-            "Attribute (short)": "Caract.",
-            "Stat (short)": "Punt.",
-            "succeeds": "supera",
-            "fails": "falla",
-            "{target} {outcome} the {ability} saving throw.": "{target} {outcome} la tirada de salvación de {ability}.",
-            "{target} {outcome} the {ability} saving throw and takes {damage}{source}{fainted}.": "{target} {outcome} la tirada de salvación de {ability} y recibe {damage}{source}{fainted}.",
-            " from {source} using {action}": " de {source} mediante {action}",
-            " from {source}": " de {source}",
-            "(Some damage was absorbed by Temporary HP)": "(Parte del daño fue absorbido por los PG temporales)",
-            "Gained the ": "Adquiere el estado ",
-            " condition.": ".",
-            " conditions.": ".",
-            "{amount} points of damage{type}": "{amount} puntos de daño{type}",
-            "No damage{type}.": "Sin daño{type}.",
-            "No damage: immunity ({type})": "Sin daño: inmunidad ({type})",
-            "No damage{type}, blocked by immunity.": "Sin daño{type}, bloqueado por inmunidad.",
-            "blocked by immunity ({type})": "bloqueado por inmunidad ({type})",
-            "reduced by resistance ({type})": "reducido por resistencia ({type})",
-            "increased by vulnerability ({type})": "aumentado por vulnerabilidad ({type})",
-            "Concentration of {caster}{spell} ended.": "La concentración de {caster}{spell} ha terminado.",
-            "Concentration of {caster}{spell} expired.": "La concentración de {caster}{spell} terminó al agotarse su duración.",
-            " on {spell}": " en {spell}",
-            "Dmg": "Daño",
-            "Init": "Iniciar",
-            "Conc.": "Conc.",
-            "Focus this token": "Centrar la vista en esta ficha",
-            "Advantage": "Ventaja",
-            "Disadvantage": "Desventaja",
-            "New token": "Ficha nueva",
-            "Run {name} macro in Roll20": "Ejecutar la macro {name} en Roll20",
-            "Apply {name} macro": "Aplicar la macro {name}",
-            "Apply {name} macro once": "Aplicar una vez la macro {name}",
-            "Edit healing amount": "Editar la cantidad de curación",
-            "Apply damage directly to selected token(s)": "Aplicar daño directamente a las fichas seleccionadas",
-            "Edit damage manually": "Editar el daño manualmente",
-            "Set an NPC area attack: choose source, move the marker, then roll": "Preparar un ataque de área de un PNJ: elige el origen, mueve el marcador y realiza la tirada",
-            "Set an NPC attack: choose source, then target": "Preparar un ataque de PNJ: elige el origen y luego el objetivo",
-            "Take the Disengage action": "Usar la acción Retirada",
-            "Open Special Actions": "Abrir las acciones especiales",
-            "Take the Dodge action": "Usar la acción Esquivar",
-            "Open Compact Sheet": "Abrir la ficha compacta",
-            "Take the Dash action": "Usar la acción Correr",
-            "List attacks from this character sheet": "Mostrar los ataques de esta hoja de personaje",
-            "Open combat spells": "Abrir los conjuros de combate",
-            "Repeat the {ability}{dc} saving throw for {effect}": "Repetir la tirada de salvación de {ability}{dc} por {effect}",
-            "Restore every persistent setting to its default value": "Restablecer todos los ajustes guardados a sus valores predeterminados",
-            "Open {menu}": "Abrir {menu}",
-            "Deal damage to selected token(s)": "Infligir daño a las fichas seleccionadas",
-            "Heal selected token(s)": "Curar a las fichas seleccionadas",
-            "Roll a saving throw for selected token(s)": "Realizar una tirada de salvación para las fichas seleccionadas",
-            "Roll initiative for the selected token(s)": "Tirar iniciativa para las fichas seleccionadas",
-            "Reroll active concentration damage and open controls": "Volver a tirar el daño del conjuro en concentración y abrir sus controles",
-            "Open the Compact Sheet for the selected token": "Abrir la hoja compacta de la ficha seleccionada",
-            "Open Resources for the selected token": "Abrir los recursos de la ficha seleccionada",
-            "Show the Round Counter using its public/GM delivery setting": "Mostrar el contador de rondas según la configuración de envío público o al DM",
-            "Open the Turn Card for the selected token": "Abrir la tarjeta de turno de la ficha seleccionada",
-            "Advance to the next turn": "Pasar al siguiente turno",
-            "Automatically fail this saving throw": "Fallar automáticamente esta tirada de salvación",
-            "Choose a target token and apply this healing once": "Elige una ficha objetivo y aplica esta curación una vez",
-            "Choose a target token and apply this damage once": "Elige una ficha objetivo y aplica este daño una vez",
-            "Choose a target token and apply this attack once": "Elige una ficha objetivo y aplica este ataque una vez",
-            "End combat and clear the Turn Order": "Finalizar el combate y vaciar el orden de turnos",
-            "Round {round}": "Ronda {round}",
-            "Reroll this concentration spell's damage and open its controls": "Volver a tirar el daño de este conjuro en concentración y abrir sus controles",
-            "{count} turn(s) left": "Quedan {count} turnos",
-            "End this turn": "Terminar este turno",
-            "Advance to the next turn, then remove this defeated token from the Turn Order": "Pasar al siguiente turno y quitar esta ficha derrotada del orden de turnos",
-            "Roll the concentration saving throw with Combat Assistant": "Realizar la tirada de salvación de concentración con Combat Assistant",
-            "Roll the concentration saving throw": "Realizar la tirada de salvación de concentración",
-            "Roll all listed 2014 initiatives with Combat Assistant": "Tirar la iniciativa de todas las fichas de 2014 mostradas con Combat Assistant",
-            "Roll all listed 2014 saving throws with Combat Assistant": "Realizar las tiradas de salvación de 2014 para todas las fichas mostradas con Combat Assistant",
-            "Run the literal test command": "Ejecutar el comando literal de prueba",
-            "Use {action}": "Usar {action}",
-            "the persistent concentration action": "la acción de concentración persistente",
-            "Open these concentration controls": "Abrir estos controles de concentración",
-            "Show these concentration controls": "Mostrar estos controles de concentración",
-            "Roll the native {ability} saving throw": "Realizar la tirada de salvación nativa de {ability}",
-            "Roll all listed saving throws": "Realizar todas las tiradas de salvación mostradas",
-            "Roll the {ability} saving throw": "Realizar la tirada de salvación de {ability}",
-            "Roll initiative with Combat Assistant": "Tirar iniciativa con Combat Assistant",
-            "End concentration and remove any linked area marker": "Terminar la concentración y eliminar los marcadores de área vinculados",
-            "Move the area marker, then roll every token inside it": "Mueve el marcador de área y realiza las tiradas para todas las fichas que contiene",
-            "Apply temporary HP to selected token bar(s)": "Aplicar PG temporales a las barras de las fichas seleccionadas",
-            "Apply healing to selected token bar(s)": "Aplicar curación a las barras de las fichas seleccionadas",
-            "Roll selected target save and apply damage": "Tirar la salvación del objetivo seleccionado y aplicar daño",
-            "Apply damage only if attack hits selected target AC": "Aplicar daño solo si el ataque alcanza la CA del objetivo seleccionado",
-            "Always Prepared - locked": "Siempre preparado: bloqueado",
-            "Granted spell - cannot be changed here": "Conjuro concedido: no puede modificarse aquí",
-            "Unprepare this spell": "Dejar de preparar este conjuro",
-            "Prepare this spell": "Preparar este conjuro",
-            "Edit this Spell Macro": "Editar esta macro de conjuro",
-            "Remove this Spell Macro": "Eliminar esta macro de conjuro",
-            "Roll total: {total}": "Total de la tirada: {total}",
-            "Roll damage: {formula}": "Tirar el daño: {formula}",
-            "Focus {name}": "Centrar la vista en {name}",
-            "Roll all listed tokens": "Realizar las tiradas de todas las fichas mostradas",
-            "Roll {name}": "Realizar la tirada de {name}",
-            "Total": "Total",
-            "Mode": "Modo",
-            "Reason": "Motivo",
-            "Roll damage": "Tirar el daño",
-            "Add {action} as a Token Action to the selected character": "Añadir {action} como acción de ficha al personaje seleccionado",
-            "Use the native sheet saving throw.": "Usa la tirada de salvación de la hoja.",
-            "Cast {name}": "Lanzar {name}",
-            "Cast {name} - unavailable": "Lanzar {name} - no disponible",
-            "Add a spell template": "Añadir una plantilla de conjuro",
-            "Enable Spell Templates": "Activar plantillas de conjuros",
-            "Enable Spell Macros": "Activar macros de conjuros",
-            "Player Macro Buttons": "Botones de macro para jugadores",
-            "Use matching spell templates for area markers. When OFF, use the default marker image.": "Usar la plantilla del conjuro para sus marcadores de área. Si está desactivado, usar la imagen predeterminada.",
-            "Run configured Apply and End macros for matching spells. Turning this OFF preserves saved macros.": "Ejecutar las macros Apply y End de los conjuros correspondientes. Al desactivarlo, las macros guardadas se conservan.",
-            "Show interactive spell macro buttons to the GM and players who control the caster. When OFF, show them only to the GM.": "Mostrar los botones interactivos de macros al GM y a los jugadores que controlan al lanzador. Si está desactivado, mostrarlos solo al GM.",
-            "Add chat text, API commands, Roll20 references, queries, or native ability commands for a spell": "Añadir al conjuro texto de chat, comandos API, referencias o consultas de Roll20, o comandos nativos de habilidades",
-            "Runs even when the target is not affected.": "Se ejecuta aunque el objetivo no resulte afectado.",
-            "Melee Attack": "Ataque cuerpo a cuerpo",
-            "Range Attack": "Ataque a distancia",
-            "Ranged Attack": "Ataque a distancia",
-            "Ranged Save": "Salvación a distancia",
-            "Save Attack": "Ataque con salvación",
-            "No uses remain.": "No quedan usos disponibles.",
-            "Out of resources": "Sin recursos",
-            "Insufficient resources for this action.": "No hay recursos suficientes para realizar esta acción.",
-            "Not enough charges remain.": "No quedan suficientes cargas.",
-            "Not enough {resource} to perform this action.": "No hay suficientes usos de {resource} para realizar esta acción.",
-            "Uses {quantity} of {resource}.": "Gasta {quantity} de {resource}.",
-            "Recovers {quantity} of {resource}.": "Recupera {quantity} de {resource}.",
-            "{current} of {max} remaining.": "Quedan {current} de {max}.",
-            "{character} moves swiftly with {action}.": "{character} acelera el paso mediante la acción {action}.",
-            "{character} withdraws carefully using {action}.": "{character} se retira con cautela mediante la acción {action}.",
-            "{character} adopts a defensive stance using {action}.": "{character} adopta una postura defensiva con la acción {action}.",
-            "No initiative result was captured for {character}. The remaining rolls will continue.": "No se registró la iniciativa de {character}. Las tiradas restantes continuarán.",
-            "{source} attacks {target} with {action}, but misses.": "{source} ataca a {target} con {action}, pero falla.",
-            "{source} attacks {target}, but misses.": "{source} ataca a {target}, pero falla.",
-            "{target} takes {damage}{source}.": "{target} recibe {damage}{source}.",
-            "{target} takes {damage}{source}{fainted}.": "{target} recibe {damage}{source}{fainted}.",
-            "{condition} remains active.": "El estado {condition} sigue activo.",
-            "{conditions} remain active.": "Los estados {conditions} siguen activos.",
-            "{condition} has ended.": "El estado {condition} ha terminado.",
-            "{conditions} have ended.": "Los estados {conditions} han terminado.",
-            "{target} gains the {condition} condition.": "{target} sufre el estado {condition}.",
-            "{target} gains the following conditions: {conditions}.": "{target} sufre los estados {conditions}.",
-            "{source} uses {action}.": "{source} utiliza {action}.",
-            "{source} uses {action} and rolls healing.": "{source} utiliza {action} y realiza una tirada de curación.",
-            "{source} uses a special action.": "{source} utiliza una acción especial.",
-            "{source} rolls healing.": "{source} realiza una tirada de curación."
-        }),
-        fragments: Object.freeze([" and rolls healing.", " rolls healing.", " heals ", " grants ", " Hit Points to ", " temporary HP to ", " using ", " uses ", " takes ", " attacks ", " misses.", " must roll a ", " saving throw", " saving throws", " was healed.", " damage", "Gained the ", " condition.", " conditions.", " and ", " on the ", " from ", " with ", " lost concentration", " condition ended.", " but misses.", " and falls unconscious", " blocked by ", " reduced by ", " increased by ", " immunity", " resistance", " vulnerability", " Save and takes ", " to Maintain "]),
+        dictionaries: Object.freeze({
+    "en": {
+        "abilities": {
+            "charisma": "Charisma",
+            "charisma_short": "CHA",
+            "constitution": "Constitution",
+            "dexterity": "Dexterity",
+            "dexterity_short": "DEX",
+            "intelligence": "Intelligence",
+            "savingthrow_suffix": " saving throw",
+            "strength": "Strength",
+            "strength_short": "STR",
+            "title_singular": "Attribute",
+            "value": "Stat",
+            "wisdom": "Wisdom",
+            "wisdom_short": "WIS"
+        },
+        "actions": {
+            "attack": "Attack",
+            "combat-special": "Special",
+            "combat-special_tip": "Open Special Actions",
+            "combat_ca": "CA Combat",
+            "combat_tip": "List attacks from this character sheet",
+            "conc_ca": "CA Concentration",
+            "concentration": "Conc.",
+            "dash": "Dash",
+            "dash_ca": "CA Dash",
+            "dash_tip": "Take the Dash action",
+            "dex-tiebreaker": "Tie Breaker",
+            "disengage_ca": "CA Disengage",
+            "disengage_tip": "Take the Disengage action",
+            "dodge": "Dodge",
+            "dodge_ca": "CA Dodge",
+            "dodge_tip": "Take the Dodge action",
+            "heal": "Heal",
+            "help_ca": "CA Help",
+            "player-init_ca": "CA Initiative",
+            "resources_ca": "CA Resources",
+            "roll-damage": "Roll Damage",
+            "roll-damage_cf71a6f": "Roll damage",
+            "roll_healing_narrative": " rolls healing.",
+            "send": "Send",
+            "sheet": "Sheet",
+            "sheet_ca": "CA Sheet",
+            "sheet_tip": "Open Compact Sheet",
+            "spells": "Spells",
+            "spells_ca": "CA Spells",
+            "spells_tip": "Open combat spells",
+            "title_plural": "Actions",
+            "title_singular": "Action",
+            "turn_ca": "CA Turn",
+            "turncard_ca": "CA Turn Card",
+            "turnfocus_ca": "CA Turn Focus",
+            "turnnext_ca": "CA Turn Next",
+            "uses_narrative": " uses ",
+            "whisper": "Whisper"
+        },
+        "combat": {
+            "BONUS_ACTION": "Bonus Action",
+            "BONUS_ACTIONS": "Bonus Actions",
+            "COMBAT": "Combat",
+            "FREE_ACTION": "Free Action",
+            "FREE_ACTIONS": "Free Actions",
+            "LEGENDARY_ACTION": "Legendary Action",
+            "LEGENDARY_ACTIONS": "Legendary Actions",
+            "MYTHIC_ACTION": "Mythic Action",
+            "MYTHIC_ACTIONS": "Mythic Actions",
+            "REACTION": "Reaction",
+            "REACTIONS": "Reactions",
+            "SPECIALS": "Special Actions",
+            "apply_damage": "Apply Damage",
+            "apply_damage_directly_to_selected_token_s": "Apply damage directly to selected token(s)",
+            "apply_damage_only_if_attack_hits_selected_target_ac": "Apply damage only if attack hits selected target AC",
+            "apply_temporary_hp_to_selected_token_bar_s": "Apply temporary HP to selected token bar(s)",
+            "attack_damage": "Attack Damage",
+            "attack_roll": "Attack Roll",
+            "cantrips": "Cantrips",
+            "choose_a_target_token_and_apply_this_attack_once": "Choose a target token and apply this attack once",
+            "choose_a_target_token_and_apply_this_damage_once": "Choose a target token and apply this damage once",
+            "could_not_apply_damage": "Could not apply damage.",
+            "could_not_apply_damage_after_the_saving_throw": "Could not apply damage after the saving throw.",
+            "damage_blocked": "Damage Blocked",
+            "damage_roll": "Damage Roll",
+            "damage_source": "Damage Source",
+            "damage_type": "Damage Type",
+            "deal_damage_to_selected_token_s": "Deal damage to selected token(s)",
+            "edit_damage_manually": "Edit damage manually",
+            "heal_selected_token_s": "Heal selected token(s)",
+            "healing_roll": "Healing Roll",
+            "healing_roll_completed_the_gm_can_apply_it": "Healing roll completed. The GM can apply it.",
+            "hit_points": "Hit Points",
+            "hit_points_to": "Hit Points to",
+            "invalid_damage_payload": "Invalid damage payload.",
+            "manual_damage": "Manual Damage",
+            "melee_attack": "Melee Attack",
+            "move_the_area_marker_then_roll_every_token_inside_it": "Move the area marker, then roll every token inside it",
+            "must_roll_a": "must roll a",
+            "no_damage": "No damage",
+            "no_damage_blocked_by": "no damage, blocked by",
+            "only_the_gm_can_roll_grouped_2014_saving_throws": "Only the GM can roll grouped 2014 saving throws.",
+            "range_attack": "Range Attack",
+            "ranged_attack": "Ranged Attack",
+            "resource": "Resource",
+            "resource_update": "Resource Update",
+            "roll_a_saving_throw_for_selected_token_s": "Roll a saving throw for selected token(s)",
+            "roll_all": "Roll All",
+            "roll_all_listed_2014_initiatives_with_combat_assistant": "Roll all listed 2014 initiatives with Combat Assistant",
+            "roll_all_listed_2014_saving_throws_with_combat_assistant": "Roll all listed 2014 saving throws with Combat Assistant",
+            "roll_all_listed_saving_throws": "Roll all listed saving throws",
+            "roll_all_listed_tokens": "Roll all listed tokens",
+            "roll_for": "Roll for:",
+            "roll_selected_target_save_and_apply_damage": "Roll selected target save and apply damage",
+            "roll_the_native": "Roll the native",
+            "save_attack": "Save Attack",
+            "set_an_npc_area_attack_choose_source_move_the_marker_then_roll": "Set an NPC area attack: choose source, move the marker, then roll",
+            "set_an_npc_attack_choose_source_then_target": "Set an NPC attack: choose source, then target",
+            "spells_level": "Level",
+            "temporary_hp": "Temporary HP",
+            "temporary_hp_to": "temporary HP to",
+            "zero_damage": "0 damage"
+        },
+        "commands": {
+            "TEST_title": "Combat Assistant Test"
+        },
+        "common": {
+            "apply": "Apply",
+            "back": "Back",
+            "cancel_narrative": "Cancel",
+            "character": "Character",
+            "createdBy": "Created by",
+            "custom": "Custom",
+            "damage": "Damage",
+            "damage_short": "Dmg",
+            "edit": "Edit",
+            "effects": "Effects",
+            "end": "End",
+            "english": "English",
+            "error": "Error",
+            "french": "French",
+            "get": "Get",
+            "gm": "GM",
+            "hptemp_narrative": "Temporary Hit Points",
+            "initiative": "Initiative",
+            "modifier_narrative": "Modifier",
+            "no": "No",
+            "on": "on",
+            "open": "Open",
+            "roll": "Roll",
+            "savingthrow_narrative": "Saving Throw",
+            "savingthrow_narrative_short": "Save",
+            "set": "Set",
+            "source": "Source",
+            "spanish": "Español",
+            "success": "Success",
+            "target": "Target",
+            "unknown": "Unknown",
+            "version": "Version",
+            "warning": "Warning",
+            "yes": "Yes",
+            "edit_short": "EDIT"
+        },
+        "config": {
+            "AC_BAR": "AC Bar",
+            "AC_BAR_tip": "Choose the token bar Combat Assistant uses for armor class.",
+            "ADD_TEMPLATE_tip": "Add a spell template",
+            "ALWAYS_RUN_MACRO": "Runs even when the target is not affected.",
+            "APPLY_CONDITION_MARKER": "Apply Condition Marker",
+            "APPLY_CONDITION_MARKER_tip": "Apply configured token markers after confirmed failed saving throws. OFF retains narrative-only results.",
+            "APPLY_ROLL20_ICON_DAMAGE_COLOR": "Apply Roll20 Icon Damage Color",
+            "APPLY_ROLL20_ICON_DAMAGE_COLOR_tip": "Recolor Roll20-style damage icons using Combat Assistant damage-type colors.",
+            "AREA_HIT_EFFECT_NAME": "Area Hit Effect Name",
+            "AREA_HIT_EFFECT_NAME_tip": "Built-in base effect or exact Custom FX name used when damage is applied through a saving throw. Leave empty to disable.",
+            "AREA_MARKER_FREE_MOVEMENT": "Marker Free Movement",
+            "AREA_MARKER_FREE_MOVEMENT_tip": "ON lets area markers move freely; OFF snaps them to the Roll20 grid.",
+            "AREA_RADIUS_DEBUG_DRAW": "Area Radius Debug Draw",
+            "AREA_RADIUS_DEBUG_DRAW_tip": "Draw temporary GM-only reference circles while resolving supported radius area markers.",
+            "BLOCK_PLAYER_NO_RESOURCES": "Block Without Resources",
+            "BLOCK_PLAYER_NO_RESOURCES_tip": "Hide player Roll, DMG, ATK, Heal, Cast, and Send buttons when the action or spell has a verified resource cost and insufficient uses or spell slots. GM controls and no-cost actions are unaffected.",
+            "CA_ROLLS_INITIATIVE": "2024 Combat Assistant Rolls Initiative",
+            "CA_ROLLS_INITIATIVE_tip": "ON lets Combat Assistant roll 2024 initiative from sheet data; OFF keeps native Roll20 initiative.",
+            "CHAT_BACKGROUND_IMAGE_URL": "Change Background URL",
+            "CHAT_BACKGROUND_IMAGE_URL_tip": "Set the background image used by Combat Assistant cards.",
+            "CHAT_DEBUG_ATTACKS": "Chat Debug Attacks",
+            "CHAT_DEBUG_ATTACKS_tip": "Temporarily print full attack diagnostics in chat after opening Combat.",
+            "CHAT_DEBUG_SPELLS": "Chat Debug Spells",
+            "CHAT_DEBUG_SPELLS_tip": "Temporarily print full spell diagnostics in chat after opening Spells.",
+            "CHAT_PROBE": "Chat Probe",
+            "CHAT_PROBE_tip": "Whisper compact Roll20 chat-message diagnostics to the GM for parser testing.",
+            "CHAT_TRACKING": "Chat Tracking",
+            "CHAT_TRACKING_tip": "Read Roll20 attack, damage, healing, and related combat rolls.",
+            "COMBAT_PAGE": "Combat Settings",
+            "COMBAT_VISUAL_EFFECTS": "Combat Visual Effects",
+            "COMBAT_VISUAL_EFFECTS_tip": "Show automatic Roll20 FX when Combat Assistant applies damage, healing, temporary HP, projectile attacks, or area effects.",
+            "CONCENTRATION_MARKER": "Concentration",
+            "CONCENTRATION_MARKER_tip": "Roll20 token marker name/tag used while a token is concentrating. Default: stopwatch.",
+            "CONCENTRATION_TOOLTIP_GM_ONLY": "GM-Only Concentration Tooltip",
+            "CONCENTRATION_TOOLTIP_GM_ONLY_tip": "Show Combat Assistant concentration token tooltips only to the GM.",
+            "CONCENTRATION_TRACKING": "Concentration Tracking",
+            "CONCENTRATION_TRACKING_tip": "Track concentration spells, area markers, persistent actions, targets, and concentration saves.",
+            "CONC_TURN_TRACKER": "Conc. Turn Tracker",
+            "CONC_TURN_TRACKER_tip": "Decrease finite concentration duration when the caster reaches its turn and end it automatically at 0.",
+            "CONDITION_MARKER_tip_begin": "Roll20 token marker name/tag for ",
+            "CONDITION_MARKER_tip_end": ". Must exist in the campaign to render.",
+            "CONSUME_ACTION_RESOURCES": "Consume Action Resources",
+            "CONSUME_ACTION_RESOURCES_tip": "Automatically consume one matching non-spell resource when a confirmed action with the same normalized name is used.",
+            "CONSUME_SPELL_SLOTS": "Consume Spell Slots",
+            "CONSUME_SPELL_SLOTS_tip": "Automatically consume the confirmed spell cost, preferring an exact linked Beacon spell Resource before a generic spell slot.",
+            "DAMAGE_ROUND_UP": "Damage Round Up",
+            "DAMAGE_ROUND_UP_tip": "Round halved damage up instead of down.",
+            "DEBUG": "Debug",
+            "DEBUG_tip": "Temporary API-console debug logging. Resets to OFF whenever the sandbox restarts.",
+            "DIRECT_HIT_EFFECT_NAME": "Direct Hit Effect Name",
+            "DIRECT_HIT_EFFECT_NAME_tip": "Built-in base effect or exact Custom FX name used when damage is applied without a saving throw. Leave empty to disable.",
+            "EDIT_MACRO_tip": "Edit this Spell Macro",
+            "EDIT_MACRO_tip_ad9a220": "Edit this spell macro",
+            "EDIT_TEMPLATE_tip": "Edit this spell template",
+            "EFFECT_TRACKER": "Effect Tracker",
+            "EFFECT_TRACKER_tip": "Track temporary save-based conditions and show due repeat-save controls on the affected token Turn Card.",
+            "FORCE_TURN_ORDER_POSITION": "Force Turn Order Position",
+            "FORCE_TURN_ORDER_POSITION_tip": "Keep new Turn Order entries in initiative order while preserving the active turn once combat has started.",
+            "GET_TOKEN_IMAGE_URL": "Get Token Image URL",
+            "GET_TOKEN_IMAGE_URL_tip": "Select exactly one token and return its current live token image URL.",
+            "HANDLE_ACTIONS": "Turn Token Action",
+            "HANDLE_ACTIONS_tip": "Show Dash, Special, C. Sheet, Combat, and Spells controls on Turn Cards.",
+            "HIDE_COMBAT_LOG": "Hide Combat Log",
+            "HIDE_COMBAT_LOG_tip": "Whisper Combat Logs to the GM instead of publishing them. Healing amounts are controlled separately by Hide Damage Details.",
+            "HIDE_DAMAGE_DETAILS": "Hide Damage Details",
+            "HIDE_DAMAGE_DETAILS_tip": "Hide public damage details and healing amounts in Combat Logs, including GM whispers. This also suppresses public resistance-detail text.",
+            "HIDE_RESISTANCE_DETAILS": "Hide Resistance Details",
+            "HIDE_RESISTANCE_DETAILS_tip": "Keep final damage amount and type visible, but hide resistance, immunity, and vulnerability explanations in public Combat Logs.",
+            "HP_BAR": "HP Bar",
+            "HP_BAR_tip": "Choose the token bar Combat Assistant uses for hit points.",
+            "LANGUAGE": "Language",
+            "LANGUAGE_tip": "Select the language used for Combat Assistant menus and messages.",
+            "MARKERS_PAGE": "Token Markers",
+            "MOVEMENT_CONSUMED_BLOCKER": "Movement Consumed Blocker",
+            "MOVEMENT_CONSUMED_BLOCKER_tip": "Lock the current player-controlled token after all available movement is spent. Dash restores movement when available.",
+            "NPC_RESOURCE_MANAGEMENT": "NPC Resource Management",
+            "NPC_RESOURCE_MANAGEMENT_tip": "Give eligible unlinked NPC tokens independent resource pools stored in Token GM Notes.",
+            "ONLY_DAMAGE_CARD": "Only Damage Card",
+            "ONLY_DAMAGE_CARD_tip": "Show the GM a direct Hit card for standalone Damage rolls with no proven attack, save, or target range.",
+            "PLAYER_ACTION_RANGE_CHECK": "Player Target Range Check",
+            "PLAYER_ACTION_RANGE_CHECK_tip": "Check caster-to-target range before generated player spell controls apply healing or damage.",
+            "PLAYER_AREA_MARKER_KEEP_UNTIL_ROLLED": "Keep Marker Until Rolls Finish",
+            "PLAYER_AREA_MARKER_KEEP_UNTIL_ROLLED_tip": "Keep an area marker visible until every affected saving throw and damage resolution is complete.",
+            "PLAYER_ATTACK_BUTTON": "Player Attack Button",
+            "PLAYER_ATTACK_BUTTON_tip": "Whisper supported attack controls to the controlling player so they can select a target and resolve the attack.",
+            "PLAYER_HEALING_BUTTON": "Player Healing Button",
+            "PLAYER_HEALING_BUTTON_tip": "Whisper supported healing controls to the controlling player so they can select a target and apply healing.",
+            "PLAYER_MANUAL_ROLL": "Player Manual Roll",
+            "PLAYER_MANUAL_ROLL_tip": "Ask player-controlled tokens to make their own supported saving throws and initiative rolls when Roll20 exposes a usable native button.",
+            "PLAYER_MARKER_OPACITY": "Marker Opacity",
+            "PLAYER_MARKER_OPACITY_tip": "Set the opacity percentage for player area-marker tokens.",
+            "PLAYER_MARKER_RADIUS_URL": "Radius Marker Roll20 URL",
+            "PLAYER_MARKER_RADIUS_URL_tip": "Roll20 uploaded image URL used for radius, sphere, cylinder, or emanation area markers.",
+            "PLAYER_MARKER_SQUARE_URL": "Square Marker Roll20 URL",
+            "PLAYER_MARKER_SQUARE_URL_tip": "Roll20 uploaded image URL used for square, cube, cone, or line area markers.",
+            "PLAYER_PUBLIC_RESOURCE_USAGE": "Player Public Usage",
+            "PLAYER_PUBLIC_RESOURCE_USAGE_tip": "Publish player Resource Update cards instead of whispering them privately.",
+            "PLAYER_SPELL_MACRO_BUTTONS": "Player Macro Buttons",
+            "PLAYER_SPELL_MACRO_BUTTONS_tip": "Show interactive spell macro buttons to the GM and players who control the caster. When OFF, show them only to the GM.",
+            "PLAYER_TOKEN_AREA_MARK": "Player Token Area Mark",
+            "PLAYER_TOKEN_AREA_MARK_tip": "Allow generated player area-spell controls to place a movable area marker and resolve tokens inside it.",
+            "PRIVACY_PAGE": "Privacy Settings",
+            "PROJECTILE_EFFECT_NAME": "Projectile Effect Name",
+            "PROJECTILE_EFFECT_NAME_tip": "Built-in or Custom FX name used from attacker to target for ranged projectile attacks. Leave empty to disable.",
+            "PUBLIC_PRESENTATION_CARD": "Public Presentation Card",
+            "PUBLIC_PRESENTATION_CARD_tip": "ON shows the startup presentation card publicly. OFF whispers it only to the GM.",
+            "PUBLIC_ROUND_COUNTER": "Public Round Counter",
+            "PUBLIC_ROUND_COUNTER_tip": "Also publish the Round Counter card to players. Round Counter must be ON.",
+            "PUBLIC_TURN_MARKER": "Turn Marker Token Public",
+            "PUBLIC_TURN_MARKER_tip": "OFF keeps the turn marker on the GM layer; ON puts it on the map layer and brings it forward.",
+            "REMOVE_MACRO_tip": "Remove this Spell Macro",
+            "REMOVE_MACRO_tip_c2aea1e": "Remove this spell macro",
+            "REMOVE_NPC_DEAD_TOKENS": "Remove NPC Dead Tokens",
+            "REMOVE_NPC_DEAD_TOKENS_tip": "Automatically remove unlinked NPC turns at 0 HP; OFF leaves a red manual Remove control.",
+            "REMOVE_TEMPLATE_tip": "Remove this spell template",
+            "REQUIRE_AC_FOR_ATTACK": "Require AC for Attack",
+            "REQUIRE_AC_FOR_ATTACK_tip": "Require a valid AC value before resolving attack-roll damage. OFF allows attack damage to continue when the configured AC bar is empty.",
+            "RESET": "Default",
+            "RESOURCES_PAGE": "Resources Settings",
+            "REVEAL_DAMAGE_SOURCE": "Reveal Damage Source in Log",
+            "REVEAL_DAMAGE_SOURCE_tip": "Show who caused damage or healing and which attack, spell, or ability caused it.",
+            "REVEAL_TOKEN_NAMES_IN_LOG": "Reveal Token Names in Log",
+            "REVEAL_TOKEN_NAMES_IN_LOG_tip": "Show token names in Combat Logs. OFF uses generic Target, Attacker, Caster, or Healer labels.",
+            "ROUND_COUNTER": "Round Counter",
+            "ROUND_COUNTER_tip": "Enable the Round Counter card and current-combat token summary.",
+            "SECTION_EXTRA": "Extra",
+            "SECTION_MAIN": "Main",
+            "SECTION_SUB_MENUS": "Sub Menus",
+            "SETTINGS": "Settings",
+            "SHEET_2014_CA_ROLLS": "2014 Combat Assistant Rolls",
+            "SHEET_2014_CA_ROLLS_tip": "OFF keeps native 2014 saving throws and initiative; ON lets Combat Assistant perform those supported rolls.",
+            "SHOW_EFFECTS_LIST": "Show Effects List",
+            "SHOW_EFFECTS_LIST_tip": "Show sheet effect toggles at the top of the Combat menu.",
+            "SHOW_NPC_RESOURCES": "Show NPC Resources",
+            "SHOW_NPC_RESOURCES_tip": "Show limited resources and spell slots for non-player-controlled tokens on the GM Turn Card.",
+            "SHOW_PLAYER_RESOURCES": "Show Player Resources",
+            "SHOW_PLAYER_RESOURCES_tip": "Show player-controlled token resources and spell slots directly on its Turn Card.",
+            "SHOW_PREPARED_SPELLS_ONLY_2024": "2024 Prepared Spells Only",
+            "SHOW_PREPARED_SPELLS_ONLY_2024_tip": "Show only 2024 spells marked Prepared or Always Prepared, including cantrips only when Roll20 marks them prepared.",
+            "TEMPLATES_PAGE": "Spell Templates",
+            "TEMP_HP_BAR": "Temp HP Bar",
+            "TEMP_HP_BAR_tip": "Choose the token bar used for temporary HP, or 0 to disable token-bar Temp HP.",
+            "TOKEN_IMAGE_URL": "Token Image URL",
+            "TURN_AUTO_FOCUS": "Turn Auto Focus",
+            "TURN_AUTO_FOCUS_tip": "Ping and focus eligible users on the current-turn token.",
+            "TURN_FOCUS_FOR_EVERYONE": "Turn Focus For Everyone",
+            "TURN_FOCUS_FOR_EVERYONE_tip": "ON focuses everyone; OFF focuses only GMs and controllers of the current token or character.",
+            "TURN_MARKER": "Turn Marker",
+            "TURN_MARKER_FOLLOW": "Turn Marker Follow",
+            "TURN_MARKER_FOLLOW_tip": "Keep the Turn Marker centered and scaled when the current token moves or resizes.",
+            "TURN_MARKER_IMAGE_URL": "Turn Marker Token Image",
+            "TURN_MARKER_IMAGE_URL_tip": "Roll20 uploaded image used for the turn marker token.",
+            "TURN_MARKER_IMG_SIZE": "Turn Marker Token Size %",
+            "TURN_MARKER_IMG_SIZE_tip": "Percentage added to current token width and height for the Turn Marker. Default 20.",
+            "TURN_MARKER_ROTATION": "Turn Marker Rotation",
+            "TURN_MARKER_ROTATION_SPEED": "Turn Marker Rotation Speed",
+            "TURN_MARKER_ROTATION_SPEED_tip": "Milliseconds between Turn Marker rotation updates. Default 100 ms.",
+            "TURN_MARKER_ROTATION_STEPS": "Turn Marker Rotation Steps",
+            "TURN_MARKER_ROTATION_STEPS_tip": "Degrees applied on every Turn Marker rotation update. Default 1.",
+            "TURN_MARKER_ROTATION_tip": "Rotate the Turn Marker while combat is active.",
+            "TURN_MARKER_tip": "Spawn a marker token on the current-turn token.",
+            "TURN_MOVEMENT_BLOCKER": "Turn Movement Blocker",
+            "TURN_MOVEMENT_BLOCKER_tip": "Lock player-controlled initiative tokens until their turn. Automatically unlock when their turn begins or they leave initiative.",
+            "TURN_MOVEMENT_TRACKER": "Turn Movement Tracker",
+            "TURN_MOVEMENT_TRACKER_tip": "Track movement spent by the current-turn token and warn when it exceeds available speed.",
+            "TURN_PAGE": "Turn Tracker Settings",
+            "TURN_TRACKER": "Turn Tracker",
+            "TURN_TRACKER_tip": "Track combat rounds and current turns from the Roll20 Turn Order.",
+            "USE_ROLL20_DAMAGE_ICON": "Use Roll20 Damage Icon",
+            "USE_ROLL20_DAMAGE_ICON_tip": "Use Roll20-style SVG damage icons instead of the default Combat Assistant icons.",
+            "USE_SHEET_DAMAGE_TRAITS": "Read Sheet Resistances",
+            "USE_SHEET_DAMAGE_TRAITS_tip": "Read sheet damage resistances, immunities, and vulnerabilities when applying damage.",
+            "USE_SPELL_MACROS": "Enable Spell Macros",
+            "USE_SPELL_MACROS_tip": "Run configured Apply and End macros for matching spells. Turning this OFF preserves saved macros.",
+            "USE_SPELL_TEMPLATES": "Enable Spell Templates",
+            "USE_SPELL_TEMPLATES_tip": "Use matching spell templates for area markers. When OFF, use the default marker image."
+        },
+        "damageType": {
+            "acid": "Acid",
+            "bludgeoning": "Bludgeoning",
+            "cold": "Cold",
+            "fire": "Fire",
+            "force": "Force",
+            "healing": "Healing",
+            "lightning": "Lightning",
+            "necrotic": "Necrotic",
+            "normal": "Normal",
+            "piercing": "Piercing",
+            "poison": "Poison",
+            "psychic": "Psychic",
+            "radiant": "Radiant",
+            "slashing": "Slashing",
+            "temp_healing": "Temporary HP",
+            "thunder": "Thunder"
+        },
+        "errors": {
+            "NO_SELECTED_TOKEN": "No selected token."
+        },
+        "fragments": {
+            "and": " and ",
+            "and_falls_unconscious": " and falls unconscious",
+            "and_rolls_healing": " and rolls healing.",
+            "attacks": " attacks ",
+            "blocked_by": " blocked by ",
+            "but_misses": " but misses.",
+            "condition": " condition.",
+            "condition_ended": " condition ended.",
+            "conditions": " conditions.",
+            "damage": " damage",
+            "duration_expired": "(duration expired)",
+            "from": " from ",
+            "from_source": " from {source}",
+            "from_source_using_action": " from {source} using {action}",
+            "gained_the": "Gained the ",
+            "grants": " grants ",
+            "heals": " heals ",
+            "hit_points_to": " Hit Points to ",
+            "immunity": " immunity",
+            "increased_by": " increased by ",
+            "lost_concentration": " lost concentration",
+            "misses": " misses.",
+            "must_roll_a": " must roll a ",
+            "on_spell": " on {spell}",
+            "on_the": " on the ",
+            "reduced_by": " reduced by ",
+            "resistance": " resistance",
+            "save_and_takes": " Save and takes ",
+            "saving_throws": " saving throws",
+            "some_damage_was_absorbed_by_temporary_hp": "(Some damage was absorbed by Temporary HP)",
+            "takes": " takes ",
+            "temporary_hp_to": " temporary HP to ",
+            "to_maintain": " to Maintain ",
+            "using": " using ",
+            "using_action": " using {action}",
+            "vulnerability": " vulnerability",
+            "was_healed": " was healed.",
+            "with": " with "
+        },
+        "help": {
+            "alias_of_ca_turncard_ca_turn_card_is_also_accepted": "- Alias of !ca turncard. !ca turn-card is also accepted.",
+            "declares_dash_for_the_selected_token_during_its_active_turn_da": "- Declares Dash for the selected token. During its active turn, Dash also increases its Movement Tracker allowance.",
+            "declares_disengage_narratively_for_the_selected_token_even_out": "- Declares Disengage narratively for the selected token, even outside its turn.",
+            "declares_dodge_narratively_for_the_selected_token_even_outside": "- Declares Dodge narratively for the selected token, even outside its turn.",
+            "ends_the_current_turn_when_you_control_the_active_token": "- Ends the current turn when you control the active token.",
+            "opens_the_combat_assistant_settings": "- Opens the Combat Assistant settings.",
+            "opens_the_main_combat_assistant_menu": "- Opens the main Combat Assistant menu.",
+            "recalls_the_active_concentration_controls_for_a_token_you_cont": "- Recalls the active concentration controls for a token you control.",
+            "requests_the_native_sheet_initiative_roll_when_ca_initiative_r": "- Requests the native sheet initiative roll when CA initiative rolls are OFF; otherwise Combat Assistant rolls it. The result is tracked in Turn Order.",
+            "sets_the_token_bar_used_for_armor_class": "- Sets the token bar used for Armor Class.",
+            "sets_the_token_bar_used_for_hit_points": "- Sets the token bar used for Hit Points.",
+            "sets_the_token_bar_used_for_temporary_hit_points_use_0_to_disa": "- Sets the token bar used for Temporary Hit Points. Use 0 to disable it.",
+            "shows_resources_for_a_character_sheet_you_can_access": "- Shows resources for a character sheet you can access.",
+            "shows_resources_for_the_named_character_sheet": "- Shows resources for the named character sheet.",
+            "shows_resources_for_the_selected_token": "- Shows resources for the selected token.",
+            "shows_the_attack_list_for_a_character_sheet_you_can_access": "- Shows the attack list for a character sheet you can access.",
+            "shows_the_attack_list_for_the_named_character_sheet": "- Shows the attack list for the named character sheet.",
+            "shows_the_attack_list_for_the_selected_token": "- Shows the attack list for the selected token.",
+            "shows_the_compact_sheet_for_the_selected_token": "- Shows the Compact Sheet for the selected token.",
+            "shows_the_compact_sheet_for_the_selected_token_a_controlled_to": "- Shows the Compact Sheet for the selected token. A controlled token or character ID can also be supplied manually.",
+            "shows_the_full_turn_card_for_the_selected_controlled_character": "- Shows the full Turn Card for the selected controlled character. A character ID can also be supplied manually.",
+            "shows_the_live_turn_card_only_when_the_current_token_is_yours": "- Shows the live Turn Card only when the current token is yours.",
+            "shows_the_normal_turn_card_for_the_token_whose_turn_it_current": "- Shows the normal Turn Card for the token whose turn it currently is.",
+            "shows_the_spell_list_for_a_character_sheet_you_can_access": "- Shows the spell list for a character sheet you can access.",
+            "shows_the_spell_list_for_the_named_character_sheet": "- Shows the spell list for the named character sheet.",
+            "shows_the_spell_list_for_the_selected_token": "- Shows the spell list for the selected token.",
+            "shows_this_help_card": "- Shows this help card.",
+            "shows_this_player_help_card": "- Shows this player help card."
+        },
+        "messages": {
+            "an_error_occurred": "An error occurred.",
+            "apply_recommended_on_off_settings_only": "Apply recommended ON/OFF settings only?",
+            "but_misses": "but misses.",
+            "cast_lv": "CAST LV.",
+            "choose_a_target_token_before_pressing_the_button": "Choose a target token before pressing the button.",
+            "combat_assistant_data_was_cleared_and_default_settings_restore": "Combat Assistant data was cleared and default settings restored. Restart the Roll20 Mod sandbox to clear temporary in-memory data.",
+            "condition": "condition.",
+            "condition_ended": "condition ended.",
+            "conditions": "conditions.",
+            "copy_the_text_above_to_edit_it_in_the_next_prompt_replace_keep": "Copy the text above to edit it. In the next prompt, replace [keep] to change a field, leave [keep] to preserve it, or erase it to clear that field.",
+            "could_not_apply_healing": "Could not apply healing.",
+            "custom_language_could_not_be_loaded_english_will_be_used_until": "Custom language could not be loaded; English will be used until the handout is fixed.",
+            "custom_language_loaded_successfully": "Custom language loaded successfully.",
+            "custom_translations_loaded_from_ca_language": "Custom translations loaded from CA Language.",
+            "ended": "ended.",
+            "for_more_information": "for more information.",
+            "gm_only_permanently_clear_ca_state_after_typing_confirm_export": "GM only: permanently clear CA state after typing CONFIRM. Export CA Settings first.",
+            "insufficient_resources_for_this_action": "Insufficient resources for this action.",
+            "invalid_healing_payload": "Invalid healing payload.",
+            "it_will_appear_when_a_linked_token_for_that_character_is_selec": ". It will appear when a linked token for that character is selected.",
+            "language_json_is_invalid": "Language JSON is invalid.",
+            "no_active_effects": "No active effects.",
+            "no_attacks_found": "No attacks found.",
+            "no_handout_named_ca_language_was_found": "No handout named \"CA Language\" was found.",
+            "no_pending_saving_throws_were_found": "No pending saving throws were found.",
+            "no_resources_found": "No resources found.",
+            "no_selected_token_was_linked_to_a_character_sheet": "No selected token was linked to a character sheet.",
+            "no_spells_found": "No spells found.",
+            "no_target_tokens_were_found_inside_the_area_marker": "No target tokens were found inside the area marker.",
+            "no_translation_entries_were_found_in_the_language_handout": "No translation entries were found in the language handout.",
+            "no_usable_combat_actions_were_found_on_this_character_sheet": "No usable combat actions were found on this character sheet.",
+            "no_uses_remain": "No uses remain.",
+            "not_enough_charges_remain": "not enough charges remain.",
+            "not_enough_charges_remain_f874606": "Not enough charges remain.",
+            "only_the_gm_can_remove_turns": "Only the GM can remove turns.",
+            "only_the_gm_can_stop_combat": "Only the GM can stop combat.",
+            "recommended_settings_cancelled_no_changes_were_made": "Recommended settings cancelled. No changes were made.",
+            "reload_the_translation_json_from_the_ca_language_handout": "Reload the translation JSON from the CA Language handout.",
+            "remaining": "remaining.",
+            "select_one_or_more_linked_tokens": "Select one or more linked tokens.",
+            "select_target_token_s_before_pressing_a_button": "Select target token(s) before pressing a button.",
+            "select_target_token_s_before_pressing_any_button": "Select target token(s) before pressing any button.",
+            "single_use_button_press_the_button_then_choose_a_target_when_r": "Single Use Button. Press the button, then choose a target when Roll20 asks.",
+            "some_ca_managed_map_locks_or_markers_could_not_be_released_che": "Some CA-managed map locks or markers could not be released; check them manually.",
+            "source_and_target_must_be_on_the_same_page": "Source and target must be on the same page.",
+            "the_affected_token_was_not_found": "The affected token was not found.",
+            "the_handout_contains_an_unsafe_translation_value": "The handout contains an unsafe translation value.",
+            "the_handout_translations_must_be_an_object_of_text_keys_and_tr": "The handout translations must be an object of text keys and translated strings.",
+            "the_language_handout_does_not_contain_valid_json": "The language handout does not contain valid JSON.",
+            "the_language_setting_must_be_english_spanish_or_custom": "Choose English or a language available in the CA Language handout.",
+            "the_pending_saving_throw_target_token_was_not_found": "The pending saving throw target token was not found.",
+            "the_remaining_rolls_will_continue": ". The remaining rolls will continue.",
+            "the_requested_token_was_not_found": "The requested token was not found.",
+            "the_selected_target_is_not_within_range_for_this_action": "The selected target is not within range for this action.",
+            "the_selected_target_token_could_not_be_found": "The selected target token could not be found.",
+            "the_selected_token_is_not_linked_to_a_character_sheet": "The selected token is not linked to a character sheet.",
+            "this_action_is_already_being_resolved_or_has_no_remaining_uses": "This action is already being resolved or has no remaining uses.",
+            "this_area_button_has_already_been_used_or_expired": "This area button has already been used or expired.",
+            "this_saving_throw_request_expired_or_was_already_used": "This saving throw request expired or was already used.",
+            "this_single_use_button_has_already_been_used_or_expired": "This single-use button has already been used or expired.",
+            "this_tracked_effect_expired_or_was_already_removed": "This tracked effect expired or was already removed.",
+            "to_perform_this_action": "to perform this action.",
+            "use_a_handout_named_ca_language_containing_the_translation_jso": "Use a handout named CA Language containing the translation JSON to activate Custom.",
+            "use_the_native_sheet_saving_throw": "Use the native sheet saving throw.",
+            "uses_a_special_action": "uses a special action.",
+            "was_affected": "was affected.",
+            "was_healed": "was healed.",
+            "you_do_not_control_this_character": "You do not control this character.",
+            "you_do_not_control_this_token": "You do not control this token."
+        },
+        "narrative": {
+            "add_action_as_a_token_action_to_the_selected_character": "Add {action} as a Token Action to the selected character",
+            "amount_points_of_damagetype": "{amount} points of damage{type}",
+            "apply_name_macro": "Apply {name} macro",
+            "apply_name_macro_once": "Apply {name} macro once",
+            "attack_misses": "{source} attacks {target}, but misses.",
+            "attack_with_action_misses": "{source} attacks {target} with {action}, but misses.",
+            "blocked_by_immunity_type": "blocked by immunity ({type})",
+            "cast_name": "Cast {name}",
+            "cast_name_unavailable": "Cast {name} - unavailable",
+            "concentration_of_casterspell_ended": "Concentration of {caster}{spell} ended.",
+            "concentration_of_casterspell_expired": "Concentration of {caster}{spell} expired.",
+            "condition_active": "{condition} remains active.",
+            "condition_ended": "{condition} has ended.",
+            "condition_gained": "{target} gains the {condition} condition.",
+            "conditions_active": "{conditions} remain active.",
+            "conditions_ended": "{conditions} have ended.",
+            "conditions_gained": "{target} gains the following conditions: {conditions}.",
+            "count_prepared": "{count} prepared",
+            "count_turn_s_left": "{count} turn(s) left",
+            "current_of_max_remaining": "{current} of {max} remaining.",
+            "dash": "{character} moves swiftly with {action}.",
+            "deleted_name": "Deleted \"{name}\".",
+            "disengage": "{character} withdraws carefully using {action}.",
+            "dodge": "{character} adopts a defensive stance using {action}.",
+            "focus_name": "Focus {name}",
+            "increased_by_vulnerability_type": "increased by vulnerability ({type})",
+            "no_damage_immunity_type": "No damage: immunity ({type})",
+            "no_damagetype": "No damage{type}.",
+            "no_damagetype_blocked_by_immunity": "No damage{type}, blocked by immunity.",
+            "no_initiative_result_was_captured_for_character_the_remaining": "No initiative result was captured for {character}. The remaining rolls will continue.",
+            "not_enough_resource_to_perform_this_action": "Not enough {resource} to perform this action.",
+            "open_menu": "Open {menu}",
+            "recommended_settings_were_applied_to_count_on_off_options_imag": "Recommended settings were applied to {count} ON/OFF options. Images, markers, language, templates, and macros were left unchanged.",
+            "recovers_quantity_of_resource": "Recovers {quantity} of {resource}.",
+            "reduced_by_resistance_type": "reduced by resistance ({type})",
+            "repeat_the_abilitydc_saving_throw_for_effect": "Repeat the {ability}{dc} saving throw for {effect}",
+            "roll20_token_marker_name_tag_for_marker_must_exist_in_the_camp": "Roll20 token marker name/tag for {marker}. Must exist in the campaign to render.",
+            "roll_damage_formula": "Roll damage: {formula}",
+            "roll_name": "Roll {name}",
+            "roll_the_ability_saving_throw": "Roll the {ability} saving throw",
+            "roll_the_native_ability_saving_throw": "Roll the native {ability} saving throw",
+            "roll_total_total": "Roll total: {total}",
+            "rolls_healing": "{source} rolls healing.",
+            "round_round": "Round {round}",
+            "run_name_macro_in_roll20": "Run {name} macro in Roll20",
+            "source_grants_amount_temporary_hp_to_targetusing": "{source} grants {amount} temporary HP to {target}{using}.",
+            "source_grants_temporary_hp_to_targetusing": "{source} grants temporary HP to {target}{using}.",
+            "source_heals_amount_hit_points_to_targetusing": "{source} heals {amount} Hit Points to {target}{using}.",
+            "source_heals_targetusing": "{source} heals {target}{using}.",
+            "target_outcome_the_ability_saving_throw": "{target} {outcome} the {ability} saving throw.",
+            "target_outcome_the_ability_saving_throw_and_takes_damagesource": "{target} {outcome} the {ability} saving throw and takes {damage}{source}{fainted}.",
+            "target_takes_damage": "{target} takes {damage}{source}.",
+            "target_takes_damage_fainted": "{target} takes {damage}{source}{fainted}.",
+            "the_attack_against_target_misses": "The attack against {target} misses.",
+            "the_condition_condition_affecting_target_has_ended": "The {condition} condition affecting {target} has ended.",
+            "use_action": "Use {action}",
+            "uses_action": "{source} uses {action}.",
+            "uses_action_heals": "{source} uses {action} and rolls healing.",
+            "uses_quantity_of_resource": "Uses {quantity} of {resource}.",
+            "uses_special_action": "{source} uses a special action.",
+            "language_not_available_in_ca_language": "The language {language} is not available in the CA Language handout."
+        },
+        "skills": {
+            "acrobatics": "Acrobatics",
+            "animal_handling": "Animal Handling",
+            "arcana": "Arcana",
+            "athletics": "Athletics",
+            "deception": "Deception",
+            "history": "History",
+            "insight": "Insight",
+            "intimidation": "Intimidation",
+            "investigation": "Investigation",
+            "medicine": "Medicine",
+            "nature": "Nature",
+            "perception": "Perception",
+            "performance": "Performance",
+            "persuasion": "Persuasion",
+            "religion": "Religion",
+            "sleight_of_hand": "Sleight of Hand",
+            "stealth": "Stealth",
+            "survival": "Survival",
+            "title_plural": "Skills",
+            "title_singular": "Skill"
+        },
+        "spell": {
+            "abilities_apply_delivers_a_single_use_player_card_when_the_cas": "abilities. Apply delivers a single-use player card when the caster has a player controller plus an unlimited GM card; End keeps the canonical direct/client-required execution path. For multiple resolved targets,",
+            "active_concentration": "Active concentration.",
+            "add_chat_text_api_commands_roll20_references_queries_or_native": "Add chat text, API commands, Roll20 references, queries, or native ability commands for a spell",
+            "add_spell": "Add Spell",
+            "add_spell_macro": "Add Spell Macro",
+            "add_spell_template": "Add Spell Template",
+            "always_prepared": "Always Prepared",
+            "always_prepared_locked": "Always Prepared - locked",
+            "apply_recommended_on_off_settings_without_changing_images_mark": "Apply recommended ON/OFF settings without changing images, markers, language, spell templates, or macros",
+            "can_be_used_while_concentration_lasts": "can be used while concentration lasts.",
+            "cantrip": "Cantrip",
+            "caster": "Caster",
+            "caster_name": "Caster Name:",
+            "caster_page": "Caster Page:",
+            "concentration_check": "Concentration Check",
+            "concentration_damage": "Concentration Damage",
+            "concentration_ended": "Concentration Ended",
+            "concentration_lost": "Concentration Lost",
+            "concentration_on": "concentration on",
+            "edit_spell": "Edit Spell",
+            "end_concentration_and_remove_any_linked_area_marker": "End concentration and remove any linked area marker",
+            "ends_naturally_as_the_spell_reaches_the_end_of_its_duration": "ends naturally as the spell reaches the end of its duration.",
+            "granted_spell_cannot_be_changed_here": "Granted spell - cannot be changed here",
+            "lost_concentration": "lost concentration",
+            "macros": "Spell Macros",
+            "no_active_concentration_was_found": "No active concentration was found.",
+            "no_active_concentration_was_found_for_your_token": "No active concentration was found for your token.",
+            "no_complete_area_marker_was_found_cast_the_spell_again_to_crea": "No complete area marker was found. Cast the spell again to create a new marker.",
+            "no_spell_macros_configured": "No Spell Macros configured.",
+            "no_spell_templates_configured": "No spell templates configured.",
+            "open_these_concentration_controls": "Open these concentration controls",
+            "prepare_this_spell": "Prepare this spell",
+            "prepared": "Prepared",
+            "prepared_count": "Prepared Count",
+            "prepared_leveled_spells_excluding_always_prepared_and_item_spe": "Prepared leveled spells excluding Always Prepared and item spells",
+            "prepared_spells": "Prepared Spells",
+            "prepared_spells_at_this_level_the_limit_is_shared_across_level": "Prepared spells at this level; the limit is shared across levels",
+            "private_concentration_result": "Private concentration result.",
+            "reroll_active_concentration_damage_and_open_controls": "Reroll active concentration damage and open controls",
+            "reroll_this_concentration_spell_s_damage_and_open_its_controls": "Reroll this concentration spell's damage and open its controls",
+            "roll_the_concentration_saving_throw": "Roll the concentration saving throw",
+            "roll_the_concentration_saving_throw_with_combat_assistant": "Roll the concentration saving throw with Combat Assistant",
+            "show_these_concentration_controls": "Show these concentration controls",
+            "spell": "Spell",
+            "spell_attack": "Spell Attack",
+            "spell_diagnostic": "Spell Diagnostic",
+            "spell_level": "Spell Level",
+            "spell_macro": "Spell Macro",
+            "spell_macros": "Spell Macros.",
+            "spell_name": "Spell Name",
+            "spell_probe": "Spell Probe",
+            "spell_resources": "Spell Resources",
+            "spell_save": "Spell Save",
+            "spell_slot_auto_consumption_is_armed_for_the_next_leveled_spel": "Spell slot auto-consumption is armed for the next leveled spell roll",
+            "spell_slots": "Spell Slots",
+            "spell_template": "Spell Template",
+            "the_persistent_concentration_action": "the persistent concentration action",
+            "this_permanently_deletes_all_ca_settings_spell_templates_spell": "This permanently deletes all CA settings, Spell Templates, Spell Macros, and tracked combat data. Other scripts and Roll20 handouts are not affected. Export CA Settings first if you need a backup.",
+            "unprepare_this_spell": "Unprepare this spell"
+        },
+        "turn": {
+            "advance_to_the_next_turn": "Advance to the next turn",
+            "advance_to_the_next_turn_then_remove_this_defeated_token_from": "Advance to the next turn, then remove this defeated token from the Turn Order",
+            "end_combat_and_clear_the_turn_order": "End combat and clear the Turn Order",
+            "end_this_turn": "End this turn",
+            "initiative_roll": "Initiative Roll",
+            "initiative_roll_request_sent_to_player_controlled_token_s": "Initiative roll request sent to player-controlled token(s).",
+            "initiative_roll_timeout": "Initiative Roll Timeout",
+            "initiative_rolls": "Initiative Rolls",
+            "it_is_not_your_turn": "It is not your turn.",
+            "next_turn": "Next Turn",
+            "no_initiative_result_was_captured_for": "No initiative result was captured for",
+            "only_the_gm_can_roll_grouped_2014_initiative": "Only the GM can roll grouped 2014 initiative.",
+            "open_the_turn_card_for_the_selected_token": "Open the Turn Card for the selected token",
+            "prev_turn": "Prev Turn",
+            "roll_initiative": "Roll initiative",
+            "roll_initiative_for_the_selected_token_s": "Roll initiative for the selected token(s)",
+            "roll_initiative_with_combat_assistant": "Roll initiative with Combat Assistant",
+            "round": "Round",
+            "round_1": "Round 1",
+            "select_exactly_one_linked_token_before_rolling_initiative": "Select exactly one linked token before rolling initiative.",
+            "show_the_round_counter_using_its_public_gm_delivery_setting": "Show the Round Counter using its public/GM delivery setting",
+            "turn": "Turn",
+            "turn_action": "Turn Action",
+            "turn_card": "Turn Card"
+        },
+        "ui": {
+            "abilities": "Abilities",
+            "abilities_2e383af": "abilities,",
+            "ability": "Ability",
+            "ability_check": "Ability Check",
+            "ac": "AC",
+            "action_busy": "Action Busy",
+            "action_expired": "Action Expired",
+            "add": "Add",
+            "advantage": "Advantage",
+            "and": "and",
+            "and_falls_unconscious": "and falls unconscious",
+            "api_commands": "API commands,",
+            "apply_end_accept_plain_chat_text_html_markup": "Apply/End accept plain chat text, HTML markup,",
+            "apply_healing": "Apply Healing",
+            "apply_healing_to_selected_token_bar_s": "Apply healing to selected token bar(s)",
+            "apply_macro": "Apply Macro",
+            "apply_to_target": "Apply to target",
+            "area": "Area",
+            "area_marker": "Area Marker",
+            "area_targets": "Area Targets",
+            "attacker": "Attacker",
+            "attacks": "Attacks",
+            "attacks_6347b76": "attacks",
+            "attribute_short": "Attr.",
+            "attributes": "attributes,",
+            "automatic_failure": "Automatic Failure",
+            "automatically_fail_this_saving_throw": "Automatically fail this saving throw",
+            "available": "Available",
+            "back_to_settings": "Back to Settings",
+            "bar_configuration": "Bar Configuration",
+            "blinded": "Blinded",
+            "blocked_by": "blocked by",
+            "cast": "Cast",
+            "character_name": "Character Name:",
+            "character_settings": "Character Settings",
+            "character_sheet": "Character Sheet",
+            "charmed": "Charmed",
+            "choose_a_target_token_and_apply_this_healing_once": "Choose a target token and apply this healing once",
+            "close": "Close",
+            "combat_assistant_help": "Combat Assistant Help",
+            "combat_assistant_settings": "Combat Assistant Settings",
+            "combat_diagnostic": "Combat Diagnostic",
+            "combat_log": "Combat Log",
+            "compact_sheet": "Compact Sheet",
+            "condition": "Condition",
+            "conditions": "Conditions",
+            "controller_name": "Controller Name:",
+            "controller_page": "Controller Page:",
+            "created": "Created",
+            "critical": "Critical",
+            "critical_hit": "Critical Hit",
+            "current": "Current",
+            "custom_ca_language_handout": "Custom (CA Language handout)",
+            "custom_language": "Custom Language",
+            "deafened": "Deafened",
+            "deferred_attributes": "deferred attributes,",
+            "disadvantage": "Disadvantage",
+            "disengage": "Disengage",
+            "distance": "Distance",
+            "does_not_have_enough": "does not have enough",
+            "edit_healing_amount": "Edit healing amount",
+            "effect": "Effect",
+            "english_default": "English (default)",
+            "examples": "Examples",
+            "exhaustion": "Exhaustion",
+            "export": "Export",
+            "failed": "Failed",
+            "fails": "fails",
+            "failure": "Failure",
+            "focus_this_token": "Focus this token",
+            "frightened": "Frightened",
+            "from": "from",
+            "gm_staging": "GM Staging",
+            "grants": "grants",
+            "grappled": "Grappled",
+            "has": "Has",
+            "healer": "Healer",
+            "healing": "Healing",
+            "healing_blocked": "Healing Blocked",
+            "heals": "heals",
+            "hit": "Hit",
+            "hp": "HP",
+            "immunity": "immunity",
+            "import": "Import",
+            "imported": "Imported",
+            "in_range": "In Range",
+            "incapacitated": "Incapacitated",
+            "increased_by": "increased by",
+            "info": "Info",
+            "init": "Init",
+            "is_already_a_token_action_for": "is already a Token Action for",
+            "is_no_longer_affected_by": "is no longer affected by",
+            "is_now_visible_as_a_token_action_for": "is now visible as a Token Action for",
+            "item_charges": "Item Charges",
+            "known_spells": "Known Spells",
+            "language_changed": "Language changed",
+            "language_handout": "Language handout",
+            "language_imported": "Language imported",
+            "language_settings": "Language Settings",
+            "language_template": "Language Template",
+            "languages": "Languages",
+            "loading": "Loading",
+            "macro": "Macro:",
+            "magic_resistance": "Magic Resistance",
+            "main_commands": "Main Commands",
+            "manual": "Manual",
+            "manual_healing": "Manual Healing",
+            "maximum": "Maximum",
+            "miss": "Miss",
+            "missed": "Missed",
+            "misses": "misses",
+            "mode": "Mode",
+            "named_macros": "named macros,",
+            "new_token": "New token",
+            "next": "Next",
+            "no_spells_available": "No Spells Available",
+            "none": "None",
+            "not_available": "Not Available",
+            "not_found": "Not found",
+            "open_help": "Open help",
+            "open_resources_for_the_selected_token": "Open Resources for the selected token",
+            "open_settings": "Open settings",
+            "open_the_compact_sheet_for_the_selected_token": "Open the Compact Sheet for the selected token",
+            "out_of_range": "Out of Range",
+            "out_of_resources": "Out of resources",
+            "pact_magic": "PACT MAGIC",
+            "paralyzed": "Paralyzed",
+            "passed": "Passed",
+            "permission_denied": "Permission Denied",
+            "petrified": "Petrified",
+            "player": "Player",
+            "player_settings": "Player Settings",
+            "poisoned": "Poisoned",
+            "previous": "Previous",
+            "privacy": "Privacy",
+            "prone": "Prone",
+            "range": "Range",
+            "ranged_save": "Ranged Save",
+            "reason": "Reason",
+            "recommended": "Recommended",
+            "reduced_by": "reduced by",
+            "reload": "Reload",
+            "reload_custom_language": "Reload Custom Language",
+            "remaining": "Remaining",
+            "remove": "Remove",
+            "reset_ca_state": "Reset CA State",
+            "resistance": "resistance",
+            "resolves_independently_fields": "resolves independently. Fields:",
+            "resources": "Resources",
+            "restore_every_persistent_setting_to_its_default_value": "Restore every persistent setting to its default value",
+            "restrained": "Restrained",
+            "roll20_references": "Roll20 References",
+            "rolls": "rolls",
+            "rolls_healing": "rolls healing",
+            "rounds": "Rounds",
+            "run_the_literal_test_command": "Run the literal test command",
+            "save_short": "Save",
+            "saving_throw_dc": "Saving Throw DC",
+            "saving_throws": "Saving Throws",
+            "settings": "settings,",
+            "settings_export": "Settings Export",
+            "settings_import": "Settings Import",
+            "single_target": "Single Target",
+            "single_use_button_select_a_target_within": "Single Use Button. Select a target within",
+            "skill_check": "Skill Check",
+            "sleep": "Sleep",
+            "slots": "Slots",
+            "slots_at_this_level": "Slots at this level",
+            "slots_auto": "Slots Auto",
+            "source_required": "Source Required",
+            "spanish": "Spanish",
+            "spells_remaining": "Spells Remaining",
+            "spent": "Spent",
+            "stat_short": "Stat",
+            "stop": "Stop",
+            "stunned": "Stunned",
+            "succeeds": "succeeds",
+            "takes": "takes",
+            "target_required": "Target Required",
+            "targets": "Targets",
+            "temp_hp": "Temp HP",
+            "templates": "Templates",
+            "templates_628420a": "Templates:",
+            "to": "to",
+            "token": "Token",
+            "token_action": "Token Action",
+            "token_page": "Token Page:",
+            "total": "Total",
+            "tracking": "Tracking:",
+            "unavailable": "Unavailable",
+            "unconscious": "Unconscious",
+            "unknown_command": "Unknown Command",
+            "unprepared": "Unprepared",
+            "update_macro": "Update Macro",
+            "updated": "Updated",
+            "updated_the": "Updated the",
+            "use": "Use",
+            "used": "Used",
+            "uses": "uses",
+            "using": "using",
+            "vulnerability": "vulnerability",
+            "was_added_to": "was added to",
+            "with": "with"
+        }
+    }
+}),
+        // Resolve only the few ambiguous original phrases explicitly; every
+        // other legacy phrase is indexed from dictionaries.en at runtime.
+        legacyAliases: Object.freeze({"Attribute (short)": "ui.attribute_short", "Healing": "ui.healing", "Save": "common.savingthrow_narrative_short", "Save (short)": "ui.save_short", "Stat": "abilities.value", "Stat (short)": "ui.stat_short", "Temporary HP": "combat.temporary_hp", "damageType.acid": "damageType.acid", "damageType.bludgeoning": "damageType.bludgeoning", "damageType.cold": "damageType.cold", "damageType.fire": "damageType.fire", "damageType.force": "damageType.force", "damageType.healing": "damageType.healing", "damageType.lightning": "damageType.lightning", "damageType.necrotic": "damageType.necrotic", "damageType.normal": "damageType.normal", "damageType.piercing": "damageType.piercing", "damageType.poison": "damageType.poison", "damageType.psychic": "damageType.psychic", "damageType.radiant": "damageType.radiant", "damageType.slashing": "damageType.slashing", "damageType.temp_healing": "damageType.temp_healing", "damageType.thunder": "damageType.thunder"}),
+        fragments: Object.freeze(["fragments.and_rolls_healing", "actions.roll_healing_narrative", "fragments.heals", "fragments.grants", "fragments.hit_points_to", "fragments.temporary_hp_to", "fragments.using", "actions.uses_narrative", "fragments.takes", "fragments.attacks", "fragments.misses", "fragments.must_roll_a", "abilities.savingthrow_suffix", "fragments.saving_throws", "fragments.was_healed", "fragments.damage", "fragments.gained_the", "fragments.condition", "fragments.conditions", "fragments.and", "fragments.on_the", "fragments.from", "fragments.with", "fragments.lost_concentration", "fragments.condition_ended", "fragments.but_misses", "fragments.and_falls_unconscious", "fragments.blocked_by", "fragments.reduced_by", "fragments.increased_by", "fragments.immunity", "fragments.resistance", "fragments.vulnerability", "fragments.save_and_takes", "fragments.to_maintain"]),
         custom: null,
+        // The in-memory cache is rebuilt from CA Language; no extra state keys.
+        externalDictionaries: Object.create(null),
+        externalLanguages: [],
+        caseFoldCache: new WeakMap(),
+        englishIndexCache: null,
+
+        isExternalLanguage(code) {
+            return code === 'custom' || code === 'es' || code === 'fr' || /^custom:[a-z]{2,3}(?:-[a-z0-9]{2,8})?$/.test(String(code || ''));
+        },
 
         language() {
             const value = RuntimeConfig.get('LANGUAGE');
-            return value === 'es' || value === 'custom' ? value : 'en';
+            return value === 'en' || this.isExternalLanguage(value) ? value : 'en';
         },
 
         dictionary() {
             const language = this.language();
-            return language === 'es' ? this.spanish : (language === 'custom' ? this.custom : null);
+            if (language === 'custom') return this.custom;
+            if (this.isExternalLanguage(language)) return this.externalDictionaries[language] || null;
+            return this.dictionaries[language];
         },
+
+        languageOptions() {
+            // Main Settings never inspects or parses CA Language. The handout
+            // is read only after the GM explicitly chooses Custom.
+            return [
+                { value: 'en', name: this.t('common.english'), short: 'EN' },
+                { value: 'custom', name: this.t('common.custom'), short: 'CUS' }
+            ];
+        },
+
+        handouts() {
+            return typeof findObjs === 'function'
+                ? (findObjs({ _type: 'handout', name: this.HANDOUT_NAME }) || []) : [];
+        },
+
+        hasHandout() { return this.handouts().length > 0; },
+
+        // Only own properties are traversed; custom handouts cannot access
+        // prototype fields or JavaScript object methods as translation IDs.
+        lookup(dictionary, path) {
+            if (!dictionary || !path || typeof path !== 'string') return undefined;
+            if (Object.prototype.hasOwnProperty.call(dictionary, path) && typeof dictionary[path] === 'string') return dictionary[path];
+            let node = dictionary;
+            for (const part of path.split('.')) {
+                if (!part || part === '__proto__' || part === 'constructor' || part === 'prototype' ||
+                    !node || typeof node !== 'object' || !Object.prototype.hasOwnProperty.call(node, part)) return undefined;
+                node = node[part];
+            }
+            return typeof node === 'string' ? node : undefined;
+        },
+
+        flatten(dictionary, prefix, out) {
+            const result = out || Object.create(null);
+            if (!dictionary || typeof dictionary !== 'object' || Array.isArray(dictionary)) return result;
+            Object.keys(dictionary).forEach((part) => {
+                if (!part || part === '__proto__' || part === 'prototype' || part === 'constructor') return;
+                const key = prefix ? prefix + '.' + part : part;
+                const value = dictionary[part];
+                if (typeof value === 'string') result[key] = value;
+                else if (value && typeof value === 'object' && !Array.isArray(value)) this.flatten(value, key, result);
+            });
+            return result;
+        },
+
+        englishIndex() {
+            if (this.englishIndexCache) return this.englishIndexCache;
+            const index = Object.create(null);
+            const flat = this.flatten(this.dictionaries.en);
+            Object.keys(flat).forEach((key) => {
+                const phrase = flat[key];
+                if (!Object.prototype.hasOwnProperty.call(index, phrase)) index[phrase] = key;
+            });
+            Object.keys(this.legacyAliases).forEach((phrase) => { index[phrase] = this.legacyAliases[phrase]; });
+            this.englishIndexCache = index;
+            return index;
+        },
+
+        // A read-only view for older extensions/tests that inspected the flat
+        // Spanish table. Values are derived from the canonical nested dictionary;
+        // CA itself uses only stable keys, never this compatibility view.
+        legacyFlat(language) {
+            const result = Object.create(null);
+            const active = this.dictionaries[language] || this.externalDictionaries[language];
+            Object.keys(this.englishIndex()).forEach((phrase) => {
+                const translated = this.lookup(active, this.englishIndex()[phrase]);
+                if (typeof translated === 'string') result[phrase] = translated;
+            });
+            Object.keys(this.flatten(this.dictionaries.en)).forEach((key) => {
+                if (key.indexOf('damageType.') !== 0) return;
+                const translated = this.lookup(active, key);
+                if (typeof translated === 'string') result[key] = translated;
+            });
+            return result;
+        },
+
+        get spanish() { return this.legacyFlat('es'); },
 
         caseFoldIndex(dictionary) {
             let index = this.caseFoldCache.get(dictionary);
@@ -910,8 +1043,7 @@ const CombatAssistant = (() => {
             index = Object.create(null);
             Object.keys(dictionary).forEach((key) => {
                 const folded = key.toLowerCase();
-                // Ambiguous casing such as Attacks (noun) / attacks (verb)
-                // must retain exact-case lookup rather than picking one.
+                // Preserve ambiguous English pairs such as Attacks / attacks.
                 index[folded] = Object.prototype.hasOwnProperty.call(index, folded) ? null : key;
             });
             this.caseFoldCache.set(dictionary, index);
@@ -921,39 +1053,60 @@ const CombatAssistant = (() => {
         t(key, replacements) {
             const source = String(key === undefined || key === null ? '' : key);
             if (source === 'ON' || source === 'OFF' || source === '+' || source === 'X') return source;
+            const en = this.dictionaries.en;
+            const direct = this.lookup(en, source);
+            const englishIndex = this.englishIndex();
+            let canonical = direct !== undefined ? source : englishIndex[source];
+            let caseSource = '';
+            if (!canonical) {
+                const match = this.caseFoldIndex(englishIndex)[source.toLowerCase()];
+                if (match) { canonical = englishIndex[match]; caseSource = source; }
+            }
+            const language = this.language();
             const dictionary = this.dictionary();
-            let translated = source;
-            if (dictionary && Object.prototype.hasOwnProperty.call(dictionary, source)) {
-                translated = dictionary[source];
-            } else if (dictionary) {
-                const canonical = this.caseFoldIndex(dictionary)[source.toLowerCase()];
-                if (canonical) {
-                    translated = dictionary[canonical];
-                    if (source !== source.toLowerCase() && source === source.toUpperCase()) {
-                        translated = translated.toUpperCase();
-                    } else if (source !== source.toUpperCase() && source === source.toLowerCase()) {
-                        translated = translated.toLowerCase();
-                    } else {
-                        const first = source.match(/[A-Za-zÀ-ÖØ-öø-ÿ]/);
-                        if (first && first[0] === first[0].toUpperCase()) {
-                            translated = translated.replace(/[A-Za-zÀ-ÖØ-öø-ÿ]/, (char) => char.toUpperCase());
-                        }
-                    }
+            let translated = direct !== undefined ? direct : source;
+            if (canonical && language !== 'en') {
+                const legacyValue = this.isExternalLanguage(language) && dictionary ? this.lookup(dictionary, source) : undefined;
+                const requested = this.lookup(dictionary, canonical);
+                const originalEnglish = this.lookup(en, canonical);
+                // Old flat/custom dictionaries resolve their English phrase keys
+                // through the same engine; no locale is hardcoded here.
+                const legacyEnglish = this.isExternalLanguage(language) && typeof originalEnglish === 'string'
+                    ? this.lookup(dictionary, originalEnglish) : undefined;
+                translated = typeof legacyValue === 'string' ? legacyValue :
+                    (typeof requested === 'string' ? requested :
+                        (typeof legacyEnglish === 'string' ? legacyEnglish : originalEnglish));
+            } else if (!canonical && this.isExternalLanguage(language) && dictionary) {
+                const legacyValue = this.lookup(dictionary, source);
+                if (typeof legacyValue === 'string') translated = legacyValue;
+                else {
+                    const caseKey = this.caseFoldIndex(dictionary)[source.toLowerCase()];
+                    if (caseKey) { translated = this.lookup(dictionary, caseKey); caseSource = source; }
                 }
             }
+            if (canonical && caseSource && language !== 'en' && typeof translated === 'string') {
+                if (caseSource !== caseSource.toLowerCase() && caseSource === caseSource.toUpperCase()) {
+                    translated = translated.toUpperCase();
+                } else if (caseSource !== caseSource.toUpperCase() && caseSource === caseSource.toLowerCase()) {
+                    translated = translated.toLowerCase();
+                } else {
+                    const first = caseSource.match(/[A-Za-zÀ-ÖØ-öø-ÿ]/);
+                    if (first && first[0] === first[0].toUpperCase())
+                        translated = translated.replace(/[A-Za-zÀ-ÖØ-öø-ÿ]/, (char) => char.toUpperCase());
+                }
+            }
+            if (typeof translated !== 'string') translated = source;
             if (!replacements) return translated;
             return translated.replace(/\{([a-zA-Z][a-zA-Z0-9_]*)\}/g, (match, name) =>
                 Object.prototype.hasOwnProperty.call(replacements, name) ? String(replacements[name]) : match);
         },
 
-        // Translate only a displayed damage-type label; all Roll20 parsing,
-        // payloads and resistance calculations keep canonical English identifiers.
+        // Translate display labels only. Resistances and engine identifiers stay
+        // in English, even when the player-facing label is French or Spanish.
         damageTypeLabel(value, capitalize) {
             const original = String(value === undefined || value === null ? '' : value).trim();
             const normalized = original.toLowerCase().replace(/[_-]+/g, ' ').replace(/\s+/g, ' ');
             const key = /^(?:temporary hp|temporary healing|temp hp)$/.test(normalized) ? 'temp healing' : normalized;
-            // The damage-type registry is authoritative; do not maintain a
-            // second list of the same 16 English identifiers here.
             if (!Object.prototype.hasOwnProperty.call(DAMAGE_TYPE_COLORS, key)) return original;
             const english = key === 'temp healing' ? 'Temporary HP' : key.charAt(0).toUpperCase() + key.slice(1);
             const lookup = 'damageType.' + key.replace(/\s+/g, '_');
@@ -962,25 +1115,20 @@ const CombatAssistant = (() => {
             return capitalize ? display.charAt(0).toUpperCase() + display.slice(1) : display.toLowerCase();
         },
 
-        // The outer chat message can contain real character/attack/item names.
-        // Translate only complete known text nodes and carefully scoped prose
-        // connectors; never try to translate arbitrary unknown words.
+        // Keep legacy generated HTML localized while migrating its producers to
+        // I18N.t('namespace.key'). Never translate raw dynamic player names,
+        // API commands, Roll20 references or URLs by general text substitution.
         localizeHtml(html) {
             if (this.language() === 'en' || !this.dictionary()) return html;
-            const dictionary = this.dictionary();
-            const connectors = this.fragments;
             const original = String(html);
             const commandPrefix = original.match(/^\/w\s+"[^"]+"\s*|^\/direct\s+/i);
             const prefix = commandPrefix ? commandPrefix[0] : '';
-            // Never translate native Roll20 rolls, macros, or API script commands.
             if (/^\s*(?:[!%@]|\/(?:r|roll|me|em|emas|desc|as)\b)/i.test(original.slice(prefix.length))) return html;
             let skipText = 0;
             return prefix + original.slice(prefix.length).split(/(<[^>]*>)/g).map((chunk) => {
                 if (chunk.charAt(0) === '<') {
                     if (/^<(?:strong|b)\b/i.test(chunk)) skipText += 1;
                     if (/^<\/(?:strong|b)\s*>/i.test(chunk)) skipText = Math.max(0, skipText - 1);
-                    // Translate exact known tooltips; leave commands, URLs and dynamic
-                    // character/item names inside unrelated attributes unchanged.
                     return chunk.replace(/\b(title|aria-label|alt)="([^"]*)"/gi, (attribute, field, value) => {
                         const translated = this.t(value);
                         return translated === value ? attribute : field + '="' + Utils.attrSafe(translated) + '"';
@@ -992,55 +1140,119 @@ const CombatAssistant = (() => {
                 const exact = this.t(chunk);
                 if (exact !== chunk) return exact;
                 const translatedTrimmed = trimmed ? this.t(trimmed) : trimmed;
-                if (translatedTrimmed !== trimmed) {
+                if (translatedTrimmed !== trimmed)
                     return chunk.slice(0, chunk.indexOf(trimmed)) + translatedTrimmed + chunk.slice(chunk.indexOf(trimmed) + trimmed.length);
-                }
-                return connectors.reduce((text, phrase) => {
-                    const replacement = dictionary[phrase];
-                    return typeof replacement === 'string' ? text.split(phrase).join(replacement) : text;
+                return this.fragments.reduce((text, key) => {
+                    const english = this.lookup(this.dictionaries.en, key);
+                    const localized = this.t(key);
+                    return english && localized !== english ? text.split(english).join(localized) : text;
                 }, chunk);
             }).join('');
         },
 
         async loadCustomHandout() {
-            const handouts = typeof findObjs === 'function'
-                ? (findObjs({ _type: 'handout', name: this.HANDOUT_NAME }) || []) : [];
-            if (!handouts.length) return { ok: false, message: this.t('No handout named "CA Language" was found.') };
-            const notes = await SettingsTransferService.readNotes(handouts[0]);
-            if (/<(?:script|iframe|svg|object|img)\b|\b(?:onerror|onclick|javascript:)\b/i.test(notes)) {
-                return { ok: false, message: this.t('The handout contains an unsafe translation value.') };
+            const handouts = this.handouts();
+            if (!handouts.length) {
+                this.custom = null;
+                this.externalDictionaries = Object.create(null);
+                this.externalLanguages = [];
+                return { ok: false, message: this.t('No handout named "CA Language" was found.') };
             }
-            if (notes.length > 250000) return { ok: false, message: this.t('The language handout does not contain valid JSON.') };
+            const notes = await SettingsTransferService.readNotes(handouts[0]);
+            if (/<(?:script|iframe|svg|object|img)\b|\b(?:onerror|onclick|javascript:)\b/i.test(notes))
+                return { ok: false, message: this.t('The handout contains an unsafe translation value.') };
+            // Multi-language handouts can contain several independent dictionaries.
+            if (notes.length > 750000) return { ok: false, message: this.t('The language handout does not contain valid JSON.') };
             let payload;
             const text = Utils.stripHtml(notes);
             try { payload = JSON.parse(text); }
             catch (error) {
-                // Roll20 can persist handout Notes in URL-encoded form.
                 try { payload = JSON.parse(decodeURIComponent(text.replace(/\+/g, '%20'))); }
                 catch (decodeError) { return { ok: false, message: this.t('The language handout does not contain valid JSON.') }; }
             }
-            const records = payload && payload.translations;
-            if (!payload || payload.format !== 'Combat Assistant Language' || !State.isRecord(records)) {
+            if (!State.isRecord(payload) || payload.format !== 'Combat Assistant Language')
                 return { ok: false, message: this.t('The handout translations must be an object of text keys and translated strings.') };
+
+            const englishIndex = this.englishIndex();
+            const validateDictionary = (translations) => {
+                const candidate = Object.create(null);
+                let count = 0;
+                const traverse = (record, prefix, depth) => {
+                    if (!State.isRecord(record) || depth > 8) throw new Error('Invalid translation structure');
+                    Object.keys(record).forEach((part) => {
+                        if (!part || part.length > 400 || part === '__proto__' || part === 'constructor' || part === 'prototype')
+                            throw new Error('Invalid translation key');
+                        const key = prefix ? prefix + '.' + part : part;
+                        const value = record[part];
+                        if (State.isRecord(value)) { traverse(value, key, depth + 1); return; }
+                        count += 1;
+                        if (count > 2000 || typeof value !== 'string' || value.length > 2000 || /[<>]/.test(value))
+                            throw new Error('Invalid translation value');
+                        const expected = this.lookup(this.dictionaries.en, key);
+                        const resolved = expected !== undefined ? key : englishIndex[key];
+                        const original = expected !== undefined ? expected : key;
+                        const slots = original.match(/\{[a-zA-Z][a-zA-Z0-9_]*\}/g) || [];
+                        if (slots.some((slot) => value.indexOf(slot) < 0)) throw new Error('Missing translation placeholder');
+                        candidate[resolved || key] = value;
+                    });
+                };
+                traverse(translations, '', 0);
+                if (!count) throw new Error('Empty translation dictionary');
+                return { candidate, count };
+            };
+            const nextDictionaries = Object.create(null);
+            const nextLanguages = [];
+            let nextCustom = null;
+            let count = 0;
+            try {
+                if (State.isRecord(payload.languages)) {
+                    // Schema 3: languages: { pt: { name, translations }, de: ... }
+                    const codes = Object.keys(payload.languages);
+                    if (!codes.length || codes.length > 16) throw new Error('Invalid language count');
+                    codes.forEach((code) => {
+                        const normalized = String(code).toLowerCase();
+                        if (code !== normalized || !/^[a-z]{2,3}(?:-[a-z0-9]{2,8})?$/.test(code))
+                            throw new Error('Invalid locale code');
+                        const definition = payload.languages[code];
+                        if (!State.isRecord(definition)) throw new Error('Invalid language definition');
+                        // Accept both { name, translations: {...} } and
+                        // the T&T-like compact { locale: { common: {...} } }.
+                        const translations = State.isRecord(definition.translations)
+                            ? definition.translations : definition;
+                        const parsed = validateDictionary(translations);
+                        const languageId = code === 'es' || code === 'fr' ? code : 'custom:' + code;
+                        const name = String((State.isRecord(definition.translations) && definition.name) ||
+                            (State.isRecord(payload.languageNames) && payload.languageNames[code]) || code.toUpperCase()).trim();
+                        if (!name || name.length > 80 || /[<>|,{}?]/.test(name)) throw new Error('Invalid language name');
+                        nextDictionaries[languageId] = parsed.candidate;
+                        nextLanguages.push({ value: languageId, name, count: parsed.count });
+                        count += parsed.count;
+                    });
+                } else if (State.isRecord(payload.translations)) {
+                    // Schema 1/2: one legacy flat or hierarchical Custom dictionary.
+                    const parsed = validateDictionary(payload.translations);
+                    nextCustom = parsed.candidate;
+                    count = parsed.count;
+                    const name = String(payload.name || payload.language || 'Custom').trim().slice(0, 80);
+                    if (/[<>|,{}?]/.test(name)) throw new Error('Invalid language name');
+                    const legacyCode = String(payload.language || '').trim().toLowerCase();
+                    if (legacyCode === 'es' || legacyCode === 'fr') {
+                        nextDictionaries[legacyCode] = parsed.candidate;
+                        nextLanguages.push({ value: legacyCode, name, count });
+                    } else nextLanguages.push({ value: 'custom', name, count });
+                } else throw new Error('Missing translations');
+            } catch (error) {
+                return { ok: false, message: this.t('The handout contains an unsafe translation value.') };
             }
-            const keys = Object.keys(records);
-            if (!keys.length || keys.length > 2000) return { ok: false, message: this.t('No translation entries were found in the language handout.') };
-            const candidate = Object.create(null);
-            for (const key of keys) {
-                const value = records[key];
-                const slots = key.match(/\{[a-zA-Z][a-zA-Z0-9_]*\}/g) || [];
-                if (!key || key.length > 400 || typeof value !== 'string' || value.length > 2000 || /[<>]/.test(value) ||
-                    slots.some((slot) => value.indexOf(slot) < 0)) {
-                    return { ok: false, message: this.t('The handout contains an unsafe translation value.') };
-                }
-                candidate[key] = value;
-            }
-            this.custom = candidate;
-            return { ok: true, count: keys.length, name: String(payload.name || payload.language || 'Custom').slice(0, 80),
+            // Transactional update: a malformed handout never erases valid translations.
+            this.custom = nextCustom;
+            this.externalDictionaries = nextDictionaries;
+            this.externalLanguages = nextLanguages;
+            return { ok: true, count, languages: nextLanguages.length,
+                name: nextLanguages.length === 1 ? nextLanguages[0].name : 'CA Language',
                 duplicateCount: Math.max(0, handouts.length - 1) };
         }
     };
-
 
     const COMMANDS = Object.freeze([
         '!combatassistant',
@@ -1455,95 +1667,95 @@ const CombatAssistant = (() => {
     });
 
     const RUNTIME_CONFIG_FIELDS = Object.freeze([
-        { key: 'USE_SPELL_TEMPLATES', page: 'spelltemplates', label: 'Enable Spell Templates', type: 'boolean', tip: 'Use matching spell templates for area markers. When OFF, use the default marker image.' },
-        { key: 'USE_SPELL_MACROS', page: 'spelltemplates', label: 'Enable Spell Macros', type: 'boolean', tip: 'Run configured Apply and End macros for matching spells. Turning this OFF preserves saved macros.' },
-        { key: 'PLAYER_SPELL_MACRO_BUTTONS', page: 'spelltemplates', label: 'Player Macro Buttons', type: 'boolean', tip: 'Show interactive spell macro buttons to the GM and players who control the caster. When OFF, show them only to the GM.' },
-        { key: 'CHAT_TRACKING', page: 'main', label: 'Chat Tracking', type: 'boolean', tip: 'Read Roll20 attack, damage, healing, and related combat rolls.' },
-        { key: 'CA_ROLLS_INITIATIVE', page: 'main', label: '2024 Combat Assistant Rolls Initiative', type: 'boolean', tip: 'ON lets Combat Assistant roll 2024 initiative from sheet data; OFF keeps native Roll20 initiative.' },
-        { key: 'SHEET_2014_CA_ROLLS', page: 'main', label: '2014 Combat Assistant Rolls', type: 'boolean', tip: 'OFF keeps native 2014 saving throws and initiative; ON lets Combat Assistant perform those supported rolls.' },
+        { key: 'USE_SPELL_TEMPLATES', page: 'spelltemplates', label: "config.USE_SPELL_TEMPLATES", type: 'boolean', tip: "config.USE_SPELL_TEMPLATES_tip" },
+        { key: 'USE_SPELL_MACROS', page: 'spelltemplates', label: "config.USE_SPELL_MACROS", type: 'boolean', tip: "config.USE_SPELL_MACROS_tip" },
+        { key: 'PLAYER_SPELL_MACRO_BUTTONS', page: 'spelltemplates', label: "config.PLAYER_SPELL_MACRO_BUTTONS", type: 'boolean', tip: "config.PLAYER_SPELL_MACRO_BUTTONS_tip" },
+        { key: 'CHAT_TRACKING', page: 'main', label: "config.CHAT_TRACKING", type: 'boolean', tip: "config.CHAT_TRACKING_tip" },
+        { key: 'CA_ROLLS_INITIATIVE', page: 'main', label: "config.CA_ROLLS_INITIATIVE", type: 'boolean', tip: "config.CA_ROLLS_INITIATIVE_tip" },
+        { key: 'SHEET_2014_CA_ROLLS', page: 'main', label: "config.SHEET_2014_CA_ROLLS", type: 'boolean', tip: "config.SHEET_2014_CA_ROLLS_tip" },
 
-        { key: 'HIDE_COMBAT_LOG', page: 'privacy', label: 'Hide Combat Log', type: 'boolean', tip: 'Whisper Combat Logs to the GM instead of publishing them. Healing amounts are controlled separately by Hide Damage Details.' },
-        { key: 'HIDE_RESISTANCE_DETAILS', page: 'privacy', label: 'Hide Resistance Details', type: 'boolean', tip: 'Keep final damage amount and type visible, but hide resistance, immunity, and vulnerability explanations in public Combat Logs.' },
-        { key: 'HIDE_DAMAGE_DETAILS', page: 'privacy', label: 'Hide Damage Details', type: 'boolean', tip: 'Hide public damage details and healing amounts in Combat Logs, including GM whispers. This also suppresses public resistance-detail text.' },
-        { key: 'REVEAL_DAMAGE_SOURCE', page: 'privacy', label: 'Reveal Damage Source in Log', type: 'boolean', tip: 'Show who caused damage or healing and which attack, spell, or ability caused it.' },
-        { key: 'REVEAL_TOKEN_NAMES_IN_LOG', page: 'privacy', label: 'Reveal Token Names in Log', type: 'boolean', tip: 'Show token names in Combat Logs. OFF uses generic Target, Attacker, Caster, or Healer labels.' },
-        { key: 'PUBLIC_PRESENTATION_CARD', page: 'privacy', label: 'Public Presentation Card', type: 'boolean', tip: 'ON shows the startup presentation card publicly. OFF whispers it only to the GM.' },
+        { key: 'HIDE_COMBAT_LOG', page: 'privacy', label: "config.HIDE_COMBAT_LOG", type: 'boolean', tip: "config.HIDE_COMBAT_LOG_tip" },
+        { key: 'HIDE_RESISTANCE_DETAILS', page: 'privacy', label: "config.HIDE_RESISTANCE_DETAILS", type: 'boolean', tip: "config.HIDE_RESISTANCE_DETAILS_tip" },
+        { key: 'HIDE_DAMAGE_DETAILS', page: 'privacy', label: "config.HIDE_DAMAGE_DETAILS", type: 'boolean', tip: "config.HIDE_DAMAGE_DETAILS_tip" },
+        { key: 'REVEAL_DAMAGE_SOURCE', page: 'privacy', label: "config.REVEAL_DAMAGE_SOURCE", type: 'boolean', tip: "config.REVEAL_DAMAGE_SOURCE_tip" },
+        { key: 'REVEAL_TOKEN_NAMES_IN_LOG', page: 'privacy', label: "config.REVEAL_TOKEN_NAMES_IN_LOG", type: 'boolean', tip: "config.REVEAL_TOKEN_NAMES_IN_LOG_tip" },
+        { key: 'PUBLIC_PRESENTATION_CARD', page: 'privacy', label: "config.PUBLIC_PRESENTATION_CARD", type: 'boolean', tip: "config.PUBLIC_PRESENTATION_CARD_tip" },
 
-        { key: 'CONCENTRATION_TRACKING', page: 'combat', section: 'Combat', label: 'Concentration Tracking', type: 'boolean', tip: 'Track concentration spells, area markers, persistent actions, targets, and concentration saves.' },
-        { key: 'CONCENTRATION_TOOLTIP_GM_ONLY', page: 'combat', label: 'GM-Only Concentration Tooltip', type: 'boolean', tip: 'Show Combat Assistant concentration token tooltips only to the GM.' },
-        { key: 'HP_BAR', page: 'combat', label: 'HP Bar', type: 'bar', tip: 'Choose the token bar Combat Assistant uses for hit points.' },
-        { key: 'AC_BAR', page: 'combat', label: 'AC Bar', type: 'bar', tip: 'Choose the token bar Combat Assistant uses for armor class.' },
-        { key: 'TEMP_HP_BAR', page: 'combat', label: 'Temp HP Bar', type: 'bar0', tip: 'Choose the token bar used for temporary HP, or 0 to disable token-bar Temp HP.' },
-        { key: 'DAMAGE_ROUND_UP', page: 'combat', label: 'Damage Round Up', type: 'boolean', tip: 'Round halved damage up instead of down.' },
-        { key: 'REQUIRE_AC_FOR_ATTACK', page: 'combat', label: 'Require AC for Attack', type: 'boolean', tip: 'Require a valid AC value before resolving attack-roll damage. OFF allows attack damage to continue when the configured AC bar is empty.' },
-        { key: 'ONLY_DAMAGE_CARD', page: 'combat', label: 'Only Damage Card', type: 'boolean', tip: 'Show the GM a direct Hit card for standalone Damage rolls with no proven attack, save, or target range.' },
-        { key: 'USE_SHEET_DAMAGE_TRAITS', page: 'combat', label: 'Read Sheet Resistances', type: 'boolean', tip: 'Read sheet damage resistances, immunities, and vulnerabilities when applying damage.' },
-        { key: 'SHOW_EFFECTS_LIST', page: 'combat', label: 'Show Effects List', type: 'boolean', tip: 'Show sheet effect toggles at the top of the Combat menu.' },
+        { key: 'CONCENTRATION_TRACKING', page: 'combat', section: 'Combat', label: "config.CONCENTRATION_TRACKING", type: 'boolean', tip: "config.CONCENTRATION_TRACKING_tip" },
+        { key: 'CONCENTRATION_TOOLTIP_GM_ONLY', page: 'combat', label: "config.CONCENTRATION_TOOLTIP_GM_ONLY", type: 'boolean', tip: "config.CONCENTRATION_TOOLTIP_GM_ONLY_tip" },
+        { key: 'HP_BAR', page: 'combat', label: "config.HP_BAR", type: 'bar', tip: "config.HP_BAR_tip" },
+        { key: 'AC_BAR', page: 'combat', label: "config.AC_BAR", type: 'bar', tip: "config.AC_BAR_tip" },
+        { key: 'TEMP_HP_BAR', page: 'combat', label: "config.TEMP_HP_BAR", type: 'bar0', tip: "config.TEMP_HP_BAR_tip" },
+        { key: 'DAMAGE_ROUND_UP', page: 'combat', label: "config.DAMAGE_ROUND_UP", type: 'boolean', tip: "config.DAMAGE_ROUND_UP_tip" },
+        { key: 'REQUIRE_AC_FOR_ATTACK', page: 'combat', label: "config.REQUIRE_AC_FOR_ATTACK", type: 'boolean', tip: "config.REQUIRE_AC_FOR_ATTACK_tip" },
+        { key: 'ONLY_DAMAGE_CARD', page: 'combat', label: "config.ONLY_DAMAGE_CARD", type: 'boolean', tip: "config.ONLY_DAMAGE_CARD_tip" },
+        { key: 'USE_SHEET_DAMAGE_TRAITS', page: 'combat', label: "config.USE_SHEET_DAMAGE_TRAITS", type: 'boolean', tip: "config.USE_SHEET_DAMAGE_TRAITS_tip" },
+        { key: 'SHOW_EFFECTS_LIST', page: 'combat', label: "config.SHOW_EFFECTS_LIST", type: 'boolean', tip: "config.SHOW_EFFECTS_LIST_tip" },
 
-        { key: 'PLAYER_MANUAL_ROLL', page: 'combat', section: 'Player', label: 'Player Manual Roll', type: 'boolean', tip: 'Ask player-controlled tokens to make their own supported saving throws and initiative rolls when Roll20 exposes a usable native button.' },
-        { key: 'PLAYER_HEALING_BUTTON', page: 'combat', label: 'Player Healing Button', type: 'boolean', tip: 'Whisper supported healing controls to the controlling player so they can select a target and apply healing.' },
-        { key: 'PLAYER_ATTACK_BUTTON', page: 'combat', label: 'Player Attack Button', type: 'boolean', tip: 'Whisper supported attack controls to the controlling player so they can select a target and resolve the attack.' },
-        { key: 'PLAYER_ACTION_RANGE_CHECK', page: 'combat', label: 'Player Target Range Check', type: 'boolean', tip: 'Check caster-to-target range before generated player spell controls apply healing or damage.' },
-        { key: 'PLAYER_TOKEN_AREA_MARK', page: 'combat', label: 'Player Token Area Mark', type: 'boolean', tip: 'Allow generated player area-spell controls to place a movable area marker and resolve tokens inside it.' },
+        { key: 'PLAYER_MANUAL_ROLL', page: 'combat', section: 'Player', label: "config.PLAYER_MANUAL_ROLL", type: 'boolean', tip: "config.PLAYER_MANUAL_ROLL_tip" },
+        { key: 'PLAYER_HEALING_BUTTON', page: 'combat', label: "config.PLAYER_HEALING_BUTTON", type: 'boolean', tip: "config.PLAYER_HEALING_BUTTON_tip" },
+        { key: 'PLAYER_ATTACK_BUTTON', page: 'combat', label: "config.PLAYER_ATTACK_BUTTON", type: 'boolean', tip: "config.PLAYER_ATTACK_BUTTON_tip" },
+        { key: 'PLAYER_ACTION_RANGE_CHECK', page: 'combat', label: "config.PLAYER_ACTION_RANGE_CHECK", type: 'boolean', tip: "config.PLAYER_ACTION_RANGE_CHECK_tip" },
+        { key: 'PLAYER_TOKEN_AREA_MARK', page: 'combat', label: "config.PLAYER_TOKEN_AREA_MARK", type: 'boolean', tip: "config.PLAYER_TOKEN_AREA_MARK_tip" },
 
-        { key: 'PLAYER_AREA_MARKER_KEEP_UNTIL_ROLLED', page: 'combat', section: 'Effect', label: 'Keep Marker Until Rolls Finish', type: 'boolean', tip: 'Keep an area marker visible until every affected saving throw and damage resolution is complete.' },
-        { key: 'AREA_MARKER_FREE_MOVEMENT', page: 'combat', label: 'Marker Free Movement', type: 'boolean', tip: 'ON lets area markers move freely; OFF snaps them to the Roll20 grid.' },
-        { key: 'PLAYER_MARKER_SQUARE_URL', page: 'combat', label: 'Square Marker Roll20 URL', type: 'roll20image', tip: 'Roll20 uploaded image URL used for square, cube, cone, or line area markers.' },
-        { key: 'PLAYER_MARKER_RADIUS_URL', page: 'combat', label: 'Radius Marker Roll20 URL', type: 'roll20image', tip: 'Roll20 uploaded image URL used for radius, sphere, cylinder, or emanation area markers.' },
-        { key: 'PLAYER_MARKER_OPACITY', page: 'combat', label: 'Marker Opacity', type: 'percent', tip: 'Set the opacity percentage for player area-marker tokens.' },
-        { key: 'COMBAT_VISUAL_EFFECTS', page: 'combat', label: 'Combat Visual Effects', type: 'boolean', tip: 'Show automatic Roll20 FX when Combat Assistant applies damage, healing, temporary HP, projectile attacks, or area effects.' },
-        { key: 'PROJECTILE_EFFECT_NAME', page: 'combat', label: 'Projectile Effect Name', type: 'text', tip: 'Built-in or Custom FX name used from attacker to target for ranged projectile attacks. Leave empty to disable.' },
-        { key: 'DIRECT_HIT_EFFECT_NAME', page: 'combat', label: 'Direct Hit Effect Name', type: 'text', tip: 'Built-in base effect or exact Custom FX name used when damage is applied without a saving throw. Leave empty to disable.' },
-        { key: 'AREA_HIT_EFFECT_NAME', page: 'combat', label: 'Area Hit Effect Name', type: 'text', tip: 'Built-in base effect or exact Custom FX name used when damage is applied through a saving throw. Leave empty to disable.' },
+        { key: 'PLAYER_AREA_MARKER_KEEP_UNTIL_ROLLED', page: 'combat', section: 'Effect', label: "config.PLAYER_AREA_MARKER_KEEP_UNTIL_ROLLED", type: 'boolean', tip: "config.PLAYER_AREA_MARKER_KEEP_UNTIL_ROLLED_tip" },
+        { key: 'AREA_MARKER_FREE_MOVEMENT', page: 'combat', label: "config.AREA_MARKER_FREE_MOVEMENT", type: 'boolean', tip: "config.AREA_MARKER_FREE_MOVEMENT_tip" },
+        { key: 'PLAYER_MARKER_SQUARE_URL', page: 'combat', label: "config.PLAYER_MARKER_SQUARE_URL", type: 'roll20image', tip: "config.PLAYER_MARKER_SQUARE_URL_tip" },
+        { key: 'PLAYER_MARKER_RADIUS_URL', page: 'combat', label: "config.PLAYER_MARKER_RADIUS_URL", type: 'roll20image', tip: "config.PLAYER_MARKER_RADIUS_URL_tip" },
+        { key: 'PLAYER_MARKER_OPACITY', page: 'combat', label: "config.PLAYER_MARKER_OPACITY", type: 'percent', tip: "config.PLAYER_MARKER_OPACITY_tip" },
+        { key: 'COMBAT_VISUAL_EFFECTS', page: 'combat', label: "config.COMBAT_VISUAL_EFFECTS", type: 'boolean', tip: "config.COMBAT_VISUAL_EFFECTS_tip" },
+        { key: 'PROJECTILE_EFFECT_NAME', page: 'combat', label: "config.PROJECTILE_EFFECT_NAME", type: 'text', tip: "config.PROJECTILE_EFFECT_NAME_tip" },
+        { key: 'DIRECT_HIT_EFFECT_NAME', page: 'combat', label: "config.DIRECT_HIT_EFFECT_NAME", type: 'text', tip: "config.DIRECT_HIT_EFFECT_NAME_tip" },
+        { key: 'AREA_HIT_EFFECT_NAME', page: 'combat', label: "config.AREA_HIT_EFFECT_NAME", type: 'text', tip: "config.AREA_HIT_EFFECT_NAME_tip" },
 
-        { key: 'APPLY_CONDITION_MARKER', page: 'markers', label: 'Apply Condition Marker', type: 'boolean', tip: 'Apply configured token markers after confirmed failed saving throws. OFF retains narrative-only results.' },
+        { key: 'APPLY_CONDITION_MARKER', page: 'markers', label: "config.APPLY_CONDITION_MARKER", type: 'boolean', tip: "config.APPLY_CONDITION_MARKER_tip" },
         ...CONDITION_NAMES.map((name) => ({
             key: conditionSettingKey(name), page: 'markers', label: name, type: 'marker',
             tip: 'Roll20 token marker name/tag for ' + name + '. Must exist in the campaign to render.'
         })),
-        { key: 'CONCENTRATION_MARKER', page: 'markers', label: 'Concentration', type: 'marker', tip: 'Roll20 token marker name/tag used while a token is concentrating. Default: stopwatch.' },
+        { key: 'CONCENTRATION_MARKER', page: 'markers', label: "config.CONCENTRATION_MARKER", type: 'marker', tip: "config.CONCENTRATION_MARKER_tip" },
 
-        { key: 'TURN_TRACKER', page: 'turn', label: 'Turn Tracker', type: 'boolean', tip: 'Track combat rounds and current turns from the Roll20 Turn Order.' },
-        { key: 'EFFECT_TRACKER', page: 'turn', label: 'Effect Tracker', type: 'boolean', tip: 'Track temporary save-based conditions and show due repeat-save controls on the affected token Turn Card.' },
-        { key: 'FORCE_TURN_ORDER_POSITION', page: 'turn', label: 'Force Turn Order Position', type: 'boolean', tip: 'Keep new Turn Order entries in initiative order while preserving the active turn once combat has started.' },
-        { key: 'TURN_AUTO_FOCUS', page: 'turn', label: 'Turn Auto Focus', type: 'boolean', tip: 'Ping and focus eligible users on the current-turn token.' },
-        { key: 'TURN_FOCUS_FOR_EVERYONE', page: 'turn', label: 'Turn Focus For Everyone', type: 'boolean', tip: 'ON focuses everyone; OFF focuses only GMs and controllers of the current token or character.' },
-        { key: 'HANDLE_ACTIONS', page: 'turn', label: 'Turn Token Action', type: 'boolean', tip: 'Show Dash, Special, C. Sheet, Combat, and Spells controls on Turn Cards.' },
-        { key: 'TURN_MOVEMENT_TRACKER', page: 'turn', label: 'Turn Movement Tracker', type: 'boolean', tip: 'Track movement spent by the current-turn token and warn when it exceeds available speed.' },
-        { key: 'TURN_MOVEMENT_BLOCKER', page: 'turn', label: 'Turn Movement Blocker', type: 'boolean', tip: 'Lock player-controlled initiative tokens until their turn. Automatically unlock when their turn begins or they leave initiative.' },
-        { key: 'MOVEMENT_CONSUMED_BLOCKER', page: 'turn', label: 'Movement Consumed Blocker', type: 'boolean', tip: 'Lock the current player-controlled token after all available movement is spent. Dash restores movement when available.' },
-        { key: 'CONC_TURN_TRACKER', page: 'turn', label: 'Conc. Turn Tracker', type: 'boolean', tip: 'Decrease finite concentration duration when the caster reaches its turn and end it automatically at 0.' },
-        { key: 'ROUND_COUNTER', page: 'turn', label: 'Round Counter', type: 'boolean', tip: 'Enable the Round Counter card and current-combat token summary.' },
-        { key: 'PUBLIC_ROUND_COUNTER', page: 'turn', label: 'Public Round Counter', type: 'boolean', tip: 'Also publish the Round Counter card to players. Round Counter must be ON.' },
-        { key: 'REMOVE_NPC_DEAD_TOKENS', page: 'turn', label: 'Remove NPC Dead Tokens', type: 'boolean', tip: 'Automatically remove unlinked NPC turns at 0 HP; OFF leaves a red manual Remove control.' },
-        { key: 'TURN_MARKER', page: 'turn', label: 'Turn Marker', type: 'boolean', tip: 'Spawn a marker token on the current-turn token.' },
-        { key: 'PUBLIC_TURN_MARKER', page: 'turn', label: 'Turn Marker Token Public', type: 'boolean', tip: 'OFF keeps the turn marker on the GM layer; ON puts it on the map layer and brings it forward.' },
-        { key: 'TURN_MARKER_IMAGE_URL', page: 'turn', label: 'Turn Marker Token Image', type: 'roll20image', tip: 'Roll20 uploaded image used for the turn marker token.' },
-        { key: 'TURN_MARKER_IMG_SIZE', page: 'turn', label: 'Turn Marker Token Size %', type: 'number', tip: 'Percentage added to current token width and height for the Turn Marker. Default 20.' },
-        { key: 'TURN_MARKER_FOLLOW', page: 'turn', label: 'Turn Marker Follow', type: 'boolean', tip: 'Keep the Turn Marker centered and scaled when the current token moves or resizes.' },
-        { key: 'TURN_MARKER_ROTATION', page: 'turn', label: 'Turn Marker Rotation', type: 'boolean', tip: 'Rotate the Turn Marker while combat is active.' },
-        { key: 'TURN_MARKER_ROTATION_STEPS', page: 'turn', label: 'Turn Marker Rotation Steps', type: 'number', tip: 'Degrees applied on every Turn Marker rotation update. Default 1.' },
-        { key: 'TURN_MARKER_ROTATION_SPEED', page: 'turn', label: 'Turn Marker Rotation Speed', type: 'number', tip: 'Milliseconds between Turn Marker rotation updates. Default 100 ms.' },
+        { key: 'TURN_TRACKER', page: 'turn', label: "config.TURN_TRACKER", type: 'boolean', tip: "config.TURN_TRACKER_tip" },
+        { key: 'EFFECT_TRACKER', page: 'turn', label: "config.EFFECT_TRACKER", type: 'boolean', tip: "config.EFFECT_TRACKER_tip" },
+        { key: 'FORCE_TURN_ORDER_POSITION', page: 'turn', label: "config.FORCE_TURN_ORDER_POSITION", type: 'boolean', tip: "config.FORCE_TURN_ORDER_POSITION_tip" },
+        { key: 'TURN_AUTO_FOCUS', page: 'turn', label: "config.TURN_AUTO_FOCUS", type: 'boolean', tip: "config.TURN_AUTO_FOCUS_tip" },
+        { key: 'TURN_FOCUS_FOR_EVERYONE', page: 'turn', label: "config.TURN_FOCUS_FOR_EVERYONE", type: 'boolean', tip: "config.TURN_FOCUS_FOR_EVERYONE_tip" },
+        { key: 'HANDLE_ACTIONS', page: 'turn', label: "config.HANDLE_ACTIONS", type: 'boolean', tip: "config.HANDLE_ACTIONS_tip" },
+        { key: 'TURN_MOVEMENT_TRACKER', page: 'turn', label: "config.TURN_MOVEMENT_TRACKER", type: 'boolean', tip: "config.TURN_MOVEMENT_TRACKER_tip" },
+        { key: 'TURN_MOVEMENT_BLOCKER', page: 'turn', label: "config.TURN_MOVEMENT_BLOCKER", type: 'boolean', tip: "config.TURN_MOVEMENT_BLOCKER_tip" },
+        { key: 'MOVEMENT_CONSUMED_BLOCKER', page: 'turn', label: "config.MOVEMENT_CONSUMED_BLOCKER", type: 'boolean', tip: "config.MOVEMENT_CONSUMED_BLOCKER_tip" },
+        { key: 'CONC_TURN_TRACKER', page: 'turn', label: "config.CONC_TURN_TRACKER", type: 'boolean', tip: "config.CONC_TURN_TRACKER_tip" },
+        { key: 'ROUND_COUNTER', page: 'turn', label: "config.ROUND_COUNTER", type: 'boolean', tip: "config.ROUND_COUNTER_tip" },
+        { key: 'PUBLIC_ROUND_COUNTER', page: 'turn', label: "config.PUBLIC_ROUND_COUNTER", type: 'boolean', tip: "config.PUBLIC_ROUND_COUNTER_tip" },
+        { key: 'REMOVE_NPC_DEAD_TOKENS', page: 'turn', label: "config.REMOVE_NPC_DEAD_TOKENS", type: 'boolean', tip: "config.REMOVE_NPC_DEAD_TOKENS_tip" },
+        { key: 'TURN_MARKER', page: 'turn', label: "config.TURN_MARKER", type: 'boolean', tip: "config.TURN_MARKER_tip" },
+        { key: 'PUBLIC_TURN_MARKER', page: 'turn', label: "config.PUBLIC_TURN_MARKER", type: 'boolean', tip: "config.PUBLIC_TURN_MARKER_tip" },
+        { key: 'TURN_MARKER_IMAGE_URL', page: 'turn', label: "config.TURN_MARKER_IMAGE_URL", type: 'roll20image', tip: "config.TURN_MARKER_IMAGE_URL_tip" },
+        { key: 'TURN_MARKER_IMG_SIZE', page: 'turn', label: "config.TURN_MARKER_IMG_SIZE", type: 'number', tip: "config.TURN_MARKER_IMG_SIZE_tip" },
+        { key: 'TURN_MARKER_FOLLOW', page: 'turn', label: "config.TURN_MARKER_FOLLOW", type: 'boolean', tip: "config.TURN_MARKER_FOLLOW_tip" },
+        { key: 'TURN_MARKER_ROTATION', page: 'turn', label: "config.TURN_MARKER_ROTATION", type: 'boolean', tip: "config.TURN_MARKER_ROTATION_tip" },
+        { key: 'TURN_MARKER_ROTATION_STEPS', page: 'turn', label: "config.TURN_MARKER_ROTATION_STEPS", type: 'number', tip: "config.TURN_MARKER_ROTATION_STEPS_tip" },
+        { key: 'TURN_MARKER_ROTATION_SPEED', page: 'turn', label: "config.TURN_MARKER_ROTATION_SPEED", type: 'number', tip: "config.TURN_MARKER_ROTATION_SPEED_tip" },
 
-        { key: 'SHOW_PLAYER_RESOURCES', page: 'resources', label: 'Show Player Resources', type: 'boolean', tip: 'Show player-controlled token resources and spell slots directly on its Turn Card.' },
-        { key: 'SHOW_NPC_RESOURCES', page: 'resources', label: 'Show NPC Resources', type: 'boolean', tip: 'Show limited resources and spell slots for non-player-controlled tokens on the GM Turn Card.' },
-        { key: 'NPC_RESOURCE_MANAGEMENT', page: 'resources', label: 'NPC Resource Management', type: 'boolean', tip: 'Give eligible unlinked NPC tokens independent resource pools stored in Token GM Notes.' },
-        { key: 'CONSUME_SPELL_SLOTS', page: 'resources', label: 'Consume Spell Slots', type: 'boolean', tip: 'Automatically consume the confirmed spell cost, preferring an exact linked Beacon spell Resource before a generic spell slot.' },
-        { key: 'CONSUME_ACTION_RESOURCES', page: 'resources', label: 'Consume Action Resources', type: 'boolean', tip: 'Automatically consume one matching non-spell resource when a confirmed action with the same normalized name is used.' },
-        { key: 'BLOCK_PLAYER_NO_RESOURCES', page: 'resources', label: 'Block Without Resources', type: 'boolean', tip: 'Hide player Roll, DMG, ATK, Heal, Cast, and Send buttons when the action or spell has a verified resource cost and insufficient uses or spell slots. GM controls and no-cost actions are unaffected.' },
-        { key: 'SHOW_PREPARED_SPELLS_ONLY_2024', page: 'resources', label: '2024 Prepared Spells Only', type: 'boolean', tip: 'Show only 2024 spells marked Prepared or Always Prepared, including cantrips only when Roll20 marks them prepared.' },
-        { key: 'PLAYER_PUBLIC_RESOURCE_USAGE', page: 'resources', label: 'Player Public Usage', type: 'boolean', tip: 'Publish player Resource Update cards instead of whispering them privately.' },
+        { key: 'SHOW_PLAYER_RESOURCES', page: 'resources', label: "config.SHOW_PLAYER_RESOURCES", type: 'boolean', tip: "config.SHOW_PLAYER_RESOURCES_tip" },
+        { key: 'SHOW_NPC_RESOURCES', page: 'resources', label: "config.SHOW_NPC_RESOURCES", type: 'boolean', tip: "config.SHOW_NPC_RESOURCES_tip" },
+        { key: 'NPC_RESOURCE_MANAGEMENT', page: 'resources', label: "config.NPC_RESOURCE_MANAGEMENT", type: 'boolean', tip: "config.NPC_RESOURCE_MANAGEMENT_tip" },
+        { key: 'CONSUME_SPELL_SLOTS', page: 'resources', label: "config.CONSUME_SPELL_SLOTS", type: 'boolean', tip: "config.CONSUME_SPELL_SLOTS_tip" },
+        { key: 'CONSUME_ACTION_RESOURCES', page: 'resources', label: "config.CONSUME_ACTION_RESOURCES", type: 'boolean', tip: "config.CONSUME_ACTION_RESOURCES_tip" },
+        { key: 'BLOCK_PLAYER_NO_RESOURCES', page: 'resources', label: "config.BLOCK_PLAYER_NO_RESOURCES", type: 'boolean', tip: "config.BLOCK_PLAYER_NO_RESOURCES_tip" },
+        { key: 'SHOW_PREPARED_SPELLS_ONLY_2024', page: 'resources', label: "config.SHOW_PREPARED_SPELLS_ONLY_2024", type: 'boolean', tip: "config.SHOW_PREPARED_SPELLS_ONLY_2024_tip" },
+        { key: 'PLAYER_PUBLIC_RESOURCE_USAGE', page: 'resources', label: "config.PLAYER_PUBLIC_RESOURCE_USAGE", type: 'boolean', tip: "config.PLAYER_PUBLIC_RESOURCE_USAGE_tip" },
 
-        { key: 'USE_ROLL20_DAMAGE_ICON', page: 'main', section: 'Extra', label: 'Use Roll20 Damage Icon', type: 'boolean', tip: 'Use Roll20-style SVG damage icons instead of the default Combat Assistant icons.' },
-        { key: 'APPLY_ROLL20_ICON_DAMAGE_COLOR', page: 'main', label: 'Apply Roll20 Icon Damage Color', type: 'boolean', tip: 'Recolor Roll20-style damage icons using Combat Assistant damage-type colors.' },
-        { key: 'DEBUG', page: 'main', label: 'Debug', type: 'boolean', temporary: true, advancedOnly: true, tip: 'Temporary API-console debug logging. Resets to OFF whenever the sandbox restarts.' },
-        { key: 'CHAT_DEBUG_ATTACKS', page: 'main', label: 'Chat Debug Attacks', type: 'boolean', temporary: true, advancedOnly: true, tip: 'Temporarily print full attack diagnostics in chat after opening Combat.' },
-        { key: 'CHAT_DEBUG_SPELLS', page: 'main', label: 'Chat Debug Spells', type: 'boolean', temporary: true, advancedOnly: true, tip: 'Temporarily print full spell diagnostics in chat after opening Spells.' },
-        { key: 'AREA_RADIUS_DEBUG_DRAW', page: 'main', label: 'Area Radius Debug Draw', type: 'boolean', temporary: true, advancedOnly: true, tip: 'Draw temporary GM-only reference circles while resolving supported radius area markers.' },
-        { key: 'CHAT_BACKGROUND_IMAGE_URL', page: 'main', label: 'Change Background URL', type: 'text', tip: 'Set the background image used by Combat Assistant cards.' },
-        { key: 'CHAT_PROBE', page: 'main', label: 'Chat Probe', type: 'boolean', temporary: true, advancedOnly: true, tip: 'Whisper compact Roll20 chat-message diagnostics to the GM for parser testing.' },
-        { key: 'GET_TOKEN_IMAGE_URL', page: 'main', label: 'Get Token Image URL', type: 'action', action: 'gettokenimage', buttonLabel: 'Get', tip: 'Select exactly one token and return its current live token image URL.' },
-        { key: 'LANGUAGE', page: 'main', label: 'Language', type: 'language', tip: 'Select the language used for Combat Assistant menus and messages.' }
+        { key: 'USE_ROLL20_DAMAGE_ICON', page: 'main', section: 'Extra', label: "config.USE_ROLL20_DAMAGE_ICON", type: 'boolean', tip: "config.USE_ROLL20_DAMAGE_ICON_tip" },
+        { key: 'APPLY_ROLL20_ICON_DAMAGE_COLOR', page: 'main', label: "config.APPLY_ROLL20_ICON_DAMAGE_COLOR", type: 'boolean', tip: "config.APPLY_ROLL20_ICON_DAMAGE_COLOR_tip" },
+        { key: 'DEBUG', page: 'main', label: "config.DEBUG", type: 'boolean', temporary: true, advancedOnly: true, tip: "config.DEBUG_tip" },
+        { key: 'CHAT_DEBUG_ATTACKS', page: 'main', label: "config.CHAT_DEBUG_ATTACKS", type: 'boolean', temporary: true, advancedOnly: true, tip: "config.CHAT_DEBUG_ATTACKS_tip" },
+        { key: 'CHAT_DEBUG_SPELLS', page: 'main', label: "config.CHAT_DEBUG_SPELLS", type: 'boolean', temporary: true, advancedOnly: true, tip: "config.CHAT_DEBUG_SPELLS_tip" },
+        { key: 'AREA_RADIUS_DEBUG_DRAW', page: 'main', label: "config.AREA_RADIUS_DEBUG_DRAW", type: 'boolean', temporary: true, advancedOnly: true, tip: "config.AREA_RADIUS_DEBUG_DRAW_tip" },
+        { key: 'CHAT_BACKGROUND_IMAGE_URL', page: 'main', label: "config.CHAT_BACKGROUND_IMAGE_URL", type: 'text', tip: "config.CHAT_BACKGROUND_IMAGE_URL_tip" },
+        { key: 'CHAT_PROBE', page: 'main', label: "config.CHAT_PROBE", type: 'boolean', temporary: true, advancedOnly: true, tip: "config.CHAT_PROBE_tip" },
+        { key: 'GET_TOKEN_IMAGE_URL', page: 'main', label: "config.GET_TOKEN_IMAGE_URL", type: 'action', action: 'gettokenimage', buttonLabel: 'Get', tip: "config.GET_TOKEN_IMAGE_URL_tip" },
+        { key: 'LANGUAGE', page: 'main', label: "config.LANGUAGE", type: 'language', tip: "config.LANGUAGE_tip" }
     ]);
 
 
@@ -2463,7 +2675,7 @@ const CombatAssistant = (() => {
             root.settings = root.settings || {};
             // v1.2.16: FR is no longer a native option. Reset campaigns that
             // selected it to English; French remains available through Custom.
-            if (root.settings.LANGUAGE === 'fr') root.settings.LANGUAGE = 'en';
+            // French is now a native language; keep persisted FR settings unchanged.
             // Keep temporary debug flags out of persistent state even if an older
             // schema or a manual edit left them behind.
             Object.keys(TEMP_RUNTIME_CONFIG_DEFAULTS).forEach((key) => delete root.settings[key]);
@@ -2524,33 +2736,34 @@ const CombatAssistant = (() => {
 
         validateValue(field, value) {
             if (!field) return { ok: false, message: 'Unknown setting.' };
-            if (field.type === 'language' && ['en', 'es', 'custom'].indexOf(String(value || '').trim().toLowerCase()) < 0) {
-                return { ok: false, message: I18N.t('The language setting must be English, Spanish, or Custom.') };
+            if (field.type === 'language' && String(value || '').trim().toLowerCase() !== 'en' &&
+                !I18N.isExternalLanguage(String(value || '').trim().toLowerCase())) {
+                return { ok: false, message: I18N.t("messages.the_language_setting_must_be_english_spanish_or_custom") };
             }
             if (field.type === 'bar' || field.type === 'bar0') {
                 const raw = String(value === undefined || value === null ? '' : value).trim();
                 const bar = Utils.toInt(raw, null);
                 const min = field.type === 'bar0' ? 0 : 1;
                 if (bar === null || String(bar) !== raw || bar < min || bar > 4) {
-                    return { ok: false, message: field.label + ' must be a whole number from ' + min + ' to 4.' };
+                    return { ok: false, message: I18N.t(field.label) + ' must be a whole number from ' + min + ' to 4.' };
                 }
             }
             if (field.type === 'percent') {
                 const raw = String(value === undefined || value === null ? '' : value).trim();
                 const pct = Utils.toInt(raw, null);
                 if (pct === null || String(pct) !== raw || pct < 0 || pct > 100) {
-                    return { ok: false, message: field.label + ' must be a whole number from 0 to 100.' };
+                    return { ok: false, message: I18N.t(field.label) + ' must be a whole number from 0 to 100.' };
                 }
             }
             if (field.type === 'number') {
                 const raw = String(value === undefined || value === null ? '' : value).trim();
                 const number = Utils.toInt(raw, null);
                 if (number === null || String(number) !== raw || number < 0) {
-                    return { ok: false, message: field.label + ' must be a whole number of 0 or greater.' };
+                    return { ok: false, message: I18N.t(field.label) + ' must be a whole number of 0 or greater.' };
                 }
             }
             if (field.type === 'marker' && !/^[a-z0-9 _:-]{1,80}$/i.test(String(value || '').trim())) {
-                return { ok: false, message: field.label + ' marker must be 1-80 letters, digits, spaces, underscores, hyphens, or colons.' };
+                return { ok: false, message: I18N.t(field.label) + ' marker must be 1-80 letters, digits, spaces, underscores, hyphens, or colons.' };
             }
             if (field.type === 'roll20image' && !Utils.isRoll20FileUrl(value)) {
                 return { ok: false, title: 'Invalid URL', message: 'Only images uploaded to Roll20 are supported here. Use a URL that starts with https://files.d20.io/images/.' };
@@ -2870,7 +3083,7 @@ const CombatAssistant = (() => {
                     label: 'Run',
                     command: clientCommand,
                     width: 50,
-                    tooltip: I18N.t('Run {name} macro in Roll20', { name: spellName }),
+                    tooltip: I18N.t("narrative.run_name_macro_in_roll20", { name: spellName }),
                     backgroundColor: 'rgba(65,55,120,0.95)'
                 });
                 const card = Html.card({
@@ -2904,7 +3117,7 @@ const CombatAssistant = (() => {
                 label: 'Apply',
                 command: gmCommand,
                 backgroundColor: 'rgba(120,40,40,0.95)',
-                tooltip: I18N.t('Apply {name} macro', { name: spellName })
+                tooltip: I18N.t("narrative.apply_name_macro", { name: spellName })
             });
             const gmBody = Render.iconButtonTableHtml([gmButton], {
                 columns: 1,
@@ -2926,7 +3139,7 @@ const CombatAssistant = (() => {
                         label: 'Apply',
                         command: oneTime.command,
                         backgroundColor: 'rgba(120,40,40,0.95)',
-                        tooltip: I18N.t('Apply {name} macro once', { name: spellName })
+                        tooltip: I18N.t("narrative.apply_name_macro_once", { name: spellName })
                     });
                     const playerBody = Render.iconButtonTableHtml([playerButton], {
                         columns: 1,
@@ -5249,12 +5462,12 @@ const CombatAssistant = (() => {
                 Render.sendPublicMessage(
                     'Source Debug',
                     '<div style="text-align:left;font-size:11px;line-height:14px;">' +
-                        '<strong>' + Utils.escapeHtml(I18N.t('Character Name:')) + '</strong> ' + Render.characterNameHtml(characterName || 'Unknown') + '<br>' +
-                        '<strong>' + Utils.escapeHtml(I18N.t('Controller Name:')) + '</strong> ' + Utils.escapeHtml(controllerName) + '<br>' +
-                        '<strong>' + Utils.escapeHtml(I18N.t('Caster Name:')) + '</strong> ' + Render.characterNameHtml(casterName || 'Unknown') + '<br>' +
-                        '<strong>' + Utils.escapeHtml(I18N.t('Controller Page:')) + '</strong> ' + Utils.escapeHtml(controllerPageName) + '<br>' +
-                        '<strong>' + Utils.escapeHtml(I18N.t('Caster Page:')) + '</strong> ' + Utils.escapeHtml(casterPageName) + '<br>' +
-                        '<strong>' + Utils.escapeHtml(I18N.t('Token Page:')) + '</strong> ' + Utils.escapeHtml(tokenPageName) +
+                        '<strong>' + Utils.escapeHtml(I18N.t("ui.character_name")) + '</strong> ' + Render.characterNameHtml(characterName || 'Unknown') + '<br>' +
+                        '<strong>' + Utils.escapeHtml(I18N.t("ui.controller_name")) + '</strong> ' + Utils.escapeHtml(controllerName) + '<br>' +
+                        '<strong>' + Utils.escapeHtml(I18N.t("spell.caster_name")) + '</strong> ' + Render.characterNameHtml(casterName || 'Unknown') + '<br>' +
+                        '<strong>' + Utils.escapeHtml(I18N.t("ui.controller_page")) + '</strong> ' + Utils.escapeHtml(controllerPageName) + '<br>' +
+                        '<strong>' + Utils.escapeHtml(I18N.t("spell.caster_page")) + '</strong> ' + Utils.escapeHtml(casterPageName) + '<br>' +
+                        '<strong>' + Utils.escapeHtml(I18N.t("ui.token_page")) + '</strong> ' + Utils.escapeHtml(tokenPageName) +
                     '</div>',
                     'normal'
                 );
@@ -5872,7 +6085,7 @@ const CombatAssistant = (() => {
         },
 
         damageTypeQuery(defaultType) {
-            return this.queryOptionsWithDefault(I18N.t('Damage Type'), CombatService.normalizeDamageType(defaultType || 'normal'), [
+            return this.queryOptionsWithDefault(I18N.t("combat.damage_type"), CombatService.normalizeDamageType(defaultType || 'normal'), [
                 ['Normal', 'normal'],
                 ['Acid', 'acid'],
                 ['Bludgeoning', 'bludgeoning'],
@@ -6090,7 +6303,7 @@ const CombatAssistant = (() => {
                 ? (Math.max(1, Utils.toNumber(fontMatch[1], 20) - fontReduction) + 'px')
                 : baseFontSize;
             const paddingRight = Math.max(0, Utils.toInt(options.paddingRight, 0));
-            const tooltip = roll.tooltip || (I18N.t('Roll') + ' [1d20] = [ ' + String(natural) + ' ]');
+            const tooltip = roll.tooltip || (I18N.t("common.roll") + ' [1d20] = [ ' + String(natural) + ' ]');
             const markerColor = displayMarker === '&#9650;' ? 'rgb(90,220,120)' : 'rgb(230,80,80)';
             const textColor = isDimmed ? 'rgb(145,145,145)' : (rollStyle.color || 'rgb(255,255,255)');
             const criticalMarkerHtml = isCritical
@@ -6144,7 +6357,7 @@ const CombatAssistant = (() => {
                     modifier,
                     success: !!roll.success,
                     dimmed: states.length > 1 && !state.isChosen,
-                    tooltip: ability + ' ' + I18N.t('Save') + '<br>' + I18N.t('Roll') + ': ' + String(state.natural) + '<br>' + I18N.t('Modifier') + ': ' + Utils.formatSigned(modifier) + '<br>' + I18N.t('Total') + ': ' + String(total) + '<br>DC: ' + String(roll.dc) + (mode !== 'normal' ? ('<br>' + I18N.t('Mode') + ': ' + I18N.t(mode)) : '') + (roll.rollModeReason ? ('<br>' + I18N.t('Reason') + ': ' + Utils.escapeHtml(String(roll.rollModeReason))) : '')
+                    tooltip: ability + ' ' + I18N.t("common.savingthrow_narrative_short") + '<br>' + I18N.t("common.roll") + ': ' + String(state.natural) + '<br>' + I18N.t("common.modifier_narrative") + ': ' + Utils.formatSigned(modifier) + '<br>' + I18N.t("ui.total") + ': ' + String(total) + '<br>DC: ' + String(roll.dc) + (mode !== 'normal' ? ('<br>' + I18N.t("ui.mode") + ': ' + I18N.t(mode)) : '') + (roll.rollModeReason ? ('<br>' + I18N.t("ui.reason") + ': ' + Utils.escapeHtml(String(roll.rollModeReason))) : '')
                 }, state.marker, { size: 34, fontSize: '18px', paddingRight: state.paddingRight });
             }).reverse().join('');
             return '<div style="display:inline-block;text-align:right;white-space:nowrap;">' + badges + '</div>';
@@ -6155,7 +6368,7 @@ const CombatAssistant = (() => {
             return this.rollBadgeHtml({
                 natural: Utils.toInt(total, 0),
                 total: Utils.toInt(total, 0),
-                tooltip: String(tooltip || I18N.t('Roll total: {total}', { total: String(total || 0) })),
+                tooltip: String(tooltip || I18N.t("narrative.roll_total_total", { total: String(total || 0) })),
                 success: options.success
             }, options.marker || '', { size: options.size || 40, fontSize: options.fontSize || '20px' });
         },
@@ -6445,7 +6658,7 @@ const CombatAssistant = (() => {
             // In 50px save controls, keep the translated term readable; the
             // tooltip retains the full localised wording.
             const visibleLabel = rawLabel === 'Save' && I18N.language() !== 'en' && buttonW <= 50
-                ? I18N.t('Save (short)') : translatedLabel;
+                ? I18N.t("ui.save_short") : translatedLabel;
             const label = Utils.escapeHtml(visibleLabel);
             const tooltip = I18N.t(String(options.tooltip || translatedLabel).trim());
             const preferredFontSize = Math.max(1, Utils.toInt(options.fontSize, rawLabel === 'EDIT' ? 11 : 13));
@@ -6552,7 +6765,7 @@ const CombatAssistant = (() => {
                     : R20.buttonAbilityCommand(characterId, Utils.normalizeAbilityName(effect.saveAbility || '') + '_save');
                 const button = this.turnCardButtonHtml(info.tokenId, 'Save', 'effectsave', {
                     command: nativeSaveCommand || ('!combatAssistant effectsave ' + Utils.attrSafe(effect.id)),
-                    tooltip: I18N.t('Repeat the {ability}{dc} saving throw for {effect}', { ability, dc: dc ? (' DC ' + String(dc)) : '', effect: effectName }),
+                    tooltip: I18N.t("narrative.repeat_the_abilitydc_saving_throw_for_effect", { ability, dc: dc ? (' DC ' + String(dc)) : '', effect: effectName }),
                     backgroundColor: 'rgba(115,75,145,0.92)'
                 });
                 return '<table style="width:100%;border-collapse:collapse;table-layout:fixed;padding:0;margin:0;"><tbody><tr>' +
@@ -6843,7 +7056,7 @@ const CombatAssistant = (() => {
                 '</span>';
             }).join('');
             const style = 'display:block;width:50px;height:25px;min-width:50px;min-height:25px;padding:0;margin:0;box-sizing:border-box;border:1px solid rgba(255,255,255,0.55);border-radius:4px;background:rgba(85,20,20,0.70);color:rgb(255,255,255);text-align:center;vertical-align:middle;overflow:hidden;font-family:Arial,Helvetica,sans-serif;text-decoration:none;';
-            return '<a href="' + Utils.attrSafe(command) + '" title="' + Utils.attrSafe(I18N.t('Roll damage: {formula}', { formula: allDamage })) + '" style="' + style + '">' + rows + '</a>';
+            return '<a href="' + Utils.attrSafe(command) + '" title="' + Utils.attrSafe(I18N.t("narrative.roll_damage_formula", { formula: allDamage })) + '" style="' + style + '">' + rows + '</a>';
         },
 
         combatSmallActionButtonHtml(topText, bottomText, command, title, options) {
@@ -6855,7 +7068,7 @@ const CombatAssistant = (() => {
             const topFontSize = Math.max(8, Utils.toInt(opts.topFontSize, 15));
             const rawBottomText = I18N.t(String(bottomText || ''));
             const bottomFontSize = this.fitTextFontSize(rawBottomText, 24, Math.max(7, Utils.toInt(opts.bottomFontSize, 10)), 7);
-            return '<' + tag + href + ' title="' + Utils.attrSafe(safeCommand ? safeTitle : (safeTitle + ' - ' + I18N.t('Unavailable').toLowerCase())) + '" style="' +
+            return '<' + tag + href + ' title="' + Utils.attrSafe(safeCommand ? safeTitle : (safeTitle + ' - ' + I18N.t("ui.unavailable").toLowerCase())) + '" style="' +
                 'display:inline-flex;flex-direction:column;align-items:center;justify-content:center;' +
                 'width:25px;height:25px;min-width:25px;min-height:25px;padding:0;margin:0;' +
                 'box-sizing:border-box;border:1px solid rgba(255,255,255,0.70);border-radius:4px;' +
@@ -6912,9 +7125,9 @@ const CombatAssistant = (() => {
         },
 
         unavailableResourceHtml() {
-            return '<span title="' + Utils.attrSafe(I18N.t('Insufficient resources for this action.')) +
+            return '<span title="' + Utils.attrSafe(I18N.t("messages.insufficient_resources_for_this_action")) +
                 '" style="color:rgb(235,110,110);font-size:9px;font-weight:700;">' +
-                Utils.escapeHtml(I18N.t('Out of resources')) + '</span>';
+                Utils.escapeHtml(I18N.t("ui.out_of_resources")) + '</span>';
         },
 
         combatMenuRowHtml(name, detailsHtml, middleControlHtml, rightControlHtml, hasSeparator, nameColor, description) {
@@ -6954,8 +7167,8 @@ const CombatAssistant = (() => {
             const actionName = String(source.attackName || 'Special Action').trim() || 'Special Action';
             const actionHtml = Html.span(Utils.escapeHtml(actionName), 'color:rgb(245,220,80);font-weight:900;');
             const lead = revealSource
-                ? I18N.t(opts.healing ? '{source} uses {action} and rolls healing.' : '{source} uses {action}.', { source: sourceHtml, action: actionHtml })
-                : I18N.t(opts.healing ? '{source} rolls healing.' : '{source} uses a special action.', { source: sourceHtml });
+                ? I18N.t(opts.healing ? "narrative.uses_action_heals" : "narrative.uses_action", { source: sourceHtml, action: actionHtml })
+                : I18N.t(opts.healing ? "narrative.rolls_healing" : "narrative.uses_special_action", { source: sourceHtml });
             const tooltip = this.descriptionTooltipText(description);
             const desc = revealSource && tooltip
                 ? '<div style="padding-top:3px;color:rgb(205,205,205);font-size:10px;line-height:12px;">' + Utils.escapeHtml(tooltip) + '</div>'
@@ -7084,7 +7297,7 @@ const CombatAssistant = (() => {
 
         spellLevelTitle(level) {
             const safeLevel = Math.max(0, Math.min(9, Utils.toInt(level, 0)));
-            return (safeLevel === 0 ? I18N.t('Cantrips') : I18N.t('Level') + ' ' + String(safeLevel)).toUpperCase();
+            return (safeLevel === 0 ? I18N.t("combat.cantrips") : I18N.t("combat.spells_level") + ' ' + String(safeLevel)).toUpperCase();
         },
 
         resourceBalanceHtml(current, max) {
@@ -7162,8 +7375,8 @@ const CombatAssistant = (() => {
             const tag = command ? 'a' : 'span';
             const href = command ? (' href="' + Utils.attrSafe(command) + '"') : '';
             const name = String(spell && spell.name || 'Spell').trim() || 'Spell';
-            const title = I18N.t(command ? 'Cast {name}' : 'Cast {name} - unavailable', { name });
-            const castLabel = I18N.t('Cast');
+            const title = I18N.t(command ? "narrative.cast_name" : "narrative.cast_name_unavailable", { name });
+            const castLabel = I18N.t("ui.cast");
             const castFontSize = this.fitTextFontSize(castLabel, 24, 8, 7);
             return '<' + tag + href + ' title="' + Utils.attrSafe(title) + '" style="' +
                 'display:inline-flex;flex-direction:column;align-items:center;justify-content:center;' +
@@ -7246,11 +7459,11 @@ const CombatAssistant = (() => {
             if (abilityLabel) profileBits.push('<span style="color:rgb(160,160,160);">' + Utils.escapeHtml(abilityLabel) + '</span> <b style="color:rgb(235,235,235);">' + Utils.escapeHtml(signed(abilityModifier)) + '</b>');
             if (abilityLabel || attackBonus) profileBits.push('<span style="color:rgb(160,160,160);">ATK</span> <b style="color:rgb(235,235,235);">' + Utils.escapeHtml(signed(attackBonus)) + '</b>');
             if (saveDc > 0) profileBits.push('<span style="color:rgb(160,160,160);">DC</span> <b style="color:rgb(235,235,235);">' + Utils.escapeHtml(String(saveDc)) + '</b>');
-            if (Utils.toBoolean(data.consumeSpellSlots, false)) profileBits.push('<span title="' + Utils.attrSafe(I18N.t('Spell slot auto-consumption is armed for the next leveled spell roll')) + '" style="color:rgb(235,205,75);font-weight:900;">' + Utils.escapeHtml(I18N.t('Slots Auto')) + '</span>');
+            if (Utils.toBoolean(data.consumeSpellSlots, false)) profileBits.push('<span title="' + Utils.attrSafe(I18N.t("spell.spell_slot_auto_consumption_is_armed_for_the_next_leveled_spel")) + '" style="color:rgb(235,205,75);font-weight:900;">' + Utils.escapeHtml(I18N.t("ui.slots_auto")) + '</span>');
             if (data.preparedManager) {
                 const count = spells.filter(countsTowardPreparation).length;
                 const max = data.preparedCapacity;
-                profileBits.push('<span title="' + Utils.attrSafe(I18N.t('Prepared leveled spells excluding Always Prepared and item spells')) + '" style="color:rgb(205,190,235);font-weight:900;">' + Utils.escapeHtml(I18N.t('Prepared')) + '</span> ' +
+                profileBits.push('<span title="' + Utils.attrSafe(I18N.t("spell.prepared_leveled_spells_excluding_always_prepared_and_item_spe")) + '" style="color:rgb(205,190,235);font-weight:900;">' + Utils.escapeHtml(I18N.t("spell.prepared")) + '</span> ' +
                     (typeof max === 'number' && Number.isFinite(max) ? this.spellSlotValueHtml(count, max) : '<b>' + String(count) + '</b>'));
             }
             const profileHtml = profileBits.length
@@ -7264,9 +7477,9 @@ const CombatAssistant = (() => {
                 const pactLevel = Math.max(0, Utils.toInt(data.pactSlotLevel, 0));
                 pactHtml = '<div style="margin:0 0 5px 0;padding:4px 6px;border:1px solid rgba(145,120,210,0.55);border-radius:4px;background:rgba(65,55,120,0.35);font-size:10px;line-height:13px;">' +
                     '<table style="width:100%;border-collapse:collapse;table-layout:fixed;"><tbody><tr>' +
-                        '<td style="text-align:left;color:rgb(205,190,235);font-weight:900;">' + Utils.escapeHtml(I18N.t('PACT MAGIC')) + '</td>' +
+                        '<td style="text-align:left;color:rgb(205,190,235);font-weight:900;">' + Utils.escapeHtml(I18N.t("ui.pact_magic")) + '</td>' +
                         '<td style="text-align:center;">' + this.spellSlotValueHtml(pactCurrent, pactMax) + '</td>' +
-                        '<td style="text-align:right;color:rgb(205,190,235);font-weight:900;white-space:nowrap;">' + Utils.escapeHtml(I18N.t('CAST LV.')) + ' ' + Utils.escapeHtml(String(pactLevel || '-')) + '</td>' +
+                        '<td style="text-align:right;color:rgb(205,190,235);font-weight:900;white-space:nowrap;">' + Utils.escapeHtml(I18N.t("messages.cast_lv")) + ' ' + Utils.escapeHtml(String(pactLevel || '-')) + '</td>' +
                     '</tr></tbody></table>' +
                 '</div>';
             }
@@ -7287,9 +7500,9 @@ const CombatAssistant = (() => {
             const groupsHtml = levels.map((level) => {
                 const slot = !data.preparedManager && !data.isPact && level > 0 ? slotByLevel[level] : null;
                 const slotHtml = data.preparedManager && level > 0
-                    ? '<span title="' + Utils.attrSafe(I18N.t('Prepared spells at this level; the limit is shared across levels')) + '">' +
-                      Utils.escapeHtml(I18N.t('{count} prepared', { count: grouped[level].filter(countsTowardPreparation).length })) + '</span>'
-                    : (slot ? '<span title="' + Utils.attrSafe(I18N.t('Slots at this level')) + '">' + this.spellSlotValueHtml(slot.current, slot.max) + '</span>' : '');
+                    ? '<span title="' + Utils.attrSafe(I18N.t("spell.prepared_spells_at_this_level_the_limit_is_shared_across_level")) + '">' +
+                      Utils.escapeHtml(I18N.t("narrative.count_prepared", { count: grouped[level].filter(countsTowardPreparation).length })) + '</span>'
+                    : (slot ? '<span title="' + Utils.attrSafe(I18N.t("ui.slots_at_this_level")) + '">' + this.spellSlotValueHtml(slot.current, slot.max) + '</span>' : '');
                 const heading = '<div style="margin-top:' + (level === levels[0] ? '0' : '5px') + ';padding:2px 4px;border-bottom:1px solid rgba(155,130,215,0.45);color:rgb(205,190,235);font-size:9px;line-height:12px;font-weight:900;">' +
                     '<span>' + Utils.escapeHtml(this.spellLevelTitle(level)) + '</span>' +
                     (slotHtml ? ('<span style="float:right;">' + slotHtml + '</span>') : '') +
@@ -7600,7 +7813,7 @@ const CombatAssistant = (() => {
                 const value = settings[field.key];
                 const sectionRow = field.section ? this.settingsSectionRowHtml(field.section, pageKey === 'markers' ? 3 : 2) : '';
                 const tooltip = pageKey === 'markers' && field.key.indexOf('CONDITION_MARKER_') === 0
-                    ? I18N.t('Roll20 token marker name/tag for {marker}. Must exist in the campaign to render.', { marker: I18N.t(field.label) })
+                    ? I18N.t("narrative.roll20_token_marker_name_tag_for_marker_must_exist_in_the_camp", { marker: I18N.t(field.label) })
                     : I18N.t(field.tip || field.label);
                 let button = '';
                 if (field.type === 'action') {
@@ -7618,13 +7831,19 @@ const CombatAssistant = (() => {
                         backgroundColor: value ? 'rgba(20,115,55,0.95)' : 'rgba(120,40,40,0.95)'
                     });
                 } else if (field.type === 'language') {
-                    const current = value === 'es' ? 'Español' : (value === 'custom' ? 'Custom' : 'English');
+                    const available = I18N.languageOptions();
+                    const activeDictionary = I18N.dictionary();
+                    const applied = activeDictionary && value !== 'en';
+                    const currentCode = !applied ? 'EN' : value === 'custom' ? 'CUS' :
+                        value.replace(/^custom:/, '').split('-')[0].toUpperCase();
+                    const activeLocale = applied && I18N.externalLanguages.find((entry) => entry.value === value);
+                    const currentName = activeLocale ? activeLocale.name :
+                        (applied ? I18N.t('common.custom') : available[0].name);
                     button = this.compactSettingButtonHtml({
-                        label: value === 'es' ? 'ES' : (value === 'custom' ? 'CUS' : 'EN'),
-                        command: '!combatAssistant set LANGUAGE &#63;{' + Utils.attrSafe(I18N.t('Language')) +
-                            '|' + Utils.attrSafe(I18N.t('English')) + ',en|' + Utils.attrSafe(I18N.t('Español')) +
-                            ',es|' + Utils.attrSafe(I18N.t('Custom')) + ',custom}',
-                        tooltip: tooltip + ' (' + I18N.t(current) + ')'
+                        label: currentCode,
+                        command: '!combatAssistant language &#63;{' + Utils.attrSafe(I18N.t("config.LANGUAGE")) +
+                            '|' + available.map((language) => Utils.attrSafe(language.name) + ',' + language.value).join('|') + '}',
+                        tooltip: tooltip + ' (' + currentName + ')'
                     });
                 } else if (field.type === 'bar' || field.type === 'bar0') {
                     const opts = field.type === 'bar0' ? '0|1|2|3|4' : '1|2|3|4';
@@ -7679,8 +7898,8 @@ const CombatAssistant = (() => {
                 width: footerButtonWidth,
                 widthCss: '100%',
                 fontSize: 10,
-                command: '!combatAssistant recommended &#63;{' + Utils.attrSafe(I18N.t('Apply recommended ON/OFF settings only?')) +
-                    '|' + Utils.attrSafe(I18N.t('No')) + ',no|' + Utils.attrSafe(I18N.t('Yes')) + ',yes}',
+                command: '!combatAssistant recommended &#63;{' + Utils.attrSafe(I18N.t("messages.apply_recommended_on_off_settings_only")) +
+                    '|' + Utils.attrSafe(I18N.t("common.no")) + ',no|' + Utils.attrSafe(I18N.t("common.yes")) + ',yes}',
                 tooltip: 'Apply recommended ON/OFF settings without changing images, markers, language, spell templates, or macros',
                 backgroundColor: 'rgba(95,160,203,0.95)',
                 borderColor: 'rgba(172,219,244,0.96)'
@@ -7718,7 +7937,7 @@ const CombatAssistant = (() => {
                     const command = entry.command || ('!combatAssistant config ' + entry.page);
                     return '<td style="width:50%;height:' + CONFIG_ROW_HEIGHT + 'px;text-align:center;vertical-align:middle;padding:2px 1px;line-height:0;box-sizing:border-box;white-space:nowrap;">' +
                         this.compactSettingButtonHtml({
-                            label: entry.label, command, tooltip: I18N.t('Open {menu}', { menu: I18N.t(pageTitles[entry.page] || 'Spell Templates') }),
+                            label: entry.label, command, tooltip: I18N.t("narrative.open_menu", { menu: I18N.t(pageTitles[entry.page] || "config.TEMPLATES_PAGE") }),
                             width: 128, widthCss: '94%', backgroundColor: entry.backgroundColor, borderColor: entry.borderColor
                         }) + '</td>';
                 }).join('') + '</tr>').join('');
@@ -7747,6 +7966,29 @@ const CombatAssistant = (() => {
                 title,
                 body,
                 buildOptions: { titleHtml: this.settingsTitleHtml(title, '', backControl), bodyAlign: 'left' }
+            }));
+        },
+
+        showLanguageSettingsMenu(target) {
+            // Loaded by the Custom command only; this renderer performs no I/O.
+            const languages = I18N.externalLanguages;
+            const title = I18N.t('ui.language_settings');
+            const body = '<table style="width:100%;border-collapse:collapse;table-layout:auto;"><tbody>' +
+                this.settingsSectionRowHtml('ui.languages', 2) +
+                languages.map((language) => this.settingsValueRowHtml(language.name,
+                    this.compactSettingButtonHtml({
+                        label: 'SET',
+                        command: '!combatAssistant set LANGUAGE ' + Utils.attrSafe(language.value),
+                        tooltip: language.name,
+                        fontSize: 11,
+                        labelOffsetY: 2,
+                        backgroundColor: RuntimeConfig.get('LANGUAGE') === language.value
+                            ? 'rgba(20,115,55,0.95)' : 'rgba(0,86,145,0.95)'
+                    }), language.name)).join('') + '</tbody></table>';
+            const back = this.settingsTitleControlHtml('!combatAssistant config', 'Back to Settings', '&#128281;');
+            R20.whisper(target || 'GM', Html.card({
+                title, body,
+                buildOptions: { titleHtml: this.settingsTitleHtml(title, '', back), bodyAlign: 'left' }
             }));
         },
 
@@ -7806,10 +8048,10 @@ const CombatAssistant = (() => {
                     tooltip: 'Remove this Spell Macro', backgroundColor: 'rgba(125,35,35,0.95)'
                 });
                 const applyFlag = entry.command
-                    ? '<span title="' + Utils.attrSafe(I18N.t('Apply') + ': ' + entry.command + (entry.applyOnFailure ? (' | ' + I18N.t('Runs even when the target is not affected.')) : '')) + '" style="display:inline-block;color:rgb(90,220,120);font-size:11px;font-weight:900;line-height:' + CONFIG_ROW_HEIGHT + 'px;">A</span>'
+                    ? '<span title="' + this.deferButtonCommand(I18N.t("common.apply") + ': ' + entry.command + (entry.applyOnFailure ? (' | ' + I18N.t("config.ALWAYS_RUN_MACRO")) : '')) + '" style="display:inline-block;color:rgb(90,220,120);font-size:11px;font-weight:900;line-height:' + CONFIG_ROW_HEIGHT + 'px;">A</span>'
                     : '';
                 const endFlag = entry.endCommand
-                    ? '<span title="' + Utils.attrSafe(I18N.t('End') + ': ' + entry.endCommand) + '" style="display:inline-block;margin-left:' + (entry.command ? '2' : '0') + 'px;color:rgb(230,150,70);font-size:11px;font-weight:900;line-height:' + CONFIG_ROW_HEIGHT + 'px;">E</span>'
+                    ? '<span title="' + this.deferButtonCommand(I18N.t("common.end") + ': ' + entry.endCommand) + '" style="display:inline-block;margin-left:' + (entry.command ? '2' : '0') + 'px;color:rgb(230,150,70);font-size:11px;font-weight:900;line-height:' + CONFIG_ROW_HEIGHT + 'px;">E</span>'
                     : '';
                 const controls = '<span style="display:inline-block;vertical-align:middle;">' + applyFlag + endFlag + '</span>' +
                     '<span style="display:inline-block;vertical-align:middle;margin-left:2px;">' + editButton + '</span>' +
@@ -7861,7 +8103,7 @@ const CombatAssistant = (() => {
                 (part.value ? this.deferButtonCommand(part.value) : '&mdash;') + '</div>').join('');
             const body = '<div style="font-size:12px;font-weight:900;color:rgb(245,245,245);">' + Utils.escapeHtml(entry.name) + '</div>' +
                 source + '<div style="margin:8px 0 6px;font-size:10px;color:rgb(175,175,175);">' +
-                Utils.escapeHtml(I18N.t('Copy the text above to edit it. In the next prompt, replace [keep] to change a field, leave [keep] to preserve it, or erase it to clear that field.')) +
+                Utils.escapeHtml(I18N.t("messages.copy_the_text_above_to_edit_it_in_the_next_prompt_replace_keep")) +
                 '</div><div style="text-align:center;">' + updateButton + '</div>';
             const back = this.settingsTitleControlHtml('!combatAssistant spelltemplates', 'Back', '&#128281;');
             R20.whisper(target || 'GM', Html.card({
@@ -7891,7 +8133,7 @@ const CombatAssistant = (() => {
             const dmgButton = this.iconButtonHtml({
                 iconHtml: '&#128165;',
                 label: 'Dmg',
-                command: '!combatAssistant deal manual &#63;{Damage|0} &#63;{' + Utils.attrSafe(I18N.t('Damage Type')) + '|' + damageTypes + '} &#63;{DC|0} &#63;{Save|' + abilities + '} &#63;{Half on Success|no|yes}' +
+                command: '!combatAssistant deal manual &#63;{Damage|0} &#63;{' + Utils.attrSafe(I18N.t("combat.damage_type")) + '|' + damageTypes + '} &#63;{DC|0} &#63;{Save|' + abilities + '} &#63;{Half on Success|no|yes}' +
                     (RuntimeConfig.get('SHEET_2014_CA_ROLLS') ? ' &#63;{2014 Roll Mode|Normal,normal|Advantage,advantage|Disadvantage,disadvantage}' : ''),
                 backgroundColor: 'rgba(135,35,35,0.95)',
                 tooltip: 'Deal damage to selected token(s)'
@@ -7963,7 +8205,7 @@ const CombatAssistant = (() => {
                 const action = PLAYER_TOKEN_ACTIONS[String(tokenActionId || '').trim().toLowerCase()];
                 if (!action) return '<code style="font-size:12px;line-height:15px;">' + command + '</code>';
                 const installCommand = this.sanitizeCommand('!ca tokenaction ' + String(tokenActionId || '').trim().toLowerCase());
-                return '<a href="' + installCommand + '" title="' + Utils.attrSafe(I18N.t('Add {action} as a Token Action to the selected character', { action: action.name })) + '" style="display:inline-block;padding:0;margin:0;border:0;background:transparent;color:rgb(85,205,135);font-family:monospace;font-size:12px;line-height:15px;font-weight:700;text-decoration:none;vertical-align:baseline;">' + command + '</a>';
+                return '<a href="' + installCommand + '" title="' + Utils.attrSafe(I18N.t("narrative.add_action_as_a_token_action_to_the_selected_character", { action: action.name })) + '" style="display:inline-block;padding:0;margin:0;border:0;background:transparent;color:rgb(85,205,135);font-family:monospace;font-size:12px;line-height:15px;font-weight:700;text-decoration:none;vertical-align:baseline;">' + command + '</a>';
             };
             const descriptionHtml = (text) => '<span style="font-size:10px;line-height:13px;color:rgb(190,190,190);">' + Utils.escapeHtml(I18N.t(text)) + '</span>';
             const helpLine = (command, description, tokenActionId) => commandHtml(command, tokenActionId) + (description ? (' <span style="font-size:10px;line-height:13px;color:rgb(190,190,190);">- ' + Utils.escapeHtml(I18N.t(description)) + '</span>') : '') + '<br>';
@@ -8098,33 +8340,33 @@ const CombatAssistant = (() => {
         buildDamageNarrative(result) {
             result = result || {};
             const hideNames = !RuntimeConfig.get('REVEAL_TOKEN_NAMES_IN_LOG');
-            const targetLabel = hideNames ? I18N.t('Target') : String(result.tokenName || I18N.t('Target'));
+            const targetLabel = hideNames ? I18N.t("common.target") : String(result.tokenName || I18N.t("common.target"));
             const targetName = this.characterNameHtml(targetLabel);
             const sourceName = String(result.sourceName || '').trim();
             const sourceAction = String(result.sourceAction || '').trim();
             const isManualSource = /^manual$/i.test(sourceName) || /^manual(?:\s+damage)?$/i.test(sourceAction);
             const revealSource = RuntimeConfig.get('REVEAL_DAMAGE_SOURCE') && !isManualSource;
-            const sourceLabel = hideNames ? I18N.t('Attacker') : sourceName;
+            const sourceLabel = hideNames ? I18N.t("ui.attacker") : sourceName;
             const sourceNameHtml = sourceName ? this.characterNameHtml(sourceLabel) : '';
             const sourceActionHtml = sourceAction
                 ? Html.span(Utils.escapeHtml(sourceAction), 'color:rgb(245,220,80);font-weight:900;')
                 : '';
             const sourcePhrase = I18N.language() !== 'en' && revealSource
                 ? (sourceActionHtml
-                    ? I18N.t(' from {source} using {action}', { source: sourceNameHtml || I18N.t('Attacker'), action: sourceActionHtml })
-                    : (sourceNameHtml ? I18N.t(' from {source}', { source: sourceNameHtml }) : ''))
+                    ? I18N.t("fragments.from_source_using_action", { source: sourceNameHtml || I18N.t("ui.attacker"), action: sourceActionHtml })
+                    : (sourceNameHtml ? I18N.t("fragments.from_source", { source: sourceNameHtml }) : ''))
                 : (revealSource && sourceActionHtml
                     ? (' from ' + (sourceNameHtml ? (sourceNameHtml + '&#39;s ') : '') + sourceActionHtml)
                     : (revealSource && sourceNameHtml ? (' from ' + sourceNameHtml) : ''));
 
             if (result.missed) {
                 return revealSource && sourceActionHtml
-                    ? I18N.t('{source} attacks {target} with {action}, but misses.', {
-                        source: sourceNameHtml || I18N.t('Attacker'), target: targetName, action: sourceActionHtml
+                    ? I18N.t("narrative.attack_with_action_misses", {
+                        source: sourceNameHtml || I18N.t("ui.attacker"), target: targetName, action: sourceActionHtml
                     })
                     : (revealSource && sourceNameHtml
-                        ? I18N.t('{source} attacks {target}, but misses.', { source: sourceNameHtml, target: targetName })
-                        : I18N.t('The attack against {target} misses.', { target: targetName }));
+                        ? I18N.t("narrative.attack_misses", { source: sourceNameHtml, target: targetName })
+                        : I18N.t("narrative.the_attack_against_target_misses", { target: targetName }));
             }
             if (result.save && result.save.used) {
                 const roll = result.save;
@@ -8140,7 +8382,7 @@ const CombatAssistant = (() => {
                     Utils.escapeHtml(I18N.t(name)) + '</span>').join(', ');
                 const conditionLine = result.effectOnly && conditionNames.length && !result.effectTrackerRepeat
                     ? '<div style="text-align:center;padding-top:3px;color:rgb(170,170,170);font-size:12px;">' +
-                        I18N.t(conditionNames.length === 1 ? '{target} gains the {condition} condition.' : '{target} gains the following conditions: {conditions}.', {
+                        I18N.t(conditionNames.length === 1 ? "narrative.condition_gained" : "narrative.conditions_gained", {
                             target: targetName, condition: conditionHtml(conditionNames), conditions: conditionHtml(conditionNames)
                         }) + '</div>'
                     : '';
@@ -8150,8 +8392,8 @@ const CombatAssistant = (() => {
                 const repeatLine = result.effectTrackerRepeat && trackedConditionNames.length
                     ? '<div style="text-align:center;padding-top:3px;color:rgb(170,170,170);font-size:12px;">' +
                         I18N.t(result.effectTrackerEnded
-                            ? (trackedConditionNames.length === 1 ? '{condition} has ended.' : '{conditions} have ended.')
-                            : (trackedConditionNames.length === 1 ? '{condition} remains active.' : '{conditions} remain active.'), {
+                            ? (trackedConditionNames.length === 1 ? "narrative.condition_ended" : "narrative.conditions_ended")
+                            : (trackedConditionNames.length === 1 ? "narrative.condition_active" : "narrative.conditions_active"), {
                             condition: conditionHtml(trackedConditionNames), conditions: conditionHtml(trackedConditionNames)
                         }) + '</div>'
                     : '';
@@ -8164,14 +8406,14 @@ const CombatAssistant = (() => {
                         ? targetName + (roll.success ? ' succeeds' : ' fails') + ' on the ' + Utils.escapeHtml(abilityLabel) + ' saving throw.'
                         : targetName + outcome + ' on the ' + ability + ' Save and takes ' + (damageParts || 'no damage') + joinedSourcePhrase + (result.fainted ? ' and falls unconscious' : '') + '.')
                     : I18N.t(result.effectOnly
-                        ? '{target} {outcome} the {ability} saving throw.'
-                        : '{target} {outcome} the {ability} saving throw and takes {damage}{source}{fainted}.', {
+                        ? "narrative.target_outcome_the_ability_saving_throw"
+                        : "narrative.target_outcome_the_ability_saving_throw_and_takes_damagesource", {
                             target: targetName,
-                            outcome: I18N.t(roll.success ? 'succeeds' : 'fails'),
+                            outcome: I18N.t(roll.success ? "ui.succeeds" : "ui.fails"),
                             ability: I18N.t(abilityLabel),
                             damage: damageParts || I18N.t('no damage'),
                             source: joinedSourcePhrase,
-                            fainted: result.fainted ? I18N.t(' and falls unconscious') : ''
+                            fainted: result.fainted ? I18N.t("fragments.and_falls_unconscious") : ''
                         });
                 const tempLine = result.tempAbsorbed > 0 && !(RuntimeConfig.get('HIDE_DAMAGE_DETAILS') && !RuntimeConfig.get('HIDE_COMBAT_LOG'))
                     ? '<div style="padding-top:2px;color:rgb(52,203,116);font-size:10px;line-height:12px;text-align:center;">(Some damage was absorbed by Temporary HP)</div>'
@@ -8182,7 +8424,7 @@ const CombatAssistant = (() => {
                 const damageParts = this.buildDamagePartsHtml(result);
                 const hasDamageAdjustment = damageParts && /\b(?:blocked by|reduced by|increased by)\b/i.test(damageParts);
                 const joinedSourcePhrase = hasDamageAdjustment && sourcePhrase ? (',' + sourcePhrase) : sourcePhrase;
-                return I18N.t('{target} takes {damage}{source}.', { target: targetName, damage: damageParts || I18N.t('no damage'), source: joinedSourcePhrase });
+                return I18N.t("narrative.target_takes_damage", { target: targetName, damage: damageParts || I18N.t('no damage'), source: joinedSourcePhrase });
             }
 
             const damageParts = this.buildDamagePartsHtml(result);
@@ -8191,9 +8433,9 @@ const CombatAssistant = (() => {
             const tempLine = result.tempAbsorbed > 0 && !(RuntimeConfig.get('HIDE_DAMAGE_DETAILS') && !RuntimeConfig.get('HIDE_COMBAT_LOG'))
                 ? '<div style="padding-top:2px;color:rgb(52,203,116);font-size:10px;line-height:12px;text-align:center;">(Some damage was absorbed by Temporary HP)</div>'
                 : '';
-            return I18N.t('{target} takes {damage}{source}{fainted}.', {
-                target: targetName, damage: damageParts || I18N.t('0 damage'), source: joinedSourcePhrase,
-                fainted: result.fainted ? I18N.t(' and falls unconscious') : ''
+            return I18N.t("narrative.target_takes_damage_fainted", {
+                target: targetName, damage: damageParts || I18N.t("combat.zero_damage"), source: joinedSourcePhrase,
+                fainted: result.fainted ? I18N.t("fragments.and_falls_unconscious") : ''
             }) + tempLine;
         },
 
@@ -8273,9 +8515,9 @@ const CombatAssistant = (() => {
             const total = Math.max(0, Utils.toInt(result.total, 0));
             const diceValues = Array.isArray(result.diceValues) ? result.diceValues.map((value) => Utils.toInt(value, 0)).filter((value) => value > 0) : [];
             const modifier = Utils.toInt(result.modifier, 0);
-            const tooltip = I18N.t('Roll') + ':(' + (diceValues.length ? diceValues.join('+') : String(total - modifier)) + ')' +
-                '<br>' + I18N.t('Modifier') + ':' + Utils.formatSigned(modifier) +
-                '<br>' + I18N.t('Total') + ':' + String(total);
+            const tooltip = I18N.t("common.roll") + ':(' + (diceValues.length ? diceValues.join('+') : String(total - modifier)) + ')' +
+                '<br>' + I18N.t("common.modifier_narrative") + ':' + Utils.formatSigned(modifier) +
+                '<br>' + I18N.t("ui.total") + ':' + String(total);
             const body =
                 '<table style="width:100%;border-collapse:collapse;table-layout:fixed;"><tbody><tr>' +
                     '<td style="text-align:left;vertical-align:middle;font-size:14px;line-height:16px;">' +
@@ -8299,7 +8541,7 @@ const CombatAssistant = (() => {
                 const conditionHtml = Html.span(Utils.escapeHtml(condition), 'color:rgb(245,245,245);font-weight:700;');
                 const description = I18N.language() === 'en'
                     ? targetHtml + "'s " + conditionHtml + ' condition ended.'
-                    : I18N.t('The {condition} condition affecting {target} has ended.', { condition: conditionHtml, target: targetHtml });
+                    : I18N.t("narrative.the_condition_condition_affecting_target_has_ended", { condition: conditionHtml, target: targetHtml });
                 return '<div style="margin-top:2px;color:rgb(235,220,170);font-size:12px;line-height:15px;">' + description + '</div>';
             }).join('');
         },
@@ -8309,7 +8551,7 @@ const CombatAssistant = (() => {
             const eventType = String(type || 'ended').trim().toLowerCase();
             const revealNames = RuntimeConfig.get('REVEAL_TOKEN_NAMES_IN_LOG');
             const revealSource = RuntimeConfig.get('REVEAL_DAMAGE_SOURCE');
-            const casterLabel = revealNames ? String(result.casterName || I18N.t('Caster')) : I18N.t('Caster');
+            const casterLabel = revealNames ? String(result.casterName || I18N.t("spell.caster")) : I18N.t("spell.caster");
             const spellName = String(result.spellName || '').trim();
             const casterHtml = this.characterNameHtml(casterLabel);
             const visibleSpell = spellName && revealSource
@@ -8334,7 +8576,7 @@ const CombatAssistant = (() => {
                         rolls: roll.rolls,
                         mode: roll.mode || 'normal',
                         success: false,
-                        tooltip: 'CON ' + I18N.t('Save') + '<br>' + I18N.t('Total') + ': ' + String(total) + '<br>DC: ' + String(dc)
+                        tooltip: 'CON ' + I18N.t("common.savingthrow_narrative_short") + '<br>' + I18N.t("ui.total") + ': ' + String(total) + '<br>DC: ' + String(dc)
                     }, '', { size: 40, fontSize: '20px' });
                 body = '<table style="width:100%;border-collapse:collapse;table-layout:fixed;"><tbody><tr>' +
                     '<td style="text-align:left;vertical-align:middle;font-size:14px;line-height:16px;">' +
@@ -8345,14 +8587,14 @@ const CombatAssistant = (() => {
             } else if (eventType === 'expired') {
                 body = I18N.language() === 'en'
                     ? casterHtml + "'s concentration on " + (visibleSpell || 'the spell') + ' ends naturally as the spell reaches the end of its duration.'
-                    : I18N.t('Concentration of {caster}{spell} expired.', {
-                        caster: casterHtml, spell: visibleSpell ? I18N.t(' on {spell}', { spell: visibleSpell }) : ''
+                    : I18N.t("narrative.concentration_of_casterspell_expired", {
+                        caster: casterHtml, spell: visibleSpell ? I18N.t("fragments.on_spell", { spell: visibleSpell }) : ''
                     });
             } else {
                 const text = I18N.language() === 'en'
                     ? casterHtml + "'s concentration" + (visibleSpell ? (' on ' + visibleSpell) : '') + ' ended.'
-                    : I18N.t('Concentration of {caster}{spell} ended.', {
-                        caster: casterHtml, spell: visibleSpell ? I18N.t(' on {spell}', { spell: visibleSpell }) : ''
+                    : I18N.t("narrative.concentration_of_casterspell_ended", {
+                        caster: casterHtml, spell: visibleSpell ? I18N.t("fragments.on_spell", { spell: visibleSpell }) : ''
                     });
                 body = '<div style="font-size:14px;line-height:16px;">' + text + '</div>';
             }
@@ -8389,14 +8631,14 @@ const CombatAssistant = (() => {
                 const localized = I18N.language() !== 'en';
                 const typedSuffix = typed ? ' (' + typed + ')' : '';
                 const formatAmount = (amount) => localized
-                    ? I18N.t('{amount} points of damage{type}', { amount, type: typedSuffix })
+                    ? I18N.t("narrative.amount_points_of_damagetype", { amount, type: typedSuffix })
                     : amount + (typed ? (' ' + typed) : '') + ' damage';
                 if (part.immune && Utils.toInt(part.finalDamage, 0) <= 0 && hadPendingDamage(part)) {
                     if (localized) {
-                        if (hideResistanceDetails) return I18N.t('No damage{type}.', { type: typedSuffix });
+                        if (hideResistanceDetails) return I18N.t("narrative.no_damagetype", { type: typedSuffix });
                         return allVisibleDamageBlockedByImmunity && visibleParts.length === 1
-                            ? I18N.t('No damage: immunity ({type})', { type: traitLabel })
-                            : I18N.t('No damage{type}, blocked by immunity.', { type: typedSuffix });
+                            ? I18N.t("narrative.no_damage_immunity_type", { type: traitLabel })
+                            : I18N.t("narrative.no_damagetype_blocked_by_immunity", { type: typedSuffix });
                     }
                     if (hideResistanceDetails) return typed ? ('no ' + typed + ' damage') : 'no damage';
                     return allVisibleDamageBlockedByImmunity && visibleParts.length === 1
@@ -8406,9 +8648,9 @@ const CombatAssistant = (() => {
                 const amount = Html.span(Utils.escapeHtml(String(part.finalDamage)), 'color:' + color + ';font-weight:900;');
                 if (hideResistanceDetails) return formatAmount(amount);
                 const adjustments = [];
-                if (part.immune) adjustments.push(localized ? I18N.t('blocked by immunity ({type})', { type: traitLabel }) : 'blocked by ' + traitLabel + ' immunity');
-                if (part.resistant) adjustments.push(localized ? I18N.t('reduced by resistance ({type})', { type: traitLabel }) : 'reduced by ' + traitLabel + ' resistance');
-                if (part.vulnerable) adjustments.push(localized ? I18N.t('increased by vulnerability ({type})', { type: traitLabel }) : 'increased by ' + traitLabel + ' vulnerability');
+                if (part.immune) adjustments.push(localized ? I18N.t("narrative.blocked_by_immunity_type", { type: traitLabel }) : 'blocked by ' + traitLabel + ' immunity');
+                if (part.resistant) adjustments.push(localized ? I18N.t("narrative.reduced_by_resistance_type", { type: traitLabel }) : 'reduced by ' + traitLabel + ' resistance');
+                if (part.vulnerable) adjustments.push(localized ? I18N.t("narrative.increased_by_vulnerability_type", { type: traitLabel }) : 'increased by ' + traitLabel + ' vulnerability');
                 return formatAmount(amount) + (adjustments.length ? (', ' + adjustments.join(' and ')) : '');
             });
             return parts.join(', ');
@@ -8417,25 +8659,25 @@ const CombatAssistant = (() => {
         buildHealNarrative(result, showAmount) {
             result = result || {};
             const hideNames = !RuntimeConfig.get('REVEAL_TOKEN_NAMES_IN_LOG');
-            const targetName = this.characterNameHtml(hideNames ? I18N.t('Target') : String(result.tokenName || I18N.t('Target')));
+            const targetName = this.characterNameHtml(hideNames ? I18N.t("common.target") : String(result.tokenName || I18N.t("common.target")));
             const displayedAmount = result.effectiveAmount !== undefined && result.effectiveAmount !== null ? result.effectiveAmount : (result.amount || 0);
             const amount = showAmount ? Html.span(Utils.escapeHtml(String(displayedAmount)), 'color:' + (result.mode === 'temp' ? 'rgb(255,105,180)' : CONFIG.DEFAULT_TEXT_HEAL_COLOR) + ';font-weight:900;') : '';
             const sourceNameRaw = String(result.sourceName || '').trim();
             const sourceActionRaw = String(result.sourceAction || '').trim();
             const isManualSource = /^manual$/i.test(sourceNameRaw) || /^manual(?:\s+healing)?$/i.test(sourceActionRaw);
             const revealSource = RuntimeConfig.get('REVEAL_DAMAGE_SOURCE') && !isManualSource;
-            const sourceName = this.characterNameHtml(revealSource && sourceNameRaw && !hideNames ? sourceNameRaw : I18N.t('Healer'));
+            const sourceName = this.characterNameHtml(revealSource && sourceNameRaw && !hideNames ? sourceNameRaw : I18N.t("ui.healer"));
             const action = revealSource && sourceActionRaw
                 ? Html.span(Utils.escapeHtml(sourceActionRaw), 'color:rgb(245,220,80);font-weight:900;') : '';
-            const using = action ? I18N.t(' using {action}', { action }) : '';
+            const using = action ? I18N.t("fragments.using_action", { action }) : '';
             if (result.mode === 'temp') {
                 return showAmount
-                    ? I18N.t('{source} grants {amount} temporary HP to {target}{using}.', { source: sourceName, amount, target: targetName, using })
-                    : I18N.t('{source} grants temporary HP to {target}{using}.', { source: sourceName, target: targetName, using });
+                    ? I18N.t("narrative.source_grants_amount_temporary_hp_to_targetusing", { source: sourceName, amount, target: targetName, using })
+                    : I18N.t("narrative.source_grants_temporary_hp_to_targetusing", { source: sourceName, target: targetName, using });
             }
             return showAmount
-                ? I18N.t('{source} heals {amount} Hit Points to {target}{using}.', { source: sourceName, amount, target: targetName, using })
-                : I18N.t('{source} heals {target}{using}.', { source: sourceName, target: targetName, using });
+                ? I18N.t("narrative.source_heals_amount_hit_points_to_targetusing", { source: sourceName, amount, target: targetName, using })
+                : I18N.t("narrative.source_heals_targetusing", { source: sourceName, target: targetName, using });
         },
 
         conditionBadgesHtml(conditions) {
@@ -8476,7 +8718,7 @@ const CombatAssistant = (() => {
                 label: ability,
                 command: String(request.command || '#'),
                 backgroundColor: 'rgba(45,45,45,0.95)',
-                tooltip: I18N.t('Roll the {ability} saving throw', { ability })
+                tooltip: I18N.t("narrative.roll_the_ability_saving_throw", { ability })
             });
             const failCommand = String(request.failCommand || '').trim();
             const failButton = failCommand ? this.compactSettingButtonHtml({
@@ -8586,7 +8828,7 @@ const CombatAssistant = (() => {
                         total,
                         modifier,
                         dimmed: states.length > 1 && !state.isChosen,
-                        tooltip: label + (initiative ? '' : (' ' + I18N.t('Save'))) + '<br>' + I18N.t('Roll') + ': (' + String(state.natural) + ')<br>' + I18N.t('Modifier') + ': ' + modifierText + '<br>' + I18N.t('Total') + ': ' + (initiative ? RollParser.formatInitiativeValue(total) : String(total)) + (mode !== 'normal' ? ('<br>' + I18N.t('Mode') + ': ' + I18N.t(mode)) : '')
+                        tooltip: label + (initiative ? '' : (' ' + I18N.t("common.savingthrow_narrative_short"))) + '<br>' + I18N.t("common.roll") + ': (' + String(state.natural) + ')<br>' + I18N.t("common.modifier_narrative") + ': ' + modifierText + '<br>' + I18N.t("ui.total") + ': ' + (initiative ? RollParser.formatInitiativeValue(total) : String(total)) + (mode !== 'normal' ? ('<br>' + I18N.t("ui.mode") + ': ' + I18N.t(mode)) : '')
                     };
                     if (initiative) badge.displayTotal = RollParser.formatInitiativeValue(total);
                     return this.rollBadgeHtml(badge, state.marker, { size: rollSize, fontSize: '18px', paddingRight: state.paddingRight });
@@ -10096,7 +10338,7 @@ const CombatAssistant = (() => {
                         this.removePendingNativeInitiativeById(next.requestId);
                         R20.whisper('GM', Html.card({
                             title: 'Initiative Roll Timeout',
-                            body: '<div style="font-size:12px;line-height:15px;">' + I18N.t('No initiative result was captured for {character}. The remaining rolls will continue.', { character: Render.characterNameHtml(next.tokenName || 'Token') }) + '</div>'
+                            body: '<div style="font-size:12px;line-height:15px;">' + I18N.t("narrative.no_initiative_result_was_captured_for_character_the_remaining", { character: Render.characterNameHtml(next.tokenName || 'Token') }) + '</div>'
                         }));
                         this.advanceNativeInitiativeAutoQueue(batchId);
                     }, 5000);
@@ -12004,7 +12246,7 @@ const CombatAssistant = (() => {
                     backgroundColor: 'rgba(120,40,40,0.95)'
                 })
                 : '';
-            const roundBox = Render.rollBadgeHtml({ total: round, natural: 0, tooltip: I18N.t('Round {round}', { round }) }, '', {
+            const roundBox = Render.rollBadgeHtml({ total: round, natural: 0, tooltip: I18N.t("narrative.round_round", { round }) }, '', {
                 size: 40,
                 fontSize: '20px',
                 bgColor: 'rgba(55,55,55,0.95)'
@@ -12084,7 +12326,7 @@ const CombatAssistant = (() => {
                     height: 38,
                     iconSize: 16,
                     labelSize: 9,
-                    tooltip: I18N.t("Reroll this concentration spell's damage and open its controls") + (concentrationTurnsLeft !== null ? (' - ' + I18N.t('{count} turn(s) left', { count: String(concentrationTurnsLeft) })) : ''),
+                    tooltip: I18N.t("spell.reroll_this_concentration_spell_s_damage_and_open_its_controls") + (concentrationTurnsLeft !== null ? (' - ' + I18N.t("narrative.count_turn_s_left", { count: String(concentrationTurnsLeft) })) : ''),
                     backgroundColor: 'rgba(80,80,120,0.95)',
                     margin: '0'
                 })
@@ -12189,7 +12431,7 @@ const CombatAssistant = (() => {
             const label = String(info && info.name || 'Token').trim();
             const image = this.tokenImageHtml(info, size, false, 'Focus ' + label);
             if (!tokenId) return image;
-            return '<a href="!combatAssistant turnfocus ' + Utils.attrSafe(tokenId) + '" title="' + Utils.attrSafe(I18N.t('Focus {name}', { name: label })) + '" style="display:inline-block;width:' + size + 'px;height:' + size + 'px;padding:0;margin:0;border:0;background:transparent;text-decoration:none;line-height:' + size + 'px;vertical-align:middle;">' + image + '</a>';
+            return '<a href="!combatAssistant turnfocus ' + Utils.attrSafe(tokenId) + '" title="' + Utils.attrSafe(I18N.t("narrative.focus_name", { name: label })) + '" style="display:inline-block;width:' + size + 'px;height:' + size + 'px;padding:0;margin:0;border:0;background:transparent;text-decoration:none;line-height:' + size + 'px;vertical-align:middle;">' + image + '</a>';
         },
 
         setPivotFromOrder(order) {
@@ -15896,7 +16138,7 @@ const CombatAssistant = (() => {
             }
 
             const revealNames = RuntimeConfig.get('REVEAL_TOKEN_NAMES_IN_LOG');
-            const displayName = revealNames ? info.characterName : I18N.t('Character');
+            const displayName = revealNames ? info.characterName : I18N.t("common.character");
             const nameHtml = Render.characterNameHtml(displayName);
             const narrativeKeys = {
                 dash: '{character} moves swiftly with {action}.',
@@ -18461,7 +18703,7 @@ const CombatAssistant = (() => {
             const actionName = String(row.name || 'Special Action').trim() || 'Special Action';
             if (!ctx.isGM && RuntimeConfig.get('BLOCK_PLAYER_NO_RESOURCES') &&
                 ResourceService.playerActionUnavailable(actionName, ResourceService.getEntriesForToken(token, characterId))) {
-                Render.sendWhisperMessage(recipient, 'Resources', I18N.t('Insufficient resources for this action.'), 'warning');
+                Render.sendWhisperMessage(recipient, 'Resources', I18N.t("messages.insufficient_resources_for_this_action"), 'warning');
                 return false;
             }
             const description = String(row.description || '').trim();
@@ -18554,7 +18796,7 @@ const CombatAssistant = (() => {
                 : R20.findTokenByCharacterIdOnPlayerPage(characterId, ctx && ctx.playerId || '');
             if (!ctx.isGM && RuntimeConfig.get('BLOCK_PLAYER_NO_RESOURCES') &&
                 ResourceService.playerActionUnavailable(action.name, ResourceService.getEntriesForToken(token, characterId))) {
-                Render.sendWhisperMessage(recipient, 'Resources', I18N.t('Insufficient resources for this action.'), 'warning');
+                Render.sendWhisperMessage(recipient, 'Resources', I18N.t("messages.insufficient_resources_for_this_action"), 'warning');
                 return false;
             }
 
@@ -20393,7 +20635,7 @@ const CombatAssistant = (() => {
                 const body = '<table style="width:100%;border-collapse:collapse;table-layout:fixed;"><tbody>' +
                     '<tr><td style="text-align:center;vertical-align:middle;padding:0 0 3px 0;font-size:12px;line-height:15px;">' + Render.characterNameHtml(characterName) + '</td></tr>' +
                     '<tr><td style="text-align:center;vertical-align:middle;padding:0;color:rgb(225,225,225);font-size:12px;line-height:15px;">' +
-                        I18N.t('Not enough {resource} to perform this action.', { resource: coloredResource }) + '</td></tr>' +
+                        I18N.t("narrative.not_enough_resource_to_perform_this_action", { resource: coloredResource }) + '</td></tr>' +
                 '</tbody></table>';
                 R20.whisper('GM', Html.card({ title: 'Resources', body, buildOptions: { bodyAlign: 'center' } }));
             }
@@ -20419,7 +20661,7 @@ const CombatAssistant = (() => {
             const body = '<div style="text-align:center;font-size:12px;line-height:17px;color:rgb(225,225,225);">' +
                 '<div>' + Render.characterNameHtml(characterName) + '</div>' +
                 '<div>' + I18N.t(lineKey, { quantity: quantityHtml, resource: resourceHtml }) + '</div>' +
-                '<div>' + I18N.t('{current} of {max} remaining.', { current: currentHtml, max: maxHtml }) + '</div>' +
+                '<div>' + I18N.t("narrative.current_of_max_remaining", { current: currentHtml, max: maxHtml }) + '</div>' +
                 '</div>';
             return Html.card({ title: 'Resource Update', body, buildOptions: { titleHtml } });
         },
@@ -20839,7 +21081,7 @@ const CombatAssistant = (() => {
                 Render.sendWhisperMessage(ctx && ctx.who || 'GM', title, result && result.message || title.slice(0, -1) + ' could not be updated.', 'failure');
             } else if (operation === 'remove') {
                 Render.sendWhisperMessage(ctx && ctx.who || 'GM', title,
-                    Utils.escapeHtml(I18N.t('Deleted "{name}".', { name: result.entry.name })), 'success');
+                    Utils.escapeHtml(I18N.t("narrative.deleted_name", { name: result.entry.name })), 'success');
             }
             Render.showSpellTemplatesMenu(ctx && ctx.who || 'GM');
         },
@@ -21031,7 +21273,7 @@ const CombatAssistant = (() => {
                         label: plan.options.label || 'Roll',
                         iconHtml: plan.options.iconHtml || '&#127922;',
                         command: playerCommand,
-                        tooltip: plan.options.tooltip || I18N.t('Roll {name}', { name: plan.safeMacroName })
+                        tooltip: plan.options.tooltip || I18N.t("narrative.roll_name", { name: plan.safeMacroName })
                     })
                 });
                 plan.individual += 1;
@@ -21308,9 +21550,13 @@ const CombatAssistant = (() => {
                     else TurnTracker.resetState();
                     TurnTracker.refreshCurrentTurnPresentation({ sendCard: false, focus: false });
                     CombatService.repairConcentrationTooltips();
-                    if (RuntimeConfig.get('LANGUAGE') === 'custom') {
+                    if (I18N.isExternalLanguage(RuntimeConfig.get('LANGUAGE'))) {
                         const customResult = await I18N.loadCustomHandout();
-                        if (!customResult.ok) Render.sendWhisperMessage(ctx.who, 'Language', Utils.escapeHtml(customResult.message), 'warning');
+                        const chosen = RuntimeConfig.get('LANGUAGE');
+                        if (!customResult.ok || !(I18N.externalLanguages.some((language) => language.value === chosen) || (chosen === 'custom' && I18N.custom))) {
+                            const message = customResult.ok ? I18N.t('narrative.language_not_available_in_ca_language', { language: chosen }) : customResult.message;
+                            Render.sendWhisperMessage(ctx.who, 'Language', Utils.escapeHtml(message), 'warning');
+                        }
                     }
                     const duplicateNote = result.duplicateCount ? ' The first matching CA Settings handout was used.' : '';
                     Render.sendWhisperMessage(ctx.who, 'Settings Import', 'Imported <strong>' + result.settingsCount + '</strong> settings, <strong>' + result.templateCount + '</strong> Spell Templates, and <strong>' + result.macroCount + '</strong> Spell Macros.' + duplicateNote, 'normal');
@@ -21319,7 +21565,27 @@ const CombatAssistant = (() => {
                 return;
             }
             if (action === 'config' || action === 'settings') {
+                // Settings must remain immediate regardless of handout size.
                 Render.showConfigMenu(ctx.who, args[1] || '');
+                return;
+            }
+            if (action === 'language') {
+                const choice = String(args[1] || '').trim().toLowerCase();
+                if (choice === 'en') {
+                    this.applyConfigMutationResult(ctx, RuntimeConfig.set('LANGUAGE', 'en'));
+                    return;
+                }
+                if (choice === 'custom') {
+                    const loaded = await I18N.loadCustomHandout();
+                    if (!loaded.ok) {
+                        Render.sendWhisperMessage(ctx.who, 'Language', Utils.escapeHtml(loaded.message), 'failure');
+                        Render.showConfigMenu(ctx.who);
+                        return;
+                    }
+                    Render.showLanguageSettingsMenu(ctx.who);
+                    return;
+                }
+                this.sendUnknownCommand(ctx);
                 return;
             }
             if (action === 'spelltemplates') {
@@ -21355,17 +21621,17 @@ const CombatAssistant = (() => {
                 TurnTracker.refreshCurrentTurnPresentation({ sendCard: false, focus: false });
                 CombatService.repairConcentrationTooltips();
                 Render.sendWhisperMessage(ctx.who, 'Settings', I18N.t(
-                    'Recommended settings were applied to {count} ON/OFF options. Images, markers, language, templates, and macros were left unchanged.',
+                    "narrative.recommended_settings_were_applied_to_count_on_off_options_imag",
                     { count: outcome.applied }
                 ), 'normal');
                 Render.showConfigMenu(ctx.who);
                 return;
             }
             if (action === 'resetstate') {
-                const title = I18N.t('Reset CA State');
+                const title = I18N.t("ui.reset_ca_state");
                 if (args.length !== 2 || String(args[1] || '') !== 'CONFIRM') {
                     Render.sendWhisperMessage(ctx.who, title,
-                        Utils.escapeHtml(I18N.t('This permanently deletes all CA settings, Spell Templates, Spell Macros, and tracked combat data. Other scripts and Roll20 handouts are not affected. Export CA Settings first if you need a backup.')) +
+                        Utils.escapeHtml(I18N.t("spell.this_permanently_deletes_all_ca_settings_spell_templates_spell")) +
                         '<br><br><code>!ca resetstate CONFIRM</code>', 'warning');
                     return;
                 }
@@ -21378,8 +21644,8 @@ const CombatAssistant = (() => {
                 } catch (error) {
                     cleanupFailed = true;
                 }
-                const successText = I18N.t('Combat Assistant data was cleared and default settings restored. Restart the Roll20 Mod sandbox to clear temporary in-memory data.');
-                const warningText = cleanupFailed ? I18N.t('Some CA-managed map locks or markers could not be released; check them manually.') : '';
+                const successText = I18N.t("messages.combat_assistant_data_was_cleared_and_default_settings_restore");
+                const warningText = cleanupFailed ? I18N.t("messages.some_ca_managed_map_locks_or_markers_could_not_be_released_che") : '';
                 // Delete only CA's namespaces: clearing global state would erase other Mods.
                 delete state[META.STATE_KEY];
                 if (META.LEGACY_STATE_KEY) delete state[META.LEGACY_STATE_KEY];
@@ -21411,10 +21677,12 @@ const CombatAssistant = (() => {
             }
             if (action === 'set') {
                 const fieldKey = RuntimeConfig.normalizeKey(args[1] || '');
-                if (fieldKey === 'LANGUAGE' && String(args[2] || '').trim().toLowerCase() === 'custom') {
+                const requestedLanguage = String(args[2] || '').trim().toLowerCase();
+                if (fieldKey === 'LANGUAGE' && I18N.isExternalLanguage(requestedLanguage)) {
                     const load = await I18N.loadCustomHandout();
-                    if (!load.ok) {
-                        Render.sendWhisperMessage(ctx.who, 'Language', Utils.escapeHtml(load.message), 'failure');
+                    if (!load.ok || !(I18N.externalLanguages.some((language) => language.value === requestedLanguage) || (requestedLanguage === 'custom' && I18N.custom))) {
+                        const message = load.ok ? I18N.t('narrative.language_not_available_in_ca_language', { language: requestedLanguage }) : load.message;
+                        Render.sendWhisperMessage(ctx.who, 'Language', Utils.escapeHtml(message), 'failure');
                         Render.showConfigMenu(ctx.who);
                         return;
                     }
@@ -21703,7 +21971,7 @@ const CombatAssistant = (() => {
                         label: 'Use',
                         command: followup.command,
                         backgroundColor: 'rgba(55,105,170,0.95)',
-                        tooltip: I18N.t('Use {action}', { action: String(followup.actionName || I18N.t('the persistent concentration action')) })
+                        tooltip: I18N.t("narrative.use_action", { action: String(followup.actionName || I18N.t("spell.the_persistent_concentration_action")) })
                     }));
                 }
                 buttons.push(Render.concentrationEndButtonHtml(entry.actionId, entry.casterTokenId, 'End concentration'));
@@ -22056,7 +22324,7 @@ const CombatAssistant = (() => {
                 ResourceService.playerPromptUnavailable(Object.assign({}, request.payload || {}, {
                     attackName: request.attackName || (request.payload && request.payload.sourceAction) || ''
                 }), sourceToken)))) {
-                Render.sendWhisperMessage(ctx.who, 'Resources', I18N.t('Insufficient resources for this action.'), 'warning');
+                Render.sendWhisperMessage(ctx.who, 'Resources', I18N.t("messages.insufficient_resources_for_this_action"), 'warning');
                 return;
             }
             const rangeCheck = CombatService.validatePlayerActionRange(request, target);
@@ -22130,7 +22398,7 @@ const CombatAssistant = (() => {
                     ResourceService.playerPromptUnavailable(Object.assign({}, request.payload || {}, {
                         attackName: request.attackName || (request.payload && request.payload.sourceAction) || ''
                     }), sourceToken))) {
-                    Render.sendWhisperMessage(ctx.who, 'Resources', I18N.t('Insufficient resources for this action.'), 'warning');
+                    Render.sendWhisperMessage(ctx.who, 'Resources', I18N.t("messages.insufficient_resources_for_this_action"), 'warning');
                     return;
                 }
             }
@@ -22292,7 +22560,7 @@ const CombatAssistant = (() => {
                     label: 'Save',
                     command: queued.command,
                     width: 50,
-                    tooltip: I18N.t('Roll the native {ability} saving throw', { ability }),
+                    tooltip: I18N.t("narrative.roll_the_native_ability_saving_throw", { ability }),
                     backgroundColor: 'rgba(115,75,145,0.92)'
                 });
                 R20.whisper(ctx.who || 'GM', Html.card({
@@ -22785,7 +23053,7 @@ const CombatAssistant = (() => {
                 batchTitle: abilityLabel + ' Saving Throws',
                 batchIntro: 'Roll <strong>' + Utils.escapeHtml(abilityLabel) + '</strong> saving throws:',
                 iconHtml: '&#128735;',
-                tooltip: I18N.t('Roll the {ability} saving throw', { ability: abilityLabel }),
+                tooltip: I18N.t("narrative.roll_the_ability_saving_throw", { ability: abilityLabel }),
                 batchTooltip: 'Roll all listed ' + abilityLabel + ' saving throws',
                 rollMode
             });
@@ -23056,7 +23324,7 @@ const CombatAssistant = (() => {
                 if (this.whisperCombatAssistantInitiativeButton(token, visibility)) requested += 1;
             });
             if (requested) {
-                Render.sendWhisperMessage(ctx.who, 'Initiative', I18N.t('Initiative roll request sent to player-controlled token(s).'), 'normal');
+                Render.sendWhisperMessage(ctx.who, 'Initiative', I18N.t("turn.initiative_roll_request_sent_to_player_controlled_token_s"), 'normal');
             }
             if (failed.length) Render.sendWhisperMessage(ctx.who, 'Initiative', Utils.escapeHtml(failed.join(' ')), 'warning');
         },
@@ -23393,9 +23661,15 @@ const CombatAssistant = (() => {
                 );
             }
 
-            if (RuntimeConfig.get('LANGUAGE') === 'custom') {
+            // Load CA Language on startup only when a saved external locale
+            // actually needs it; English sessions stay independent of handouts.
+            if (I18N.isExternalLanguage(RuntimeConfig.get('LANGUAGE'))) {
                 I18N.loadCustomHandout().then((result) => {
-                    if (!result.ok) Render.sendWhisperMessage('GM', 'Language', Utils.escapeHtml(result.message), 'warning');
+                    const selected = RuntimeConfig.get('LANGUAGE');
+                    if (I18N.isExternalLanguage(selected) && (!result.ok || !(I18N.externalLanguages.some((language) => language.value === selected) || (selected === 'custom' && I18N.custom)))) {
+                        const message = result.ok ? I18N.t('narrative.language_not_available_in_ca_language', { language: selected }) : result.message;
+                        Render.sendWhisperMessage('GM', 'Language', Utils.escapeHtml(message), 'warning');
+                    }
                     Render.showBootstrapCard();
                 }).catch((error) => Logger.error('[i18n:handout]', String(error)));
             } else Render.showBootstrapCard();
