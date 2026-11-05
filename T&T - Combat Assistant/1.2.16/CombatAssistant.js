@@ -56,6 +56,11 @@ const CombatAssistant = (() => {
         // canonical English keys or the exact-case meaning of an entry.
         caseFoldCache: new WeakMap(),
         spanish: Object.freeze({
+            "Reset CA State": "Restablecer estado de CA",
+            "This permanently deletes all CA settings, Spell Templates, Spell Macros, and tracked combat data. Other scripts and Roll20 handouts are not affected. Export CA Settings first if you need a backup.": "Esto elimina permanentemente los ajustes, plantillas y macros de hechizos, y los datos de combate registrados por CA. No afecta a otros scripts ni a los handouts de Roll20. Exporta CA Settings primero si necesitas una copia de seguridad.",
+            "Combat Assistant data was cleared and default settings restored. Restart the Roll20 Mod sandbox to clear temporary in-memory data.": "Se borraron los datos de Combat Assistant y se restauraron los ajustes predeterminados. Reinicia el sandbox Mod de Roll20 para limpiar los datos temporales en memoria.",
+            "Some CA-managed map locks or markers could not be released; check them manually.": "No se pudieron liberar algunos bloqueos o marcadores del mapa administrados por CA; revísalos manualmente.",
+            "GM only: permanently clear CA state after typing CONFIRM. Export CA Settings first.": "Solo el DM: borra permanentemente el estado de CA después de escribir CONFIRM. Exporta CA Settings primero.",
             "Combat": "Combate",
             "Special Actions": "Acciones especiales",
             "Bonus Action": "Acción adicional",
@@ -91,6 +96,8 @@ const CombatAssistant = (() => {
             "Get": "Obtener",
             "Set": "Asignar",
             "Edit": "Editar",
+            "Update Macro": "Actualizar macro",
+            "Copy the text above to edit it. In the next prompt, replace [keep] to change a field, leave [keep] to preserve it, or erase it to clear that field.": "Copia el texto de arriba para editarlo. En la siguiente ventana, reemplaza [keep] para cambiar un campo, déjalo para conservarlo o bórralo para vaciar ese campo.",
             "Back": "Volver",
             "Default": "Predeterminado",
             "Recommended": "Recomendado",
@@ -154,6 +161,7 @@ const CombatAssistant = (() => {
             "Spell Template": "Plantilla de conjuro",
             "Spell Macros": "Macros de conjuros",
             "Spell Macro": "Macro de conjuro",
+            "Deleted \"{name}\".": "Se eliminó \"{name}\".",
             "Spells": "Conjuros",
             "Prepared Spells": "Conjuros preparados",
             "Spell Slots": "Espacios de conjuro",
@@ -843,6 +851,12 @@ const CombatAssistant = (() => {
             "Cast {name}": "Lanzar {name}",
             "Cast {name} - unavailable": "Lanzar {name} - no disponible",
             "Add a spell template": "Añadir una plantilla de conjuro",
+            "Enable Spell Templates": "Activar plantillas de conjuros",
+            "Enable Spell Macros": "Activar macros de conjuros",
+            "Player Macro Buttons": "Botones de macro para jugadores",
+            "Use matching spell templates for area markers. When OFF, use the default marker image.": "Usar la plantilla del conjuro para sus marcadores de área. Si está desactivado, usar la imagen predeterminada.",
+            "Run configured Apply and End macros for matching spells. Turning this OFF preserves saved macros.": "Ejecutar las macros Apply y End de los conjuros correspondientes. Al desactivarlo, las macros guardadas se conservan.",
+            "Show interactive spell macro buttons to the GM and players who control the caster. When OFF, show them only to the GM.": "Mostrar los botones interactivos de macros al GM y a los jugadores que controlan al lanzador. Si está desactivado, mostrarlos solo al GM.",
             "Add chat text, API commands, Roll20 references, queries, or native ability commands for a spell": "Añadir al conjuro texto de chat, comandos API, referencias o consultas de Roll20, o comandos nativos de habilidades",
             "Runs even when the target is not affected.": "Se ejecuta aunque el objetivo no resulte afectado.",
             "Melee Attack": "Ataque cuerpo a cuerpo",
@@ -1315,6 +1329,9 @@ const CombatAssistant = (() => {
         DIRECT_HIT_EFFECT_NAME: 'bomb',
         AREA_HIT_EFFECT_NAME: 'burn',
         PLAYER_HEALING_BUTTON: false,
+        USE_SPELL_TEMPLATES: true,
+        USE_SPELL_MACROS: true,
+        PLAYER_SPELL_MACRO_BUTTONS: true,
         PLAYER_ACTION_RANGE_CHECK: false,
         PLAYER_TOKEN_AREA_MARK: false,
         PLAYER_AREA_MARKER_KEEP_UNTIL_ROLLED: true,
@@ -1438,6 +1455,9 @@ const CombatAssistant = (() => {
     });
 
     const RUNTIME_CONFIG_FIELDS = Object.freeze([
+        { key: 'USE_SPELL_TEMPLATES', page: 'spelltemplates', label: 'Enable Spell Templates', type: 'boolean', tip: 'Use matching spell templates for area markers. When OFF, use the default marker image.' },
+        { key: 'USE_SPELL_MACROS', page: 'spelltemplates', label: 'Enable Spell Macros', type: 'boolean', tip: 'Run configured Apply and End macros for matching spells. Turning this OFF preserves saved macros.' },
+        { key: 'PLAYER_SPELL_MACRO_BUTTONS', page: 'spelltemplates', label: 'Player Macro Buttons', type: 'boolean', tip: 'Show interactive spell macro buttons to the GM and players who control the caster. When OFF, show them only to the GM.' },
         { key: 'CHAT_TRACKING', page: 'main', label: 'Chat Tracking', type: 'boolean', tip: 'Read Roll20 attack, damage, healing, and related combat rolls.' },
         { key: 'CA_ROLLS_INITIATIVE', page: 'main', label: '2024 Combat Assistant Rolls Initiative', type: 'boolean', tip: 'ON lets Combat Assistant roll 2024 initiative from sheet data; OFF keeps native Roll20 initiative.' },
         { key: 'SHEET_2014_CA_ROLLS', page: 'main', label: '2014 Combat Assistant Rolls', type: 'boolean', tip: 'OFF keeps native 2014 saving throws and initiative; ON lets Combat Assistant perform those supported rolls.' },
@@ -2786,8 +2806,8 @@ const CombatAssistant = (() => {
             if (!command) return '';
             const values = context || {};
             return String(command).replace(/\{([a-z][a-z0-9_]*)\}/gi, (match, key, index, source) => {
-                // @{...}, @^{...}, %{...}, and %^{...} belong to Roll20, not CA.
-                if (/[@%]\^?$/.test(source.slice(Math.max(0, index - 2), index))) return match;
+                // Roll20 @, %, and ? references (including deferred ^) are not CA fields.
+                if (/[@%?]\^?$/.test(source.slice(Math.max(0, index - 2), index))) return match;
                 const normalized = String(key || '').toLowerCase();
                 return Object.prototype.hasOwnProperty.call(values, normalized) ? String(values[normalized] || '') : match;
             }).trim();
@@ -2798,9 +2818,9 @@ const CombatAssistant = (() => {
             let text = String(command === undefined || command === null ? '' : command).trim();
             if (!text) return { text: '', apiText: '', clientRequired: false };
             text = Utils.decodeRoll20QueryText(text)
-                // The caret is a deliberate deferral marker. Persist @^{...} as
-                // entered; remove ^ only when building the actual Roll20 command.
-                .replace(/([@%])\^\{/g, '$1{')
+                // Keep ^ in stored @^{...}, %^{...}, and ?^{...} references.
+                // Remove it only when building the command for Roll20.
+                .replace(/([@%?])\^\{/g, '$1{')
                 .replace(/&amp;#(?:0*64|x0*40);|&#(?:0*64|x0*40);|&commat;/gi, '@')
                 .replace(/&amp;#(?:0*37|x0*25);|&#(?:0*37|x0*25);|&percnt;/gi, '%')
                 .replace(/&amp;#(?:0*63|x0*3f);|&#(?:0*63|x0*3f);|&quest;/gi, '?')
@@ -2853,10 +2873,12 @@ const CombatAssistant = (() => {
                     tooltip: I18N.t('Run {name} macro in Roll20', { name: spellName }),
                     backgroundColor: 'rgba(65,55,120,0.95)'
                 });
-                R20.whisper(recipient, Html.card({
+                const card = Html.card({
                     title: 'Spell Macro',
                     body: '<div style="font-size:10px;line-height:12px;padding-bottom:5px;color:rgb(200,200,200);">' + Utils.escapeHtml(spellName) + ' needs client-side Roll20 input.</div>' + button
-                }));
+                });
+                const recipients = RuntimeConfig.get('PLAYER_SPELL_MACRO_BUTTONS') ? Utils.uniqueNames(['GM', recipient]) : ['GM'];
+                recipients.forEach((who) => R20.whisper(who, card));
                 return true;
             }
             try {
@@ -2894,7 +2916,8 @@ const CombatAssistant = (() => {
                 buildOptions: { titleHtml }
             }));
 
-            const playerRecipients = Array.isArray(opts.playerRecipients) ? Utils.uniqueNames(opts.playerRecipients) : [];
+            const playerRecipients = RuntimeConfig.get('PLAYER_SPELL_MACRO_BUTTONS') && Array.isArray(opts.playerRecipients)
+                ? Utils.uniqueNames(opts.playerRecipients) : [];
             if (playerRecipients.length) {
                 const oneTime = R20.createNativeRollBatchAbility([prepared.text]);
                 if (oneTime && oneTime.ok && oneTime.command) {
@@ -2934,7 +2957,7 @@ const CombatAssistant = (() => {
         executeCommand(payload, targetToken, resolved, command, options) {
             const data = payload || {};
             const opts = options || {};
-            if (!resolved || !command) return false;
+            if (!RuntimeConfig.get('USE_SPELL_MACROS') || !resolved || !command) return false;
             const rendered = this.renderCommand(command, this.context(
                 data,
                 resolved.sourceToken,
@@ -2962,7 +2985,7 @@ const CombatAssistant = (() => {
                 }).names;
                 return this.sendInteractiveApplyCards(rendered, Object.assign({}, executionOptions, { spellName, macroTemplate: command, playerRecipients }));
             }
-            const recipient = String(opts.recipient || (player && Utils.isFunction(player.get)
+            const recipient = String(opts.recipient || (player && !(typeof playerIsGM === 'function' && playerIsGM(playerId)) && Utils.isFunction(player.get)
                 ? (player.get('_displayname') || player.get('displayname') || '')
                 : '') || 'GM').trim() || 'GM';
             return this.sendCommand(rendered, Object.assign({}, executionOptions, { recipient }));
@@ -4251,7 +4274,7 @@ const CombatAssistant = (() => {
         },
 
         getAreaMarkerImageUrl(areaInfo, actionName) {
-            const spellTemplate = SpellTemplateService.findBySpellName(actionName);
+            const spellTemplate = RuntimeConfig.get('USE_SPELL_TEMPLATES') ? SpellTemplateService.findBySpellName(actionName) : null;
             if (spellTemplate) return spellTemplate.url;
             const shape = areaInfo && areaInfo.shape ? String(areaInfo.shape) : '';
             const key = this.isSquareAreaShape(shape) || this.isConeAreaShape(shape) || this.isLineAreaShape(shape) ? 'PLAYER_MARKER_SQUARE_URL' : 'PLAYER_MARKER_RADIUS_URL';
@@ -7730,6 +7753,9 @@ const CombatAssistant = (() => {
         showSpellTemplatesMenu(target) {
             const templates = SpellTemplateService.list();
             const macros = SpellMacroService.list();
+            const settingRows = this.toggleSettingRowsHtml(RuntimeConfig.fields('spelltemplates').map((field) => ({
+                key: field.key, label: field.label, tip: field.tip, enabled: RuntimeConfig.get(field.key)
+            })), (entry) => '!combatAssistant toggle ' + entry.key);
             const addButton = (command, tooltip) => this.compactSettingButtonHtml({
                 label: '+', width: 15, height: 15, fontSize: 16, labelOffsetY: -2,
                 command, tooltip, backgroundColor: 'rgba(20,115,55,0.95)'
@@ -7769,14 +7795,9 @@ const CombatAssistant = (() => {
             }).join('');
             const macroRows = macros.map((entry) => {
                 const keyPayload = Utils.encodeJsonPayload({ key: entry.key });
-                const applyFailureQuery = this.queryOptionsWithDefault(
-                    'Run Apply Macro even if the target is not affected?',
-                    entry.applyOnFailure ? 'yes' : 'no',
-                    [['No', 'no'], ['Yes', 'yes']]
-                );
                 const editButton = this.compactSettingButtonHtml({
                     label: 'EDIT',
-                    command: '!combatAssistant spellmacro-edit ' + keyPayload + ' ||| &#63;{Spell Name|' + Utils.roll20QueryDefaultSafe(entry.name) + '} ||| &#63;{Apply Text / Macro|' + Utils.roll20QueryDefaultSafe(entry.command) + '} ||| ' + applyFailureQuery + ' ||| &#63;{End Text / Macro|' + Utils.roll20QueryDefaultSafe(entry.endCommand) + '}',
+                    command: '!combatAssistant spellmacro-options ' + keyPayload,
                     tooltip: 'Edit this Spell Macro', backgroundColor: 'rgba(0,86,145,0.95)'
                 });
                 const removeButton = this.compactSettingButtonHtml({
@@ -7797,14 +7818,55 @@ const CombatAssistant = (() => {
             }).join('');
             const templateAdd = addButton('!combatAssistant spelltemplate-add &#63;{Spell Name} ||| &#63;{Roll20 URL}', 'Add a spell template');
             const macroAdd = addButton('!combatAssistant spellmacro-add &#63;{Spell Name} ||| &#63;{Apply Text / Macro} ||| &#63;{Run Apply Macro even if the target is not affected?|No,no|Yes,yes} ||| &#63;{End Text / Macro|}', 'Add chat text, API commands, Roll20 references, queries, or native ability commands for a spell');
-            const macroHelp = '<div style="padding:3px 4px 0 4px;color:rgb(145,145,145);font-size:9px;line-height:11px;text-align:center;">Apply/End accept plain chat text, HTML markup, <b>!</b> API commands, <b>#</b> named macros, <b>&#64;{}</b> attributes, <b>&#64;^{}</b> deferred attributes, <b>&#37;{}</b> abilities, <b>&#63;{}</b> queries, and native <b>~</b> abilities. Apply delivers a single-use player card when the caster has a player controller plus an unlimited GM card; End keeps the canonical direct/client-required execution path. For multiple resolved targets, <b style="color:rgb(235,215,140);">{target}</b> resolves independently. Fields: <b style="color:rgb(235,215,140);">{source} {target} {range} {duration} {spellname} {reason}</b> and other supported spell fields.</div>';
-            const body = panelHtml('Templates', templates.length, templateAdd, templateRows, 'No spell templates configured.', '') +
+            const macroHelp = '<div style="padding:3px 4px 0 4px;color:rgb(145,145,145);font-size:9px;line-height:11px;text-align:center;">Apply/End accept plain chat text, HTML markup, <b>!</b> API commands, <b>#</b> named macros, <b>&#64;{}</b> attributes, <b>&#64;^{}</b> deferred attributes, <b>&#37;{}</b> abilities, <b>&#63;{}</b> queries, and deferred <b>&#63;^{}</b> queries, plus native <b>~</b> abilities. Apply delivers a single-use player card when the caster has a player controller plus an unlimited GM card; End keeps the canonical direct/client-required execution path. For multiple resolved targets, <b style="color:rgb(235,215,140);">{target}</b> resolves independently. Fields: <b style="color:rgb(235,215,140);">{source} {target} {range} {duration} {spellname} {reason}</b> and other supported spell fields. In EDIT, review or copy the full macro text and use <b>[keep]</b> to preserve existing Apply/End text.</div>';
+            const body = '<table style="width:100%;border-collapse:collapse;table-layout:auto;"><tbody>' +
+                this.settingsSectionRowHtml('Settings', 2) + settingRows + '</tbody></table>' +
+                '<div style="height:1px;background:rgba(125,125,125,0.55);margin:5px 0 7px;"></div>' +
+                panelHtml('Templates', templates.length, templateAdd, templateRows, 'No spell templates configured.', '') +
                 panelHtml('Macro', macros.length, macroAdd, macroRows, 'No Spell Macros configured.', macroHelp);
             const backControl = this.settingsTitleControlHtml('!combatAssistant config', 'Back to Settings', '&#128281;');
             R20.whisper(target || 'GM', Html.card({
                 title: 'Spell Templates',
                 body,
                 buildOptions: { titleHtml: this.settingsTitleHtml('Spell Templates', '', backControl), bodyAlign: 'left' }
+            }));
+        },
+
+        showSpellMacroEditMenu(target, key) {
+            const entry = SpellMacroService.findBySpellName(key);
+            if (!entry) {
+                this.sendWhisperMessage(target || 'GM', 'Spell Macros', 'Spell Macro was not found.', 'warning');
+                this.showSpellTemplatesMenu(target);
+                return;
+            }
+            const applyFailureQuery = this.queryOptionsWithDefault(
+                'Run Apply Macro even if the target is not affected?',
+                entry.applyOnFailure ? 'yes' : 'no', [['No', 'no'], ['Yes', 'yes']]
+            );
+            // Roll20 queries cannot prefill literal | or }. Show copyable source
+            // here; only the simple [keep] marker enters the native query.
+            const updateButton = this.compactSettingButtonHtml({
+                label: 'Update Macro', width: 110,
+                command: '!combatAssistant spellmacro-edit ' + Utils.encodeJsonPayload({ key: entry.key }) +
+                    ' ||| &#63;{Spell Name|' + Utils.roll20QueryDefaultSafe(entry.name) +
+                    '} ||| &#63;{Apply Text / Macro|[keep]} ||| ' + applyFailureQuery +
+                    ' ||| &#63;{End Text / Macro|[keep]}',
+                tooltip: 'Update Macro', backgroundColor: 'rgba(0,86,145,0.95)'
+            });
+            const source = [
+                { label: 'Apply', value: entry.command },
+                { label: 'End', value: entry.endCommand }
+            ].map((part) => '<div style="margin:5px 0 2px;color:rgb(235,215,140);font-size:11px;font-weight:900;">' +
+                Utils.escapeHtml(I18N.t(part.label)) + '</div><div style="white-space:pre-wrap;word-break:break-word;font-size:10px;line-height:13px;color:rgb(225,225,225);user-select:text;">' +
+                (part.value ? this.deferButtonCommand(part.value) : '&mdash;') + '</div>').join('');
+            const body = '<div style="font-size:12px;font-weight:900;color:rgb(245,245,245);">' + Utils.escapeHtml(entry.name) + '</div>' +
+                source + '<div style="margin:8px 0 6px;font-size:10px;color:rgb(175,175,175);">' +
+                Utils.escapeHtml(I18N.t('Copy the text above to edit it. In the next prompt, replace [keep] to change a field, leave [keep] to preserve it, or erase it to clear that field.')) +
+                '</div><div style="text-align:center;">' + updateButton + '</div>';
+            const back = this.settingsTitleControlHtml('!combatAssistant spelltemplates', 'Back', '&#128281;');
+            R20.whisper(target || 'GM', Html.card({
+                title: 'Spell Macros', body,
+                buildOptions: { titleHtml: this.settingsTitleHtml('Spell Macros', '', back), bodyAlign: 'left' }
             }));
         },
 
@@ -7961,6 +8023,7 @@ const CombatAssistant = (() => {
                     helpLine('!ca help', 'Shows this help card.', 'help') +
                     tokenActionNote +
                     helpLine('!ca settings', 'Opens the Combat Assistant settings.') +
+                    helpLine('!ca resetstate', 'GM only: permanently clear CA state after typing CONFIRM. Export CA Settings first.') +
                     helpLine('!ca deal manual &lt;dmg&gt; &lt;type&gt; &lt;DC&gt; &lt;Attr&gt; &lt;half&gt;', 'Applies manual damage to the selected target. Damage type, attack/DC value, saving throw ability, and half damage are optional.') +
                     helpLine('!ca heal manual &lt;hp/temp&gt; &lt;value&gt;', 'Restores Hit Points or grants Temporary Hit Points to the selected target.') +
                     helpLine('!ca save &lt;ability&gt;', 'Rolls the selected token\'s saving throw using the specified ability.') +
@@ -9303,6 +9366,8 @@ const CombatAssistant = (() => {
             const unit = '(?:foot|feet|ft\\.?)';
             const number = '\\d+(?:\\.\\d+)?';
             return source
+                .replace(new RegExp('\\b(?:sheds?|emits?|casts?|gives\\s+off)\\s+dim\\s+light\\s+(?:in\\s+a\\s+|for\\s+)?' +
+                    number + '\\s*(?:-\\s*)?' + unit + '\\s*(?:radius)?\\b', 'gi'), ' ')
                 .replace(new RegExp('\\b(?:and\\s+)?(?:it\\s+)?(?:(?:sheds?|emits?|casts?|gives\\s+off)\\s+)?bright\\s+light\\s+(?:in\\s+a\\s+|for\\s+)?' +
                     number + '\\s*(?:-\\s*)?' + unit + '\\s*(?:radius)?\\b[^.;]{0,100}?\\bdim\\s+light\\s+(?:for\\s+)?(?:an\\s+additional\\s+)?' +
                     number + '\\s*(?:-\\s*)?' + unit + '\\b', 'gi'), ' ')
@@ -9525,6 +9590,12 @@ const CombatAssistant = (() => {
 
             if (!areas.length) return { isArea: false, options: [] };
             const maxPriority = areas.reduce((max, area) => Math.max(max, Utils.toInt(area && area.priority, 0)), 0);
+            // A radius describing illumination is not a combat area on its own.
+            // Keep it as a removable alternative only when a real area already exists.
+            const lightRadius = new RegExp('\\b(?:sheds?|emits?|casts?|gives\\s+off)\\s+(?:bright|dim)\\s+light\\s+(?:in\\s+a\\s+|for\\s+)?' +
+                number + '\\s*(?:-\\s*)?' + unit + '\\s*(?:radius)?\\b', 'gi');
+            candidates.forEach((text) => scan(String(text).replace(/[\u2010-\u2014\u2212]/g, '-'), lightRadius,
+                (match) => addArea(match[1], 'radius', 0, { priority: maxPriority })));
             const selectedAreas = maxPriority > 0
                 ? areas.filter((area) => Utils.toInt(area && area.priority, 0) === maxPriority)
                 : areas;
@@ -9641,7 +9712,9 @@ const CombatAssistant = (() => {
             const fields = this.getRollTemplateFields(content);
             const advanced = this.parseAdvancedHtml(content);
             const nativeAction = this.parseNativeActionDescriptor(msg && msg.action);
-            const explicitAttackNameSource = (advanced && advanced.attackName) || fields.rname || fields.attackname || fields.spellname || fields.rollname || this.getFirstField(content, ['rname', 'attackname', 'spellname', 'rollname']);
+            const templateName = String(msg.rolltemplate || '').trim().toLowerCase();
+            const explicitAttackNameSource = (advanced && advanced.attackName) || fields.rname || fields.attackname || fields.spellname || fields.rollname ||
+                (templateName === 'spell' ? fields.name : '') || this.getFirstField(content, ['rname', 'attackname', 'spellname', 'rollname']);
             const explicitCharacterNameSource = (advanced && advanced.characterName) || fields.charname || fields.character_name || fields.character || fields.source || this.getFirstField(content, ['charname', 'character_name', 'character', 'source']);
             const attackName = Utils.cleanRoll20Label(explicitAttackNameSource || fields.name || this.getFirstField(content, ['name']) || 'Attack');
             const characterName = Utils.cleanRoll20Label(explicitCharacterNameSource || String(msg.who || '').replace(/\s+\(GM\)$/i, '').trim());
@@ -9670,16 +9743,15 @@ const CombatAssistant = (() => {
             const attackFieldIsRoll = !!attackFieldValue &&
                 !/^[01]$/.test(attackFieldValue) &&
                 (/\$\[\[\d+\]\]/.test(attackFieldValue) || /\bd20\b/i.test(attackFieldValue) || /^[+-]?\d+(?:\.\d+)?$/.test(attackFieldValue));
-            const templateName = String(msg.rolltemplate || '').trim().toLowerCase();
             const nativeActionDescriptor = String(msg && msg.action || '').trim();
-            const isSpellAction = !!((advanced && advanced.isSpellDetailsCard) || String(fields.spelllevel || fields.spell_level || fields.spell || '').trim() || /\bspell\s+details\b/i.test(content) || /\bspell-item\b/i.test(content));
+            const isSpellAction = !!(templateName === 'spell' || (advanced && advanced.isSpellDetailsCard) || String(fields.spelllevel || fields.spell_level || fields.spell || '').trim() || /\bspell\s+details\b/i.test(content) || /\bspell-item\b/i.test(content));
             const isActionUsage = !isSpellAction && !!(
                 /^(?:npcaction|traits?|npcaction-l|npcaction-m)$/i.test(templateName) ||
                 /repeating_(?:npcbonusaction|npcreaction|npcaction-l|npcaction-m)/i.test(nativeActionDescriptor)
             );
             const spellLevel = isSpellAction
                 ? Math.max(0, Math.min(9, ActionService.normalizeSpellListLevel(
-                    fields.castlevel || fields.cast_level || fields.spelllevel || fields.spell_level || (advanced && advanced.spellLevel),
+                    fields.castlevel || fields.cast_level || fields.spelllevel || fields.spell_level || (templateName === 'spell' && fields.level) || (advanced && advanced.spellLevel),
                     advanced && advanced.spellLevel
                 )))
                 : 0;
@@ -9709,7 +9781,8 @@ const CombatAssistant = (() => {
             const isSaveOnlyEffect = saveDc > 0 && !!saveAbility && !hasDamage && !explicitHealing &&
                 !attack.hasAttackRoll && !!(saveConsequences.failed || saveConsequences.success) &&
                 !saveConsequences.expectsDamage;
-            const hasSpellContext = !!(isSpellAction && !hasDamage && !explicitHealing && (saveDc > 0 || saveAbility || (areaInfo && areaInfo.isArea)));
+            // 2014 {{savedc}} appears on utility spells, even without a save.
+            const hasSpellContext = !!(isSpellAction && !hasDamage && !explicitHealing && (saveAbility || (areaInfo && areaInfo.isArea)));
             const hasSpellIdentity = !!String(explicitAttackNameSource || '').trim();
             const isSpellCastOnly = !!(isSpellAction && hasSpellIdentity && !hasDamage && !explicitHealing && !looksLikeAttack && !hasSpellContext);
             const splitSaveDamage = this.splitSecondarySaveDamageRolls(damageRolls, [
@@ -20741,13 +20814,20 @@ const CombatAssistant = (() => {
                         const hasFailureField = parts.length >= 4 && /^(?:yes|no|true|false|on|off|1|0)$/i.test(String(parts[2] || '').trim());
                         const applyOnFailure = hasFailureField ? Utils.toBoolean(parts[2], false) : false;
                         const endStart = hasFailureField ? 3 : 2;
-                        result = service.upsert(
-                            parts[0],
-                            Utils.decodeRoll20QueryText(parts[1] || ''),
-                            Utils.decodeRoll20QueryText(parts.slice(endStart).join(' ||| ')),
-                            previousKey,
-                            applyOnFailure
-                        );
+                        const previous = operation === 'edit' ? SpellMacroService.store()[previousKey] : null;
+                        if (operation === 'edit' && !previous) {
+                            result = { ok: false, message: 'Spell Macro was not found.' };
+                        } else {
+                            const applyText = Utils.decodeRoll20QueryText(parts[1] || '');
+                            const endText = Utils.decodeRoll20QueryText(parts.slice(endStart).join(' ||| '));
+                            result = service.upsert(
+                                parts[0],
+                                previous && applyText === '[keep]' ? previous.command : applyText,
+                                previous && endText === '[keep]' ? previous.endCommand : endText,
+                                previousKey,
+                                applyOnFailure
+                            );
+                        }
                     } else {
                         result = service.upsert(parts[0], parts.slice(1).join(' ||| '), previousKey);
                     }
@@ -20757,6 +20837,9 @@ const CombatAssistant = (() => {
             }
             if (!result || !result.ok) {
                 Render.sendWhisperMessage(ctx && ctx.who || 'GM', title, result && result.message || title.slice(0, -1) + ' could not be updated.', 'failure');
+            } else if (operation === 'remove') {
+                Render.sendWhisperMessage(ctx && ctx.who || 'GM', title,
+                    Utils.escapeHtml(I18N.t('Deleted "{name}".', { name: result.entry.name })), 'success');
             }
             Render.showSpellTemplatesMenu(ctx && ctx.who || 'GM');
         },
@@ -21142,7 +21225,8 @@ const CombatAssistant = (() => {
             }
             if (result.key === 'CONCENTRATION_TOOLTIP_GM_ONLY') CombatService.repairConcentrationTooltips();
             const field = result.field || RuntimeConfig.getField(result.key);
-            Render.showConfigMenu(ctx.who, field && field.page ? field.page : 'main');
+            if (field && field.page === 'spelltemplates') Render.showSpellTemplatesMenu(ctx.who);
+            else Render.showConfigMenu(ctx.who, field && field.page ? field.page : 'main');
             return true;
         },
 
@@ -21246,6 +21330,10 @@ const CombatAssistant = (() => {
                 this.handleSpellConfigMutation(ctx, action, args);
                 return;
             }
+            if (action === 'spellmacro-options') {
+                Render.showSpellMacroEditMenu(ctx.who, Utils.decodeJsonPayload(args[1], {}).key);
+                return;
+            }
             if (action === 'spellmacro-add' || action === 'spellmacro-edit' || action === 'spellmacro-remove') {
                 this.handleSpellConfigMutation(ctx, action, args);
                 return;
@@ -21271,6 +21359,38 @@ const CombatAssistant = (() => {
                     { count: outcome.applied }
                 ), 'normal');
                 Render.showConfigMenu(ctx.who);
+                return;
+            }
+            if (action === 'resetstate') {
+                const title = I18N.t('Reset CA State');
+                if (args.length !== 2 || String(args[1] || '') !== 'CONFIRM') {
+                    Render.sendWhisperMessage(ctx.who, title,
+                        Utils.escapeHtml(I18N.t('This permanently deletes all CA settings, Spell Templates, Spell Macros, and tracked combat data. Other scripts and Roll20 handouts are not affected. Export CA Settings first if you need a backup.')) +
+                        '<br><br><code>!ca resetstate CONFIRM</code>', 'warning');
+                    return;
+                }
+                let cleanupFailed = false;
+                try {
+                    // Release locks and CA's turn marker before losing their IDs.
+                    if (State.isRecord(state[META.STATE_KEY]) || State.isRecord(state[META.LEGACY_STATE_KEY])) {
+                        TurnTracker.resetState();
+                    }
+                } catch (error) {
+                    cleanupFailed = true;
+                }
+                const successText = I18N.t('Combat Assistant data was cleared and default settings restored. Restart the Roll20 Mod sandbox to clear temporary in-memory data.');
+                const warningText = cleanupFailed ? I18N.t('Some CA-managed map locks or markers could not be released; check them manually.') : '';
+                // Delete only CA's namespaces: clearing global state would erase other Mods.
+                delete state[META.STATE_KEY];
+                if (META.LEGACY_STATE_KEY) delete state[META.LEGACY_STATE_KEY];
+                STATE_INITIALIZED = false;
+                LAST_RUNTIME_CLEANUP_AT = 0;
+                RuntimeConfig.setAdvancedMode(false);
+                // Card rendering may immediately re-create the clean default state.
+                Render.sendWhisperMessage(ctx.who, title,
+                    Utils.escapeHtml(successText) +
+                    (cleanupFailed ? '<br>' + Utils.escapeHtml(warningText) : ''),
+                    cleanupFailed ? 'warning' : 'success');
                 return;
             }
             if (action === 'default' || action === 'defaults') {
@@ -23222,16 +23342,18 @@ const CombatAssistant = (() => {
         async onChatMessage(msg) {
             try {
                 if (!SCRIPT_ACTIVE) return;
-                State.cleanupRuntimeQueues();
+                const parsed = msg && msg.type === 'api' ? Utils.splitCommand(msg.content) : null;
+                const base = String(parsed && parsed.base || '').trim().toLowerCase();
+                const isReset = COMMANDS.indexOf(base) >= 0 &&
+                    String(parsed.args[0] || '').trim().toLowerCase() === 'resetstate';
+                // Recovery must remain available even if persisted state is malformed.
+                if (!isReset) State.cleanupRuntimeQueues();
                 if (msg && msg.type !== 'api') {
                     RollParser.maybeDumpChatProbe(msg);
                     await RollParser.handleChatMessage(msg);
                     return;
                 }
-                if (!msg || msg.type !== 'api') return;
-                const parsed = Utils.splitCommand(msg.content);
-                const base = String(parsed.base || '').trim().toLowerCase();
-                if (COMMANDS.indexOf(base) < 0) return;
+                if (!msg || msg.type !== 'api' || COMMANDS.indexOf(base) < 0) return;
                 const who = Utils.asString(msg.who).replace(/\s+\(GM\)$/i, '');
                 const playerId = msg.playerid || '';
                 const isGM = typeof playerIsGM === 'function' ? playerIsGM(playerId) : false;
