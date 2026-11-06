@@ -6,6 +6,7 @@ import { t } from './i18n.js';
 import { installHandouts } from './journals.js';
 import { describeEntry } from './menu.js';
 import { zoomPages } from './operations.js';
+import { onPageChange } from './pageguard.js';
 import { applyGlobalConfig, getCommand, getLang, getState, initialiseState } from './state.js';
 import { listHistory, undoLast } from './undo.js';
 import { escapeHtml } from './utils.js';
@@ -113,6 +114,11 @@ function registerEventHandlers() {
   on('chat:message', (msg) => {
     if (ready) {
       handleInput(msg);
+    }
+  });
+  on('change:page', (page) => {
+    if (ready) {
+      onPageChange(page);
     }
   });
 }

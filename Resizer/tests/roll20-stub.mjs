@@ -126,6 +126,17 @@ export function createSandbox({ state = {}, globalconfig = {} } = {}) {
     tick(ms) {
       clock += ms;
     },
+    /**
+     * A change made in a browser rather than by a Mod, which Roll20 does announce.
+     *
+     * @param {object} obj Object to change.
+     * @param {object} changes New attributes.
+     */
+    clientSet(obj, changes) {
+      const prev = obj.toJSON();
+      Object.assign(obj.attrs, JSON.parse(JSON.stringify(changes)));
+      fire(`change:${obj.attrs._type}`, obj, prev);
+    },
     add(type, attrs) {
       const obj = new Obj(type, attrs);
       objects.set(obj.id, obj);

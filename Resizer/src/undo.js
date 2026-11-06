@@ -8,6 +8,7 @@
 import { MAX_UNDO_CHARS, UNDO_DEPTH } from './constants.js';
 import { notifyZoom } from './hooks.js';
 import { GEOMETRY_KEYS, legacyPathProps, snapshot } from './objects.js';
+import { setPageGuarded } from './pageguard.js';
 import { getState } from './state.js';
 
 /**
@@ -66,7 +67,7 @@ export function startChange(label, vars = {}) {
         seenPages.add(page.id);
         entry.pages.push({ id: page.id, before: snapshot('page', page) });
       }
-      page.set(attrs);
+      setPageGuarded(page, attrs);
     },
     /**
      * Draws a Legacy path again with new properties and removes the old one.
@@ -194,7 +195,7 @@ export function undoLast() {
   for (const { id, before } of entry.pages || []) {
     const page = getObj('page', id);
     if (page) {
-      page.set(pickKeys(before, GEOMETRY_KEYS.page));
+      setPageGuarded(page, pickKeys(before, GEOMETRY_KEYS.page));
     } else {
       missing++;
     }

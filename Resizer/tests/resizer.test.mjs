@@ -70,6 +70,38 @@ describe('permissions', () => {
 });
 
 describe('zoom', () => {
+  test('puts the cell size back when the GM client saves the old one over a zoom', () => {
+    // Seen live in Jumpgate: the client saved the page straight back with the new width but the
+    // old cell size, so a zoomed page had twice the squares and every distance doubled.
+    const { game } = setup();
+    game.command('!resizer zoom 2');
+    const page = game.get('page', 'page1');
+    game.clientSet(page, { snapping_increment: 1 });
+    assert.equal(page.get('snapping_increment'), 2);
+    assert.equal(page.get('width'), 60);
+  });
+
+  test('guards an undo the same way', () => {
+    const { game } = setup();
+    game.command('!resizer zoom 2');
+    game.command('!resizer undo');
+    const page = game.get('page', 'page1');
+    game.clientSet(page, { snapping_increment: 2 });
+    assert.equal(page.get('snapping_increment'), 1);
+  });
+
+  test('leaves a deliberate change alone: a new page size, or any change after 10 seconds', () => {
+    const { game } = setup();
+    game.command('!resizer zoom 2');
+    const page = game.get('page', 'page1');
+    game.clientSet(page, { width: 50, snapping_increment: 1 });
+    assert.equal(page.get('snapping_increment'), 1);
+    game.command('!resizer zoom 2');
+    game.tick(11000);
+    game.clientSet(page, { snapping_increment: 3 });
+    assert.equal(page.get('snapping_increment'), 3);
+  });
+
   test('zooms every kind of object and keeps the distance per cell', () => {
     const { game, o } = setup();
     game.command('!resizer zoom 2');
