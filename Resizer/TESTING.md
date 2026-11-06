@@ -34,7 +34,17 @@ A Jumpgate copy of the Mod Test Lab ("Mod Test Lab - Resizer") with pages Walls 
 | 0.0.9 upgrade: state `{config:{command:'rs'}}`, restart: "Upgraded from Resizer 0.0.9" greeting, `!rs page` works                                                                                     | Passed |
 | `_lastpage` follows the GM's page change in the page drawer, so the menu and typed commands act on the page the GM is on                                                                              | Passed |
 
-Platform facts found while testing are in `DEVELOPERS.md` (Legacy paths are redrawn; grid offset directions).
+Platform facts found while testing are in `DEVELOPERS.md` (Legacy paths are redrawn; grid offset directions; the GM's client can save a page's old cell size back).
+
+### Playwright (6 November 2026, same game)
+
+`playwright-tests/tests/resizer/resizer.spec.ts` automates the menu, zoom ×2 with an object-by-object undo check, the Zoom page button with Keep their size, `size large`, calibrate from a 4 × 2 box, the page picker batch, `scale 2 down` and history: 8 of 8 passed. It needs PlaywrightHarness 1.8.0 or newer. Run it from `playwright-tests` with `ROLL20_GAME_ID=22183322` (and `PW_PROFILE_DIR` for a copied profile):
+
+```bash
+npx playwright test tests/resizer
+```
+
+The first runs found that the GM's Jumpgate client saved the old cell size back over 2 of 4 zooms (new width, old `snapping_increment`). With the page guard, 6 zooms and 6 undos in a row all kept the right cell size.
 
 ---
 

@@ -35,6 +35,7 @@ npm test
 | `undo.js`       | The change recorder, the history in state, undo and Legacy-path re-linking.                        |
 | `pages.js`      | Current page, `--pages` lists, the page picker.                                                    |
 | `hooks.js`      | `Resizer.onZoom` listeners.                                                                        |
+| `pageguard.js`  | Puts a page's new size and grid back if the GM's client saves the old ones over them.              |
 | `menu.js`       | Main menu, history, page picker, settings and help cards; Roll20 query helpers.                    |
 | `state.js`      | Persistent state (`state.RESIZER`), 0.0.9 migration, settings, command names, useroptions.         |
 | `journals.js`   | Help and Command Deck handouts.                                                                    |
@@ -56,6 +57,8 @@ A zoom by factor f scales the page and everything on it about the page's top-lef
 - **Doors and windows**: `x`, `y` (y measured upwards, so negative on the page) and the `path.handle0/handle1` offsets.
 
 Light, vision and aura distances are in page units, so they need no change.
+
+Pages are set through `setPageGuarded` (`pageguard.js`). Straight after a Mod changes a page, the GM's Jumpgate client can save the page back with some of its old settings: in a live check (6 November 2026) 2 of 4 zooms kept the new width but got the old `snapping_increment` back, so the page had twice the squares and every distance doubled. Such a client save does raise `change:page`, so for 10 seconds after Resizer sets a page, a change that undoes part of it while keeping Resizer's width and height is set right again. A change to the page size itself is taken as the GM's own and left alone. Undo goes through the same guard.
 
 ## Calibration
 

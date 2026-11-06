@@ -49,13 +49,14 @@ A quick reference for where to find each feature in the source.
 
 ## Undo
 
-| Task                        | File           | Key function                  |
-| --------------------------- | -------------- | ----------------------------- |
-| Record a change             | `src/undo.js`  | `startChange`                 |
-| Keep the history small      | `src/undo.js`  | `pushEntry`                   |
-| Undo, re-link redrawn paths | `src/undo.js`  | `undoLast`, `relink`          |
-| History list and clear      | `src/undo.js`  | `listHistory`, `clearHistory` |
-| Zoom listeners              | `src/hooks.js` | `onZoom`, `notifyZoom`        |
+| Task                        | File               | Key function                     |
+| --------------------------- | ------------------ | -------------------------------- |
+| Record a change             | `src/undo.js`      | `startChange`                    |
+| Keep the history small      | `src/undo.js`      | `pushEntry`                      |
+| Undo, re-link redrawn paths | `src/undo.js`      | `undoLast`, `relink`             |
+| History list and clear      | `src/undo.js`      | `listHistory`, `clearHistory`    |
+| Zoom listeners              | `src/hooks.js`     | `onZoom`, `notifyZoom`           |
+| Keep a page as it was set   | `src/pageguard.js` | `setPageGuarded`, `onPageChange` |
 
 ## Menus & Handouts
 

@@ -10,6 +10,7 @@ A full rewrite by MidNiteShadow7 of Robin Kuiper's Resizer 0.0.9, which had not 
 - Zooming keeps the distance per cell. 0.0.9 multiplied the page's scale (5 ft per cell became 10 ft), changing what every ruler, aura and light meant.
 - `scale 2 up` grows the page and `scale 2 down` shrinks it. 0.0.9 read the direction word twice, so both shrank the page.
 - Legacy drawings are drawn again at their new size. Jumpgate ignores a Mod's change to a Legacy drawing's scale (it resets it on the next load), so 0.0.9's scaled drawings moved but kept their old length.
+- A zoomed page keeps its new grid cell size. Straight after a Mod changes a page, Jumpgate can save the page back with its old cell size, which doubled every distance; Resizer now puts it right.
 - The grid cell size comes from each page's snapping increment, and the Jumpgate grid offset is scaled with the page. 0.0.9 assumed 70 px cells for `page`, `fit` and `center`.
 - **Fit** with keep ratio centres the graphic on the page; 0.0.9 left it in the top-left corner.
 - **Undo** works for every change and keeps the last 10 in the game's state. 0.0.9 could only undo the last resize, kept it in variables lost on a sandbox restart, and could crash or change the wrong object.
