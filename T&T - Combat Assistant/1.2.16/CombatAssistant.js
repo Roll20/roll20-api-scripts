@@ -247,6 +247,10 @@ const CombatAssistant = (() => {
             "COMBAT_PAGE": "Combat Settings",
             "COMBAT_VISUAL_EFFECTS": "Combat Visual Effects",
             "COMBAT_VISUAL_EFFECTS_tip": "Show automatic Roll20 FX when Combat Assistant applies damage, healing, temporary HP, projectile attacks, or area effects.",
+            "HEALING_EFFECT_NAME": "Healing Effect",
+            "HEALING_EFFECT_NAME_tip": "Built-in or exact Custom FX name used when hit points are restored. Leave blank to disable healing FX.",
+            "TEMP_HP_EFFECT_NAME": "Temporary HP Effect",
+            "TEMP_HP_EFFECT_NAME_tip": "Built-in or exact Custom FX name used when temporary hit points are granted. Leave blank to disable temporary HP FX.",
             "CONCENTRATION_MARKER": "Concentration",
             "CONCENTRATION_MARKER_tip": "Roll20 token marker name/tag used while a token is concentrating. Default: stopwatch.",
             "CONCENTRATION_TOOLTIP_GM_ONLY": "GM-Only Concentration Tooltip",
@@ -728,6 +732,10 @@ const CombatAssistant = (() => {
             "turn_card": "Turn Card"
         },
         "ui": {
+            "projectile_fx_reference_tip": "View the sample Roll20 Custom FX projectile definition",
+            "spell_library_import_tip": "Merge Spell Templates and Spell Macros from CA Settings",
+            "spell_library_link_tip": "Open the published CA Settings template with Spell Templates and Spell Macros",
+            "spell_library_confirm_tip": "Confirm merging Spell Templates and Spell Macros",
             "abilities": "Abilities",
             "abilities_2e383af": "abilities,",
             "ability": "Ability",
@@ -1217,15 +1225,25 @@ const CombatAssistant = (() => {
                         if (!State.isRecord(definition)) throw new Error('Invalid language definition');
                         // Accept both { name, translations: {...} } and
                         // the T&T-like compact { locale: { common: {...} } }.
-                        const translations = State.isRecord(definition.translations)
-                            ? definition.translations : definition;
+                        const hasWrappedTranslations = State.isRecord(definition.translations);
+                        const translations = hasWrappedTranslations ? definition.translations : Object.assign({}, definition);
+                        if (!hasWrappedTranslations) {
+                            delete translations.name;
+                            delete translations.translatedBy;
+                            delete translations.translatorUrl;
+                        }
                         const parsed = validateDictionary(translations);
                         const languageId = code === 'es' || code === 'fr' ? code : 'custom:' + code;
                         const name = String((State.isRecord(definition.translations) && definition.name) ||
                             (State.isRecord(payload.languageNames) && payload.languageNames[code]) || code.toUpperCase()).trim();
                         if (!name || name.length > 80 || /[<>|,{}?]/.test(name)) throw new Error('Invalid language name');
+                        const translatedBy = String(definition.translatedBy || '').trim();
+                        const translatorUrl = String(definition.translatorUrl || '').trim();
+                        if (translatedBy.length > 120 || /[<>]/.test(translatedBy) ||
+                            (translatorUrl && (!translatedBy || !/^https:\/\/[^\s<>"'()]+$/i.test(translatorUrl) || translatorUrl.length > 1000)))
+                            throw new Error('Invalid translation credits');
                         nextDictionaries[languageId] = parsed.candidate;
-                        nextLanguages.push({ value: languageId, name, count: parsed.count });
+                        nextLanguages.push({ value: languageId, name, count: parsed.count, translatedBy, translatorUrl });
                         count += parsed.count;
                     });
                 } else if (State.isRecord(payload.translations)) {
@@ -1235,11 +1253,16 @@ const CombatAssistant = (() => {
                     count = parsed.count;
                     const name = String(payload.name || payload.language || 'Custom').trim().slice(0, 80);
                     if (/[<>|,{}?]/.test(name)) throw new Error('Invalid language name');
+                    const translatedBy = String(payload.translatedBy || '').trim();
+                    const translatorUrl = String(payload.translatorUrl || '').trim();
+                    if (translatedBy.length > 120 || /[<>]/.test(translatedBy) ||
+                        (translatorUrl && (!translatedBy || !/^https:\/\/[^\s<>"'()]+$/i.test(translatorUrl) || translatorUrl.length > 1000)))
+                        throw new Error('Invalid translation credits');
                     const legacyCode = String(payload.language || '').trim().toLowerCase();
                     if (legacyCode === 'es' || legacyCode === 'fr') {
                         nextDictionaries[legacyCode] = parsed.candidate;
-                        nextLanguages.push({ value: legacyCode, name, count });
-                    } else nextLanguages.push({ value: 'custom', name, count });
+                        nextLanguages.push({ value: legacyCode, name, count, translatedBy, translatorUrl });
+                    } else nextLanguages.push({ value: 'custom', name, count, translatedBy, translatorUrl });
                 } else throw new Error('Missing translations');
             } catch (error) {
                 return { ok: false, message: this.t('The handout contains an unsafe translation value.') };
@@ -1540,6 +1563,8 @@ const CombatAssistant = (() => {
         PROJECTILE_EFFECT_NAME: 'missile',
         DIRECT_HIT_EFFECT_NAME: 'bomb',
         AREA_HIT_EFFECT_NAME: 'burn',
+        HEALING_EFFECT_NAME: 'sparkle',
+        TEMP_HP_EFFECT_NAME: 'sparkle',
         PLAYER_HEALING_BUTTON: false,
         USE_SPELL_TEMPLATES: true,
         USE_SPELL_MACROS: true,
@@ -1707,6 +1732,8 @@ const CombatAssistant = (() => {
         { key: 'PROJECTILE_EFFECT_NAME', page: 'combat', label: "config.PROJECTILE_EFFECT_NAME", type: 'text', tip: "config.PROJECTILE_EFFECT_NAME_tip" },
         { key: 'DIRECT_HIT_EFFECT_NAME', page: 'combat', label: "config.DIRECT_HIT_EFFECT_NAME", type: 'text', tip: "config.DIRECT_HIT_EFFECT_NAME_tip" },
         { key: 'AREA_HIT_EFFECT_NAME', page: 'combat', label: "config.AREA_HIT_EFFECT_NAME", type: 'text', tip: "config.AREA_HIT_EFFECT_NAME_tip" },
+        { key: 'HEALING_EFFECT_NAME', page: 'combat', label: "config.HEALING_EFFECT_NAME", type: 'text', tip: "config.HEALING_EFFECT_NAME_tip" },
+        { key: 'TEMP_HP_EFFECT_NAME', page: 'combat', label: "config.TEMP_HP_EFFECT_NAME", type: 'text', tip: "config.TEMP_HP_EFFECT_NAME_tip" },
 
         { key: 'APPLY_CONDITION_MARKER', page: 'markers', label: "config.APPLY_CONDITION_MARKER", type: 'boolean', tip: "config.APPLY_CONDITION_MARKER_tip" },
         ...CONDITION_NAMES.map((name) => ({
@@ -1786,6 +1813,8 @@ const CombatAssistant = (() => {
                 AREA_HIT: 'AREA_HIT_EFFECT_NAME',
                 AREA_HIT_FX: 'AREA_HIT_EFFECT_NAME',
                 AREA_HIT_EFFECT: 'AREA_HIT_EFFECT_NAME',
+                HEALING_FX: 'HEALING_EFFECT_NAME',
+                TEMP_HP_FX: 'TEMP_HP_EFFECT_NAME',
                 PLAYER_HEALTH: 'PLAYER_HEALING_BUTTON',
                 PLAYER_RANGE: 'PLAYER_ACTION_RANGE_CHECK',
                 PLAYER_TARGET_RANGE: 'PLAYER_ACTION_RANGE_CHECK',
@@ -3830,40 +3859,10 @@ const CombatAssistant = (() => {
                 nextSettings[key] = validation.value;
             }
 
-            const sourceTemplates = parsed.spellTemplates === undefined ? {} : parsed.spellTemplates;
-            if (!State.isRecord(sourceTemplates)) return { ok: false, message: 'Spell Templates must be a JSON object.' };
-            const nextTemplates = {};
-            const templateKeys = Object.keys(sourceTemplates);
-            for (let i = 0; i < templateKeys.length; i += 1) {
-                const entry = sourceTemplates[templateKeys[i]];
-                if (!State.isRecord(entry)) return { ok: false, message: 'A Spell Template entry is invalid.' };
-                const name = String(entry.name || '').trim();
-                const url = Utils.extractUrl(entry.url);
-                const key = Utils.normalizeName(name);
-                if (!key || !url || !Utils.isRoll20FileUrl(url)) {
-                    return { ok: false, message: 'Spell Template "' + (name || templateKeys[i]) + '" has an invalid name or Roll20 URL.' };
-                }
-                nextTemplates[key] = { name, url };
-            }
-
-            const sourceMacros = parsed.spellMacros === undefined ? {} : parsed.spellMacros;
-            if (!State.isRecord(sourceMacros)) return { ok: false, message: 'Spell Macros must be a JSON object.' };
-            const nextMacros = {};
-            const macroKeys = Object.keys(sourceMacros);
-            for (let i = 0; i < macroKeys.length; i += 1) {
-                const entry = sourceMacros[macroKeys[i]];
-                if (!State.isRecord(entry)) return { ok: false, message: 'A Spell Macro entry is invalid.' };
-                const name = String(entry.name || '').trim();
-                const key = Utils.normalizeName(name);
-                const applyValidation = SpellMacroService.validateCommand(entry.command, { allowEmpty: true });
-                const endValidation = SpellMacroService.validateCommand(entry.endCommand, { allowEmpty: true });
-                if (!key || !applyValidation.ok || !endValidation.ok || (!applyValidation.command && !endValidation.command)) {
-                    const message = !applyValidation.ok ? applyValidation.message : (!endValidation.ok ? endValidation.message : 'Provide Apply text/macro, End text/macro, or both.');
-                    return { ok: false, message: 'Spell Macro "' + (name || macroKeys[i]) + '" is invalid. ' + (message || '') };
-                }
-                nextMacros[key] = { name, command: applyValidation.command, endCommand: endValidation.command, applyOnFailure: Utils.toBoolean(entry.applyOnFailure, false) };
-            }
-
+            const spells = this.validateSpellEntries(parsed, false);
+            if (!spells.ok) return spells;
+            const nextTemplates = spells.templates;
+            const nextMacros = spells.macros;
             const root = State.get();
             root.settings = nextSettings;
             root.spellTemplates = nextTemplates;
@@ -3875,6 +3874,89 @@ const CombatAssistant = (() => {
                 templateCount: Object.keys(nextTemplates).length,
                 macroCount: Object.keys(nextMacros).length
             };
+        },
+
+        validateSpellEntries(parsed, requireSpellContent) {
+            if (requireSpellContent && parsed.spellTemplates === undefined && parsed.spellMacros === undefined)
+                return { ok: false, message: 'No Spell Templates or Spell Macros were found in CA Settings.' };
+            const sourceTemplates = parsed.spellTemplates === undefined ? {} : parsed.spellTemplates;
+            if (!State.isRecord(sourceTemplates)) return { ok: false, message: 'Spell Templates must be a JSON object.' };
+            const templates = Object.create(null);
+            for (const sourceKey of Object.keys(sourceTemplates)) {
+                const entry = sourceTemplates[sourceKey];
+                if (!State.isRecord(entry)) return { ok: false, message: 'A Spell Template entry is invalid.' };
+                const name = String(entry.name || '').trim();
+                const url = Utils.extractUrl(entry.url);
+                const key = Utils.normalizeName(name);
+                if (!key || !url || !Utils.isRoll20FileUrl(url))
+                    return { ok: false, message: 'Spell Template "' + (name || sourceKey) + '" has an invalid name or Roll20 URL.' };
+                if (Object.prototype.hasOwnProperty.call(templates, key))
+                    return { ok: false, message: 'Duplicate Spell Template name: ' + name };
+                templates[key] = { name, url };
+            }
+            const sourceMacros = parsed.spellMacros === undefined ? {} : parsed.spellMacros;
+            if (!State.isRecord(sourceMacros)) return { ok: false, message: 'Spell Macros must be a JSON object.' };
+            const macros = Object.create(null);
+            for (const sourceKey of Object.keys(sourceMacros)) {
+                const entry = sourceMacros[sourceKey];
+                if (!State.isRecord(entry)) return { ok: false, message: 'A Spell Macro entry is invalid.' };
+                const name = String(entry.name || '').trim();
+                const key = Utils.normalizeName(name);
+                const applyValidation = SpellMacroService.validateCommand(entry.command, { allowEmpty: true });
+                const endValidation = SpellMacroService.validateCommand(entry.endCommand, { allowEmpty: true });
+                if (!key || !applyValidation.ok || !endValidation.ok || (!applyValidation.command && !endValidation.command)) {
+                    const message = !applyValidation.ok ? applyValidation.message : (!endValidation.ok ? endValidation.message : 'Provide Apply text/macro, End text/macro, or both.');
+                    return { ok: false, message: 'Spell Macro "' + (name || sourceKey) + '" is invalid. ' + (message || '') };
+                }
+                if (Object.prototype.hasOwnProperty.call(macros, key))
+                    return { ok: false, message: 'Duplicate Spell Macro name: ' + name };
+                macros[key] = { name, command: applyValidation.command, endCommand: endValidation.command,
+                    applyOnFailure: Utils.toBoolean(entry.applyOnFailure, false) };
+            }
+            return { ok: true, templates, macros };
+        },
+
+        // Merge only spells from the existing CA Settings handout. Full Settings Import
+        // continues to replace the entire export; this separate route never touches settings.
+        mergeSpellLibraryData(rawNotes, apply) {
+            let parsed;
+            try { parsed = JSON.parse(Utils.stripHtml(rawNotes)); }
+            catch (error) { return { ok: false, message: 'CA Settings does not contain valid JSON.' }; }
+            if (!State.isRecord(parsed) ||
+                (parsed.format !== 'Combat Assistant Settings' && parsed.format !== 'Combat Assistant Spell Library'))
+                return { ok: false, message: 'CA Settings is not a valid Combat Assistant spell library.' };
+            if (Math.max(0, Utils.toInt(parsed.schemaVersion, 0)) > META.SCHEMA_VERSION)
+                return { ok: false, message: 'CA Settings was exported by a newer schema and cannot be imported safely.' };
+            const spells = this.validateSpellEntries(parsed, true);
+            if (!spells.ok) return spells;
+            const existingTemplates = SpellTemplateService.store();
+            const existingMacros = SpellMacroService.store();
+            const tally = { added: 0, updated: 0, unchanged: 0 };
+            const classify = (entries, existing) => {
+                Object.keys(entries).forEach((key) => {
+                    if (!Object.prototype.hasOwnProperty.call(existing, key)) { tally.added += 1; return; }
+                    const incoming = entries[key];
+                    const previous = existing[key];
+                    const same = previous && Object.keys(incoming).every((field) => previous[field] === incoming[field]);
+                    tally[same ? 'unchanged' : 'updated'] += 1;
+                });
+            };
+            classify(spells.templates, existingTemplates);
+            classify(spells.macros, existingMacros);
+            if (apply === true) {
+                Object.keys(spells.templates).forEach((key) => { existingTemplates[key] = spells.templates[key]; });
+                Object.keys(spells.macros).forEach((key) => { existingMacros[key] = spells.macros[key]; });
+            }
+            return Object.assign({ ok: true, templateCount: Object.keys(spells.templates).length,
+                macroCount: Object.keys(spells.macros).length, applied: apply === true }, tally);
+        },
+
+        async importSpellLibraryFromHandout(apply) {
+            const handouts = this.handouts();
+            if (!handouts.length) return { ok: false, message: 'Handout "CA Settings" was not found.' };
+            const result = this.mergeSpellLibraryData(await this.readNotes(handouts[0]), apply === true);
+            if (result.ok) result.duplicateCount = Math.max(0, handouts.length - 1);
+            return result;
         },
 
         async importFromHandout() {
@@ -5600,6 +5682,29 @@ const CombatAssistant = (() => {
     /** -----------------------------------------------------------------------
      * Combat visual effects
      * --------------------------------------------------------------------- */
+    const PROJECTILE_FX_REFERENCE = Object.freeze({
+        additionalEmissionRatePerPixel: 0.35,
+        additionalSpeedPerPixel: 0.1,
+        alignParticles: true,
+        angle: -1,
+        angleRandom: -0.01,
+        duration: 12,
+        emissionRate: 128,
+        emitRateGradients: [{ factor: 1, gradient: 0 }, { factor: 0.2, gradient: 0.25 }, { factor: 0, gradient: 1 }],
+        emitterSize: 4,
+        lifeSpan: 11,
+        lifeSpanRandom: 0,
+        maxParticles: 1000,
+        rulerType: 'line',
+        size: 40,
+        sizeRandom: 20,
+        speed: 0,
+        speedRandom: 0
+    });
+
+    // Published CA Settings template (Spell Templates and Spell Macros).
+    const SPELL_LIBRARY_URL = 'https://raw.githubusercontent.com/AmadeusVF/Combat-Assistant/refs/heads/main/Release%201.2.16/CA%20Settings.json';
+
     const CombatEffects = {
         DAMAGE_TYPE_EFFECT_COLORS: Object.freeze({
             normal: 'death',
@@ -5813,7 +5918,8 @@ const CombatAssistant = (() => {
         playHealingReceived(token, mode, effectiveAmount) {
             if (!this.isEnabled() || Math.max(0, Utils.toInt(effectiveAmount, 0)) <= 0) return false;
             const type = String(mode || '').trim().toLowerCase() === 'temp' ? 'temp healing' : 'healing';
-            return this.spawnTimedAtToken(token, 'sparkle', this.getEffectColor(type), 1000);
+            const effectName = this.getEffectName(type === 'temp healing' ? 'TEMP_HP_EFFECT_NAME' : 'HEALING_EFFECT_NAME');
+            return effectName ? this.spawnTimedAtToken(token, effectName, this.getEffectColor(type), 1000) : false;
         },
 
         playConeBreath(request, payload, fallbackMarkerToken) {
@@ -7901,8 +8007,7 @@ const CombatAssistant = (() => {
                 command: '!combatAssistant recommended &#63;{' + Utils.attrSafe(I18N.t("messages.apply_recommended_on_off_settings_only")) +
                     '|' + Utils.attrSafe(I18N.t("common.no")) + ',no|' + Utils.attrSafe(I18N.t("common.yes")) + ',yes}',
                 tooltip: 'Apply recommended ON/OFF settings without changing images, markers, language, spell templates, or macros',
-                backgroundColor: 'rgba(95,160,203,0.95)',
-                borderColor: 'rgba(172,219,244,0.96)'
+                backgroundColor: 'rgba(0,86,145,0.95)'
             });
             const languageTemplateButton = this.compactSettingButtonHtml({
                 label: 'Language Template',
@@ -7910,9 +8015,7 @@ const CombatAssistant = (() => {
                 widthCss: '100%',
                 fontSize: 9,
                 command: 'https://amadeusvf.s.gy/combat-assistant-language-template-latest',
-                backgroundColor: 'rgba(160,205,165,0.95)',
-                borderColor: 'rgba(208,237,204,0.95)',
-                textColor: 'rgb(25,65,30)'
+                backgroundColor: 'rgba(20,115,55,0.95)'
             });
             if (pageKey === 'main') {
                 const mainFields = RuntimeConfig.fields('main');
@@ -7960,12 +8063,33 @@ const CombatAssistant = (() => {
                 return;
             }
             const title = I18N.t(pageTitles[pageKey] || (META.NAME + ' Settings'));
-            const body = (pageKey === 'markers' ? markerTableOpen : settingsTableOpen) + renderRows(RuntimeConfig.fields(pageKey)) + tableClose;
+            const projectileFxButton = pageKey === 'combat'
+                ? '<div style="width:50%;margin:8px auto 1px;text-align:center;">' + this.compactSettingButtonHtml({
+                    label: 'Projectile FX', command: '!combatAssistant projectilefx',
+                    width: 130, widthCss: '100%', fontSize: 11,
+                    tooltip: I18N.t('ui.projectile_fx_reference_tip')
+                }) + '</div>' : '';
+            const body = (pageKey === 'markers' ? markerTableOpen : settingsTableOpen) +
+                renderRows(RuntimeConfig.fields(pageKey)) + tableClose + projectileFxButton;
             const backControl = this.settingsTitleControlHtml('!combatAssistant config', 'Back to Settings', '&#128281;');
             R20.whisper(target || 'GM', Html.card({
                 title,
                 body,
                 buildOptions: { titleHtml: this.settingsTitleHtml(title, '', backControl), bodyAlign: 'left' }
+            }));
+        },
+
+        showProjectileFxMenu(target) {
+            const reference = JSON.stringify(PROJECTILE_FX_REFERENCE, null, 2);
+            const body = '<div style="font-size:10px;line-height:14px;color:rgb(180,180,180);margin-bottom:6px;">' +
+                'Copy the JSON into a Roll20 Custom FX definition. This example is not executed automatically.</div>' +
+                '<div style="font-size:9px;line-height:12px;white-space:pre-wrap;overflow-wrap:anywhere;' +
+                'word-break:break-word;user-select:text;color:rgb(230,230,230);">' +
+                Utils.escapeHtml(reference) + '</div>';
+            const back = this.settingsTitleControlHtml('!combatAssistant config combat', 'Back to Combat Settings', '&#128281;');
+            R20.whisper(target || 'GM', Html.card({
+                title: 'Custom Effect', body,
+                buildOptions: { titleHtml: this.settingsTitleHtml('Custom Effect', '', back), bodyAlign: 'left' }
             }));
         },
 
@@ -7975,20 +8099,46 @@ const CombatAssistant = (() => {
             const title = I18N.t('ui.language_settings');
             const body = '<table style="width:100%;border-collapse:collapse;table-layout:auto;"><tbody>' +
                 this.settingsSectionRowHtml('ui.languages', 2) +
-                languages.map((language) => this.settingsValueRowHtml(language.name,
-                    this.compactSettingButtonHtml({
-                        label: 'SET',
-                        command: '!combatAssistant set LANGUAGE ' + Utils.attrSafe(language.value),
-                        tooltip: language.name,
-                        fontSize: 11,
-                        labelOffsetY: 2,
+                languages.map((language) => {
+                    const name = Utils.escapeHtml(language.name);
+                    const author = String(language.translatedBy || '');
+                    const url = String(language.translatorUrl || '');
+                    const authorHtml = !author ? '' : '<span style="font-weight:400;color:rgb(160,160,160);font-size:10px;"> By ' +
+                        (url ? '<a href="' + Utils.attrSafe(url) + '" style="color:rgb(160,160,160);font-size:10px;font-weight:400;text-decoration:none;border:0;background:none;">' + Utils.escapeHtml(author) + '</a>' : Utils.escapeHtml(author)) + '</span>';
+                    const button = this.compactSettingButtonHtml({
+                        label: 'SET', command: '!combatAssistant set LANGUAGE ' + Utils.attrSafe(language.value),
+                        tooltip: language.name, fontSize: 11, labelOffsetY: 2,
                         backgroundColor: RuntimeConfig.get('LANGUAGE') === language.value
                             ? 'rgba(20,115,55,0.95)' : 'rgba(0,86,145,0.95)'
-                    }), language.name)).join('') + '</tbody></table>';
+                    });
+                    return '<tr style="height:' + CONFIG_ROW_HEIGHT + 'px;">' +
+                        '<td style="height:' + CONFIG_ROW_HEIGHT + 'px;padding:0 4px 0 2px;vertical-align:middle;line-height:13px;white-space:normal;overflow-wrap:break-word;color:rgb(245,245,245);font-size:12px;font-weight:700;">' + name + authorHtml + '</td>' +
+                        '<td width="' + SETTINGS_CONTROL_WIDTH + '" style="width:' + SETTINGS_CONTROL_WIDTH + 'px;height:' + CONFIG_ROW_HEIGHT + 'px;text-align:right;vertical-align:middle;padding:0;line-height:0;">' + button + '</td></tr>';
+                }).join('') + '</tbody></table>';
             const back = this.settingsTitleControlHtml('!combatAssistant config', 'Back to Settings', '&#128281;');
             R20.whisper(target || 'GM', Html.card({
                 title, body,
                 buildOptions: { titleHtml: this.settingsTitleHtml(title, '', back), bodyAlign: 'left' }
+            }));
+        },
+
+        showSpellLibraryImportPreview(target, result) {
+            const summary = 'Templates: ' + result.templateCount + ' / Macros: ' + result.macroCount +
+                '<br>New: ' + result.added + ' / Updated: ' + result.updated +
+                ' / Unchanged: ' + result.unchanged +
+                '<br><span style="color:rgb(190,190,190);font-size:10px;">' +
+                'Only templates and macros will be merged. Existing unrelated entries and all Settings remain untouched.' +
+                '</span>';
+            const confirmation = this.compactSettingButtonHtml({
+                label: 'CONFIRM', width: 105, command: '!combatAssistant spelllibrary-import CONFIRM',
+                tooltip: I18N.t('ui.spell_library_confirm_tip'), backgroundColor: 'rgba(20,115,55,0.95)'
+            });
+            const back = this.settingsTitleControlHtml('!combatAssistant spelltemplates', 'Back to Spell Templates', '&#128281;');
+            R20.whisper(target || 'GM', Html.card({
+                title: 'Spell Library Import',
+                body: '<div style="font-size:12px;line-height:18px;">' + summary + '</div>' +
+                    '<div style="margin-top:8px;text-align:center;">' + confirmation + '</div>',
+                buildOptions: { titleHtml: this.settingsTitleHtml('Spell Library Import', '', back), bodyAlign: 'left' }
             }));
         },
 
@@ -8061,11 +8211,27 @@ const CombatAssistant = (() => {
             const templateAdd = addButton('!combatAssistant spelltemplate-add &#63;{Spell Name} ||| &#63;{Roll20 URL}', 'Add a spell template');
             const macroAdd = addButton('!combatAssistant spellmacro-add &#63;{Spell Name} ||| &#63;{Apply Text / Macro} ||| &#63;{Run Apply Macro even if the target is not affected?|No,no|Yes,yes} ||| &#63;{End Text / Macro|}', 'Add chat text, API commands, Roll20 references, queries, or native ability commands for a spell');
             const macroHelp = '<div style="padding:3px 4px 0 4px;color:rgb(145,145,145);font-size:9px;line-height:11px;text-align:center;">Apply/End accept plain chat text, HTML markup, <b>!</b> API commands, <b>#</b> named macros, <b>&#64;{}</b> attributes, <b>&#64;^{}</b> deferred attributes, <b>&#37;{}</b> abilities, <b>&#63;{}</b> queries, and deferred <b>&#63;^{}</b> queries, plus native <b>~</b> abilities. Apply delivers a single-use player card when the caster has a player controller plus an unlimited GM card; End keeps the canonical direct/client-required execution path. For multiple resolved targets, <b style="color:rgb(235,215,140);">{target}</b> resolves independently. Fields: <b style="color:rgb(235,215,140);">{source} {target} {range} {duration} {spellname} {reason}</b> and other supported spell fields. In EDIT, review or copy the full macro text and use <b>[keep]</b> to preserve existing Apply/End text.</div>';
+            const libraryButtons = [
+                this.compactSettingButtonHtml({
+                    label: 'IMPORT', width: 126, widthCss: '96%', fontSize: 11,
+                    command: '!combatAssistant spelllibrary-import',
+                    tooltip: I18N.t('ui.spell_library_import_tip')
+                }),
+                this.compactSettingButtonHtml({
+                    label: 'TEMPLATE', width: 126, widthCss: '96%', fontSize: 11,
+                    command: SPELL_LIBRARY_URL,
+                    tooltip: I18N.t('ui.spell_library_link_tip')
+                })
+            ];
+            const libraryRow = '<table style="width:100%;table-layout:fixed;border-collapse:collapse;margin:5px 0 7px;"><tbody><tr>' +
+                libraryButtons.map((button) => '<td style="width:50%;padding:0 2px;text-align:center;">' + button + '</td>').join('') +
+                '</tr></tbody></table>';
             const body = '<table style="width:100%;border-collapse:collapse;table-layout:auto;"><tbody>' +
                 this.settingsSectionRowHtml('Settings', 2) + settingRows + '</tbody></table>' +
                 '<div style="height:1px;background:rgba(125,125,125,0.55);margin:5px 0 7px;"></div>' +
                 panelHtml('Templates', templates.length, templateAdd, templateRows, 'No spell templates configured.', '') +
-                panelHtml('Macro', macros.length, macroAdd, macroRows, 'No Spell Macros configured.', macroHelp);
+                panelHtml('Macro', macros.length, macroAdd, macroRows, 'No Spell Macros configured.', macroHelp) +
+                libraryRow;
             const backControl = this.settingsTitleControlHtml('!combatAssistant config', 'Back to Settings', '&#128281;');
             R20.whisper(target || 'GM', Html.card({
                 title: 'Spell Templates',
@@ -21588,7 +21754,33 @@ const CombatAssistant = (() => {
                 this.sendUnknownCommand(ctx);
                 return;
             }
+            if (action === 'projectilefx') {
+                Render.showProjectileFxMenu(ctx.who);
+                return;
+            }
             if (action === 'spelltemplates') {
+                Render.showSpellTemplatesMenu(ctx.who);
+                return;
+            }
+            if (action === 'spelllibrary-link') {
+                Render.sendWhisperMessage(ctx.who, 'Spell Library',
+                    'Open the <a href="' + Utils.attrSafe(SPELL_LIBRARY_URL) + '" style="color:rgb(120,195,255);text-decoration:underline;">published CA Settings template</a>.', 'normal');
+                return;
+            }
+            if (action === 'spelllibrary-import') {
+                const confirmed = String(args[1] || '') === 'CONFIRM';
+                const result = await SettingsTransferService.importSpellLibraryFromHandout(confirmed);
+                if (!result.ok) {
+                    Render.sendWhisperMessage(ctx.who, 'Spell Library Import', Utils.escapeHtml(result.message), 'failure');
+                    return;
+                }
+                if (!confirmed) {
+                    Render.showSpellLibraryImportPreview(ctx.who, result);
+                    return;
+                }
+                Render.sendWhisperMessage(ctx.who, 'Spell Library Import',
+                    'Added ' + result.added + ', updated ' + result.updated + ', unchanged ' + result.unchanged +
+                    '. All existing Settings were preserved.', 'success');
                 Render.showSpellTemplatesMenu(ctx.who);
                 return;
             }
