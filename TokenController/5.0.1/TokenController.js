@@ -5,7 +5,7 @@
  * Name: TokenController
  * Script: TokenController.js
  * Version: 5.0.1
- * Built: 2026-11-01T09:19:14.970Z
+ * Built: 2026-11-07T02:06:38.836Z
  */
 const TokenControllerMod = (() => {
   'use strict';
@@ -13,7 +13,7 @@ const TokenControllerMod = (() => {
   // Build-time placeholders replaced by rollup.config.js inject-build-metadata plugin.
   const SCRIPT_NAME = 'TokenController';
   const SCRIPT_VERSION = '5.0.1';
-  const SCRIPT_LAST_UPDATED = '2026-11-01T09:19:14.970Z';
+  const SCRIPT_LAST_UPDATED = '2026-11-07T02:06:38.836Z';
 
   const DEFAULT_LOCALE$1 = 'en-US';
 
@@ -1984,7 +1984,7 @@ const TokenControllerMod = (() => {
       leader: 'Líder',
       follow: 'Seguiu',
       unfollow: 'Deixa de seguir',
-      resume: 'Currículum',
+      resume: 'Reprèn',
       pause: 'Posa-ho tot en pausa',
       combatOn: 'Combat activat',
       combatOff: 'Combat desactivat',
@@ -3103,7 +3103,7 @@ const TokenControllerMod = (() => {
       leader: 'Vůdce',
       follow: 'Následovat',
       unfollow: 'Přestat sledovat',
-      resume: 'Resumé',
+      resume: 'Obnovit',
       pause: 'Pozastavit vše',
       combatOn: 'Boj zap.',
       combatOff: 'Boj vyp.',
@@ -4236,7 +4236,7 @@ const TokenControllerMod = (() => {
       leader: 'Leider',
       follow: 'Volgen',
       unfollow: 'Ontvolgen',
-      resume: 'Cv',
+      resume: 'Hervatten',
       pause: 'Pauzeer alles',
       combatOn: 'Gevecht aan',
       combatOff: 'Gevecht uit',
@@ -5942,7 +5942,7 @@ const TokenControllerMod = (() => {
       leader: 'Chef',
       follow: 'Suivre',
       unfollow: 'Ne plus suivre',
-      resume: 'CV',
+      resume: 'Reprendre',
       pause: 'Tout suspendre',
       combatOn: 'Combattez',
       combatOff: 'Combattre',
@@ -7112,7 +7112,7 @@ const TokenControllerMod = (() => {
       leader: 'Ηγέτης',
       follow: 'Ακολουθώ',
       unfollow: 'Κατάργηση παρακολούθησης',
-      resume: 'Περίληψη',
+      resume: 'Συνέχιση',
       pause: 'Παύση όλων',
       combatOn: 'Μάχη ενεργή',
       combatOff: 'Μάχη ανενεργή',
@@ -7675,7 +7675,7 @@ const TokenControllerMod = (() => {
       leader: 'מַנהִיג',
       follow: 'לַעֲקוֹב',
       unfollow: 'בטל את המעקב',
-      resume: 'קוֹרוֹת חַיִים',
+      resume: 'המשך',
       pause: 'השהה הכל',
       combatOn: 'קרב פעיל',
       combatOff: 'קרב כבוי',
@@ -12238,7 +12238,7 @@ const TokenControllerMod = (() => {
       leader: 'Лидер',
       follow: 'Следовать',
       unfollow: 'Отписаться',
-      resume: 'Резюме',
+      resume: 'Возобновить',
       pause: 'Приостановить все',
       combatOn: 'Бой включен',
       combatOff: 'Бой выключен',
@@ -14521,7 +14521,7 @@ const TokenControllerMod = (() => {
       leader: 'Лідер',
       follow: 'Слідуйте',
       unfollow: 'Відписатися',
-      resume: 'Резюме',
+      resume: 'Відновити',
       pause: 'Призупинити все',
       combatOn: 'Бій увімк.',
       combatOff: 'Бій вимк.',
