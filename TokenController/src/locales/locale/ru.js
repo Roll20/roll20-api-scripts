@@ -252,7 +252,7 @@ const TRANSLATION = {
     leader: 'Лидер',
     follow: 'Следовать',
     unfollow: 'Отписаться',
-    resume: 'Резюме',
+    resume: 'Возобновить',
     pause: 'Приостановить все',
     combatOn: 'Бой включен',
     combatOff: 'Бой выключен',

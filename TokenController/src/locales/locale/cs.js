@@ -248,7 +248,7 @@ const TRANSLATION = {
     leader: 'Vůdce',
     follow: 'Následovat',
     unfollow: 'Přestat sledovat',
-    resume: 'Resumé',
+    resume: 'Obnovit',
     pause: 'Pozastavit vše',
     combatOn: 'Boj zap.',
     combatOff: 'Boj vyp.',

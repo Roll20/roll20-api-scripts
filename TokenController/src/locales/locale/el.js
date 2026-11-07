@@ -258,7 +258,7 @@ const TRANSLATION = {
     leader: 'Ηγέτης',
     follow: 'Ακολουθώ',
     unfollow: 'Κατάργηση παρακολούθησης',
-    resume: 'Περίληψη',
+    resume: 'Συνέχιση',
     pause: 'Παύση όλων',
     combatOn: 'Μάχη ενεργή',
     combatOff: 'Μάχη ανενεργή',

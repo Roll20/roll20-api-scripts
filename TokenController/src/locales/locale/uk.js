@@ -250,7 +250,7 @@ const TRANSLATION = {
     leader: 'Лідер',
     follow: 'Слідуйте',
     unfollow: 'Відписатися',
-    resume: 'Резюме',
+    resume: 'Відновити',
     pause: 'Призупинити все',
     combatOn: 'Бій увімк.',
     combatOff: 'Бій вимк.',

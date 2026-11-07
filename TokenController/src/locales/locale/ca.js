@@ -250,7 +250,7 @@ const TRANSLATION = {
     leader: 'Líder',
     follow: 'Seguiu',
     unfollow: 'Deixa de seguir',
-    resume: 'Currículum',
+    resume: 'Reprèn',
     pause: 'Posa-ho tot en pausa',
     combatOn: 'Combat activat',
     combatOff: 'Combat desactivat',

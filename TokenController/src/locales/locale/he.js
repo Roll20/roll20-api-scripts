@@ -239,7 +239,7 @@ const TRANSLATION = {
     leader: 'מַנהִיג',
     follow: 'לַעֲקוֹב',
     unfollow: 'בטל את המעקב',
-    resume: 'קוֹרוֹת חַיִים',
+    resume: 'המשך',
     pause: 'השהה הכל',
     combatOn: 'קרב פעיל',
     combatOff: 'קרב כבוי',
