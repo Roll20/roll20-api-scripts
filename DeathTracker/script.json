@@ -1,18 +1,264 @@
 {
-    "name": "DeathTracker",
-    "script": "DeathTracker.js",
-    "version": "0.1.8",
-    "previousversions": ["0.1.4","0.1.6","0.1.7"],
-    "description": "## DeathTracker\n\n* Skype: RobinKuiper.eu\n* Discord: Atheos#1095\n* Roll20: https://app.roll20.net/users/1226016/robin\n* Reddit: https://www.reddit.com/user/robinkuiper/\n* Patreon: https://www.patreon.com/robinkuiper\n\n---\n\n![Token](https://i.imgur.com/Glb1usj.png \"Token\")\n\nDeathTracker sets the statusmarker when a character is death or (optional) almost death, works great together with my [LazyExperience](https://github.com/RobinKuiper/Roll20APIScripts/tree/master/LazyExperience) script.\n__Optionally__: Set an **Unconscious** statusmarker on **Player Characters**. This works great with [StatusInfo](https://github.com/RobinKuiper/Roll20APIScripts/tree/master/StatusInfo).\n\n![Config Menu](https://i.imgur.com/cZeENYE.png \"Config Menu\")\n\n### Commands\n\n* **!dead config** - Shows the config menu.\n\n### Tints\n[Full](https://i.imgur.com/2gOgofe.png \"Full\")\n[Half](https://i.imgur.com/ODMv1Ev.png \"Half\")\n[empty](https://i.imgur.com/PgBqgLc.png \"empty\")\n\n---\n\n#### Changelog\n**0.1.6**\n* Optionally FX on HP Gain (heal).\n\n**0.1.5**\n* Optionally adjust tint color on HP loss/gain.\n* Optionally FX on HP Loss.",
-    "authors": "Robin Kuiper",
-    "roll20userid": "1226016",
-    "patreon": "https://www.patreon.com/robinkuiper",
-    "useroptions": [],
-    "dependencies": {},
-    "modifies": {
-        "state.DEATHTRACKER": "read,write",
-        "attribute.name": "read,write",
-        "attribute.current": "read,write"
+  "name": "DeathTracker",
+  "script": "DeathTracker.js",
+  "version": "1.0.0",
+  "previousversions": [
+    "0.1.4",
+    "0.1.6",
+    "0.1.7",
+    "0.1.8"
+  ],
+  "description": "# DeathTracker\r\rWatches hit points and marks tokens as **Bloodied**, **Dying**, **Stable** or **Dead**. Tracks death saves for player characters (read from the D&D 2024 sheet as boxes are ticked or saves rolled, or from checkbox fields on the 2014 sheet), and can move the dead to the GM or Map layer and take them out of the turn order.\r\r**Version 1.0.0 is a full rewrite of Robin Kuiper's 0.1.8** for Jumpgate and the D&D 2024 sheet. 0.1 settings carry over and `!dead` still works.\r\r* Any marker in the game, including custom sets and the 2024 sheet's condition markers.\r* Choose the hit point bar; empty bars are never read as 0.\r* Optional tint and hurt/heal effects (off when HealthColors is installed).\r* Chat menu, Help and Command Deck handouts in 24 languages.\r\rType `!deathtracker` for the menu. Full instructions are in the **DeathTracker - Help** handout.",
+  "authors": "Robin Kuiper, MidNiteShadow7",
+  "roll20userid": "1226016",
+  "patreon": "https://www.patreon.com/robinkuiper",
+  "useroptions": [
+    {
+      "name": "language",
+      "displayname": "Language",
+      "type": "select",
+      "options": [
+        "af",
+        "ca",
+        "zh-TW",
+        "cs",
+        "da",
+        "nl",
+        "en-US",
+        "fi",
+        "fr",
+        "de",
+        "el",
+        "he",
+        "hu",
+        "it",
+        "ja",
+        "ko",
+        "pl",
+        "pt-PT",
+        "pt-BR",
+        "ru",
+        "es",
+        "sv",
+        "tr",
+        "uk"
+      ],
+      "default": "en-US",
+      "description": "Language of menus, messages and handouts."
     },
-    "conflicts": []
+    {
+      "name": "hpBar",
+      "displayname": "Hit Point Bar",
+      "type": "select",
+      "options": [
+        "1",
+        "2",
+        "3"
+      ],
+      "default": "1",
+      "description": "The bar that holds hit points."
+    },
+    {
+      "name": "bloodiedPercent",
+      "displayname": "Bloodied At (%)",
+      "type": "text",
+      "default": "50",
+      "description": "Bloodied at or below this percentage of maximum hit points (0 turns Bloodied off)."
+    },
+    {
+      "name": "bloodiedMarker",
+      "displayname": "Bloodied Marker",
+      "type": "text",
+      "default": "red",
+      "description": "Marker name or tag for Bloodied, or none."
+    },
+    {
+      "name": "dyingMarker",
+      "displayname": "Dying Marker",
+      "type": "text",
+      "default": "sleepy",
+      "description": "Marker for a dying PC (for example Unconscious on the D&D 2024 sheet)."
+    },
+    {
+      "name": "stableMarker",
+      "displayname": "Stable Marker",
+      "type": "text",
+      "default": "green",
+      "description": "Marker for a stable PC."
+    },
+    {
+      "name": "deadMarker",
+      "displayname": "Dead Marker",
+      "type": "text",
+      "default": "dead",
+      "description": "Marker for the dead."
+    },
+    {
+      "name": "pcDetection",
+      "displayname": "Who Is a PC",
+      "type": "select",
+      "options": [
+        "auto",
+        "players"
+      ],
+      "default": "auto",
+      "description": "auto: controlled by a player or the sheet is not an NPC sheet; players: controlled by a player only."
+    },
+    {
+      "name": "deathSaves",
+      "displayname": "Track Death Saves",
+      "type": "checkbox",
+      "value": "true",
+      "description": "PCs at 0 hit points make death saves: three successes are Stable, three failures Dead.",
+      "checked": "checked"
+    },
+    {
+      "name": "resetSheetSaves",
+      "displayname": "Clear Sheet Boxes",
+      "type": "checkbox",
+      "value": "true",
+      "description": "Clear the sheet's death save boxes when a PC drops to 0 and when healed, and show them on the D&D 2024 sheet.",
+      "checked": "checked"
+    },
+    {
+      "name": "successFields",
+      "displayname": "Success Fields",
+      "type": "text",
+      "default": "deathsave_succ1,deathsave_succ2,deathsave_succ3",
+      "description": "Sheet fields ticked for death save successes (2014 and other sheets)."
+    },
+    {
+      "name": "failureFields",
+      "displayname": "Failure Fields",
+      "type": "text",
+      "default": "deathsave_fail1,deathsave_fail2,deathsave_fail3",
+      "description": "Sheet fields ticked for death save failures."
+    },
+    {
+      "name": "massiveDamage",
+      "displayname": "Massive Damage",
+      "type": "checkbox",
+      "value": "true",
+      "description": "A PC whose bar goes below 0 by at least its maximum dies outright."
+    },
+    {
+      "name": "announce",
+      "displayname": "Announce",
+      "type": "select",
+      "options": [
+        "controllers",
+        "gm",
+        "off"
+      ],
+      "default": "controllers",
+      "description": "Who is told when a PC goes down, becomes stable, dies or gets up."
+    },
+    {
+      "name": "deathLayer",
+      "displayname": "Move the Dead To",
+      "type": "select",
+      "options": [
+        "none",
+        "gmlayer",
+        "map"
+      ],
+      "default": "none",
+      "description": "Move dead tokens to the GM layer or the Map layer."
+    },
+    {
+      "name": "deathTurnOrder",
+      "displayname": "Turn Order",
+      "type": "select",
+      "options": [
+        "keep",
+        "remove"
+      ],
+      "default": "keep",
+      "description": "Remove dead tokens from the turn order."
+    },
+    {
+      "name": "deathActionsFor",
+      "displayname": "On-Death Actions Apply To",
+      "type": "select",
+      "options": [
+        "npc",
+        "all"
+      ],
+      "default": "npc",
+      "description": "npc: moving and turn order apply to NPCs; all: to PCs as well."
+    },
+    {
+      "name": "tintPlayers",
+      "displayname": "Tint PCs",
+      "type": "checkbox",
+      "value": "true",
+      "description": "Tint PCs from green to red as they lose hit points.",
+      "checked": "checked"
+    },
+    {
+      "name": "tintNpcs",
+      "displayname": "Tint NPCs",
+      "type": "checkbox",
+      "value": "true",
+      "description": "Tint NPCs the same way.",
+      "checked": "checked"
+    },
+    {
+      "name": "hurtFx",
+      "displayname": "Hurt Effect",
+      "type": "checkbox",
+      "value": "true",
+      "description": "Play an effect when a token loses hit points.",
+      "checked": "checked"
+    },
+    {
+      "name": "hurtFxType",
+      "displayname": "Hurt Effect Type",
+      "type": "text",
+      "default": "splatter-blood",
+      "description": "Built-in effect as type-colour."
+    },
+    {
+      "name": "healFx",
+      "displayname": "Heal Effect",
+      "type": "checkbox",
+      "value": "true",
+      "description": "Play an effect when a token gains hit points."
+    },
+    {
+      "name": "healFxType",
+      "displayname": "Heal Effect Type",
+      "type": "text",
+      "default": "glow-holy",
+      "description": "Built-in effect as type-colour."
+    }
+  ],
+  "dependencies": [],
+  "modifies": {
+    "attribute.current": "read,write",
+    "attribute.max": "read",
+    "attribute.name": "read",
+    "campaign.token_markers": "read",
+    "campaign.turnorder": "read,write",
+    "character.controlledby": "read",
+    "graphic.bar1_value": "read",
+    "graphic.bar2_value": "read",
+    "graphic.bar3_value": "read",
+    "graphic.bar1_max": "read",
+    "graphic.bar2_max": "read",
+    "graphic.bar3_max": "read",
+    "graphic.bar1_link": "read",
+    "graphic.bar2_link": "read",
+    "graphic.bar3_link": "read",
+    "graphic.controlledby": "read",
+    "graphic.layer": "read,write",
+    "graphic.statusmarkers": "read,write",
+    "graphic.tint_color": "read,write",
+    "handout.notes": "write",
+    "macro.action": "write",
+    "player._lastpage": "read",
+    "state.DeathTracker": "read,write",
+    "state.DEATHTRACKER": "read"
+  },
+  "conflicts": []
 }
