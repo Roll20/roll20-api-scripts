@@ -1,5 +1,5 @@
 // ===========================
-// === HealthColors v2.4.0 ===
+// === HealthColors v2.5.0 ===
 // ===========================
 
 // AUTHORS:
@@ -7,7 +7,7 @@
 //  - Surok: https://app.roll20.net/users/335573/surok
 //  - MidNiteShadow7: https://app.roll20.net/users/16506286/midniteshadow7
 
-/* global createObj TokenMod SmartAoE spawnFxWithDefinition spawnFx spawnFxBetweenPoints getObj state globalconfig playerIsGM sendChat findObjs Campaign log on getSheetItem */
+/* global createObj TokenMod SmartAoE spawnFxWithDefinition spawnFx spawnFxBetweenPoints getObj state globalconfig playerIsGM sendChat findObjs Campaign log on getSheetItem DeathTracker */
 
 var HealthColors =
   HealthColors ||
@@ -15,10 +15,10 @@ var HealthColors =
     'use strict';
 
     // ————— CONSTANTS —————
-    const VERSION = '2.4.0';
+    const VERSION = '2.5.0';
     const SCRIPT_NAME = 'HealthColors';
     const SCHEMA_VERSION = '1.1.0';
-    const UPDATED = '2026-10-25 12:00 UTC';
+    const UPDATED = '2026-11-04 21:00 UTC';
 
     // ————— DEFAULTS —————
     /**
@@ -1325,6 +1325,8 @@ var HealthColors =
           return name;
         });
       if (hooked.length) log(`${SCRIPT_NAME}: observing token changes from ${hooked.join(', ')}`);
+      if (deathTrackerOwnsMarkers())
+        log(`${SCRIPT_NAME}: DeathTracker is installed; leaving 0 HP markers and death saves to it`);
       getSmartAoeZeroHpMarkers();
     }
 
@@ -1377,6 +1379,31 @@ var HealthColors =
         .map((tag) => tag.trim().replace(/@\d+$/, ''))
         .filter(Boolean);
       return tags.find((tag) => known.has(tag)) || null;
+    }
+
+    /**
+     * Returns true when DeathTracker 1.0 or later is installed. It sets the dead, dying, stable
+     * and bloodied markers and tracks death saves itself, so HealthColors adds none of those
+     * markers (it still colours tokens and plays its death sound). DeathTracker 0.1 has no
+     * isManagingDeathSaves, so it does not count.
+     *
+     * @returns {boolean} Whether DeathTracker owns the 0 HP markers.
+     */
+    function deathTrackerOwnsMarkers() {
+      return (
+        typeof DeathTracker !== 'undefined' && !!DeathTracker && typeof DeathTracker.isManagingDeathSaves === 'function'
+      );
+    }
+
+    /**
+     * Returns true when HealthColors' own Death Save Integration should run: it is switched on
+     * and DeathTracker is not handling death saves.
+     *
+     * @param {object} [s] - HealthColors state.
+     * @returns {boolean} Whether to track death saves here.
+     */
+    function deathSavesActive(s = state.HealthColors) {
+      return !!s?.deathSavesOn && !deathTrackerOwnsMarkers();
     }
 
     // ————— STATE / INSTALL —————
@@ -1700,7 +1727,7 @@ var HealthColors =
      */
     function applyDeathSaveStatus(obj, curValue, isPlayer) {
       const s = state.HealthColors;
-      if (!s.deathSavesOn || !isPlayer) return false;
+      if (!deathSavesActive(s) || !isPlayer) return false;
 
       if (curValue > 0) {
         obj.set(buildDeathSaveMarkerPatch(false, false, false));
@@ -1734,9 +1761,12 @@ var HealthColors =
 
       // SmartAoE added its own 0 HP marker: let that stand and add no HealthColors marker.
       const smartAoeMarker = curValue <= 0 ? getSmartAoeZeroHpMarkerOn(obj) : null;
-      const deathSaveActive = state.HealthColors.deathSavesOn && isPlayer;
+      const deathSaveActive = deathSavesActive() && isPlayer;
 
-      if (smartAoeMarker) {
+      if (deathTrackerOwnsMarkers()) {
+        // DeathTracker sets the 0 HP markers: HealthColors only plays its death sound.
+        if (showDead && curValue <= 0) applyDeadStatus(obj, curValue, prevValue, hasPrevValue, true);
+      } else if (smartAoeMarker) {
         if (!deathSaveActive && showDead) applyDeadStatus(obj, curValue, prevValue, hasPrevValue, true);
       } else {
         // Death Save Integration (PC-only) owns the dying/stable/dead markers when enabled.
@@ -1976,7 +2006,7 @@ var HealthColors =
       const oCharacter = getObj('character', obj.get('represents'));
       const typeConfig = resolveTypeConfig(oCharacter);
 
-      if (state.HealthColors.deathSavesOn && typeConfig.isPlayer && oCharacter) {
+      if (deathSavesActive() && typeConfig.isPlayer && oCharacter) {
         ensureDeathSaveWatchForCharacter(oCharacter, state.HealthColors);
       }
 
@@ -2627,6 +2657,10 @@ var HealthColors =
         gmWhisper('Death Save Integration is currently off. Enable it first with !aura deathsaves on.');
         return;
       }
+      if (deathTrackerOwnsMarkers()) {
+        gmWhisper('DeathTracker is installed and tracks death saves, so HealthColors leaves them to it.');
+        return;
+      }
 
       const selected = msg.selected || [];
       if (!selected.length) {
@@ -2754,7 +2788,7 @@ var HealthColors =
      *        without relying solely on aggregate counts.
      */
     function syncDeathSaveMarkersForCharacter(characterId, s, changeHint) {
-      if (!s.deathSavesOn) return;
+      if (!deathSavesActive(s)) return;
 
       const character = getObj('character', characterId);
       if (!character) return;
@@ -2764,7 +2798,7 @@ var HealthColors =
 
       const watched = getConfiguredDeathSaveWatchAttrs(s);
       collectDeathSaveWatchValuesWithFallback(character, watched, (resolvedSnapshot) => {
-        if (!state?.HealthColors?.deathSavesOn) return;
+        if (!deathSavesActive()) return;
         if (!s.dsAttrWatch || typeof s.dsAttrWatch !== 'object' || Array.isArray(s.dsAttrWatch)) s.dsAttrWatch = {};
         s.dsAttrWatch[characterId] = resolvedSnapshot;
 
@@ -3759,6 +3793,12 @@ var HealthColors =
 
       const deathSaves = menuSection('Death Save Integration', [
         menuNote(interactive ? sandboxDeathSaveIntegrationNote() : '', true),
+        menuNote(
+          deathTrackerOwnsMarkers()
+            ? 'DeathTracker is installed: it sets the dead, dying and stable markers and tracks death saves, so these settings are not used.'
+            : '',
+          true,
+        ),
         menuRow('Enabled', t(s.deathSavesOn, '!aura deathsaves toggle')),
         menuRow(
           'Success fields',
@@ -3971,6 +4011,10 @@ var HealthColors =
       [
         'SmartAoE',
         "When SmartAoE is installed, HealthColors listens for its token changes, so area damage and healing it applies re-colour tokens and update dead markers. If an AoE has a zeroHPmarker set, SmartAoE's marker is used instead: HealthColors adds no dead (or dying) marker to a token at 0 HP that already carries a SmartAoE 0 HP marker. The death sound still plays.",
+      ],
+      [
+        'DeathTracker',
+        'When DeathTracker 1.0 or later is installed, it sets the dead, dying, stable and bloodied markers and tracks death saves. HealthColors adds none of those markers and leaves its Death Save Integration settings unused; it still colours tokens and plays the death sound.',
       ],
       [
         'AlterBars, ChatSetAttr and other attribute scripts',
@@ -4208,6 +4252,7 @@ var HealthColors =
           const isObserver = getTokenObserverScripts().some((e) => e.name === title);
           let status = '';
           if (isObserver) status = isObserverScriptAvailable(title) ? ' (detected)' : ' (not installed)';
+          if (title === 'DeathTracker') status = deathTrackerOwnsMarkers() ? ' (detected)' : ' (not installed)';
           return `<h3 style="${S.h3}">${escapeHandoutHtml(title + status)}</h3>${p(escapeHandoutHtml(body))}`;
         }).join('');
 
@@ -4704,7 +4749,7 @@ var HealthColors =
       if (deathSavePollTimer) return;
       deathSavePollTimer = setInterval(() => {
         const s = state.HealthColors;
-        if (!s?.deathSavesOn) return;
+        if (!deathSavesActive(s)) return;
         const active = s.dsAttrWatchActive && typeof s.dsAttrWatchActive === 'object' ? s.dsAttrWatchActive : {};
         const activeIds = Object.keys(active).filter((id) => active[id]);
         if (!activeIds.length) return;

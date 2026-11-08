@@ -229,7 +229,11 @@ When [SmartAoE](https://github.com/Roll20/roll20-api-scripts/tree/master/SmartAo
 
 HealthColors never removes SmartAoE's marker, even if both use the same tag. The rule applies however the token reached 0 HP, as long as the SmartAoE marker is on it. HealthColors recognises the tags set as `zeroHPmarker` on any SmartAoE AoE, including `--instant` AoEs and AoEs deleted since the sandbox started (it asks SmartAoE 1.0.0+ through `SmartAoE.ZeroHPMarkers()`, and reads the AoEs saved by older versions). If SmartAoE isn't installed, the rule is off.
 
-The help handout marks TokenMod and SmartAoE as *detected* or *not installed* for the current game, and the API console logs `HealthColors: observing token changes from …` at startup.
+### DeathTracker
+
+When [DeathTracker](https://github.com/Roll20/roll20-api-scripts/tree/master/DeathTracker) 1.0 or later is installed, it sets the dead, dying, stable and bloodied markers and tracks death saves. HealthColors then adds none of those markers and leaves its Death Save Integration settings unused, so the two Mods never fight over a token's markers. HealthColors still colours tokens and plays the death sound (`!aura deadfx`). The API console logs `HealthColors: DeathTracker is installed; leaving 0 HP markers and death saves to it` at startup, and the help handout marks DeathTracker as *detected*.
+
+The help handout marks TokenMod, SmartAoE and DeathTracker as *detected* or *not installed* for the current game, and the API console logs `HealthColors: observing token changes from …` at startup.
 
 ### AlterBars, ChatSetAttr and other attribute scripts
 

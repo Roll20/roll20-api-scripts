@@ -26,7 +26,7 @@ This checklist validates `HealthColors.js` in a live Roll20 VTT game before rele
 3b-menu. Click **Update Selected** with nothing selected, then with a token selected.
    - Expected: First a "Select one or more tokens first" whisper; then "Updated 1 token: <name>" and the token is re-coloured. No "UPDATING TOKENS..." whisper for this button.
 3a. Open the Journal.
-   - Expected: A **HealthColors — Help & Reference** handout exists, is not shown to players, shows v2.4.0, and has these sections: Overview, Commands (including `!aura opacity`, `!aura lock`, `!aura bar <1-4>`, `!aura handout`), Aura shapes & appearance (six shapes plus Auto/Auto Border/Keep), Colour palettes (swatches for `default` and `colorblind`, the one in use marked), Attribute reference (`USECOLOR`, `USEBLOOD`, `USEHEAL`), Optional integrations (Death Save Integration with the watched fields and this game's sandbox version, TokenMod, attribute scripts, One-Click, Script API), Tips & troubleshooting, and Current settings.
+   - Expected: A **HealthColors — Help & Reference** handout exists, is not shown to players, shows v2.5.0, and has these sections: Overview, Commands (including `!aura opacity`, `!aura lock`, `!aura bar <1-4>`, `!aura handout`), Aura shapes & appearance (six shapes plus Auto/Auto Border/Keep), Colour palettes (swatches for `default` and `colorblind`, the one in use marked), Attribute reference (`USECOLOR`, `USEBLOOD`, `USEHEAL`), Optional integrations (Death Save Integration with the watched fields and this game's sandbox version, TokenMod, SmartAoE, DeathTracker, attribute scripts, One-Click, Script API), Tips & troubleshooting, and Current settings.
 3b. Change a setting (e.g. `!aura a1shape Hex Border`), then reopen the handout.
    - Expected: Current settings shows the new value. The menu's **Help → Open Handout** button opens it; `!aura handout` whispers "Help handout rebuilt" without an `UPDATING TOKENS...` whisper and does not create a second handout.
 4. Run `!aura settings`.
@@ -239,6 +239,8 @@ Use the PC token. Defaults target the D&D sheets (`deathsave_succ1..3` / `deaths
    - Expected: No dying marker is added; SmartAoE's marker stays. Recording 3 successes adds the stable marker without removing SmartAoE's.
 1b. Run `!aura reset`, then apply TokenMod or SmartAoE damage once.
    - Expected: The token is processed once: exactly one FX plays.
+1e. Install DeathTracker 1.0 or later, turn Death Save Integration on (`!aura deathsaves on`) and restart the sandbox. Drop the NPC and the PC to 0 HP.
+   - Expected: The console logs `HealthColors: DeathTracker is installed; leaving 0 HP markers and death saves to it`. HealthColors adds no Red X, dying or stable marker (DeathTracker's markers are the only ones), the tokens are still coloured and the death sound plays. The GM menu's Death Save Integration section says DeathTracker is handling them, `!aura deathsaves sync` says the same, and the handout shows DeathTracker (detected). Disable DeathTracker and restart: HealthColors' own markers come back.
 2. With ChatSetAttr or AlterBars installed, change the HP attribute through that script.
    - Expected: The token colour updates even though the token bar was not edited directly.
 3. Drag a new token from the journal onto the page.

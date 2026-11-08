@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.  
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [2.5.0] – 2026-11-04
+
+### Added
+
+- **DeathTracker hand-off.** When DeathTracker 1.0 or later is installed, it owns the 0 HP markers: HealthColors adds no dead (Red X), dying or stable marker of its own and leaves its Death Save Integration unused (death-save watching, polling and `!aura deathsaves sync` included). HealthColors still colours tokens and plays the death sound. The GM menu's Death Save Integration section and the help handout say so, the handout lists DeathTracker as *detected* or *not installed*, and the API console logs `HealthColors: DeathTracker is installed; leaving 0 HP markers and death saves to it` at startup. DeathTracker 0.1 is not affected.
+
 ## [2.4.0] – 2026-10-25
 
 ### Added
