@@ -1,0 +1,20 @@
+{
+  "name": "deathtracker-roll20",
+  "version": "1.0.0",
+  "description": "Roll20 Mod that marks tokens as bloodied, dying, stable or dead from their hit points, tracks death saves and can clear the dead from the map and turn order.",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "set-version": "node scripts/bump-version.mjs",
+    "watch": "node scripts/build.mjs --watch",
+    "test": "node --test \"tests/*.test.mjs\"",
+    "format": "prettier --write \"DeathTracker.js\" \"rollup.config.js\" \"src/**/*.js\" \"tests/**/*.mjs\" \"*.md\" \"scripts/**/*.mjs\"",
+    "sync-locales": "node scripts/sync-locales.mjs",
+    "regenerate-locales": "node scripts/sync-locales.mjs --regenerate"
+  },
+  "devDependencies": {
+    "prettier": "^3.5.3",
+    "rollup": "^4.34.8"
+  }
+}
