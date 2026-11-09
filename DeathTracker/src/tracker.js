@@ -9,6 +9,7 @@ import { applyTint, clearTint, playFx } from './fx.js';
 import { readHp } from './hp.js';
 import { t } from './i18n.js';
 import { applyMarkers } from './markers.js';
+import { owns } from './owners.js';
 import {
   capSaves,
   clearDeathSaves,
@@ -95,6 +96,9 @@ export function judge(token, { prevHp = null, event = false, force = null } = {}
   }
   const character = getCharacter(token);
   const pc = isPc(token, character);
+  // HealthColors may be the one handling death saves, colours or effects.
+  const ownSaves = owns('deathSaves');
+  const deathSaves = settings.deathSaves && ownSaves;
   const before = record.hp ?? prevHp;
   const wasDown = [STATUS.DYING, STATUS.STABLE, STATUS.DEAD].includes(previous);
   const dropped = hp <= 0 && (before === null ? false : before > 0) && !wasDown;
@@ -103,7 +107,7 @@ export function judge(token, { prevHp = null, event = false, force = null } = {}
   if (healed) {
     record.base = null;
     record.saves = null;
-    if (pc && character && settings.resetSheetSaves) {
+    if (pc && character && ownSaves && settings.resetSheetSaves) {
       clearDeathSaves(character.id, settings, false);
     }
   }
@@ -114,7 +118,7 @@ export function judge(token, { prevHp = null, event = false, force = null } = {}
       massive = settings.massiveDamage && isMassiveDamage(hp, max);
       record.saves = null;
       record.base = { s: 0, f: 0 };
-      if (character && settings.deathSaves) {
+      if (character && deathSaves) {
         if (settings.resetSheetSaves) {
           clearDeathSaves(character.id, settings, true);
           record.base = { s: 0, f: 0 };
@@ -124,7 +128,7 @@ export function judge(token, { prevHp = null, event = false, force = null } = {}
         }
       }
     }
-    if (character && settings.deathSaves) {
+    if (character && deathSaves) {
       const sheet = readDeathSaves(character.id, settings);
       if (sheet) {
         const counted = countSaves(sheet, record.base);
@@ -140,7 +144,7 @@ export function judge(token, { prevHp = null, event = false, force = null } = {}
     isPc: pc,
     previous,
     saves: record.saves ? capSaves(record.saves) : null,
-    deathSaves: settings.deathSaves,
+    deathSaves,
     bloodiedPercent: settings.bloodiedPercent,
     massive,
   });
@@ -148,13 +152,16 @@ export function judge(token, { prevHp = null, event = false, force = null } = {}
     status = STATUS.STABLE;
   }
 
-  record.markers = applyMarkers(token, record.markers, [markerFor(status, settings)]);
-  if (pc ? settings.tintPlayers : settings.tintNpcs) {
+  // The dying, stable and dead markers go with death saves.
+  const down = [STATUS.DYING, STATUS.STABLE, STATUS.DEAD].includes(status);
+  const marker = down && !ownSaves ? '' : markerFor(status, settings);
+  record.markers = applyMarkers(token, record.markers, [marker]);
+  if (owns('colours') && (pc ? settings.tintPlayers : settings.tintNpcs)) {
     applyTint(token, record, hp, max);
   } else {
     clearTint(token, record);
   }
-  if (event && prevHp !== null && hp !== prevHp) {
+  if (event && prevHp !== null && hp !== prevHp && owns('effects')) {
     if (hp < prevHp && settings.hurtFx) {
       playFx(token, settings.hurtFxType);
     } else if (hp > prevHp && settings.healFx) {
@@ -198,8 +205,9 @@ export function judge(token, { prevHp = null, event = false, force = null } = {}
  */
 function announce(token, status, previous, pc, saves, event) {
   const settings = getSettings();
-  // A token first seen by `check` is not news; one just hit is.
-  if (!pc || settings.announce === 'off' || (previous === null && !event)) {
+  // A token first seen by `check` is not news; one just hit is. When
+  // HealthColors (or nobody) handles death saves, it is not DeathTracker's news.
+  if (!pc || settings.announce === 'off' || (previous === null && !event) || !owns('deathSaves')) {
     return;
   }
   const down = [STATUS.DYING, STATUS.STABLE, STATUS.DEAD];

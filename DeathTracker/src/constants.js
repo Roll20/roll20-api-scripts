@@ -167,8 +167,8 @@ export const SETTING_CHOICES = Object.freeze({
   announce: ['off', 'gm', 'controllers'],
 });
 
-// Default settings for new installs. Tint and FX are switched off on a new
-// install when HealthColors is installed (it draws its own).
+// Default settings for new installs. Whether DeathTracker tints and plays
+// effects at all is chosen with HealthColors (see owners.js).
 export const DEFAULT_SETTINGS = {
   language: DEFAULT_LOCALE,
   hpBar: 1,

@@ -2,6 +2,7 @@
 // the death save macro for sheets DeathTracker cannot read.
 
 import { COMMAND, DEATH_SAVE_POLL_MS, MACRO_NAME, STATUS } from './constants.js';
+import { owns } from './owners.js';
 import { isTicked } from './sheet.js';
 import { getRecord, getSettings, getState } from './state.js';
 import { countSaves } from './status.js';
@@ -36,7 +37,7 @@ export function downedTokens(characterId) {
  */
 export function handleAttributeChange(attr) {
   const settings = getSettings();
-  if (!settings.deathSaves) {
+  if (!settings.deathSaves || !owns('deathSaves')) {
     return;
   }
   const name = toText(attr.get('name')).toLowerCase();
@@ -59,7 +60,7 @@ export function handleAttributeChange(attr) {
 export function startPoll() {
   const tick = () => {
     try {
-      if (getSettings().deathSaves) {
+      if (getSettings().deathSaves && owns('deathSaves')) {
         for (const token of downedTokens()) {
           judge(token);
         }

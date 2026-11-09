@@ -1,18 +1,14 @@
 // DeathTracker: start-up, event wiring and the public DeathTracker object.
 
 import { whisper, whisperWarning } from './chat.js';
-import { handleChat } from './commands.js';
+import { handleChat, refreshForOwners } from './commands.js';
 import { SCRIPT_LAST_UPDATED, SCRIPT_NAME, SCRIPT_VERSION } from './constants.js';
 import { handleAttributeChange, startPoll } from './deathsaves.js';
 import { previousHp } from './hp.js';
 import { t } from './i18n.js';
-import {
-  healthColorsInstalled,
-  healthColorsTracksSaves,
-  notifyObservers,
-  observeTokenChange,
-} from './integration.js';
+import { healthColorsTracksSaves, notifyObservers, observeTokenChange } from './integration.js';
 import { installHandouts } from './journals.js';
+import { healthColorsShares, owns } from './owners.js';
 import { getSandboxVersion } from './sheet.js';
 import {
   applyGlobalConfig,
@@ -104,16 +100,6 @@ function start() {
   started = true;
   const { fresh, migrated } = initialiseState();
   const s = getState();
-  // HealthColors draws its own tint and effects. One-Click options applied
-  // next still win.
-  if (fresh && healthColorsInstalled()) {
-    Object.assign(s.settings, {
-      tintPlayers: false,
-      tintNpcs: false,
-      hurtFx: false,
-      healFx: false,
-    });
-  }
   applyGlobalConfig();
   const lang = getLang();
   on('chat:message', guarded('chat:message', handleChat));
@@ -138,12 +124,19 @@ function start() {
     if (migrated) {
       lines.push(t('messages.migrated', lang));
     }
-    if (fresh && healthColorsInstalled()) {
+    if (fresh && healthColorsShares()) {
       lines.push(t('messages.healthColors', lang));
     }
     whisper(null, t('titles.ready', lang), lines.map((l) => `<div>${l}</div>`).join(''));
   }
-  if (healthColorsTracksSaves() && getSettings().deathSaves && !s.notices.healthColors) {
+  // HealthColors before 2.5 does not read who handles what, so it may track
+  // death saves as well.
+  if (
+    !healthColorsShares() &&
+    healthColorsTracksSaves() &&
+    getSettings().deathSaves &&
+    !s.notices.healthColors
+  ) {
     s.notices.healthColors = true;
     whisperWarning(null, t('messages.healthColorsSaves', lang));
   }
@@ -161,7 +154,8 @@ const api = {
   getStatus,
   onStatusChange,
   observeTokenChange,
-  isManagingDeathSaves: () => getSettings().deathSaves === true,
+  isManagingDeathSaves: () => getSettings().deathSaves === true && owns('deathSaves'),
+  ownersChanged: refreshForOwners,
   ObserveTokenChange: observeTokenChange,
   CheckInstall: () => {},
   RegisterEventHandlers: () => {},

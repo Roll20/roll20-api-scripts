@@ -71,13 +71,63 @@ test('defect 2 and 7: no NaN tint with a blank maximum, and the own tint comes b
   assert.equal(t2.get('tint_color'), '#123456');
 });
 
-test('tint and FX start off when HealthColors is installed', () => {
-  const api = createSandbox({ globals: { HealthColors: {} } });
+/** A HealthColors 2.5 stand-in that counts its refreshes */
+const sharingHealthColors = () => {
+  const hc = { refreshed: 0 };
+  hc.ownersChanged = () => {
+    hc.refreshed += 1;
+  };
+  return hc;
+};
+
+test('with HealthColors 2.5, it does the colours and effects and DeathTracker the death saves', () => {
+  const api = createSandbox({ globals: { HealthColors: sharingHealthColors() } });
   api.ready();
-  const s = api.dtState().settings;
-  assert.equal(s.tintPlayers, false);
-  assert.equal(s.hurtFx, false);
-  assert.match(api.allChat(), /HealthColors/);
+  assert.match(api.allChat(), /HealthColors is installed: DeathTracker handles death saves/);
+  const goblin = addNpc(api);
+  api.setHp(goblin, '4');
+  assert.equal(goblin.get('tint_color'), 'transparent', 'no DeathTracker tint');
+  assert.deepEqual(api.spawns, [], 'no DeathTracker effects');
+  assert.deepEqual(api.markers(goblin), ['red'], 'the bloodied marker is still added');
+  assert.equal(api.sandbox.DeathTracker.isManagingDeathSaves(), true);
+});
+
+test('without HealthColors, DeathTracker handles all three', () => {
+  const api = start();
+  const goblin = addNpc(api);
+  api.setHp(goblin, '4');
+  assert.match(goblin.get('tint_color'), /^#[0-9a-f]{6}$/);
+  assert.equal(api.spawns.length, 1);
+});
+
+test('who handles what is shared with HealthColors and changes both Mods', () => {
+  const hc = sharingHealthColors();
+  const api = start({ globals: { HealthColors: hc } });
+  const goblin = addNpc(api);
+  api.setHp(goblin, '4');
+  api.command('!deathtracker set coloursBy DeathTracker');
+  assert.equal(api.sandbox.state.ModOwners.colours, 'DeathTracker');
+  assert.equal(hc.refreshed, 1, 'HealthColors is asked to refresh');
+  assert.match(goblin.get('tint_color'), /^#[0-9a-f]{6}$/, 'tinted straight away');
+  api.command('!deathtracker set coloursBy off');
+  assert.equal(goblin.get('tint_color'), 'transparent', 'its own tint comes back');
+  api.command('!deathtracker set effectsBy nonsense');
+  assert.match(api.allChat(), /not a valid value/);
+  assert.equal(api.sandbox.state.ModOwners.effects, undefined);
+});
+
+test('when HealthColors handles death saves, DeathTracker adds no 0 HP markers or news', () => {
+  const api = start({ globals: { HealthColors: sharingHealthColors() } });
+  api.sandbox.state.ModOwners = { deathSaves: 'HealthColors' };
+  const { token } = addPc(api);
+  api.setHp(token, '0');
+  assert.deepEqual(api.markers(token), []);
+  assert.doesNotMatch(api.allChat(), /is down and dying/);
+  assert.equal(api.sandbox.DeathTracker.isManagingDeathSaves(), false);
+  const goblin = addNpc(api);
+  api.setHp(goblin, '0');
+  assert.deepEqual(api.markers(goblin), [], 'no dead marker either');
+  assert.equal(api.sandbox.DeathTracker.getStatus(goblin), 'dead', 'the status is still known');
 });
 
 test('hurt and heal effects play on the token page', () => {
@@ -466,12 +516,7 @@ test('One-Click options apply once, then chat changes win', () => {
     tokenMarkers: [{ tag: 'sheet-unconscious', name: 'Unconscious' }],
   });
   assert.equal(api.dtState().settings.dyingMarker, 'sheet-unconscious');
-  assert.equal(
-    api.dtState().settings.tintNpcs,
-    true,
-    'One-Click wins over the HealthColors default'
-  );
-  assert.equal(api.dtState().settings.tintPlayers, false);
+  assert.equal(api.dtState().settings.tintNpcs, true);
   api.command('!deathtracker set hpBar 3');
   // A restart with the same options keeps the change made in chat.
   const again = start({ globalconfig, state: api.sandbox.state });

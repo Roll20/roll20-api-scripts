@@ -27,6 +27,7 @@ import {
   showStatus,
   tokensWithHp,
 } from './menu.js';
+import { OWNER_SETTINGS, parseOwner, setOwner, tellHealthColors } from './owners.js';
 import { getCharacter, tokenControllers } from './sheet.js';
 import {
   dropRecord,
@@ -150,6 +151,54 @@ export function rejudgeAll() {
 }
 
 /**
+ * Brings tokens up to date after the choice of who handles death saves,
+ * colours and effects changed: every token DeathTracker knows, and the tokens
+ * on the players' page.
+ *
+ * @returns {void}
+ */
+export function refreshForOwners() {
+  rejudgeAll();
+  const known = getState().tokens;
+  for (const tok of tokensWithHp(Campaign().get('playerpageid'))) {
+    if (!known[tok.id]) {
+      judge(tok);
+    }
+  }
+}
+
+/**
+ * Chooses who handles death saves, colours or effects (for HealthColors too)
+ * and reports the result.
+ *
+ * @param {string} playerId GM's player ID.
+ * @param {string} key One of the OWNER_SETTINGS keys.
+ * @param {string} rawValue Value as typed.
+ * @param {boolean} showCard Show the settings card afterwards.
+ * @returns {void}
+ */
+function changeOwner(playerId, key, rawValue, showCard) {
+  const lang = getLang();
+  const owner = parseOwner(rawValue);
+  if (!owner) {
+    whisperError(playerId, t('messages.settingRejected', lang, { setting: key, value: rawValue }));
+    return;
+  }
+  setOwner(OWNER_SETTINGS[key], owner);
+  refreshForOwners();
+  tellHealthColors();
+  if (showCard) {
+    showSettings(playerId);
+    return;
+  }
+  const text = t('messages.settingChanged', lang, {
+    setting: t(`settings.${key}`, lang),
+    value: describeValue(key, owner, lang),
+  });
+  whisper(playerId, t('titles.settings', lang), escapeForChat(text));
+}
+
+/**
  * Changes a setting from chat and reports the result.
  *
  * @param {string} playerId GM's player ID.
@@ -160,6 +209,13 @@ export function rejudgeAll() {
  */
 function changeSetting(playerId, rawKey, rawValue, showCard) {
   const lang = getLang();
+  const ownerKey = Object.keys(OWNER_SETTINGS).find(
+    (k) => k.toLowerCase() === toText(rawKey).toLowerCase()
+  );
+  if (ownerKey) {
+    changeOwner(playerId, ownerKey, rawValue, showCard);
+    return;
+  }
   const key = Object.keys(DEFAULT_SETTINGS).find(
     (k) => k.toLowerCase() === toText(rawKey).toLowerCase()
   );

@@ -13,7 +13,7 @@ export default {
     migrated:
       'Your DeathTracker 0.1 settings were carried over. !dead still works; !deathtracker is the new command.',
     healthColors:
-      'HealthColors is installed, so DeathTracker left its own tint and hurt/heal effects off. Turn them on in Settings if you want both.',
+      'HealthColors is installed: DeathTracker handles death saves and the dying, stable and dead markers, and HealthColors the health colours and hurt/heal effects. Change who handles what in Settings.',
     healthColorsSaves:
       'HealthColors is also tracking death saves and setting dying markers. Turn one of them off (!aura deathsaves off) so they do not fight over markers.',
     settingChanged: '{setting} is now {value}.',
@@ -98,6 +98,7 @@ export default {
     language: 'Language',
   },
   sections: {
+    owners: 'Who handles what',
     hp: 'Hit points',
     markers: 'Markers',
     deathSaves: 'Death saves (PCs)',
@@ -106,6 +107,9 @@ export default {
     general: 'General',
   },
   settings: {
+    deathSavesBy: 'Death saves and 0 HP markers',
+    coloursBy: 'Health colours',
+    effectsBy: 'Hurt and heal effects',
     language: 'Language',
     hpBar: 'Hit point bar',
     bloodiedPercent: 'Bloodied at',
@@ -138,6 +142,7 @@ export default {
     deathActionsFor: { npc: 'NPCs', all: 'NPCs and PCs' },
     announce: { off: 'Off', gm: 'GM', controllers: 'GM and players' },
     none: 'None',
+    notInstalled: 'not installed',
   },
   help: {
     menu: 'Open the menu.',
@@ -221,8 +226,9 @@ export default {
     healthColors: {
       heading: 'HealthColors and other Mods',
       points: [
-        'With HealthColors installed, DeathTracker starts with its own tint and effects off; HealthColors draws those.',
-        "Only one Mod should handle death saves: turn off HealthColors' with !aura deathsaves off.",
+        'Who handles what, in Settings, chooses which Mod does death saves (with the dying, stable and dead markers), health colours and hurt/heal effects: DeathTracker, HealthColors or Off. HealthColors 2.5 and later shows the same choice, and changing it in either Mod changes it for both.',
+        'At first DeathTracker handles death saves and HealthColors the colours and effects. Without HealthColors, DeathTracker handles all three.',
+        'HealthColors before 2.5 does not share the choice: turn its death saves off with !aura deathsaves off.',
         'Changes made by TokenMod are seen. Other Mods can call DeathTracker.check(token) after changing hit points.',
         'DeathTracker only takes away markers it put on itself.',
       ],
@@ -241,6 +247,12 @@ export default {
       colKey: 'Setting',
       colDesc: 'What it does',
       rows: {
+        deathSavesBy:
+          'Who tracks death saves and sets the dying, stable and dead markers: DeathTracker, HealthColors or off. Shared with HealthColors.',
+        coloursBy:
+          'Who colours tokens by hit points: DeathTracker (its tint), HealthColors or off. Shared with HealthColors.',
+        effectsBy:
+          'Who plays the hurt and heal effects: DeathTracker, HealthColors or off. Shared with HealthColors.',
         language: 'Language of menus, messages and handouts.',
         hpBar: 'The bar that holds hit points (1, 2 or 3).',
         bloodiedPercent:
@@ -281,7 +293,10 @@ export default {
         onStatusChange: 'Be told when a status changes ({token, status, previous, isPc}).',
         observe:
           'Version 0.1: be told (token, prev) after DeathTracker handles a hit point change.',
-        managing: 'True when DeathTracker is tracking death saves (HealthColors uses this).',
+        managing:
+          'True when DeathTracker is tracking death saves: they are on, and DeathTracker is chosen to handle them (HealthColors uses this).',
+        ownersChanged:
+          'Bring tokens up to date after who handles what changed (HealthColors calls this).',
       },
     },
     upgrading: {

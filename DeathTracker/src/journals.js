@@ -26,6 +26,7 @@ import {
 } from './constants.js';
 import { getDirectionStyle, getLocale, LOCALE_DEFINITIONS, t, tRaw } from './i18n.js';
 import { COMMAND_LIST } from './menu.js';
+import { OWNER_SETTINGS } from './owners.js';
 import { getLang } from './state.js';
 import { escapeHtml } from './utils.js';
 
@@ -109,7 +110,7 @@ export function buildHelpHtml(locale) {
     escapeHtml(t(`help.${key}`, lang)),
   ]);
   commands.push([code('--ids id1,id2'), escapeHtml(t('help.ids', lang))]);
-  const settings = Object.keys(DEFAULT_SETTINGS).map((key) => [
+  const settings = [...Object.keys(OWNER_SETTINGS), ...Object.keys(DEFAULT_SETTINGS)].map((key) => [
     code(key),
     escapeHtml(t(`handout.settings.rows.${key}`, lang)),
   ]);
@@ -119,6 +120,7 @@ export function buildHelpHtml(locale) {
     ['onStatusChange(fn)', 'onStatusChange'],
     ['ObserveTokenChange(fn)', 'observe'],
     ['isManagingDeathSaves()', 'managing'],
+    ['ownersChanged()', 'ownersChanged'],
   ].map(([fn, key]) => [
     code(`DeathTracker.${fn}`),
     escapeHtml(t(`handout.api.rows.${key}`, lang)),

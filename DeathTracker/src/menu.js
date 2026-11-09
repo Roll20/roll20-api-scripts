@@ -23,6 +23,7 @@ import { readHp } from './hp.js';
 import { LOCALE_DEFINITIONS, t } from './i18n.js';
 import { healthColorsInstalled } from './integration.js';
 import { listMarkers, markerName } from './markers.js';
+import { getOwner, healthColorsShares, OWNER_SETTINGS } from './owners.js';
 import { getSandboxVersion } from './sheet.js';
 import { getLang, getRecord, getSettings } from './state.js';
 import { isPc } from './tracker.js';
@@ -204,6 +205,15 @@ export function showStatus(playerId, tokens) {
  * @returns {string} Text.
  */
 export function describeValue(key, value, lang) {
+  if (key in OWNER_SETTINGS) {
+    if (value === 'off') {
+      return t('buttons.off', lang);
+    }
+    const missing =
+      (value === 'HealthColors' && !healthColorsShares()) ||
+      (value !== 'HealthColors' && value !== 'DeathTracker');
+    return missing ? `${value} (${t('choices.notInstalled', lang)})` : value;
+  }
   if (BOOLEAN_SETTINGS.includes(key)) {
     return t(value ? 'buttons.on' : 'buttons.off', lang);
   }
@@ -232,6 +242,9 @@ export function describeValue(key, value, lang) {
  */
 function settingCommand(key, value, lang) {
   const set = `${COMMAND} set ${key}`;
+  if (key in OWNER_SETTINGS) {
+    return `${set} ?{${queryText(t(`settings.${key}`, lang))}|DeathTracker|HealthColors|${queryText(t('buttons.off', lang))},off} --settings`;
+  }
   if (BOOLEAN_SETTINGS.includes(key)) {
     return `${set} ${value ? 'off' : 'on'} --settings`;
   }
@@ -271,6 +284,7 @@ function settingCommand(key, value, lang) {
 
 // The settings card's sections and what is in each.
 const SETTING_SECTIONS = [
+  ['owners', Object.keys(OWNER_SETTINGS)],
   ['hp', ['hpBar', 'bloodiedPercent', 'pcDetection']],
   ['markers', ['bloodiedMarker', 'dyingMarker', 'stableMarker', 'deadMarker']],
   [
@@ -302,11 +316,12 @@ export function showSettings(playerId) {
   for (const [section, keys] of SETTING_SECTIONS) {
     parts.push(buildSectionLabel(t(`sections.${section}`, lang)));
     for (const key of keys) {
-      const label = describeValue(key, s[key], lang);
+      const value = key in OWNER_SETTINGS ? getOwner(OWNER_SETTINGS[key]) : s[key];
+      const label = describeValue(key, value, lang);
       parts.push(
         buildRow(
           t(`settings.${key}`, lang),
-          buildSecondaryButton(truncate(label, 24), settingCommand(key, s[key], lang))
+          buildSecondaryButton(truncate(label, 24), settingCommand(key, value, lang))
         )
       );
     }
