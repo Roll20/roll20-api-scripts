@@ -1325,8 +1325,10 @@ var HealthColors =
           return name;
         });
       if (hooked.length) log(`${SCRIPT_NAME}: observing token changes from ${hooked.join(', ')}`);
-      if (deathTrackerOwnsMarkers())
-        log(`${SCRIPT_NAME}: DeathTracker is installed; leaving 0 HP markers and death saves to it`);
+      if (deathTrackerInstalled())
+        log(
+          `${SCRIPT_NAME}: DeathTracker is installed. Death saves: ${getOwner('deathSaves')}, colours: ${getOwner('colours')}, effects: ${getOwner('effects')}`,
+        );
       getSmartAoeZeroHpMarkers();
     }
 
@@ -1381,29 +1383,138 @@ var HealthColors =
       return tags.find((tag) => known.has(tag)) || null;
     }
 
+    // ————— SHARED WITH DEATHTRACKER —————
+    // HealthColors and DeathTracker 1.0+ can both do three things: death saves with the dying,
+    // stable and dead markers; colouring tokens by health; and hurt/heal effects. Each is done
+    // by one of them or by neither. The choice lives in state.ModOwners, which DeathTracker
+    // reads and writes too, so changing it in either Mod's settings changes it for both.
+
+    /** Areas both Mods can handle, with the words accepted for them in `!aura owner`. */
+    const OWNER_AREAS = {
+      deathSaves: { words: ['deathsaves', 'saves', 'markers'], label: 'Death saves &amp; 0 HP markers' },
+      colours: { words: ['colours', 'colors', 'colour', 'color', 'tint', 'aura'], label: 'Health colours' },
+      effects: { words: ['effects', 'fx'], label: 'Hurt &amp; heal effects' },
+    };
+
+    /** Who can handle an area: one of the two Mods, or 'off' for neither. */
+    const OWNERS = ['HealthColors', 'DeathTracker', 'off'];
+
     /**
-     * Returns true when DeathTracker 1.0 or later is installed. It sets the dead, dying, stable
-     * and bloodied markers and tracks death saves itself, so HealthColors adds none of those
-     * markers (it still colours tokens and plays its death sound). DeathTracker 0.1 has no
-     * isManagingDeathSaves, so it does not count.
+     * Returns true when DeathTracker 1.0 or later is installed (0.1 has no isManagingDeathSaves
+     * and knows nothing of the shared choice).
      *
-     * @returns {boolean} Whether DeathTracker owns the 0 HP markers.
+     * @returns {boolean} Whether DeathTracker 1.0+ is installed.
      */
-    function deathTrackerOwnsMarkers() {
+    function deathTrackerInstalled() {
       return (
         typeof DeathTracker !== 'undefined' && !!DeathTracker && typeof DeathTracker.isManagingDeathSaves === 'function'
       );
     }
 
     /**
+     * Who handles an area until the GM chooses: with DeathTracker installed it does death saves
+     * and HealthColors the colours and effects; otherwise HealthColors does them all.
+     * DeathTracker works this out the same way.
+     *
+     * @param {string} area - Key of OWNER_AREAS.
+     * @returns {string} One of OWNERS.
+     */
+    function defaultOwner(area) {
+      if (!deathTrackerInstalled()) return 'HealthColors';
+      return area === 'deathSaves' ? 'DeathTracker' : 'HealthColors';
+    }
+
+    /**
+     * Who handles an area now.
+     *
+     * @param {string} area - Key of OWNER_AREAS.
+     * @returns {string} One of OWNERS.
+     */
+    function getOwner(area) {
+      const chosen = state.ModOwners && typeof state.ModOwners === 'object' ? state.ModOwners[area] : undefined;
+      return OWNERS.includes(chosen) ? chosen : defaultOwner(area);
+    }
+
+    /**
+     * Returns true when HealthColors handles an area.
+     *
+     * @param {string} area - Key of OWNER_AREAS.
+     * @returns {boolean} Whether HealthColors does it.
+     */
+    function ownsArea(area) {
+      return getOwner(area) === 'HealthColors';
+    }
+
+    /**
+     * Describes who handles an area for menus: the Mod's name, "Off", or the name marked
+     * "(not installed)" when DeathTracker is chosen but missing.
+     *
+     * @param {string} area - Key of OWNER_AREAS.
+     * @returns {string} Label.
+     */
+    function describeOwner(area) {
+      const owner = getOwner(area);
+      if (owner === 'off') return 'Off';
+      if (owner === 'DeathTracker' && !deathTrackerInstalled()) return 'DeathTracker (not installed)';
+      return owner;
+    }
+
+    /**
+     * Brings every token up to date after the shared choice changed (no chat messages), and
+     * the help handout with it. DeathTracker calls this through the public API.
+     */
+    function ownersChanged() {
+      const workQueue = findObjs({ type: 'graphic', subtype: 'token', layer: 'objects' });
+      const drainQueue = () => {
+        const token = workQueue.shift();
+        if (!token) return;
+        handleToken(token, deepClone(token), 'YES');
+        setTimeout(drainQueue, 0);
+      };
+      drainQueue();
+      installHandout();
+    }
+
+    /**
+     * `!aura owner <area> <HealthColors|DeathTracker|off>`: chooses who handles an area, for
+     * both Mods, then refreshes HealthColors' tokens and asks DeathTracker to refresh its own.
+     *
+     * @param {string[]} parts - Command parts.
+     * @returns {boolean} True when the choice changed.
+     */
+    function setOwnerFromChat(parts) {
+      const word = String(parts[2] || '').toLowerCase();
+      const area = Object.keys(OWNER_AREAS).find((key) => OWNER_AREAS[key].words.includes(word));
+      const value = String(parts[3] || '').toLowerCase();
+      const owner = ['none', 'disabled', 'disable', 'no'].includes(value)
+        ? 'off'
+        : OWNERS.find((o) => o.toLowerCase() === value);
+      if (!area || !owner) {
+        gmWhisper('Use !aura owner &lt;deathsaves|colours|effects&gt; &lt;HealthColors|DeathTracker|off&gt;.');
+        return false;
+      }
+      if (!state.ModOwners || typeof state.ModOwners !== 'object') state.ModOwners = {};
+      state.ModOwners[area] = owner;
+      ownersChanged();
+      if (deathTrackerInstalled() && typeof DeathTracker.ownersChanged === 'function') {
+        try {
+          DeathTracker.ownersChanged();
+        } catch (e) {
+          log(`${SCRIPT_NAME}: DeathTracker could not refresh: ${e?.message || e}`);
+        }
+      }
+      return true;
+    }
+
+    /**
      * Returns true when HealthColors' own Death Save Integration should run: it is switched on
-     * and DeathTracker is not handling death saves.
+     * and HealthColors is chosen to handle death saves.
      *
      * @param {object} [s] - HealthColors state.
      * @returns {boolean} Whether to track death saves here.
      */
     function deathSavesActive(s = state.HealthColors) {
-      return !!s?.deathSavesOn && !deathTrackerOwnsMarkers();
+      return !!s?.deathSavesOn && ownsArea('deathSaves');
     }
 
     // ————— STATE / INSTALL —————
@@ -1763,8 +1874,8 @@ var HealthColors =
       const smartAoeMarker = curValue <= 0 ? getSmartAoeZeroHpMarkerOn(obj) : null;
       const deathSaveActive = deathSavesActive() && isPlayer;
 
-      if (deathTrackerOwnsMarkers()) {
-        // DeathTracker sets the 0 HP markers: HealthColors only plays its death sound.
+      if (!ownsArea('deathSaves')) {
+        // DeathTracker (or nobody) sets the 0 HP markers: HealthColors only plays its death sound.
         if (showDead && curValue <= 0) applyDeadStatus(obj, curValue, prevValue, hasPrevValue, true);
       } else if (smartAoeMarker) {
         if (!deathSaveActive && showDead) applyDeadStatus(obj, curValue, prevValue, hasPrevValue, true);
@@ -1774,7 +1885,7 @@ var HealthColors =
         if (!deathSaveHandled && showDead) applyDeadStatus(obj, curValue, prevValue, hasPrevValue);
       }
 
-      if (isTypeOn && useAura !== 'NO') {
+      if (isTypeOn && useAura !== 'NO' && ownsArea('colours')) {
         if (curValue <= 0) {
           tokenSet(obj, state.HealthColors.AuraSize, markerColor);
         } else if (percentOn <= 0) {
@@ -1934,7 +2045,7 @@ var HealthColors =
      */
     function maybeSpawnFX(obj, oCharacter, curValue, prevValue, maxValue, update) {
       if (update === 'YES' || Number.isNaN(prevValue) || curValue === prevValue) return;
-      if (!state.HealthColors.FX) return;
+      if (!state.HealthColors.FX || !ownsArea('effects')) return;
       const useBlood = oCharacter ? lookupUseBlood(oCharacter) : undefined;
       if (isFxOff(useBlood)) return;
       const isHeal = curValue > prevValue;
@@ -2657,8 +2768,10 @@ var HealthColors =
         gmWhisper('Death Save Integration is currently off. Enable it first with !aura deathsaves on.');
         return;
       }
-      if (deathTrackerOwnsMarkers()) {
-        gmWhisper('DeathTracker is installed and tracks death saves, so HealthColors leaves them to it.');
+      if (!ownsArea('deathSaves')) {
+        gmWhisper(
+          `Death saves are handled by ${describeOwner('deathSaves')}, not HealthColors. Change it with !aura owner deathsaves HealthColors.`,
+        );
         return;
       }
 
@@ -3734,6 +3847,26 @@ var HealthColors =
           ].join('')}</div>`
         : '';
 
+      const ownerRow = (area, word) =>
+        menuRow(
+          OWNER_AREAS[area].label,
+          c(
+            escapeForChat(describeOwner(area)),
+            `!aura owner ${word} ?{${OWNER_AREAS[area].label.replace('&amp;', 'and')}|HealthColors|DeathTracker|Off,off}`,
+            { style: ownsArea(area) ? '' : MENU_STYLE.neutral },
+          ),
+        );
+      const owners = menuSection('Who handles what', [
+        ownerRow('deathSaves', 'deathsaves'),
+        ownerRow('colours', 'colours'),
+        ownerRow('effects', 'effects'),
+        menuNote(
+          deathTrackerInstalled()
+            ? 'Shared with DeathTracker: changing these here changes them there too.'
+            : 'DeathTracker is not installed, so HealthColors handles these unless set to Off.',
+        ),
+      ]);
+
       const general = menuSection('General', [
         menuRow('Enabled', t(s.auraColorOn, s.auraColorOn ? '!aura off' : '!aura on')),
         menuRow('Health bar', c(s.auraBar, '!aura bar ?{Health bar|1|2|3|4}')),
@@ -3794,9 +3927,9 @@ var HealthColors =
       const deathSaves = menuSection('Death Save Integration', [
         menuNote(interactive ? sandboxDeathSaveIntegrationNote() : '', true),
         menuNote(
-          deathTrackerOwnsMarkers()
-            ? 'DeathTracker is installed: it sets the dead, dying and stable markers and tracks death saves, so these settings are not used.'
-            : '',
+          ownsArea('deathSaves')
+            ? ''
+            : `Death saves and 0 HP markers are handled by ${describeOwner('deathSaves')}, so these settings are not used.`,
           true,
         ),
         menuRow('Enabled', t(s.deathSavesOn, '!aura deathsaves toggle')),
@@ -3864,6 +3997,7 @@ var HealthColors =
         `<div style="${MENU_STYLE.outer}">`,
         `<div style="${MENU_STYLE.header}">${title} <span style="${MENU_STYLE.subheader}">v${VERSION}</span></div>`,
         actions,
+        owners,
         general,
         tracking,
         names,
@@ -3911,6 +4045,17 @@ var HealthColors =
           ['!aura update', 'Re-colour the selected tokens only.'],
           ['!aura reset', 'Reset all settings to factory defaults.'],
           ['!aura reset-all', 'Restore defaults, rebuild the default FX and refresh every token.'],
+        ],
+      ],
+      [
+        'Who handles what (shared with DeathTracker)',
+        [
+          [
+            '!aura owner deathsaves <HealthColors|DeathTracker|off>',
+            'Who tracks death saves and sets the dying, stable and dead markers.',
+          ],
+          ['!aura owner colours <HealthColors|DeathTracker|off>', 'Who colours tokens by health (aura or tint).'],
+          ['!aura owner effects <HealthColors|DeathTracker|off>', 'Who plays the hurt and heal effects.'],
         ],
       ],
       [
@@ -4014,7 +4159,7 @@ var HealthColors =
       ],
       [
         'DeathTracker',
-        'When DeathTracker 1.0 or later is installed, it sets the dead, dying, stable and bloodied markers and tracks death saves. HealthColors adds none of those markers and leaves its Death Save Integration settings unused; it still colours tokens and plays the death sound.',
+        "HealthColors and DeathTracker 1.0 or later can both track death saves with the dying, stable and dead markers, colour tokens by health, and play hurt and heal effects. 'Who handles what' in the menu chooses HealthColors, DeathTracker or Off for each, and DeathTracker's settings show the same choice: changing it in either Mod changes it for both. At first DeathTracker handles death saves and HealthColors the colours and effects; without DeathTracker, HealthColors handles all three. The death sound and nameplates are always HealthColors', and the bloodied marker always DeathTracker's.",
       ],
       [
         'AlterBars, ChatSetAttr and other attribute scripts',
@@ -4252,7 +4397,7 @@ var HealthColors =
           const isObserver = getTokenObserverScripts().some((e) => e.name === title);
           let status = '';
           if (isObserver) status = isObserverScriptAvailable(title) ? ' (detected)' : ' (not installed)';
-          if (title === 'DeathTracker') status = deathTrackerOwnsMarkers() ? ' (detected)' : ' (not installed)';
+          if (title === 'DeathTracker') status = deathTrackerInstalled() ? ' (detected)' : ' (not installed)';
           return `<h3 style="${S.h3}">${escapeHandoutHtml(title + status)}</h3>${p(escapeHandoutHtml(body))}`;
         }).join('');
 
@@ -4401,6 +4546,7 @@ var HealthColors =
     function runAuraSpecialOption(option, parts, msg, s) {
       const handlers = {
         MENU: () => ({ handled: true, earlyReturn: false }),
+        OWNER: () => ({ handled: true, earlyReturn: !setOwnerFromChat(parts) }),
         SETTINGS: () => {
           showSettingsInGameChat();
           return { handled: true, earlyReturn: true };
@@ -4799,6 +4945,7 @@ var HealthColors =
       CheckInstall: checkInstall,
       registerEventHandlers,
       RegisterEventHandlers: registerEventHandlers,
+      ownersChanged,
     };
 
     globalThis.HealthColors = publicApi;
