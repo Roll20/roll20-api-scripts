@@ -240,7 +240,13 @@ Use the PC token. Defaults target the D&D sheets (`deathsave_succ1..3` / `deaths
 1b. Run `!aura reset`, then apply TokenMod or SmartAoE damage once.
    - Expected: The token is processed once: exactly one FX plays.
 1e. Install DeathTracker 1.0 or later, turn Death Save Integration on (`!aura deathsaves on`) and restart the sandbox. Drop the NPC and the PC to 0 HP.
-   - Expected: The console logs `HealthColors: DeathTracker is installed; leaving 0 HP markers and death saves to it`. HealthColors adds no Red X, dying or stable marker (DeathTracker's markers are the only ones), the tokens are still coloured and the death sound plays. The GM menu's Death Save Integration section says DeathTracker is handling them, `!aura deathsaves sync` says the same, and the handout shows DeathTracker (detected). Disable DeathTracker and restart: HealthColors' own markers come back.
+   - Expected: The console logs `HealthColors: DeathTracker is installed. Death saves: DeathTracker, colours: HealthColors, effects: HealthColors`. HealthColors adds no Red X, dying or stable marker (DeathTracker's markers are the only ones), the tokens are coloured by HealthColors only (no DeathTracker tint), HealthColors' hurt FX plays and the death sound plays. The menu's **Who handles what** section shows the same three values, the Death Save Integration section says DeathTracker handles death saves, `!aura deathsaves sync` says the same, and the handout shows DeathTracker (detected).
+1f. In **Who handles what**, set Health colours and Hurt & heal effects to DeathTracker.
+   - Expected: HealthColors' auras or tints come off and DeathTracker tints the damaged tokens straight away; damage now plays only DeathTracker's effect. Open `!deathtracker settings`: its **Who handles what** shows the same values.
+1g. In `!deathtracker settings`, set Death saves and 0 HP markers to HealthColors, then drop the PC to 0 HP.
+   - Expected: HealthColors' dying marker appears and DeathTracker adds none and announces nothing. The `!aura` menu shows HealthColors for death saves.
+1h. Set Health colours to Off in either Mod.
+   - Expected: Neither Mod colours tokens. Disable DeathTracker and restart: any area left on DeathTracker shows *DeathTracker (not installed)* in the menu and nobody does it until it is changed.
 2. With ChatSetAttr or AlterBars installed, change the HP attribute through that script.
    - Expected: The token colour updates even though the token bar was not edited directly.
 3. Drag a new token from the journal onto the page.

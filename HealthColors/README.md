@@ -45,7 +45,7 @@ When installed from the Roll20 One-Click library, every HealthColors setting can
 Type `!aura` in the chat to open the interactive configuration menu. Every value is a button: click it to change the setting (buttons that need a value open a prompt; hover over a button for a hint where one is shown).
 
 - **Action bar** (top): **Update Selected** re-colours the selected token(s) (`!aura update`), **Refresh All** re-colours every token (`!aura forceall`), and **Post Settings** posts a read-only copy of the settings to game chat (`!aura settings`).
-- **Sections:** General · Tracking & markers · Nameplates (a GM/Players × PCs/NPCs grid) · Aura 1 ring · Effects & sound · Death Save Integration · Reference values (not applied).
+- **Sections:** Who handles what (shared with DeathTracker) · General · Tracking & markers · Nameplates (a GM/Players × PCs/NPCs grid) · Aura 1 ring · Effects & sound · Death Save Integration · Reference values (not applied).
 - **Footer:** **Open Help** opens the help handout and **Rebuild Help** recreates it.
 
 Red buttons are switched off and grey nameplate buttons are set to *Off* (leave the token's own setting alone). When a command changes a setting, HealthColors re-whispers the menu so you can carry on without typing `!aura` again. The `!aura settings` snapshot uses the same layout without buttons.
@@ -91,6 +91,7 @@ HealthColors keeps a GM-only **HealthColors — Help & Reference** handout in th
 | `!aura reset`                        | Resets the script's state to factory defaults.                                                                                |
 | `!aura reset-fx`                     | Rebuilds `-DefaultHeal` and `-DefaultHurt` custom FX objects.                                                                 |
 | `!aura reset-all`                    | Restores all settings to `DEFAULTS`, rebuilds default FX, and force-syncs tokens.                                             |
+| `!aura owner <area> <who>`           | Chooses who handles `deathsaves` (death saves and the dying, stable and dead markers), `colours` (aura or tint) or `effects` (heal and hurt FX): `HealthColors`, `DeathTracker` or `off`. Shared with DeathTracker. |
 | `!aura deathsaves on/off/toggle`     | Enables or disables the optional Death Save Integration.                                                                     |
 | `!aura deathsaves success <attr,…>`  | Sets the success attribute name(s) — single name or comma-separated checkbox list (default targets the D&D sheets).          |
 | `!aura deathsaves failure <attr,…>`  | Sets the failure attribute name(s) — single name or comma-separated checkbox list.                                          |
@@ -231,7 +232,17 @@ HealthColors never removes SmartAoE's marker, even if both use the same tag. The
 
 ### DeathTracker
 
-When [DeathTracker](https://github.com/Roll20/roll20-api-scripts/tree/master/DeathTracker) 1.0 or later is installed, it sets the dead, dying, stable and bloodied markers and tracks death saves. HealthColors then adds none of those markers and leaves its Death Save Integration settings unused, so the two Mods never fight over a token's markers. HealthColors still colours tokens and plays the death sound (`!aura deadfx`). The API console logs `HealthColors: DeathTracker is installed; leaving 0 HP markers and death saves to it` at startup, and the help handout marks DeathTracker as *detected*.
+HealthColors and [DeathTracker](https://github.com/Roll20/roll20-api-scripts/tree/master/DeathTracker) 1.0 or later can both do three things. The **Who handles what** section at the top of the `!aura` menu chooses which Mod does each, or neither:
+
+| Area                                   | Command                                          | What it covers                                                     |
+| :------------------------------------- | :----------------------------------------------- | :----------------------------------------------------------------- |
+| Death saves & 0 HP markers             | `!aura owner deathsaves <HealthColors\|DeathTracker\|off>` | Death save tracking and the dying, stable and dead (Red X) markers. |
+| Health colours                         | `!aura owner colours <HealthColors\|DeathTracker\|off>`    | HealthColors' aura or tint, or DeathTracker's tint.                |
+| Hurt & heal effects                    | `!aura owner effects <HealthColors\|DeathTracker\|off>`    | The particle effects played when HP goes down or up.               |
+
+The choice is stored once and DeathTracker's settings (**Who handles what**) show and change the same values, so the two Mods never fight over a token. Changing it in either Mod refreshes both Mods' tokens. At first, with DeathTracker installed, DeathTracker handles death saves and HealthColors the colours and effects; without DeathTracker, HealthColors handles all three.
+
+When HealthColors does not handle an area it leaves it alone: no dead, dying or stable markers and an idle Death Save Integration; no aura or tint (its own is taken off); or no heal and hurt FX. The death sound (`!aura deadfx`) and nameplates are always HealthColors', and the bloodied marker is always DeathTracker's. The API console logs who handles what at startup, and the help handout marks DeathTracker as *detected* or *not installed*.
 
 The help handout marks TokenMod, SmartAoE and DeathTracker as *detected* or *not installed* for the current game, and the API console logs `HealthColors: observing token changes from …` at startup.
 
@@ -249,6 +260,7 @@ Other Mod scripts can ask HealthColors to re-colour a token:
 
 ```js
 HealthColors.Update(token, prev); // prev = the token's previous values, or {}
+HealthColors.ownersChanged(); // refresh every token after state.ModOwners changed (DeathTracker calls this)
 ```
 
 ---
