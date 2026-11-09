@@ -56,7 +56,21 @@ Healing a dead token takes its markers away but does not move it back. Select it
 
 ## Tint and Effects
 
-As in version 0.1, tokens can be tinted from green to red as they lose hit points, and an effect can play when they are hurt (`splatter-blood`) or healed (`glow-holy`). A token gets its own tint back at full hit points. If HealthColors is installed when DeathTracker is first set up, DeathTracker leaves its tint and effects off, because HealthColors draws its own.
+As in version 0.1, tokens can be tinted from green to red as they lose hit points, and an effect can play when they are hurt (`splatter-blood`) or healed (`glow-holy`). A token gets its own tint back at full hit points. **Tint PCs** and **Tint NPCs** switch the tint off for either, and **Hurt effect** and **Heal effect** the effects.
+
+## Who Handles What
+
+HealthColors 2.5 and later can also track death saves, colour tokens by health and play hurt and heal effects. **Who handles what**, at the top of Settings, chooses which Mod does each, or neither:
+
+| Setting                      | Command                                                          | What it covers                                                              |
+| :--------------------------- | :--------------------------------------------------------------- | :-------------------------------------------------------------------------- |
+| Death saves and 0 HP markers | `!deathtracker set deathSavesBy DeathTracker\|HealthColors\|off` | Death save tracking, announcements, and the dying, stable and dead markers. |
+| Health colours               | `!deathtracker set coloursBy DeathTracker\|HealthColors\|off`    | DeathTracker's tint, or HealthColors' aura or tint.                         |
+| Hurt and heal effects        | `!deathtracker set effectsBy DeathTracker\|HealthColors\|off`    | The effects played when hit points go down or up.                           |
+
+The choice is stored once, and HealthColors' `!aura` menu shows and changes the same values, so the two Mods never fight over a token. Changing it in either Mod brings both Mods' tokens up to date. At first DeathTracker handles death saves and HealthColors the colours and effects; without HealthColors, DeathTracker handles all three.
+
+When DeathTracker does not handle death saves it adds no dying, stable or dead marker, reads no sheets and announces nothing, but still knows each token's status (for the menu, the bloodied marker and the on-death actions).
 
 ## Commands
 
@@ -84,35 +98,39 @@ Add `--ids id1,id2` to work on tokens by ID instead of the selection.
 
 ## Settings
 
-| Setting           | Default                                           | What it does                                                                                      |
-| ----------------- | ------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
-| `language`        | `en-US`                                           | Language of menus, messages and handouts (24 languages).                                          |
-| `hpBar`           | `1`                                               | The bar that holds hit points.                                                                    |
-| `bloodiedPercent` | `50`                                              | Bloodied at or below this percentage of maximum (`0` turns Bloodied off).                         |
-| `bloodiedMarker`  | `red`                                             | Marker for Bloodied (`none` for no marker).                                                       |
-| `dyingMarker`     | `sleepy`                                          | Marker for a dying PC.                                                                            |
-| `stableMarker`    | `green`                                           | Marker for a stable PC.                                                                           |
-| `deadMarker`      | `dead`                                            | Marker for the dead.                                                                              |
-| `pcDetection`     | `auto`                                            | `auto`: player-controlled or the sheet says PC. `players`: player-controlled only.                |
-| `deathSaves`      | `on`                                              | Track death saves for PCs at 0.                                                                   |
-| `resetSheetSaves` | `on`                                              | Clear the sheet's death save boxes at the drop to 0 and when healed; show them on the 2024 sheet. |
-| `successFields`   | `deathsave_succ1,deathsave_succ2,deathsave_succ3` | Sheet fields for successes (2014 and other sheets).                                               |
-| `failureFields`   | `deathsave_fail1,deathsave_fail2,deathsave_fail3` | Sheet fields for failures.                                                                        |
-| `massiveDamage`   | `off`                                             | A PC whose bar goes below 0 by at least its maximum dies outright.                                |
-| `announce`        | `controllers`                                     | Who is told that a PC went down, became stable, died or got up: `off`, `gm`, `controllers`.       |
-| `deathLayer`      | `none`                                            | Move the dead to `none`, `gmlayer` or `map`.                                                      |
-| `deathTurnOrder`  | `keep`                                            | `keep` or `remove` the dead from the turn order.                                                  |
-| `deathActionsFor` | `npc`                                             | `npc`, or `all` for PCs as well.                                                                  |
-| `tintPlayers`     | `on`                                              | Tint PCs by hit points.                                                                           |
-| `tintNpcs`        | `on`                                              | Tint NPCs by hit points.                                                                          |
-| `hurtFx`          | `on`                                              | Play an effect when a token loses hit points.                                                     |
-| `hurtFxType`      | `splatter-blood`                                  | That effect.                                                                                      |
-| `healFx`          | `off`                                             | Play an effect when a token gains hit points.                                                     |
-| `healFxType`      | `glow-holy`                                       | That effect.                                                                                      |
+| Setting           | Default                                           | What it does                                                                                                                       |
+| ----------------- | ------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `deathSavesBy`    | `DeathTracker`                                    | Who handles death saves and the dying, stable and dead markers: `DeathTracker`, `HealthColors` or `off`. Shared with HealthColors. |
+| `coloursBy`       | `HealthColors` if installed, else `DeathTracker`  | Who colours tokens by hit points. Shared with HealthColors.                                                                        |
+| `effectsBy`       | `HealthColors` if installed, else `DeathTracker`  | Who plays the hurt and heal effects. Shared with HealthColors.                                                                     |
+| `language`        | `en-US`                                           | Language of menus, messages and handouts (24 languages).                                                                           |
+| `hpBar`           | `1`                                               | The bar that holds hit points.                                                                                                     |
+| `bloodiedPercent` | `50`                                              | Bloodied at or below this percentage of maximum (`0` turns Bloodied off).                                                          |
+| `bloodiedMarker`  | `red`                                             | Marker for Bloodied (`none` for no marker).                                                                                        |
+| `dyingMarker`     | `sleepy`                                          | Marker for a dying PC.                                                                                                             |
+| `stableMarker`    | `green`                                           | Marker for a stable PC.                                                                                                            |
+| `deadMarker`      | `dead`                                            | Marker for the dead.                                                                                                               |
+| `pcDetection`     | `auto`                                            | `auto`: player-controlled or the sheet says PC. `players`: player-controlled only.                                                 |
+| `deathSaves`      | `on`                                              | Track death saves for PCs at 0.                                                                                                    |
+| `resetSheetSaves` | `on`                                              | Clear the sheet's death save boxes at the drop to 0 and when healed; show them on the 2024 sheet.                                  |
+| `successFields`   | `deathsave_succ1,deathsave_succ2,deathsave_succ3` | Sheet fields for successes (2014 and other sheets).                                                                                |
+| `failureFields`   | `deathsave_fail1,deathsave_fail2,deathsave_fail3` | Sheet fields for failures.                                                                                                         |
+| `massiveDamage`   | `off`                                             | A PC whose bar goes below 0 by at least its maximum dies outright.                                                                 |
+| `announce`        | `controllers`                                     | Who is told that a PC went down, became stable, died or got up: `off`, `gm`, `controllers`.                                        |
+| `deathLayer`      | `none`                                            | Move the dead to `none`, `gmlayer` or `map`.                                                                                       |
+| `deathTurnOrder`  | `keep`                                            | `keep` or `remove` the dead from the turn order.                                                                                   |
+| `deathActionsFor` | `npc`                                             | `npc`, or `all` for PCs as well.                                                                                                   |
+| `tintPlayers`     | `on`                                              | Tint PCs by hit points.                                                                                                            |
+| `tintNpcs`        | `on`                                              | Tint NPCs by hit points.                                                                                                           |
+| `hurtFx`          | `on`                                              | Play an effect when a token loses hit points.                                                                                      |
+| `hurtFxType`      | `splatter-blood`                                  | That effect.                                                                                                                       |
+| `healFx`          | `off`                                             | Play an effect when a token gains hit points.                                                                                      |
+| `healFxType`      | `glow-holy`                                       | That effect.                                                                                                                       |
 
 ## Working with Other Mods
 
-- **HealthColors:** use one Mod for death saves. If both track them, DeathTracker warns once; turn HealthColors' off with `!aura deathsaves off`.
+- **HealthColors 2.5 and later:** choose who handles death saves, colours and effects in **Who handles what** (see above); both Mods share the choice.
+- **HealthColors before 2.5** does not share the choice: use one Mod for death saves. If both track them, DeathTracker warns once; turn HealthColors' off with `!aura deathsaves off`.
 - **TokenMod:** hit point changes made with TokenMod are seen.
 - **Other Mods** that change hit points (API changes raise no Roll20 events) can call `DeathTracker.check(token)`.
 - **CombatMaster, LazyExperience, StatusInfo** and other Mods that call `DeathTracker.ObserveTokenChange` keep working.

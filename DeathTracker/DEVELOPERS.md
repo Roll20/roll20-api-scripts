@@ -26,26 +26,27 @@ npm run format
 
 ## Module Responsibilities
 
-| Module           | Responsibility                                                                                                            |
-| ---------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| `index.js`       | Startup, event registration, TokenMod observer, the global `DeathTracker` object.                                         |
-| `tracker.js`     | `judge`: reads HP, works out PC/NPC and death saves, applies markers, tint, effects, on-death actions, announcements.     |
-| `status.js`      | Pure rules: `decideStatus`, `countSaves` (baseline counting), `isMassiveDamage`, `tintHue`.                               |
-| `sheet.js`       | Character reads and writes: the 2024 `store` attribute, checkbox fields, PC/NPC from the sheet, controllers.              |
-| `deathsaves.js`  | Attribute-change handler, the 3-second poll of downed PCs, the DeathSaves macro and `dsync`.                              |
-| `hp.js`          | Hit points from the chosen bar, linked maximum fallback.                                                                  |
-| `markers.js`     | Marker list (libTokenMarkers or the campaign), name/tag lookup, editing `statusmarkers` without touching others' markers. |
-| `actions.js`     | On-death layer move and turn-order removal, and undoing them.                                                             |
-| `fx.js`          | Tint by hit points and hurt/heal effects.                                                                                 |
-| `integration.js` | HealthColors detection, the 0.1 `ObserveTokenChange` observer list.                                                       |
-| `commands.js`    | `!deathtracker` parsing and routing, settings changes, 0.1 `config`.                                                      |
-| `menu.js`        | Chat cards: menu, status, settings, markers, help; the command list.                                                      |
-| `journals.js`    | Help and Command Deck handouts.                                                                                           |
-| `state.js`       | Persistent state, setting validation, 0.1 migration, One-Click options, token records, PC/NPC choices.                    |
-| `chat.js`        | Chat cards, buttons, whispers and errors.                                                                                 |
-| `i18n.js`        | Translation lookup (`t`, `tRaw`), locale normalisation and text direction.                                                |
-| `constants.js`   | Build placeholders, command names, defaults, choices, markers, effects and colours.                                       |
-| `utils.js`       | Small helpers: escaping, number parsing, lists, colours.                                                                  |
+| Module           | Responsibility                                                                                                             |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `index.js`       | Startup, event registration, TokenMod observer, the global `DeathTracker` object.                                          |
+| `tracker.js`     | `judge`: reads HP, works out PC/NPC and death saves, applies markers, tint, effects, on-death actions, announcements.      |
+| `status.js`      | Pure rules: `decideStatus`, `countSaves` (baseline counting), `isMassiveDamage`, `tintHue`.                                |
+| `sheet.js`       | Character reads and writes: the 2024 `store` attribute, checkbox fields, PC/NPC from the sheet, controllers.               |
+| `deathsaves.js`  | Attribute-change handler, the 3-second poll of downed PCs, the DeathSaves macro and `dsync`.                               |
+| `hp.js`          | Hit points from the chosen bar, linked maximum fallback.                                                                   |
+| `markers.js`     | Marker list (libTokenMarkers or the campaign), name/tag lookup, editing `statusmarkers` without touching others' markers.  |
+| `actions.js`     | On-death layer move and turn-order removal, and undoing them.                                                              |
+| `fx.js`          | Tint by hit points and hurt/heal effects.                                                                                  |
+| `integration.js` | HealthColors detection, the 0.1 `ObserveTokenChange` observer list.                                                        |
+| `owners.js`      | Who handles death saves, colours and effects (`state.ModOwners`, shared with HealthColors 2.5+), and telling HealthColors. |
+| `commands.js`    | `!deathtracker` parsing and routing, settings changes, 0.1 `config`.                                                       |
+| `menu.js`        | Chat cards: menu, status, settings, markers, help; the command list.                                                       |
+| `journals.js`    | Help and Command Deck handouts.                                                                                            |
+| `state.js`       | Persistent state, setting validation, 0.1 migration, One-Click options, token records, PC/NPC choices.                     |
+| `chat.js`        | Chat cards, buttons, whispers and errors.                                                                                  |
+| `i18n.js`        | Translation lookup (`t`, `tRaw`), locale normalisation and text direction.                                                 |
+| `constants.js`   | Build placeholders, command names, defaults, choices, markers, effects and colours.                                        |
+| `utils.js`       | Small helpers: escaping, number parsing, lists, colours.                                                                   |
 
 ## State
 

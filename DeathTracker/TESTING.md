@@ -32,7 +32,10 @@ ROLL20_GAME_ID=22182976 PW_PROFILE_DIR=P:/Code/Dnd-Roll20/.dt-auth/gm PW_PLAYER_
 - [ ] Settings card: every button; a marker query (pick **Unconscious**) changes the marker on downed tokens at once.
 - [ ] On death: GM layer, Map layer, turn order removal; **Restore** puts the token back with its initiative.
 - [ ] TokenMod `--set bar1_value|0` → Dead.
-- [ ] HealthColors installed with death saves on → one warning.
+- [ ] HealthColors before 2.5 installed with death saves on → one warning.
+- [ ] HealthColors 2.5 installed: Settings shows Who handles what (death saves DeathTracker, colours and effects HealthColors); DeathTracker adds no tint or effects, HealthColors no 0 HP markers.
+- [ ] Set Health colours to DeathTracker here → HealthColors' colours come off and DeathTracker tints at once; `!aura` shows the same.
+- [ ] Set Death saves to HealthColors in `!aura` → DeathTracker adds no dying marker and announces nothing; its Settings shows HealthColors.
 - [ ] Restart the sandbox: downed PCs stay Dying/Stable and keep their counts.
 - [ ] Upgrade: install 0.1.8, set its config, replace with 1.0.0 → settings carried over, `!dead` works.
 
@@ -59,4 +62,6 @@ Live results, 4 November 2026, Mod Test Lab - DeathTracker (22182976), Jumpgate,
 
 Spec runs, 6 November 2026: 9 of 10 passed in one run (`three failures kill a PC` timed out in its `beforeEach` while snapshotting all pages on a slow machine) and passed on its own afterwards. A full run takes about 30 minutes.
 
-Not tested live: HealthColors 2.5.0 alongside DeathTracker (Node smoke test only), a D&D 2014 sheet game, sandbox v1.0, the upgrade from an installed 0.1.8, massive damage, sandbox restart with PCs down.
+Live results, 9 November 2026, same game, HealthColors 2.5.0 switched on alongside DeathTracker: Who handles what starts as death saves DeathTracker, colours and effects HealthColors (logged by HealthColors); a goblin at 3/10 gets HealthColors' aura and hurt effect and DeathTracker's Bloodied marker only; Kildrak at 0 gets DeathTracker's Dying marker and announcement. `!aura owner colours DeathTracker` and `!aura owner effects DeathTracker` take the aura off and DeathTracker tints at once; damage then plays only `splatter-blood`; DeathTracker's settings card shows the same choice. `!deathtracker set deathSavesBy HealthColors` with HealthColors' death saves on: Seraphina (player-controlled) at 0 gets HealthColors' skull and no DeathTracker marker; Kildrak (no controlling player) gets HealthColors' Red X, as HealthColors treats him as an NPC. `!aura owner colours off`: neither Mod colours.
+
+Not tested live: a D&D 2014 sheet game, sandbox v1.0, the upgrade from an installed 0.1.8, massive damage, sandbox restart with PCs down.

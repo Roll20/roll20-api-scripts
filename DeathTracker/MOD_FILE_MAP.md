@@ -52,11 +52,12 @@ A quick reference for where to find each feature in the source.
 
 ## Commands & Output
 
-| Task                                  | File              | Key function                                                        |
-| ------------------------------------- | ----------------- | ------------------------------------------------------------------- |
-| Chat command routing                  | `src/commands.js` | `handleChat`, `parseCommand`                                        |
-| `set`, `config` and validation        | `src/commands.js` | `changeSetting`; `src/state.js` `checkSetting`                      |
-| Judge every tracked token again       | `src/commands.js` | `rejudgeAll`                                                        |
-| Menu, status, settings, markers, help | `src/menu.js`     | `showMenu`, `showStatus`, `showSettings`, `showMarkers`, `showHelp` |
-| Handouts                              | `src/journals.js` | `installHandouts`, `buildHelpHtml`, `buildDeckHtml`                 |
-| Translations                          | `src/i18n.js`     | `t`, `tRaw`                                                         |
+| Task                                  | File              | Key function                                                                        |
+| ------------------------------------- | ----------------- | ----------------------------------------------------------------------------------- |
+| Chat command routing                  | `src/commands.js` | `handleChat`, `parseCommand`                                                        |
+| `set`, `config` and validation        | `src/commands.js` | `changeSetting`; `src/state.js` `checkSetting`                                      |
+| Judge every tracked token again       | `src/commands.js` | `rejudgeAll`                                                                        |
+| Who handles what (with HealthColors)  | `src/owners.js`   | `getOwner`, `owns`, `setOwner`; `src/commands.js` `changeOwner`, `refreshForOwners` |
+| Menu, status, settings, markers, help | `src/menu.js`     | `showMenu`, `showStatus`, `showSettings`, `showMarkers`, `showHelp`                 |
+| Handouts                              | `src/journals.js` | `installHandouts`, `buildHelpHtml`, `buildDeckHtml`                                 |
+| Translations                          | `src/i18n.js`     | `t`, `tRaw`                                                                         |

@@ -27,7 +27,7 @@ A full rewrite by MidNiteShadow7 of Robin Kuiper's DeathTracker 0.1.8, which had
 - A chat menu, a settings card with buttons for every setting, `status`, `check`, `stable`, `clear`, `restore`, `markers` and `--ids`.
 - **DeathTracker - Help** and **DeathTracker - Command Deck** handouts, in 24 languages.
 - One-Click options for every setting.
-- A public API: `check`, `getStatus`, `onStatusChange`, `isManagingDeathSaves`, alongside 0.1's `ObserveTokenChange`.
+- A public API: `check`, `getStatus`, `onStatusChange`, `isManagingDeathSaves`, `ownersChanged`, alongside 0.1's `ObserveTokenChange`.
 - Commands from other Mods (player "API") are accepted.
 
 ### Changed
@@ -35,7 +35,7 @@ A full rewrite by MidNiteShadow7 of Robin Kuiper's DeathTracker 0.1.8, which had
 - The main command is `!deathtracker` (also `!dt`); `!dead`, `!dead config key|value` and `!dead reset` still work.
 - Settings live in `state.DeathTracker`; 0.1's `state.DEATHTRACKER` is read once and left in place.
 - The PC Unconscious marker is now the Dying marker.
-- With HealthColors installed, a new install starts with DeathTracker's tint and effects off.
+- **Who handles what**, shared with HealthColors 2.5 and later: Settings chooses DeathTracker, HealthColors or Off for death saves (with the dying, stable and dead markers), health colours and hurt/heal effects (`deathSavesBy`, `coloursBy`, `effectsBy`). The choice is stored once (`state.ModOwners`), HealthColors' `!aura` menu shows and changes the same values, and a change in either Mod refreshes both. At first DeathTracker handles death saves and HealthColors the colours and effects; without HealthColors, DeathTracker handles all three.
 
 ## 0.1.8
 
