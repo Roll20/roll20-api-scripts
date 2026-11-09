@@ -13,7 +13,7 @@ export default {
     migrated:
       'Οι ρυθμίσεις σας από το DeathTracker 0.1 μεταφέρθηκαν. Το !dead λειτουργεί ακόμα· η νέα εντολή είναι !deathtracker.',
     healthColors:
-      'Το HealthColors είναι εγκατεστημένο, οπότε το DeathTracker απενεργοποίησε τον δικό του χρωματισμό και τα εφέ τραυματισμού και θεραπείας. Ενεργοποιήστε τα στις Ρυθμίσεις αν θέλετε και τα δύο.',
+      'Το HealthColors είναι εγκατεστημένο: το DeathTracker χειρίζεται τις ρίψεις διάσωσης θανάτου και τους δείκτες ετοιμοθάνατου, σταθερού και νεκρού, και το HealthColors τα χρώματα υγείας και τα εφέ τραυματισμού και θεραπείας. Αλλάξτε ποιος χειρίζεται τι στις Ρυθμίσεις.',
     healthColorsSaves:
       'Το HealthColors παρακολουθεί κι αυτό τις ρίψεις διάσωσης θανάτου και βάζει δείκτες ετοιμοθάνατου. Απενεργοποιήστε το ένα από τα δύο (!aura deathsaves off) ώστε να μη συγκρούονται για τους δείκτες.',
     settingChanged: 'Η ρύθμιση {setting} είναι τώρα {value}.',
@@ -98,6 +98,7 @@ export default {
     language: 'Γλώσσα',
   },
   sections: {
+    owners: 'Ποιος χειρίζεται τι',
     hp: 'Πόντοι ζωής',
     markers: 'Δείκτες',
     deathSaves: 'Ρίψεις διάσωσης θανάτου (PC)',
@@ -106,6 +107,9 @@ export default {
     general: 'Γενικά',
   },
   settings: {
+    deathSavesBy: 'Ρίψεις διάσωσης και δείκτες 0 ΠΖ',
+    coloursBy: 'Χρώματα υγείας',
+    effectsBy: 'Εφέ τραυματισμού και θεραπείας',
     language: 'Γλώσσα',
     hpBar: 'Μπάρα πόντων ζωής',
     bloodiedPercent: 'Αιμόφυρτος στο',
@@ -138,6 +142,7 @@ export default {
     deathActionsFor: { npc: 'NPC', all: 'NPC και PC' },
     announce: { off: 'Όχι', gm: 'GM', controllers: 'GM και παίκτες' },
     none: 'Κανένας',
+    notInstalled: 'δεν είναι εγκατεστημένο',
   },
   help: {
     menu: 'Άνοιγμα του μενού.',
@@ -225,8 +230,9 @@ export default {
     healthColors: {
       heading: 'HealthColors και άλλα Mod',
       points: [
-        'Με εγκατεστημένο το HealthColors, το DeathTracker ξεκινά με ανενεργό τον δικό του χρωματισμό και τα εφέ· τα σχεδιάζει το HealthColors.',
-        'Μόνο ένα Mod πρέπει να χειρίζεται τις ρίψεις διάσωσης θανάτου: απενεργοποιήστε του HealthColors με !aura deathsaves off.',
+        'Το «Ποιος χειρίζεται τι», στις Ρυθμίσεις, ορίζει ποιο Mod χειρίζεται τις ρίψεις διάσωσης θανάτου (με τους δείκτες ετοιμοθάνατου, σταθερού και νεκρού), τα χρώματα υγείας και τα εφέ τραυματισμού και θεραπείας: DeathTracker, HealthColors ή Όχι. Το HealthColors 2.5 και νεότερο δείχνει την ίδια επιλογή, και η αλλαγή της σε οποιοδήποτε από τα δύο Mod ισχύει και για τα δύο.',
+        'Αρχικά το DeathTracker χειρίζεται τις ρίψεις διάσωσης θανάτου και το HealthColors τα χρώματα και τα εφέ. Χωρίς το HealthColors, το DeathTracker χειρίζεται και τα τρία.',
+        'Το HealthColors πριν από την 2.5 δεν μοιράζεται την επιλογή: απενεργοποιήστε τις ρίψεις διάσωσης θανάτου του με !aura deathsaves off.',
         'Οι αλλαγές από το TokenMod γίνονται αντιληπτές. Άλλα Mod μπορούν να καλούν το DeathTracker.check(token) αφού αλλάξουν πόντους ζωής.',
         'Το DeathTracker αφαιρεί μόνο δείκτες που έβαλε το ίδιο.',
       ],
@@ -245,6 +251,12 @@ export default {
       colKey: 'Ρύθμιση',
       colDesc: 'Τι κάνει',
       rows: {
+        deathSavesBy:
+          'Ποιος παρακολουθεί τις ρίψεις διάσωσης θανάτου και βάζει τους δείκτες ετοιμοθάνατου, σταθερού και νεκρού: DeathTracker, HealthColors ή off. Κοινή με το HealthColors.',
+        coloursBy:
+          'Ποιος χρωματίζει τα πιόνια ανάλογα με τους πόντους ζωής: DeathTracker (ο χρωματισμός του), HealthColors ή off. Κοινή με το HealthColors.',
+        effectsBy:
+          'Ποιος αναπαράγει τα εφέ τραυματισμού και θεραπείας: DeathTracker, HealthColors ή off. Κοινή με το HealthColors.',
         language: 'Γλώσσα των μενού, των μηνυμάτων και των εντύπων.',
         hpBar: 'Η μπάρα που κρατά τους πόντους ζωής (1, 2 ή 3).',
         bloodiedPercent:
@@ -287,7 +299,9 @@ export default {
         observe:
           'Έκδοση 0.1: ειδοποίηση (token, prev) αφού το DeathTracker χειριστεί μια αλλαγή πόντων ζωής.',
         managing:
-          'True όταν το DeathTracker παρακολουθεί ρίψεις διάσωσης θανάτου (το χρησιμοποιεί το HealthColors).',
+          'True όταν το DeathTracker παρακολουθεί ρίψεις διάσωσης θανάτου: είναι ενεργές και έχει επιλεγεί το DeathTracker για να τις χειρίζεται (το χρησιμοποιεί το HealthColors).',
+        ownersChanged:
+          'Ενημέρωση των πιονιών αφού αλλάξει ποιος χειρίζεται τι (το καλεί το HealthColors).',
       },
     },
     upgrading: {

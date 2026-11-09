@@ -13,7 +13,7 @@ export default {
     migrated:
       'Dina inställningar från DeathTracker 0.1 har förts över. !dead fungerar fortfarande; !deathtracker är det nya kommandot.',
     healthColors:
-      'HealthColors är installerat, så DeathTracker har stängt av sin egen färgton och sina skade-/läkeeffekter. Slå på dem i Inställningar om du vill ha båda.',
+      'HealthColors är installerat: DeathTracker sköter dödsräddningsslag och markörerna för döende, stabil och död, och HealthColors sköter hälsofärgerna och skade-/läkeeffekterna. Ändra vem som sköter vad i Inställningar.',
     healthColorsSaves:
       'HealthColors följer också dödsräddningsslag och sätter markörer för döende. Stäng av ett av dem (!aura deathsaves off) så att de inte bråkar om markörerna.',
     settingChanged: '{setting} är nu {value}.',
@@ -98,6 +98,7 @@ export default {
     language: 'Språk',
   },
   sections: {
+    owners: 'Vem sköter vad',
     hp: 'Träffpoäng',
     markers: 'Markörer',
     deathSaves: 'Dödsräddningsslag (RP)',
@@ -106,6 +107,9 @@ export default {
     general: 'Allmänt',
   },
   settings: {
+    deathSavesBy: 'Dödsräddningsslag och markörer vid 0 TP',
+    coloursBy: 'Hälsofärger',
+    effectsBy: 'Skade- och läkeeffekter',
     language: 'Språk',
     hpBar: 'Mätare för träffpoäng',
     bloodiedPercent: 'Blödande vid',
@@ -138,6 +142,7 @@ export default {
     deathActionsFor: { npc: 'SLP', all: 'SLP och RP' },
     announce: { off: 'Av', gm: 'SL', controllers: 'SL och spelare' },
     none: 'Ingen',
+    notInstalled: 'inte installerat',
   },
   help: {
     menu: 'Öppna menyn.',
@@ -222,8 +227,9 @@ export default {
     healthColors: {
       heading: 'HealthColors och andra Mods',
       points: [
-        'Med HealthColors installerat startar DeathTracker med sin egen färgton och sina effekter avstängda; HealthColors ritar dem.',
-        'Bara en Mod bör hantera dödsräddningsslag: stäng av HealthColors med !aura deathsaves off.',
+        'Vem sköter vad, i Inställningar, väljer vilken Mod som sköter dödsräddningsslag (med markörerna för döende, stabil och död), hälsofärger och skade-/läkeeffekter: DeathTracker, HealthColors eller Av. HealthColors 2.5 och senare visar samma val, och en ändring i någon av dem gäller för båda.',
+        'Från början sköter DeathTracker dödsräddningsslag och HealthColors färgerna och effekterna. Utan HealthColors sköter DeathTracker alla tre.',
+        'HealthColors före 2.5 delar inte valet: stäng av dess dödsräddningsslag med !aura deathsaves off.',
         'Ändringar gjorda av TokenMod uppfattas. Andra Mods kan anropa DeathTracker.check(token) efter att ha ändrat träffpoäng.',
         'DeathTracker tar bara bort markörer som den själv har satt.',
       ],
@@ -242,6 +248,12 @@ export default {
       colKey: 'Inställning',
       colDesc: 'Vad den gör',
       rows: {
+        deathSavesBy:
+          'Vem som följer dödsräddningsslag och sätter markörerna för döende, stabil och död: DeathTracker, HealthColors eller av. Delas med HealthColors.',
+        coloursBy:
+          'Vem som färgar tokens efter träffpoäng: DeathTracker (dess färgton), HealthColors eller av. Delas med HealthColors.',
+        effectsBy:
+          'Vem som spelar skade- och läkeeffekterna: DeathTracker, HealthColors eller av. Delas med HealthColors.',
         language: 'Språk för menyer, meddelanden och handouts.',
         hpBar: 'Mätaren som innehåller träffpoängen (1, 2 eller 3).',
         bloodiedPercent:
@@ -282,7 +294,10 @@ export default {
         onStatusChange: 'Få veta när en status ändras ({token, status, previous, isPc}).',
         observe:
           'Version 0.1: få veta (token, prev) efter att DeathTracker har hanterat en ändring av träffpoäng.',
-        managing: 'True när DeathTracker följer dödsräddningsslag (HealthColors använder detta).',
+        managing:
+          'True när DeathTracker följer dödsräddningsslag: de är på och DeathTracker är vald att sköta dem (HealthColors använder detta).',
+        ownersChanged:
+          'Uppdatera tokens efter att vem som sköter vad har ändrats (HealthColors anropar detta).',
       },
     },
     upgrading: {

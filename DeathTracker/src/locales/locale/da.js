@@ -13,7 +13,7 @@ export default {
     migrated:
       'Dine indstillinger fra DeathTracker 0.1 er overført. !dead virker stadig; !deathtracker er den nye kommando.',
     healthColors:
-      'HealthColors er installeret, så DeathTracker har slået sin egen farvetone og sine skade-/helingseffekter fra. Slå dem til under Indstillinger, hvis du vil have begge.',
+      'HealthColors er installeret: DeathTracker håndterer dødsredningsslag og døende-, stabil- og død-markørerne, og HealthColors helbredsfarverne og skade-/helingseffekterne. Skift, hvem der håndterer hvad, under Indstillinger.',
     healthColorsSaves:
       'HealthColors holder også styr på dødsredningsslag og sætter døende-markører. Slå en af dem fra (!aura deathsaves off), så de ikke kæmper om markørerne.',
     settingChanged: '{setting} er nu {value}.',
@@ -98,6 +98,7 @@ export default {
     language: 'Sprog',
   },
   sections: {
+    owners: 'Hvem håndterer hvad',
     hp: 'Livspoint',
     markers: 'Markører',
     deathSaves: 'Dødsredningsslag (PC’er)',
@@ -106,6 +107,9 @@ export default {
     general: 'Generelt',
   },
   settings: {
+    deathSavesBy: 'Dødsredningsslag og 0 LP-markører',
+    coloursBy: 'Helbredsfarver',
+    effectsBy: 'Skade- og helingseffekter',
     language: 'Sprog',
     hpBar: 'Livspointbjælke',
     bloodiedPercent: 'Blødende ved',
@@ -138,6 +142,7 @@ export default {
     deathActionsFor: { npc: 'NPC’er', all: 'NPC’er og PC’er' },
     announce: { off: 'Fra', gm: 'GM', controllers: 'GM og spillere' },
     none: 'Ingen',
+    notInstalled: 'ikke installeret',
   },
   help: {
     menu: 'Åbn menuen.',
@@ -222,8 +227,9 @@ export default {
     healthColors: {
       heading: 'HealthColors og andre Mods',
       points: [
-        'Med HealthColors installeret starter DeathTracker med sin egen farvetone og sine effekter slået fra; HealthColors tegner dem.',
-        'Kun én Mod bør håndtere dødsredningsslag: slå HealthColors’ fra med !aura deathsaves off.',
+        'Hvem håndterer hvad, under Indstillinger, vælger, hvilken Mod der står for dødsredningsslag (med døende-, stabil- og død-markørerne), helbredsfarver og skade-/helingseffekter: DeathTracker, HealthColors eller Fra. HealthColors 2.5 og nyere viser samme valg, og ændrer du det i den ene Mod, ændres det i begge.',
+        'Fra start håndterer DeathTracker dødsredningsslag og HealthColors farverne og effekterne. Uden HealthColors håndterer DeathTracker alle tre.',
+        'HealthColors før 2.5 deler ikke valget: slå dens dødsredningsslag fra med !aura deathsaves off.',
         'Ændringer foretaget af TokenMod opfanges. Andre Mods kan kalde DeathTracker.check(token) efter at have ændret livspoint.',
         'DeathTracker fjerner kun markører, den selv har sat på.',
       ],
@@ -242,6 +248,12 @@ export default {
       colKey: 'Indstilling',
       colDesc: 'Hvad den gør',
       rows: {
+        deathSavesBy:
+          'Hvem der følger dødsredningsslag og sætter døende-, stabil- og død-markørerne: DeathTracker, HealthColors eller off. Delt med HealthColors.',
+        coloursBy:
+          'Hvem der farver tokens efter livspoint: DeathTracker (dens farvetone), HealthColors eller off. Delt med HealthColors.',
+        effectsBy:
+          'Hvem der afspiller skade- og helingseffekterne: DeathTracker, HealthColors eller off. Delt med HealthColors.',
         language: 'Sprog for menuer, beskeder og handouts.',
         hpBar: 'Bjælken, der indeholder livspoint (1, 2 eller 3).',
         bloodiedPercent:
@@ -282,7 +294,10 @@ export default {
         onStatusChange: 'Få besked, når en status ændres ({token, status, previous, isPc}).',
         observe:
           'Version 0.1: få besked (token, prev), efter at DeathTracker har håndteret en ændring af livspoint.',
-        managing: 'True, når DeathTracker følger dødsredningsslag (HealthColors bruger dette).',
+        managing:
+          'True, når DeathTracker følger dødsredningsslag: de er slået til, og DeathTracker er valgt til at håndtere dem (HealthColors bruger dette).',
+        ownersChanged:
+          'Opdatér tokens, efter at det er ændret, hvem der håndterer hvad (HealthColors kalder dette).',
       },
     },
     upgrading: {

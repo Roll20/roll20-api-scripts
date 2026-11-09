@@ -13,7 +13,7 @@ export default {
     migrated:
       'As suas definições do DeathTracker 0.1 foram mantidas. !dead continua a funcionar; !deathtracker é o novo comando.',
     healthColors:
-      'O HealthColors está instalado, por isso o DeathTracker deixou desligados a sua própria tonalidade e os efeitos de dano/cura. Ligue-os nas Definições se quiser os dois.',
+      'O HealthColors está instalado: o DeathTracker trata dos testes contra a morte e dos marcadores de a morrer, estável e morto, e o HealthColors das cores de vida e dos efeitos de dano/cura. Altere quem trata do quê nas Definições.',
     healthColorsSaves:
       'O HealthColors também está a seguir os testes contra a morte e a colocar marcadores de a morrer. Desligue um deles (!aura deathsaves off) para que não disputem os marcadores.',
     settingChanged: '{setting} passa a ser {value}.',
@@ -99,6 +99,7 @@ export default {
     language: 'Idioma',
   },
   sections: {
+    owners: 'Quem trata do quê',
     hp: 'Pontos de vida',
     markers: 'Marcadores',
     deathSaves: 'Testes contra a morte (PJs)',
@@ -107,6 +108,9 @@ export default {
     general: 'Geral',
   },
   settings: {
+    deathSavesBy: 'Testes contra a morte e marcadores a 0 PV',
+    coloursBy: 'Cores de vida',
+    effectsBy: 'Efeitos de dano e cura',
     language: 'Idioma',
     hpBar: 'Barra de pontos de vida',
     bloodiedPercent: 'Ensanguentado a',
@@ -139,6 +143,7 @@ export default {
     deathActionsFor: { npc: 'PNJs', all: 'PNJs e PJs' },
     announce: { off: 'Desligado', gm: 'MJ', controllers: 'MJ e jogadores' },
     none: 'Nenhum',
+    notInstalled: 'não instalado',
   },
   help: {
     menu: 'Abre o menu.',
@@ -225,8 +230,9 @@ export default {
     healthColors: {
       heading: 'HealthColors e outros Mods',
       points: [
-        'Com o HealthColors instalado, o DeathTracker começa com a sua própria tonalidade e efeitos desligados; é o HealthColors que os desenha.',
-        'Só um Mod deve tratar dos testes contra a morte: desligue os do HealthColors com !aura deathsaves off.',
+        'Quem trata do quê, nas Definições, escolhe que Mod trata dos testes contra a morte (com os marcadores de a morrer, estável e morto), das cores de vida e dos efeitos de dano/cura: DeathTracker, HealthColors ou Desligado. O HealthColors 2.5 ou posterior mostra a mesma escolha, e alterá-la num dos Mods altera-a nos dois.',
+        'De início, o DeathTracker trata dos testes contra a morte e o HealthColors das cores e dos efeitos. Sem o HealthColors, o DeathTracker trata dos três.',
+        'O HealthColors anterior à 2.5 não partilha a escolha: desligue os testes contra a morte dele com !aura deathsaves off.',
         'As alterações feitas pelo TokenMod são detetadas. Outros Mods podem chamar DeathTracker.check(token) depois de alterar os pontos de vida.',
         'O DeathTracker só retira os marcadores que ele próprio colocou.',
       ],
@@ -245,6 +251,12 @@ export default {
       colKey: 'Definição',
       colDesc: 'O que faz',
       rows: {
+        deathSavesBy:
+          'Quem segue os testes contra a morte e coloca os marcadores de a morrer, estável e morto: DeathTracker, HealthColors ou off. Partilhado com o HealthColors.',
+        coloursBy:
+          'Quem tinge os tokens consoante os pontos de vida: DeathTracker (a sua tonalidade), HealthColors ou off. Partilhado com o HealthColors.',
+        effectsBy:
+          'Quem mostra os efeitos de dano e cura: DeathTracker, HealthColors ou off. Partilhado com o HealthColors.',
         language: 'Idioma dos menus, mensagens e folhetos.',
         hpBar: 'A barra que contém os pontos de vida (1, 2 ou 3).',
         bloodiedPercent:
@@ -288,7 +300,9 @@ export default {
         observe:
           'Versão 0.1: avisa (token, prev) depois de o DeathTracker tratar uma alteração de pontos de vida.',
         managing:
-          'Verdadeiro quando o DeathTracker está a seguir os testes contra a morte (o HealthColors usa isto).',
+          'Verdadeiro quando o DeathTracker está a seguir os testes contra a morte: estão ligados e o DeathTracker foi escolhido para tratar deles (o HealthColors usa isto).',
+        ownersChanged:
+          'Atualiza os tokens depois de mudar quem trata do quê (o HealthColors chama isto).',
       },
     },
     upgrading: {

@@ -13,7 +13,7 @@ export default {
     migrated:
       'Le tue impostazioni di DeathTracker 0.1 sono state riprese. !dead funziona ancora; !deathtracker è il nuovo comando.',
     healthColors:
-      'HealthColors è installato, quindi DeathTracker ha lasciato spenti la sua tinta e i suoi effetti di ferita e cura. Attivali nelle Impostazioni se li vuoi entrambi.',
+      'HealthColors è installato: DeathTracker gestisce i tiri contro morte e i segnalini di morente, stabile e morto, e HealthColors i colori della salute e gli effetti di ferita e cura. Cambia chi gestisce cosa nelle Impostazioni.',
     healthColorsSaves:
       'Anche HealthColors tiene traccia dei tiri salvezza contro morte e mette i segnalini di morente. Disattivane uno (!aura deathsaves off) così non si contendono i segnalini.',
     settingChanged: '{setting} ora è {value}.',
@@ -99,6 +99,7 @@ export default {
     language: 'Lingua',
   },
   sections: {
+    owners: 'Chi gestisce cosa',
     hp: 'Punti ferita',
     markers: 'Segnalini',
     deathSaves: 'Tiri salvezza contro morte (PG)',
@@ -107,6 +108,9 @@ export default {
     general: 'Generale',
   },
   settings: {
+    deathSavesBy: 'Tiri contro morte e segnalini a 0 PF',
+    coloursBy: 'Colori della salute',
+    effectsBy: 'Effetti di ferita e cura',
     language: 'Lingua',
     hpBar: 'Barra dei punti ferita',
     bloodiedPercent: 'Sanguinante a',
@@ -139,6 +143,7 @@ export default {
     deathActionsFor: { npc: 'PNG', all: 'PNG e PG' },
     announce: { off: 'Spento', gm: 'GM', controllers: 'GM e giocatori' },
     none: 'Nessuno',
+    notInstalled: 'non installata',
   },
   help: {
     menu: 'Apri il menu.',
@@ -224,8 +229,9 @@ export default {
     healthColors: {
       heading: 'HealthColors e altre Mod',
       points: [
-        'Con HealthColors installato, DeathTracker parte con la sua tinta e i suoi effetti spenti; ci pensa HealthColors.',
-        'Solo una Mod deve gestire i tiri contro morte: spegni quelli di HealthColors con !aura deathsaves off.',
+        'Chi gestisce cosa, nelle Impostazioni, sceglie quale Mod si occupa dei tiri contro morte (con i segnalini di morente, stabile e morto), dei colori della salute e degli effetti di ferita e cura: DeathTracker, HealthColors o Spento. HealthColors dalla 2.5 in poi mostra la stessa scelta, e cambiarla in una delle due Mod la cambia per entrambe.',
+        'All’inizio DeathTracker gestisce i tiri contro morte e HealthColors i colori e gli effetti. Senza HealthColors, DeathTracker gestisce tutti e tre.',
+        'Le versioni di HealthColors precedenti alla 2.5 non condividono la scelta: spegni i loro tiri contro morte con !aura deathsaves off.',
         'Le modifiche fatte da TokenMod vengono viste. Le altre Mod possono chiamare DeathTracker.check(token) dopo aver cambiato i punti ferita.',
         'DeathTracker toglie solo i segnalini che ha messo lui.',
       ],
@@ -244,6 +250,12 @@ export default {
       colKey: 'Impostazione',
       colDesc: 'Cosa fa',
       rows: {
+        deathSavesBy:
+          'Chi tiene traccia dei tiri contro morte e mette i segnalini di morente, stabile e morto: DeathTracker, HealthColors o off. Condiviso con HealthColors.',
+        coloursBy:
+          'Chi colora i token in base ai punti ferita: DeathTracker (la sua tinta), HealthColors o off. Condiviso con HealthColors.',
+        effectsBy:
+          'Chi riproduce gli effetti di ferita e cura: DeathTracker, HealthColors o off. Condiviso con HealthColors.',
         language: 'Lingua di menu, messaggi e handout.',
         hpBar: 'La barra che contiene i punti ferita (1, 2 o 3).',
         bloodiedPercent:
@@ -288,7 +300,9 @@ export default {
         observe:
           'Versione 0.1: ricevere (token, prev) dopo che DeathTracker ha gestito un cambio di punti ferita.',
         managing:
-          'True quando DeathTracker tiene traccia dei tiri contro morte (HealthColors lo usa).',
+          'True quando DeathTracker tiene traccia dei tiri contro morte: sono attivi e DeathTracker è scelto per gestirli (HealthColors lo usa).',
+        ownersChanged:
+          'Aggiorna i token dopo che è cambiato chi gestisce cosa (HealthColors la chiama).',
       },
     },
     upgrading: {

@@ -12,7 +12,7 @@ export default {
     readyHint: '輸入 !deathtracker 開啟選單。',
     migrated: '已沿用你的 DeathTracker 0.1 設定。!dead 仍可使用；新指令是 !deathtracker。',
     healthColors:
-      '已安裝 HealthColors，因此 DeathTracker 關閉了自己的染色與受傷/治療特效。如果兩者都想要，請在設定中開啟。',
+      '已安裝 HealthColors：DeathTracker 負責死亡豁免檢定與瀕死、穩定、死亡標記，HealthColors 負責生命值顏色與受傷/治療特效。可在設定中變更由誰負責。',
     healthColorsSaves:
       'HealthColors 也在追蹤死亡豁免檢定並設定瀕死標記。請關閉其中一個 (!aura deathsaves off)，以免兩者搶著改標記。',
     settingChanged: '{setting} 已設為 {value}。',
@@ -96,6 +96,7 @@ export default {
     language: '語言',
   },
   sections: {
+    owners: '由誰負責',
     hp: '生命值',
     markers: '狀態標記',
     deathSaves: '死亡豁免檢定 (PC)',
@@ -104,6 +105,9 @@ export default {
     general: '一般',
   },
   settings: {
+    deathSavesBy: '死亡豁免與 0 生命值標記',
+    coloursBy: '生命值顏色',
+    effectsBy: '受傷與治療特效',
     language: '語言',
     hpBar: '生命值數值條',
     bloodiedPercent: '重傷門檻',
@@ -136,6 +140,7 @@ export default {
     deathActionsFor: { npc: 'NPC', all: 'NPC 與 PC' },
     announce: { off: '關', gm: 'GM', controllers: 'GM 與玩家' },
     none: '無',
+    notInstalled: '未安裝',
   },
   help: {
     menu: '開啟選單。',
@@ -218,8 +223,9 @@ export default {
     healthColors: {
       heading: 'HealthColors 與其他 Mod',
       points: [
-        '安裝 HealthColors 時，DeathTracker 一開始會關閉自己的染色與特效；由 HealthColors 繪製。',
-        '只應由一個 Mod 處理死亡豁免檢定：用 !aura deathsaves off 關閉 HealthColors 的。',
+        '設定中的「由誰負責」可選擇由哪個 Mod 處理死亡豁免檢定 (含瀕死、穩定與死亡標記)、生命值顏色與受傷/治療特效：DeathTracker、HealthColors 或關。HealthColors 2.5 以上版本會顯示相同的選項，在任一 Mod 中變更都會同時套用到兩者。',
+        '預設由 DeathTracker 處理死亡豁免檢定，HealthColors 處理顏色與特效。未安裝 HealthColors 時，三者都由 DeathTracker 處理。',
+        'HealthColors 2.5 之前的版本不會共用此選項：請用 !aura deathsaves off 關閉它的死亡豁免檢定。',
         'TokenMod 做的變更會被偵測到。其他 Mod 可以在變更生命值後呼叫 DeathTracker.check(token)。',
         'DeathTracker 只會移除它自己加上的標記。',
       ],
@@ -237,6 +243,12 @@ export default {
       colKey: '設定',
       colDesc: '功能',
       rows: {
+        deathSavesBy:
+          '由誰追蹤死亡豁免檢定並設定瀕死、穩定與死亡標記：DeathTracker、HealthColors 或關閉。與 HealthColors 共用。',
+        coloursBy:
+          '由誰依生命值為指示物上色：DeathTracker (其染色)、HealthColors 或關閉。與 HealthColors 共用。',
+        effectsBy:
+          '由誰播放受傷與治療特效：DeathTracker、HealthColors 或關閉。與 HealthColors 共用。',
         language: '選單、訊息與講義的語言。',
         hpBar: '存放生命值的數值條 (1、2 或 3)。',
         bloodiedPercent: '等於或低於最大生命值的此百分比時為重傷 (0 會關閉重傷)。',
@@ -273,7 +285,9 @@ export default {
         getStatus: '指示物的狀態：healthy、bloodied、dying、stable、dead 或 null。',
         onStatusChange: '狀態改變時收到通知 ({token, status, previous, isPc})。',
         observe: '0.1 版：DeathTracker 處理生命值變化後，以 (token, prev) 收到通知。',
-        managing: 'DeathTracker 正在追蹤死亡豁免檢定時為 true (HealthColors 會使用)。',
+        managing:
+          'DeathTracker 正在追蹤死亡豁免檢定時為 true：檢定已開啟，且選擇由 DeathTracker 處理 (HealthColors 會使用)。',
+        ownersChanged: '在「由誰負責」變更後更新指示物 (HealthColors 會呼叫)。',
       },
     },
     upgrading: {

@@ -13,7 +13,7 @@ export default {
     migrated:
       'S’ha conservat la teva configuració de DeathTracker 0.1. !dead encara funciona; !deathtracker és l’ordre nova.',
     healthColors:
-      'HealthColors està instal·lat, així que DeathTracker ha deixat desactivats el seu propi tint i els seus efectes de ferida i curació. Activa’ls a Configuració si vols tots dos.',
+      'HealthColors està instal·lat: DeathTracker s’encarrega de les salvacions contra la mort i dels marcadors de moribund, estable i mort, i HealthColors dels colors de salut i dels efectes de ferida i curació. Canvia qui s’encarrega de què a Configuració.',
     healthColorsSaves:
       'HealthColors també porta les tirades de salvació contra la mort i posa marcadors de moribund. Desactiva’n un (!aura deathsaves off) perquè no es barallin pels marcadors.',
     settingChanged: '{setting} ara és {value}.',
@@ -98,6 +98,7 @@ export default {
     language: 'Idioma',
   },
   sections: {
+    owners: 'Qui s’encarrega de què',
     hp: 'Punts de cop',
     markers: 'Marcadors',
     deathSaves: 'Salvacions contra la mort (PJ)',
@@ -106,6 +107,9 @@ export default {
     general: 'General',
   },
   settings: {
+    deathSavesBy: 'Salvacions i marcadors a 0 PC',
+    coloursBy: 'Colors de salut',
+    effectsBy: 'Efectes de ferida i curació',
     language: 'Idioma',
     hpBar: 'Barra de punts de cop',
     bloodiedPercent: 'Ensangonat a',
@@ -138,6 +142,7 @@ export default {
     deathActionsFor: { npc: 'PNJ', all: 'PNJ i PJ' },
     announce: { off: 'Desactivat', gm: 'DJ', controllers: 'DJ i jugadors' },
     none: 'Cap',
+    notInstalled: 'no instal·lat',
   },
   help: {
     menu: 'Obre el menú.',
@@ -224,8 +229,9 @@ export default {
     healthColors: {
       heading: 'HealthColors i altres Mods',
       points: [
-        'Amb HealthColors instal·lat, DeathTracker comença amb el seu propi tint i els seus efectes desactivats; HealthColors se n’encarrega.',
-        'Només un Mod s’ha d’encarregar de les salvacions contra la mort: desactiva les de HealthColors amb !aura deathsaves off.',
+        'Qui s’encarrega de què, a Configuració, tria quin Mod porta les salvacions contra la mort (amb els marcadors de moribund, estable i mort), els colors de salut i els efectes de ferida i curació: DeathTracker, HealthColors o Desactivat. HealthColors 2.5 i posteriors mostren la mateixa opció, i canviar-la en qualsevol dels dos Mods la canvia per a tots dos.',
+        'Al principi DeathTracker s’encarrega de les salvacions contra la mort i HealthColors dels colors i els efectes. Sense HealthColors, DeathTracker s’encarrega de les tres coses.',
+        'HealthColors anterior a la 2.5 no comparteix l’opció: desactiva’n les salvacions contra la mort amb !aura deathsaves off.',
         'Es detecten els canvis fets per TokenMod. Altres Mods poden cridar DeathTracker.check(token) després de canviar els punts de cop.',
         'DeathTracker només treu els marcadors que ha posat ell mateix.',
       ],
@@ -244,6 +250,12 @@ export default {
       colKey: 'Opció',
       colDesc: 'Què fa',
       rows: {
+        deathSavesBy:
+          'Qui porta les salvacions contra la mort i posa els marcadors de moribund, estable i mort: DeathTracker, HealthColors o off. Compartit amb HealthColors.',
+        coloursBy:
+          'Qui acoloreix els tokens segons els punts de cop: DeathTracker (el seu tint), HealthColors o off. Compartit amb HealthColors.',
+        effectsBy:
+          'Qui reprodueix els efectes de ferida i curació: DeathTracker, HealthColors o off. Compartit amb HealthColors.',
         language: 'Idioma dels menús, missatges i handouts.',
         hpBar: 'La barra que conté els punts de cop (1, 2 o 3).',
         bloodiedPercent:
@@ -285,7 +297,9 @@ export default {
         observe:
           'Versió 0.1: rep (token, prev) després que DeathTracker gestioni un canvi de punts de cop.',
         managing:
-          'True quan DeathTracker porta les salvacions contra la mort (HealthColors ho fa servir).',
+          'True quan DeathTracker porta les salvacions contra la mort: estan activades i DeathTracker és qui se n’encarrega (HealthColors ho fa servir).',
+        ownersChanged:
+          'Posa al dia els tokens després que canviï qui s’encarrega de què (HealthColors ho crida).',
       },
     },
     upgrading: {

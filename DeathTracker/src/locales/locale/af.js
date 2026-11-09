@@ -13,7 +13,7 @@ export default {
     migrated:
       'Jou DeathTracker 0.1-instellings is oorgedra. !dead werk steeds; !deathtracker is die nuwe opdrag.',
     healthColors:
-      'HealthColors is geïnstalleer, so DeathTracker het sy eie tint en seer-/genesingseffekte afgelaat. Skakel hulle aan in Instellings as jy albei wil hê.',
+      'HealthColors is geïnstalleer: DeathTracker hanteer doodsreddingsgooie en die sterwend-, stabiel- en dood-merkers, en HealthColors die gesondheidskleure en seer-/genesingseffekte. Verander in Instellings wie wat hanteer.',
     healthColorsSaves:
       'HealthColors hou ook doodsreddingsgooie dop en sit sterwend-merkers. Skakel een van die twee af (!aura deathsaves off) sodat hulle nie oor merkers baklei nie.',
     settingChanged: '{setting} is nou {value}.',
@@ -98,6 +98,7 @@ export default {
     language: 'Taal',
   },
   sections: {
+    owners: 'Wie hanteer wat',
     hp: 'Lewenspunte',
     markers: 'Merkers',
     deathSaves: 'Doodsreddingsgooie (PC’s)',
@@ -106,6 +107,9 @@ export default {
     general: 'Algemeen',
   },
   settings: {
+    deathSavesBy: 'Doodsreddingsgooie en 0-LP-merkers',
+    coloursBy: 'Gesondheidskleure',
+    effectsBy: 'Seer- en genesingseffekte',
     language: 'Taal',
     hpBar: 'Lewenspuntebalk',
     bloodiedPercent: 'Bebloed op',
@@ -138,6 +142,7 @@ export default {
     deathActionsFor: { npc: 'NPC’s', all: 'NPC’s en PC’s' },
     announce: { off: 'Af', gm: 'GM', controllers: 'GM en spelers' },
     none: 'Geen',
+    notInstalled: 'nie geïnstalleer nie',
   },
   help: {
     menu: 'Maak die kieslys oop.',
@@ -223,8 +228,9 @@ export default {
     healthColors: {
       heading: 'HealthColors en ander Mods',
       points: [
-        'Met HealthColors geïnstalleer begin DeathTracker met sy eie tint en effekte af; HealthColors teken dié.',
-        'Net een Mod moet doodsreddingsgooie hanteer: skakel HealthColors s’n af met !aura deathsaves off.',
+        'Wie hanteer wat, in Instellings, bepaal watter Mod doodsreddingsgooie (met die sterwend-, stabiel- en dood-merkers), gesondheidskleure en seer-/genesingseffekte hanteer: DeathTracker, HealthColors of Af. HealthColors 2.5 en later wys dieselfde keuse, en ’n verandering in enige van die twee Mods geld vir albei.',
+        'Aanvanklik hanteer DeathTracker doodsreddingsgooie en HealthColors die kleure en effekte. Sonder HealthColors hanteer DeathTracker al drie.',
+        'HealthColors voor 2.5 deel nie die keuse nie: skakel sy doodsreddingsgooie af met !aura deathsaves off.',
         'Veranderings wat TokenMod maak, word raakgesien. Ander Mods kan DeathTracker.check(token) roep nadat hulle lewenspunte verander het.',
         'DeathTracker haal net merkers af wat dit self opgesit het.',
       ],
@@ -243,6 +249,12 @@ export default {
       colKey: 'Instelling',
       colDesc: 'Wat dit doen',
       rows: {
+        deathSavesBy:
+          'Wie doodsreddingsgooie dophou en die sterwend-, stabiel- en dood-merkers sit: DeathTracker, HealthColors of off. Gedeel met HealthColors.',
+        coloursBy:
+          'Wie tokens volgens lewenspunte kleur: DeathTracker (sy tint), HealthColors of off. Gedeel met HealthColors.',
+        effectsBy:
+          'Wie die seer- en genesingseffekte speel: DeathTracker, HealthColors of off. Gedeel met HealthColors.',
         language: 'Taal van kieslyste, boodskappe en uitdeelstukke.',
         hpBar: 'Die balk wat die lewenspunte hou (1, 2 of 3).',
         bloodiedPercent:
@@ -284,7 +296,10 @@ export default {
           'Word laat weet wanneer ’n status verander ({token, status, previous, isPc}).',
         observe:
           'Weergawe 0.1: word laat weet (token, prev) nadat DeathTracker ’n lewenspunteverandering hanteer het.',
-        managing: 'True wanneer DeathTracker doodsreddingsgooie dophou (HealthColors gebruik dit).',
+        managing:
+          'True wanneer DeathTracker doodsreddingsgooie dophou: hulle is aan, en DeathTracker is gekies om hulle te hanteer (HealthColors gebruik dit).',
+        ownersChanged:
+          'Bring tokens op datum nadat verander het wie wat hanteer (HealthColors roep dit).',
       },
     },
     upgrading: {

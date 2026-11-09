@@ -13,7 +13,7 @@ export default {
     migrated:
       'Deine Einstellungen aus DeathTracker 0.1 wurden übernommen. !dead funktioniert weiterhin; !deathtracker ist der neue Befehl.',
     healthColors:
-      'HealthColors ist installiert, daher hat DeathTracker seine eigene Tönung und seine Schadens-/Heileffekte ausgeschaltet. Schalte sie in den Einstellungen ein, wenn du beides willst.',
+      'HealthColors ist installiert: DeathTracker übernimmt Todesrettungswürfe und die Sterbend-, Stabil- und Tot-Marker, HealthColors die Gesundheitsfarben und Schadens-/Heileffekte. Wer was übernimmt, änderst du in den Einstellungen.',
     healthColorsSaves:
       'HealthColors verfolgt ebenfalls Todesrettungswürfe und setzt Sterbend-Marker. Schalte eines davon aus (!aura deathsaves off), damit sie sich nicht um die Marker streiten.',
     settingChanged: '{setting} ist jetzt {value}.',
@@ -99,6 +99,7 @@ export default {
     language: 'Sprache',
   },
   sections: {
+    owners: 'Wer übernimmt was',
     hp: 'Trefferpunkte',
     markers: 'Marker',
     deathSaves: 'Todesrettungswürfe (SC)',
@@ -107,6 +108,9 @@ export default {
     general: 'Allgemein',
   },
   settings: {
+    deathSavesBy: 'Todesrettungswürfe und 0-TP-Marker',
+    coloursBy: 'Gesundheitsfarben',
+    effectsBy: 'Schadens- und Heileffekte',
     language: 'Sprache',
     hpBar: 'Trefferpunkte-Leiste',
     bloodiedPercent: 'Angeschlagen bei',
@@ -139,6 +143,7 @@ export default {
     deathActionsFor: { npc: 'NSC', all: 'NSC und SC' },
     announce: { off: 'Aus', gm: 'SL', controllers: 'SL und Spieler' },
     none: 'Keiner',
+    notInstalled: 'nicht installiert',
   },
   help: {
     menu: 'Das Menü öffnen.',
@@ -225,8 +230,9 @@ export default {
     healthColors: {
       heading: 'HealthColors und andere Mods',
       points: [
-        'Ist HealthColors installiert, startet DeathTracker mit eigener Tönung und Effekten aus; HealthColors zeichnet diese.',
-        'Nur ein Mod sollte Todesrettungswürfe übernehmen: schalte die von HealthColors mit !aura deathsaves off aus.',
+        '„Wer übernimmt was“ in den Einstellungen legt fest, welcher Mod Todesrettungswürfe (mit den Sterbend-, Stabil- und Tot-Markern), Gesundheitsfarben und Schadens-/Heileffekte übernimmt: DeathTracker, HealthColors oder Aus. HealthColors ab 2.5 zeigt dieselbe Auswahl, und eine Änderung in einem der beiden Mods gilt für beide.',
+        'Anfangs übernimmt DeathTracker die Todesrettungswürfe und HealthColors die Farben und Effekte. Ohne HealthColors übernimmt DeathTracker alle drei.',
+        'HealthColors vor 2.5 teilt die Auswahl nicht: schalte seine Todesrettungswürfe mit !aura deathsaves off aus.',
         'Änderungen durch TokenMod werden erkannt. Andere Mods können DeathTracker.check(token) aufrufen, nachdem sie Trefferpunkte geändert haben.',
         'DeathTracker entfernt nur Marker, die es selbst gesetzt hat.',
       ],
@@ -245,6 +251,12 @@ export default {
       colKey: 'Einstellung',
       colDesc: 'Was sie tut',
       rows: {
+        deathSavesBy:
+          'Wer Todesrettungswürfe verfolgt und die Sterbend-, Stabil- und Tot-Marker setzt: DeathTracker, HealthColors oder off. Mit HealthColors geteilt.',
+        coloursBy:
+          'Wer Tokens nach Trefferpunkten färbt: DeathTracker (seine Tönung), HealthColors oder off. Mit HealthColors geteilt.',
+        effectsBy:
+          'Wer die Schadens- und Heileffekte abspielt: DeathTracker, HealthColors oder off. Mit HealthColors geteilt.',
         language: 'Sprache der Menüs, Nachrichten und Handouts.',
         hpBar: 'Die Leiste mit den Trefferpunkten (1, 2 oder 3).',
         bloodiedPercent:
@@ -288,7 +300,10 @@ export default {
           'Benachrichtigt werden, wenn sich ein Status ändert ({token, status, previous, isPc}).',
         observe:
           'Version 0.1: (token, prev) erhalten, nachdem DeathTracker eine Trefferpunkte-Änderung verarbeitet hat.',
-        managing: 'True, wenn DeathTracker Todesrettungswürfe verfolgt (HealthColors nutzt das).',
+        managing:
+          'True, wenn DeathTracker Todesrettungswürfe verfolgt: sie sind an, und DeathTracker ist dafür ausgewählt (HealthColors nutzt das).',
+        ownersChanged:
+          'Tokens aktualisieren, nachdem sich geändert hat, wer was übernimmt (HealthColors ruft das auf).',
       },
     },
     upgrading: {

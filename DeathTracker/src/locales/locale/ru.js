@@ -13,7 +13,7 @@ export default {
     migrated:
       'Ваши настройки DeathTracker 0.1 перенесены. !dead по-прежнему работает; новая команда — !deathtracker.',
     healthColors:
-      'Установлен HealthColors, поэтому DeathTracker выключил свою окраску и эффекты урона и лечения. Включите их в настройках, если нужны оба.',
+      'Установлен HealthColors: DeathTracker ведёт спасброски от смерти и маркеры «При смерти», «Стабилен» и «Мёртв», а HealthColors — цвета здоровья и эффекты урона и лечения. Кто чем занимается, можно изменить в настройках.',
     healthColorsSaves:
       'HealthColors тоже отслеживает спасброски от смерти и ставит маркеры умирающих. Выключите один из них (!aura deathsaves off), чтобы они не спорили из-за маркеров.',
     settingChanged: '{setting} теперь {value}.',
@@ -98,6 +98,7 @@ export default {
     language: 'Язык',
   },
   sections: {
+    owners: 'Кто чем занимается',
     hp: 'Хиты',
     markers: 'Маркеры',
     deathSaves: 'Спасброски от смерти (ИП)',
@@ -106,6 +107,9 @@ export default {
     general: 'Общие',
   },
   settings: {
+    deathSavesBy: 'Спасброски и маркеры 0 хитов',
+    coloursBy: 'Цвета здоровья',
+    effectsBy: 'Эффекты урона и лечения',
     language: 'Язык',
     hpBar: 'Полоса хитов',
     bloodiedPercent: 'Окровавлен при',
@@ -138,6 +142,7 @@ export default {
     deathActionsFor: { npc: 'НИП', all: 'НИП и ИП' },
     announce: { off: 'Выкл.', gm: 'Мастеру', controllers: 'Мастеру и игрокам' },
     none: 'Нет',
+    notInstalled: 'не установлен',
   },
   help: {
     menu: 'Открыть меню.',
@@ -222,8 +227,9 @@ export default {
     healthColors: {
       heading: 'HealthColors и другие Моды',
       points: [
-        'Если установлен HealthColors, DeathTracker запускается с выключенными окраской и эффектами; их рисует HealthColors.',
-        'Спасбросками от смерти должен заниматься только один Мод: выключите их в HealthColors командой !aura deathsaves off.',
+        '«Кто чем занимается» в настройках определяет, какой Мод ведёт спасброски от смерти (с маркерами «При смерти», «Стабилен» и «Мёртв»), цвета здоровья и эффекты урона и лечения: DeathTracker, HealthColors или «Выкл.». HealthColors 2.5 и новее показывает тот же выбор, и изменение в любом из Модов меняет его для обоих.',
+        'Изначально DeathTracker ведёт спасброски от смерти, а HealthColors — цвета и эффекты. Без HealthColors DeathTracker занимается всеми тремя.',
+        'HealthColors до версии 2.5 не разделяет этот выбор: выключите в нём спасброски от смерти командой !aura deathsaves off.',
         'Изменения, сделанные TokenMod, видны. Другие Моды могут вызывать DeathTracker.check(token) после изменения хитов.',
         'DeathTracker снимает только те маркеры, которые поставил сам.',
       ],
@@ -242,6 +248,12 @@ export default {
       colKey: 'Настройка',
       colDesc: 'Что делает',
       rows: {
+        deathSavesBy:
+          'Кто отслеживает спасброски от смерти и ставит маркеры «При смерти», «Стабилен» и «Мёртв»: DeathTracker, HealthColors или никто. Общая с HealthColors.',
+        coloursBy:
+          'Кто окрашивает жетоны по хитам: DeathTracker (своей окраской), HealthColors или никто. Общая с HealthColors.',
+        effectsBy:
+          'Кто показывает эффекты урона и лечения: DeathTracker, HealthColors или никто. Общая с HealthColors.',
         language: 'Язык меню, сообщений и раздаточных материалов.',
         hpBar: 'Полоса, в которой хранятся хиты (1, 2 или 3).',
         bloodiedPercent:
@@ -284,7 +296,9 @@ export default {
         observe:
           'Версия 0.1: получать (token, prev) после того, как DeathTracker обработает изменение хитов.',
         managing:
-          'True, когда DeathTracker отслеживает спасброски от смерти (это использует HealthColors).',
+          'True, когда DeathTracker отслеживает спасброски от смерти: они включены, и вести их выбран DeathTracker (это использует HealthColors).',
+        ownersChanged:
+          'Обновить жетоны после того, как изменилось, кто чем занимается (это вызывает HealthColors).',
       },
     },
     upgrading: {

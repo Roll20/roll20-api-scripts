@@ -13,7 +13,7 @@ export default {
     migrated:
       'Vaše nastavení z DeathTracker 0.1 bylo převzato. !dead stále funguje; !deathtracker je nový příkaz.',
     healthColors:
-      'HealthColors je nainstalován, takže DeathTracker nechal své vlastní zabarvení a efekty zranění/léčení vypnuté. Zapněte je v Nastavení, pokud chcete obojí.',
+      'HealthColors je nainstalován: DeathTracker obsluhuje hody proti smrti a značky umírání, stabilizace a smrti, HealthColors barvy zdraví a efekty zranění/léčení. Kdo co obsluhuje, změníte v Nastavení.',
     healthColorsSaves:
       'HealthColors také sleduje záchranné hody proti smrti a nastavuje značky umírání. Jeden z nich vypněte (!aura deathsaves off), aby se o značky nepřetahovaly.',
     settingChanged: '{setting} je nyní {value}.',
@@ -98,6 +98,7 @@ export default {
     language: 'Jazyk',
   },
   sections: {
+    owners: 'Kdo co obsluhuje',
     hp: 'Životy',
     markers: 'Značky',
     deathSaves: 'Záchranné hody proti smrti (PC)',
@@ -106,6 +107,9 @@ export default {
     general: 'Obecné',
   },
   settings: {
+    deathSavesBy: 'Hody proti smrti a značky při 0 životech',
+    coloursBy: 'Barvy zdraví',
+    effectsBy: 'Efekty zranění a léčení',
     language: 'Jazyk',
     hpBar: 'Lišta životů',
     bloodiedPercent: 'Zakrvácený při',
@@ -138,6 +142,7 @@ export default {
     deathActionsFor: { npc: 'NPC', all: 'NPC i PC' },
     announce: { off: 'Vyp', gm: 'PJ', controllers: 'PJ a hráči' },
     none: 'Žádná',
+    notInstalled: 'není nainstalován',
   },
   help: {
     menu: 'Otevřít nabídku.',
@@ -221,8 +226,9 @@ export default {
     healthColors: {
       heading: 'HealthColors a další Mody',
       points: [
-        'Když je nainstalován HealthColors, DeathTracker začíná s vypnutým vlastním zabarvením a efekty; ty kreslí HealthColors.',
-        'Hody proti smrti by měl obsluhovat jen jeden Mod: vypněte ty v HealthColors příkazem !aura deathsaves off.',
+        'Kdo co obsluhuje (v Nastavení) určuje, který Mod obsluhuje hody proti smrti (se značkami umírání, stabilizace a smrti), barvy zdraví a efekty zranění/léčení: DeathTracker, HealthColors nebo Vyp. HealthColors 2.5 a novější nabízí stejnou volbu a její změna v kterémkoli z obou Modů platí pro oba.',
+        'Na začátku obsluhuje DeathTracker hody proti smrti a HealthColors barvy a efekty. Bez HealthColors obsluhuje DeathTracker všechny tři.',
+        'HealthColors starší než 2.5 volbu nesdílí: vypněte v něm hody proti smrti příkazem !aura deathsaves off.',
         'Změny provedené TokenModem jsou zachyceny. Ostatní Mody mohou po změně životů zavolat DeathTracker.check(token).',
         'DeathTracker odstraňuje jen značky, které sám nastavil.',
       ],
@@ -241,6 +247,12 @@ export default {
       colKey: 'Nastavení',
       colDesc: 'Co dělá',
       rows: {
+        deathSavesBy:
+          'Kdo sleduje hody proti smrti a nastavuje značky umírání, stabilizace a smrti: DeathTracker, HealthColors nebo off. Sdíleno s HealthColors.',
+        coloursBy:
+          'Kdo barví tokeny podle životů: DeathTracker (jeho zabarvení), HealthColors nebo off. Sdíleno s HealthColors.',
+        effectsBy:
+          'Kdo přehrává efekty zranění a léčení: DeathTracker, HealthColors nebo off. Sdíleno s HealthColors.',
         language: 'Jazyk nabídek, zpráv a podkladů.',
         hpBar: 'Lišta, ve které jsou životy (1, 2 nebo 3).',
         bloodiedPercent:
@@ -280,7 +292,10 @@ export default {
         onStatusChange: 'Dostat zprávu, když se stav změní ({token, status, previous, isPc}).',
         observe:
           'Verze 0.1: dostat zprávu (token, prev) poté, co DeathTracker zpracuje změnu životů.',
-        managing: 'True, když DeathTracker sleduje hody proti smrti (používá to HealthColors).',
+        managing:
+          'True, když DeathTracker sleduje hody proti smrti: jsou zapnuté a jejich obsluhou je pověřen DeathTracker (používá to HealthColors).',
+        ownersChanged:
+          'Aktualizovat tokeny poté, co se změnilo, kdo co obsluhuje (volá to HealthColors).',
       },
     },
     upgrading: {

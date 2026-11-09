@@ -13,7 +13,7 @@ export default {
     migrated:
       'DeathTracker 0.1 ayarlarınız aktarıldı. !dead hâlâ çalışıyor; yeni komut !deathtracker.',
     healthColors:
-      'HealthColors kurulu olduğu için DeathTracker kendi renklendirmesini ve hasar/iyileşme efektlerini kapattı. İkisini birden istiyorsanız Ayarlar’dan açın.',
+      'HealthColors kurulu: ölüm kurtarma atışlarını ve ölmekte, stabil ve ölü işaretçilerini DeathTracker, sağlık renklerini ve hasar/iyileşme efektlerini HealthColors yönetiyor. Neyi kimin yöneteceğini Ayarlar’dan değiştirin.',
     healthColorsSaves:
       'HealthColors da ölüm kurtarma atışlarını izliyor ve ölmekte işaretçileri koyuyor. İşaretçiler için çakışmamaları adına birini kapatın (!aura deathsaves off).',
     settingChanged: '{setting} artık {value}.',
@@ -98,6 +98,7 @@ export default {
     language: 'Dil',
   },
   sections: {
+    owners: 'Kim neyi yönetir',
     hp: 'Can puanları',
     markers: 'İşaretçiler',
     deathSaves: 'Ölüm kurtarma atışları (PC’ler)',
@@ -106,6 +107,9 @@ export default {
     general: 'Genel',
   },
   settings: {
+    deathSavesBy: 'Ölüm kurtarma ve 0 CP işaretçileri',
+    coloursBy: 'Sağlık renkleri',
+    effectsBy: 'Hasar ve iyileşme efektleri',
     language: 'Dil',
     hpBar: 'Can puanı çubuğu',
     bloodiedPercent: 'Kanlı eşiği',
@@ -138,6 +142,7 @@ export default {
     deathActionsFor: { npc: 'NPC’ler', all: 'NPC’ler ve PC’ler' },
     announce: { off: 'Kapalı', gm: 'GM', controllers: 'GM ve oyuncular' },
     none: 'Yok',
+    notInstalled: 'kurulu değil',
   },
   help: {
     menu: 'Menüyü açar.',
@@ -222,8 +227,9 @@ export default {
     healthColors: {
       heading: 'HealthColors ve diğer Mod’lar',
       points: [
-        'HealthColors kuruluysa DeathTracker kendi renklendirmesi ve efektleri kapalı başlar; bunları HealthColors çizer.',
-        'Ölüm kurtarma atışlarıyla yalnızca bir Mod ilgilenmeli: HealthColors’ınkini !aura deathsaves off ile kapatın.',
+        'Ayarlar’daki Kim neyi yönetir bölümü, ölüm kurtarma atışlarını (ölmekte, stabil ve ölü işaretçileriyle birlikte), sağlık renklerini ve hasar/iyileşme efektlerini hangi Mod’un yöneteceğini seçer: DeathTracker, HealthColors veya Kapalı. HealthColors 2.5 ve sonrası aynı seçimi gösterir; iki Mod’dan birinde değiştirmek ikisinde de değiştirir.',
+        'Başlangıçta ölüm kurtarma atışlarını DeathTracker, renkleri ve efektleri HealthColors yönetir. HealthColors yoksa üçünü de DeathTracker yönetir.',
+        '2.5’ten önceki HealthColors bu seçimi paylaşmaz: onun ölüm kurtarma atışlarını !aura deathsaves off ile kapatın.',
         'TokenMod’un yaptığı değişiklikler görülür. Diğer Mod’lar can puanlarını değiştirdikten sonra DeathTracker.check(token) çağırabilir.',
         'DeathTracker yalnızca kendi koyduğu işaretçileri kaldırır.',
       ],
@@ -242,6 +248,12 @@ export default {
       colKey: 'Ayar',
       colDesc: 'Ne yapar',
       rows: {
+        deathSavesBy:
+          'Ölüm kurtarma atışlarını kimin izleyip ölmekte, stabil ve ölü işaretçilerini koyacağı: DeathTracker, HealthColors veya kapalı. HealthColors ile ortaktır.',
+        coloursBy:
+          'Jetonları can puanına göre kimin renklendireceği: DeathTracker (kendi renklendirmesi), HealthColors veya kapalı. HealthColors ile ortaktır.',
+        effectsBy:
+          'Hasar ve iyileşme efektlerini kimin oynatacağı: DeathTracker, HealthColors veya kapalı. HealthColors ile ortaktır.',
         language: 'Menülerin, mesajların ve belgelerin dili.',
         hpBar: 'Can puanlarını tutan çubuk (1, 2 veya 3).',
         bloodiedPercent:
@@ -284,7 +296,9 @@ export default {
         observe:
           'Sürüm 0.1: DeathTracker bir can puanı değişikliğini işledikten sonra (token, prev) bildirimi alırsınız.',
         managing:
-          'DeathTracker ölüm kurtarma atışlarını izliyorsa true (HealthColors bunu kullanır).',
+          'DeathTracker ölüm kurtarma atışlarını izliyorsa true: atışlar açıktır ve onları yönetmek için DeathTracker seçilmiştir (HealthColors bunu kullanır).',
+        ownersChanged:
+          'Neyi kimin yöneteceği değiştikten sonra jetonları günceller (HealthColors bunu çağırır).',
       },
     },
     upgrading: {

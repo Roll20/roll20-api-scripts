@@ -13,7 +13,7 @@ export default {
     migrated:
       'Ваші налаштування DeathTracker 0.1 перенесено. !dead і далі працює; нова команда — !deathtracker.',
     healthColors:
-      'Встановлено HealthColors, тому DeathTracker вимкнув власне забарвлення та ефекти поранення й лікування. Увімкніть їх у налаштуваннях, якщо потрібні обидва.',
+      'Встановлено HealthColors: DeathTracker веде рятівні кидки від смерті та маркери «При смерті», «Стабільний» і «Мертвий», а HealthColors — кольори здоров’я та ефекти поранення й лікування. Хто чим займається, можна змінити в налаштуваннях.',
     healthColorsSaves:
       'HealthColors теж відстежує рятівні кидки від смерті та ставить маркери вмираючих. Вимкніть один із них (!aura deathsaves off), щоб вони не змагалися за маркери.',
     settingChanged: '{setting} тепер {value}.',
@@ -98,6 +98,7 @@ export default {
     language: 'Мова',
   },
   sections: {
+    owners: 'Хто чим займається',
     hp: 'Хіти',
     markers: 'Маркери',
     deathSaves: 'Рятівні кидки від смерті (ПГ)',
@@ -106,6 +107,9 @@ export default {
     general: 'Загальні',
   },
   settings: {
+    deathSavesBy: 'Рятівні кидки й маркери 0 хітів',
+    coloursBy: 'Кольори здоров’я',
+    effectsBy: 'Ефекти поранення й лікування',
     language: 'Мова',
     hpBar: 'Смуга хітів',
     bloodiedPercent: 'Закривавлений на',
@@ -138,6 +142,7 @@ export default {
     deathActionsFor: { npc: 'НІП', all: 'НІП і ПГ' },
     announce: { off: 'Вимк.', gm: 'Майстру', controllers: 'Майстру та гравцям' },
     none: 'Немає',
+    notInstalled: 'не встановлено',
   },
   help: {
     menu: 'Відкрити меню.',
@@ -222,8 +227,9 @@ export default {
     healthColors: {
       heading: 'HealthColors та інші Моди',
       points: [
-        'Якщо встановлено HealthColors, DeathTracker запускається з вимкненими забарвленням та ефектами; їх малює HealthColors.',
-        'Рятівними кидками від смерті має займатися лише один Мод: вимкніть їх у HealthColors командою !aura deathsaves off.',
+        '«Хто чим займається» в налаштуваннях визначає, який Мод веде рятівні кидки від смерті (з маркерами «При смерті», «Стабільний» і «Мертвий»), кольори здоров’я та ефекти поранення й лікування: DeathTracker, HealthColors або «Вимк.». HealthColors 2.5 і новіші показують той самий вибір, і зміна в будь-якому з Модів змінює його для обох.',
+        'Спочатку DeathTracker веде рятівні кидки від смерті, а HealthColors — кольори та ефекти. Без HealthColors DeathTracker займається всіма трьома.',
+        'HealthColors до версії 2.5 не поділяє цей вибір: вимкніть у ньому рятівні кидки від смерті командою !aura deathsaves off.',
         'Зміни, зроблені TokenMod, видно. Інші Моди можуть викликати DeathTracker.check(token) після зміни хітів.',
         'DeathTracker знімає лише ті маркери, які поставив сам.',
       ],
@@ -242,6 +248,12 @@ export default {
       colKey: 'Налаштування',
       colDesc: 'Що робить',
       rows: {
+        deathSavesBy:
+          'Хто відстежує рятівні кидки від смерті й ставить маркери «При смерті», «Стабільний» і «Мертвий»: DeathTracker, HealthColors або ніхто. Спільна з HealthColors.',
+        coloursBy:
+          'Хто забарвлює жетони за хітами: DeathTracker (своїм забарвленням), HealthColors або ніхто. Спільна з HealthColors.',
+        effectsBy:
+          'Хто показує ефекти поранення й лікування: DeathTracker, HealthColors або ніхто. Спільна з HealthColors.',
         language: 'Мова меню, повідомлень і роздаткових матеріалів.',
         hpBar: 'Смуга, у якій зберігаються хіти (1, 2 або 3).',
         bloodiedPercent:
@@ -284,7 +296,9 @@ export default {
         observe:
           'Версія 0.1: отримувати (token, prev) після того, як DeathTracker обробить зміну хітів.',
         managing:
-          'True, коли DeathTracker відстежує рятівні кидки від смерті (це використовує HealthColors).',
+          'True, коли DeathTracker відстежує рятівні кидки від смерті: їх увімкнено, і вести їх обрано DeathTracker (це використовує HealthColors).',
+        ownersChanged:
+          'Оновити жетони після того, як змінилося, хто чим займається (це викликає HealthColors).',
       },
     },
     upgrading: {

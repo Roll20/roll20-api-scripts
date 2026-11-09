@@ -13,7 +13,7 @@ export default {
     migrated:
       'Se han conservado tus ajustes de DeathTracker 0.1. !dead sigue funcionando; !deathtracker es el nuevo comando.',
     healthColors:
-      'HealthColors está instalado, así que DeathTracker ha dejado desactivados su propio tinte y sus efectos de daño y curación. Actívalos en Ajustes si quieres ambos.',
+      'HealthColors está instalado: DeathTracker se encarga de las salvaciones de muerte y de los marcadores de moribundo, estable y muerto, y HealthColors de los colores de salud y los efectos de daño y curación. Cambia quién se encarga de qué en Ajustes.',
     healthColorsSaves:
       'HealthColors también lleva las tiradas de salvación de muerte y pone marcadores de moribundo. Desactiva uno de los dos (!aura deathsaves off) para que no se peleen por los marcadores.',
     settingChanged: '{setting} ahora es {value}.',
@@ -98,6 +98,7 @@ export default {
     language: 'Idioma',
   },
   sections: {
+    owners: 'Quién se encarga de qué',
     hp: 'Puntos de golpe',
     markers: 'Marcadores',
     deathSaves: 'Salvaciones de muerte (PJ)',
@@ -106,6 +107,9 @@ export default {
     general: 'General',
   },
   settings: {
+    deathSavesBy: 'Salvaciones y marcadores a 0 PG',
+    coloursBy: 'Colores de salud',
+    effectsBy: 'Efectos de daño y curación',
     language: 'Idioma',
     hpBar: 'Barra de puntos de golpe',
     bloodiedPercent: 'Ensangrentado en',
@@ -138,6 +142,7 @@ export default {
     deathActionsFor: { npc: 'PNJ', all: 'PNJ y PJ' },
     announce: { off: 'Desactivado', gm: 'DJ', controllers: 'DJ y jugadores' },
     none: 'Ninguno',
+    notInstalled: 'no instalado',
   },
   help: {
     menu: 'Abrir el menú.',
@@ -224,8 +229,9 @@ export default {
     healthColors: {
       heading: 'HealthColors y otros Mods',
       points: [
-        'Con HealthColors instalado, DeathTracker empieza con su propio tinte y sus efectos desactivados; HealthColors se encarga de ellos.',
-        'Solo un Mod debe encargarse de las salvaciones de muerte: desactiva las de HealthColors con !aura deathsaves off.',
+        'Quién se encarga de qué, en Ajustes, elige qué Mod lleva las salvaciones de muerte (con los marcadores de moribundo, estable y muerto), los colores de salud y los efectos de daño y curación: DeathTracker, HealthColors o Desactivado. HealthColors 2.5 o posterior muestra la misma elección, y cambiarla en cualquiera de los dos Mods la cambia en ambos.',
+        'Al principio, DeathTracker se encarga de las salvaciones de muerte y HealthColors de los colores y los efectos. Sin HealthColors, DeathTracker se encarga de las tres cosas.',
+        'Las versiones de HealthColors anteriores a la 2.5 no comparten la elección: desactiva sus salvaciones de muerte con !aura deathsaves off.',
         'Se detectan los cambios hechos por TokenMod. Otros Mods pueden llamar a DeathTracker.check(token) después de cambiar los puntos de golpe.',
         'DeathTracker solo quita los marcadores que ha puesto él mismo.',
       ],
@@ -244,6 +250,12 @@ export default {
       colKey: 'Ajuste',
       colDesc: 'Qué hace',
       rows: {
+        deathSavesBy:
+          'Quién lleva las salvaciones de muerte y pone los marcadores de moribundo, estable y muerto: DeathTracker, HealthColors u off. Compartido con HealthColors.',
+        coloursBy:
+          'Quién colorea los tokens según sus puntos de golpe: DeathTracker (su tinte), HealthColors u off. Compartido con HealthColors.',
+        effectsBy:
+          'Quién reproduce los efectos de daño y curación: DeathTracker, HealthColors u off. Compartido con HealthColors.',
         language: 'Idioma de los menús, mensajes y handouts.',
         hpBar: 'La barra que contiene los puntos de golpe (1, 2 o 3).',
         bloodiedPercent:
@@ -285,7 +297,10 @@ export default {
         onStatusChange: 'Recibir aviso cuando cambia un estado ({token, status, previous, isPc}).',
         observe:
           'Versión 0.1: recibir (token, prev) después de que DeathTracker procese un cambio de puntos de golpe.',
-        managing: 'True cuando DeathTracker lleva las salvaciones de muerte (HealthColors lo usa).',
+        managing:
+          'True cuando DeathTracker lleva las salvaciones de muerte: están activadas y DeathTracker es quien se encarga de ellas (HealthColors lo usa).',
+        ownersChanged:
+          'Poner los tokens al día después de cambiar quién se encarga de qué (HealthColors lo llama).',
       },
     },
     upgrading: {

@@ -13,7 +13,7 @@ export default {
     migrated:
       'A DeathTracker 0.1 beállításaid átkerültek. A !dead továbbra is működik; a !deathtracker az új parancs.',
     healthColors:
-      'A HealthColors telepítve van, ezért a DeathTracker kikapcsolva hagyta a saját színezését és sebződés/gyógyulás effektjeit. Kapcsold be őket a Beállításokban, ha mindkettőt szeretnéd.',
+      'A HealthColors telepítve van: a DeathTracker kezeli a halál elleni mentődobásokat és a haldokló, stabil és halott jelölőket, a HealthColors pedig az életerő-színeket és a sebződés/gyógyulás effekteket. Hogy ki mit kezel, azt a Beállításokban módosíthatod.',
     healthColorsSaves:
       'A HealthColors is követi a halál elleni mentődobásokat és haldokló jelölőket tesz fel. Kapcsold ki az egyiket (!aura deathsaves off), hogy ne harcoljanak a jelölőkön.',
     settingChanged: '{setting} új értéke: {value}.',
@@ -98,6 +98,7 @@ export default {
     language: 'Nyelv',
   },
   sections: {
+    owners: 'Ki mit kezel',
     hp: 'Életerőpontok',
     markers: 'Jelölők',
     deathSaves: 'Halál elleni mentődobások (JK)',
@@ -106,6 +107,9 @@ export default {
     general: 'Általános',
   },
   settings: {
+    deathSavesBy: 'Halálmentők és 0 ÉP-s jelölők',
+    coloursBy: 'Életerő-színek',
+    effectsBy: 'Sebződés/gyógyulás effektek',
     language: 'Nyelv',
     hpBar: 'Életerőpont-sáv',
     bloodiedPercent: 'Vérző ennél',
@@ -138,6 +142,7 @@ export default {
     deathActionsFor: { npc: 'NJK-k', all: 'NJK-k és JK-k' },
     announce: { off: 'Ki', gm: 'KM', controllers: 'KM és játékosok' },
     none: 'Nincs',
+    notInstalled: 'nincs telepítve',
   },
   help: {
     menu: 'Megnyitja a menüt.',
@@ -225,8 +230,9 @@ export default {
     healthColors: {
       heading: 'HealthColors és más Modok',
       points: [
-        'Ha a HealthColors telepítve van, a DeathTracker saját színezése és effektjei kikapcsolva indulnak; ezeket a HealthColors rajzolja.',
-        'Csak egy Mod kezelje a halál elleni mentődobásokat: a HealthColors-ét kapcsold ki a !aura deathsaves off paranccsal.',
+        'A Beállítások "Ki mit kezel" része határozza meg, melyik Mod kezeli a halál elleni mentődobásokat (a haldokló, stabil és halott jelölőkkel együtt), az életerő-színeket és a sebződés/gyógyulás effekteket: DeathTracker, HealthColors vagy Ki. A HealthColors 2.5-ös és újabb verziói ugyanezt a választást mutatják, és ha bármelyik Modban módosítod, mindkettőben megváltozik.',
+        'Kezdetben a DeathTracker kezeli a halál elleni mentődobásokat, a HealthColors pedig a színeket és az effekteket. HealthColors nélkül a DeathTracker kezeli mindhármat.',
+        'A HealthColors 2.5 előtti verziói nem osztják meg a választást: a halálmentőiket a !aura deathsaves off paranccsal kapcsold ki.',
         'A TokenMod által végzett változtatásokat észleli. Más Modok az életerőpontok módosítása után meghívhatják a DeathTracker.check(token) függvényt.',
         'A DeathTracker csak azokat a jelölőket veszi le, amelyeket maga tett fel.',
       ],
@@ -245,6 +251,12 @@ export default {
       colKey: 'Beállítás',
       colDesc: 'Mit csinál',
       rows: {
+        deathSavesBy:
+          'Ki követi a halál elleni mentődobásokat és teszi fel a haldokló, stabil és halott jelölőket: DeathTracker, HealthColors vagy off. Közös a HealthColors-szal.',
+        coloursBy:
+          'Ki színezi a tokeneket az életerőpontok szerint: DeathTracker (a saját színezése), HealthColors vagy off. Közös a HealthColors-szal.',
+        effectsBy:
+          'Ki játssza le a sebződés/gyógyulás effekteket: DeathTracker, HealthColors vagy off. Közös a HealthColors-szal.',
         language: 'A menük, üzenetek és segédletek nyelve.',
         hpBar: 'Az életerőpontokat tartalmazó sáv (1, 2 vagy 3).',
         bloodiedPercent:
@@ -287,7 +299,10 @@ export default {
           'Értesítés, amikor egy állapot megváltozik ({token, status, previous, isPc}).',
         observe:
           '0.1-es verzió: értesítés (token, prev) azután, hogy a DeathTracker kezelt egy életerőpont-változást.',
-        managing: 'True, ha a DeathTracker követi a halálmentőket (a HealthColors használja).',
+        managing:
+          'True, ha a DeathTracker követi a halálmentőket: be vannak kapcsolva, és a DeathTracker van kiválasztva a kezelésükre (a HealthColors használja).',
+        ownersChanged:
+          'Frissíti a tokeneket, miután megváltozott, hogy ki mit kezel (a HealthColors hívja meg).',
       },
     },
     upgrading: {

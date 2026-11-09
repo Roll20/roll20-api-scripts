@@ -13,7 +13,7 @@ export default {
     migrated:
       'DeathTracker 0.1 설정을 그대로 가져왔습니다. !dead도 계속 쓸 수 있으며, 새 명령어는 !deathtracker입니다.',
     healthColors:
-      'HealthColors가 설치되어 있어 DeathTracker의 색조와 피해/치유 효과를 꺼 두었습니다. 둘 다 쓰려면 설정에서 켜세요.',
+      'HealthColors가 설치되어 있습니다. 죽음 내성 굴림과 빈사·안정·사망 마커는 DeathTracker가, 히트 포인트 색상과 피해/치유 효과는 HealthColors가 맡습니다. 담당 Mod는 설정에서 바꿀 수 있습니다.',
     healthColorsSaves:
       'HealthColors도 죽음 내성 굴림을 추적하고 빈사 마커를 붙이고 있습니다. 마커를 두고 충돌하지 않도록 둘 중 하나를 끄세요 (!aura deathsaves off).',
     settingChanged: '{setting}을(를) {value}(으)로 바꿨습니다.',
@@ -98,6 +98,7 @@ export default {
     language: '언어',
   },
   sections: {
+    owners: '담당 Mod',
     hp: '히트 포인트',
     markers: '마커',
     deathSaves: '죽음 내성 굴림 (PC)',
@@ -106,6 +107,9 @@ export default {
     general: '일반',
   },
   settings: {
+    deathSavesBy: '죽음 내성 굴림과 0 HP 마커',
+    coloursBy: '히트 포인트 색상',
+    effectsBy: '피해와 치유 효과',
     language: '언어',
     hpBar: '히트 포인트 바',
     bloodiedPercent: '중상 기준',
@@ -138,6 +142,7 @@ export default {
     deathActionsFor: { npc: 'NPC', all: 'NPC와 PC' },
     announce: { off: '끄기', gm: 'GM', controllers: 'GM과 플레이어' },
     none: '없음',
+    notInstalled: '설치 안 됨',
   },
   help: {
     menu: '메뉴를 엽니다.',
@@ -221,8 +226,9 @@ export default {
     healthColors: {
       heading: 'HealthColors와 다른 Mod',
       points: [
-        'HealthColors가 설치되어 있으면 DeathTracker는 자체 색조와 효과를 끈 채로 시작합니다. 그것들은 HealthColors가 그립니다.',
-        '죽음 내성 굴림은 하나의 Mod만 다뤄야 합니다. HealthColors 쪽은 !aura deathsaves off로 끄세요.',
+        '설정의 담당 Mod에서 죽음 내성 굴림(빈사, 안정, 사망 마커 포함), 히트 포인트 색상, 피해/치유 효과를 어느 Mod가 맡을지 고릅니다: DeathTracker, HealthColors 또는 끄기. HealthColors 2.5 이상에도 같은 선택지가 있으며, 어느 Mod에서 바꾸든 양쪽에 함께 적용됩니다.',
+        '처음에는 죽음 내성 굴림은 DeathTracker가, 색상과 효과는 HealthColors가 맡습니다. HealthColors가 없으면 DeathTracker가 세 가지를 모두 맡습니다.',
+        'HealthColors 2.5 이전 버전은 이 선택을 공유하지 않습니다. !aura deathsaves off로 HealthColors 쪽의 죽음 내성 굴림을 끄세요.',
         'TokenMod가 바꾼 내용은 감지됩니다. 다른 Mod는 히트 포인트를 바꾼 뒤 DeathTracker.check(token)을 호출할 수 있습니다.',
         'DeathTracker는 자신이 붙인 마커만 제거합니다.',
       ],
@@ -241,6 +247,12 @@ export default {
       colKey: '설정',
       colDesc: '기능',
       rows: {
+        deathSavesBy:
+          '죽음 내성 굴림을 추적하고 빈사, 안정, 사망 마커를 붙일 Mod: DeathTracker, HealthColors 또는 off. HealthColors와 공유됩니다.',
+        coloursBy:
+          '히트 포인트에 따라 토큰에 색을 입힐 Mod: DeathTracker(자체 색조), HealthColors 또는 off. HealthColors와 공유됩니다.',
+        effectsBy:
+          '피해와 치유 효과를 재생할 Mod: DeathTracker, HealthColors 또는 off. HealthColors와 공유됩니다.',
         language: '메뉴, 메시지, 핸드아웃의 언어.',
         hpBar: '히트 포인트를 담는 바 (1, 2 또는 3).',
         bloodiedPercent: '최대 히트 포인트의 이 비율 이하이면 중상 (0이면 중상을 끔).',
@@ -280,7 +292,9 @@ export default {
         onStatusChange: '상태가 바뀌면 알림을 받습니다 ({token, status, previous, isPc}).',
         observe:
           '버전 0.1: DeathTracker가 히트 포인트 변화를 처리한 뒤 (token, prev)로 알림을 받습니다.',
-        managing: 'DeathTracker가 죽음 내성 굴림을 추적 중이면 true (HealthColors가 사용).',
+        managing:
+          'DeathTracker가 죽음 내성 굴림을 추적 중이면 true: 추적이 켜져 있고 DeathTracker가 담당으로 선택된 경우 (HealthColors가 사용).',
+        ownersChanged: '담당 Mod가 바뀐 뒤 토큰을 최신 상태로 맞춥니다 (HealthColors가 호출).',
       },
     },
     upgrading: {

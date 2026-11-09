@@ -13,7 +13,7 @@ export default {
     migrated:
       'DeathTracker 0.1 の設定を引き継ぎました。!dead も引き続き使えますが、新しいコマンドは !deathtracker です。',
     healthColors:
-      'HealthColors が導入されているため、DeathTracker の色付けとダメージ/回復エフェクトはオフにしました。両方使いたい場合は設定でオンにしてください。',
+      'HealthColors が導入されています。死亡セーヴと瀕死・安定状態・死亡のマーカーは DeathTracker が、HP に応じた色付けとダメージ/回復エフェクトは HealthColors が担当します。担当は設定で変更できます。',
     healthColorsSaves:
       'HealthColors も死亡セーヴを記録し、瀕死マーカーを付けています。マーカーが競合しないよう、どちらか一方をオフにしてください (!aura deathsaves off)。',
     settingChanged: '{setting} を {value} にしました。',
@@ -98,6 +98,7 @@ export default {
     language: '言語',
   },
   sections: {
+    owners: '担当する Mod',
     hp: 'ヒット・ポイント',
     markers: 'マーカー',
     deathSaves: '死亡セーヴ (PC)',
@@ -106,6 +107,9 @@ export default {
     general: '一般',
   },
   settings: {
+    deathSavesBy: '死亡セーヴと HP 0 のマーカー',
+    coloursBy: 'HP に応じた色付け',
+    effectsBy: 'ダメージと回復のエフェクト',
     language: '言語',
     hpBar: 'ヒット・ポイントのバー',
     bloodiedPercent: '重傷の基準',
@@ -138,6 +142,7 @@ export default {
     deathActionsFor: { npc: 'NPC', all: 'NPC と PC' },
     announce: { off: 'オフ', gm: 'GM', controllers: 'GM とプレイヤー' },
     none: 'なし',
+    notInstalled: '未導入',
   },
   help: {
     menu: 'メニューを開きます。',
@@ -221,8 +226,9 @@ export default {
     healthColors: {
       heading: 'HealthColors とほかの Mod',
       points: [
-        'HealthColors が導入されている場合、DeathTracker は自身の色付けとエフェクトをオフにして始めます。それらは HealthColors が描きます。',
-        '死亡セーヴを扱う Mod は 1 つだけにしてください。HealthColors 側は !aura deathsaves off でオフにします。',
+        '設定の「担当する Mod」で、死亡セーヴ (瀕死・安定状態・死亡のマーカーを含む)、HP に応じた色付け、ダメージ/回復エフェクトをどの Mod が扱うかを選びます: DeathTracker、HealthColors、オフ。HealthColors 2.5 以降にも同じ選択肢があり、どちらの Mod で変更しても両方に反映されます。',
+        '最初は死亡セーヴを DeathTracker が、色付けとエフェクトを HealthColors が担当します。HealthColors がなければ、3 つとも DeathTracker が担当します。',
+        '2.5 より前の HealthColors はこの選択を共有しません。!aura deathsaves off で HealthColors 側の死亡セーヴをオフにしてください。',
         'TokenMod による変更は検知されます。ほかの Mod はヒット・ポイントを変えた後に DeathTracker.check(token) を呼べます。',
         'DeathTracker は自分が付けたマーカーだけを外します。',
       ],
@@ -241,6 +247,12 @@ export default {
       colKey: '設定',
       colDesc: '内容',
       rows: {
+        deathSavesBy:
+          '死亡セーヴを記録し、瀕死・安定状態・死亡のマーカーを付ける Mod: DeathTracker、HealthColors、off。HealthColors と共有します。',
+        coloursBy:
+          'ヒット・ポイントに応じてトークンを色付けする Mod: DeathTracker (自身の色付け)、HealthColors、off。HealthColors と共有します。',
+        effectsBy:
+          'ダメージと回復のエフェクトを再生する Mod: DeathTracker、HealthColors、off。HealthColors と共有します。',
         language: 'メニュー、メッセージ、ハンドアウトの言語。',
         hpBar: 'ヒット・ポイントを入れるバー (1、2、3)。',
         bloodiedPercent: '最大ヒット・ポイントに対してこの割合以下で重傷 (0 で重傷はオフ)。',
@@ -280,7 +292,10 @@ export default {
         onStatusChange: '状態が変わったときに通知を受けます ({token, status, previous, isPc})。',
         observe:
           'バージョン 0.1: DeathTracker がヒット・ポイントの変化を処理した後に (token, prev) で通知を受けます。',
-        managing: 'DeathTracker が死亡セーヴを記録しているとき true (HealthColors が使用)。',
+        managing:
+          'DeathTracker が死亡セーヴを記録しているとき true。死亡セーヴがオンで、担当に DeathTracker が選ばれている場合です (HealthColors が使用)。',
+        ownersChanged:
+          '担当する Mod が変わった後に、トークンを最新の状態にします (HealthColors が呼び出します)。',
       },
     },
     upgrading: {

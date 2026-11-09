@@ -13,7 +13,7 @@ export default {
     migrated:
       'Je instellingen van DeathTracker 0.1 zijn overgenomen. !dead werkt nog; !deathtracker is het nieuwe commando.',
     healthColors:
-      'HealthColors is geïnstalleerd, dus DeathTracker heeft zijn eigen kleuring en schade-/genezingseffecten uitgezet. Zet ze aan in Instellingen als je beide wilt.',
+      'HealthColors is geïnstalleerd: DeathTracker handelt doodsreddingsworpen en de markeringen Stervend, Stabiel en Dood af, en HealthColors de gezondheidskleuren en schade-/genezingseffecten. Wie wat doet, wijzig je in Instellingen.',
     healthColorsSaves:
       'HealthColors houdt ook doodsreddingsworpen bij en zet stervend-markeringen. Zet een van de twee uit (!aura deathsaves off) zodat ze niet om markeringen vechten.',
     settingChanged: '{setting} is nu {value}.',
@@ -98,6 +98,7 @@ export default {
     language: 'Taal',
   },
   sections: {
+    owners: 'Wie doet wat',
     hp: 'Levenspunten',
     markers: 'Markeringen',
     deathSaves: 'Doodsreddingsworpen (PC’s)',
@@ -106,6 +107,9 @@ export default {
     general: 'Algemeen',
   },
   settings: {
+    deathSavesBy: 'Doodsreddingsworpen en markeringen bij 0 LP',
+    coloursBy: 'Gezondheidskleuren',
+    effectsBy: 'Schade- en genezingseffecten',
     language: 'Taal',
     hpBar: 'Levenspuntenbalk',
     bloodiedPercent: 'Bebloed op',
@@ -138,6 +142,7 @@ export default {
     deathActionsFor: { npc: 'NPC’s', all: 'NPC’s en PC’s' },
     announce: { off: 'Uit', gm: 'GM', controllers: 'GM en spelers' },
     none: 'Geen',
+    notInstalled: 'niet geïnstalleerd',
   },
   help: {
     menu: 'Open het menu.',
@@ -224,8 +229,9 @@ export default {
     healthColors: {
       heading: 'HealthColors en andere Mods',
       points: [
-        'Met HealthColors geïnstalleerd begint DeathTracker met zijn eigen kleuring en effecten uit; HealthColors tekent die.',
-        'Slechts één Mod moet doodsreddingsworpen afhandelen: zet die van HealthColors uit met !aura deathsaves off.',
+        'Wie doet wat, in Instellingen, bepaalt welke Mod doodsreddingsworpen (met de markeringen Stervend, Stabiel en Dood), gezondheidskleuren en schade-/genezingseffecten afhandelt: DeathTracker, HealthColors of Uit. HealthColors 2.5 en later toont dezelfde keuze, en een wijziging in de ene Mod geldt ook voor de andere.',
+        'Eerst handelt DeathTracker de doodsreddingsworpen af en HealthColors de kleuren en effecten. Zonder HealthColors handelt DeathTracker alle drie af.',
+        'HealthColors vóór 2.5 deelt de keuze niet: zet daar de doodsreddingsworpen uit met !aura deathsaves off.',
         'Wijzigingen door TokenMod worden opgemerkt. Andere Mods kunnen DeathTracker.check(token) aanroepen na het wijzigen van levenspunten.',
         'DeathTracker haalt alleen markeringen weg die het zelf heeft gezet.',
       ],
@@ -244,6 +250,12 @@ export default {
       colKey: 'Instelling',
       colDesc: 'Wat het doet',
       rows: {
+        deathSavesBy:
+          'Wie doodsreddingsworpen bijhoudt en de markeringen Stervend, Stabiel en Dood zet: DeathTracker, HealthColors of off. Gedeeld met HealthColors.',
+        coloursBy:
+          'Wie tokens kleurt op basis van levenspunten: DeathTracker (zijn kleuring), HealthColors of off. Gedeeld met HealthColors.',
+        effectsBy:
+          'Wie de schade- en genezingseffecten afspeelt: DeathTracker, HealthColors of off. Gedeeld met HealthColors.',
         language: 'Taal van menu’s, berichten en handouts.',
         hpBar: 'De balk met de levenspunten (1, 2 of 3).',
         bloodiedPercent:
@@ -286,7 +298,9 @@ export default {
         observe:
           'Versie 0.1: krijg (token, prev) nadat DeathTracker een wijziging in levenspunten heeft afgehandeld.',
         managing:
-          'True wanneer DeathTracker doodsreddingsworpen bijhoudt (HealthColors gebruikt dit).',
+          'True wanneer DeathTracker doodsreddingsworpen bijhoudt: ze staan aan en DeathTracker is gekozen om ze af te handelen (HealthColors gebruikt dit).',
+        ownersChanged:
+          'Werk tokens bij nadat is gewijzigd wie wat doet (HealthColors roept dit aan).',
       },
     },
     upgrading: {

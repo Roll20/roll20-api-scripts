@@ -13,7 +13,7 @@ export default {
     migrated:
       'DeathTracker 0.1:n asetuksesi siirrettiin. !dead toimii yhä; !deathtracker on uusi komento.',
     healthColors:
-      'HealthColors on asennettu, joten DeathTracker jätti oman sävytyksensä sekä vahinko- ja parannustehosteensa pois päältä. Kytke ne päälle Asetuksista, jos haluat molemmat.',
+      'HealthColors on asennettu: DeathTracker hoitaa kuolemanpelastusheitot sekä kuolevan, vakaan ja kuolleen merkit, ja HealthColors terveysvärit sekä vahinko- ja parannustehosteet. Muuta sitä, kuka hoitaa mitä, Asetuksista.',
     healthColorsSaves:
       'Myös HealthColors seuraa kuolemanpelastusheittoja ja asettaa kuolevan merkkejä. Kytke toinen niistä pois (!aura deathsaves off), jotta ne eivät kiistele merkeistä.',
     settingChanged: '{setting} on nyt {value}.',
@@ -99,6 +99,7 @@ export default {
     language: 'Kieli',
   },
   sections: {
+    owners: 'Kuka hoitaa mitä',
     hp: 'Osumapisteet',
     markers: 'Merkit',
     deathSaves: 'Kuolemanpelastusheitot (PH)',
@@ -107,6 +108,9 @@ export default {
     general: 'Yleiset',
   },
   settings: {
+    deathSavesBy: 'Pelastusheitot ja 0 OP:n merkit',
+    coloursBy: 'Terveysvärit',
+    effectsBy: 'Vahinko- ja parannustehosteet',
     language: 'Kieli',
     hpBar: 'Osumapistepalkki',
     bloodiedPercent: 'Verinen kun',
@@ -139,6 +143,7 @@ export default {
     deathActionsFor: { npc: 'EPH:t', all: 'EPH:t ja PH:t' },
     announce: { off: 'Pois', gm: 'PJ', controllers: 'PJ ja pelaajat' },
     none: 'Ei mitään',
+    notInstalled: 'ei asennettu',
   },
   help: {
     menu: 'Avaa valikko.',
@@ -223,8 +228,9 @@ export default {
     healthColors: {
       heading: 'HealthColors ja muut Modit',
       points: [
-        'Kun HealthColors on asennettu, DeathTrackerin oma sävytys ja tehosteet ovat aluksi pois päältä; HealthColors piirtää ne.',
-        'Vain yhden Modin tulisi hoitaa kuolemanpelastusheitot: kytke HealthColorsin omat pois komennolla !aura deathsaves off.',
+        'Asetusten kohdassa Kuka hoitaa mitä valitaan, mikä Mod hoitaa kuolemanpelastusheitot (kuolevan, vakaan ja kuolleen merkkeineen), terveysvärit sekä vahinko- ja parannustehosteet: DeathTracker, HealthColors tai Pois. HealthColors 2.5 ja uudemmat näyttävät saman valinnan, ja sen muuttaminen kummassa tahansa Modissa muuttaa sen molemmissa.',
+        'Aluksi DeathTracker hoitaa kuolemanpelastusheitot ja HealthColors värit ja tehosteet. Ilman HealthColorsia DeathTracker hoitaa kaikki kolme.',
+        'HealthColorsin 2.5:tä vanhemmat versiot eivät jaa valintaa: kytke niiden kuolemanpelastusheitot pois komennolla !aura deathsaves off.',
         'TokenModin tekemät muutokset huomataan. Muut Modit voivat kutsua DeathTracker.check(token) muutettuaan osumapisteitä.',
         'DeathTracker poistaa vain merkit, jotka se on itse asettanut.',
       ],
@@ -243,6 +249,12 @@ export default {
       colKey: 'Asetus',
       colDesc: 'Mitä se tekee',
       rows: {
+        deathSavesBy:
+          'Kuka seuraa kuolemanpelastusheittoja ja asettaa kuolevan, vakaan ja kuolleen merkit: DeathTracker, HealthColors tai off. Yhteinen HealthColorsin kanssa.',
+        coloursBy:
+          'Kuka värittää nappulat osumapisteiden mukaan: DeathTracker (sen sävytys), HealthColors tai off. Yhteinen HealthColorsin kanssa.',
+        effectsBy:
+          'Kuka toistaa vahinko- ja parannustehosteet: DeathTracker, HealthColors tai off. Yhteinen HealthColorsin kanssa.',
         language: 'Valikoiden, viestien ja monisteiden kieli.',
         hpBar: 'Palkki, jossa osumapisteet ovat (1, 2 tai 3).',
         bloodiedPercent:
@@ -286,7 +298,9 @@ export default {
         observe:
           'Versio 0.1: saa tieto (token, prev), kun DeathTracker on käsitellyt osumapisteiden muutoksen.',
         managing:
-          'True, kun DeathTracker seuraa kuolemanpelastusheittoja (HealthColors käyttää tätä).',
+          'True, kun DeathTracker seuraa kuolemanpelastusheittoja: ne ovat päällä, ja DeathTracker on valittu hoitamaan ne (HealthColors käyttää tätä).',
+        ownersChanged:
+          'Päivitä nappulat, kun valinta siitä, kuka hoitaa mitä, on muuttunut (HealthColors kutsuu tätä).',
       },
     },
     upgrading: {

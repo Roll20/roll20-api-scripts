@@ -13,7 +13,7 @@ export default {
     migrated:
       'Vos paramètres de DeathTracker 0.1 ont été repris. !dead fonctionne toujours ; !deathtracker est la nouvelle commande.',
     healthColors:
-      'HealthColors est installé, DeathTracker a donc désactivé sa propre teinte et ses effets de blessure et de soin. Activez-les dans les Paramètres si vous voulez les deux.',
+      'HealthColors est installé : DeathTracker gère les jets contre la mort et les marqueurs Mourant, Stable et Mort, et HealthColors les couleurs de santé et les effets de blessure et de soin. Changez qui gère quoi dans les Paramètres.',
     healthColorsSaves:
       'HealthColors suit aussi les jets de sauvegarde contre la mort et pose des marqueurs Mourant. Désactivez l’un des deux (!aura deathsaves off) pour qu’ils ne se disputent pas les marqueurs.',
     settingChanged: '{setting} vaut maintenant {value}.',
@@ -99,6 +99,7 @@ export default {
     language: 'Langue',
   },
   sections: {
+    owners: 'Qui gère quoi',
     hp: 'Points de vie',
     markers: 'Marqueurs',
     deathSaves: 'Jets de sauvegarde contre la mort (PJ)',
@@ -107,6 +108,9 @@ export default {
     general: 'Général',
   },
   settings: {
+    deathSavesBy: 'Jets contre la mort et marqueurs à 0 PV',
+    coloursBy: 'Couleurs de santé',
+    effectsBy: 'Effets de blessure et de soin',
     language: 'Langue',
     hpBar: 'Barre des points de vie',
     bloodiedPercent: 'Ensanglanté à',
@@ -139,6 +143,7 @@ export default {
     deathActionsFor: { npc: 'PNJ', all: 'PNJ et PJ' },
     announce: { off: 'Désactivé', gm: 'MJ', controllers: 'MJ et joueurs' },
     none: 'Aucun',
+    notInstalled: 'non installé',
   },
   help: {
     menu: 'Ouvrir le menu.',
@@ -226,8 +231,9 @@ export default {
     healthColors: {
       heading: 'HealthColors et autres Mods',
       points: [
-        'Avec HealthColors installé, DeathTracker démarre avec sa propre teinte et ses effets désactivés ; HealthColors les dessine.',
-        'Un seul Mod doit gérer les jets contre la mort : désactivez ceux de HealthColors avec !aura deathsaves off.',
+        'Qui gère quoi, dans les Paramètres, choisit quel Mod s’occupe des jets contre la mort (avec les marqueurs Mourant, Stable et Mort), des couleurs de santé et des effets de blessure et de soin : DeathTracker, HealthColors ou Désactivé. À partir de la version 2.5, HealthColors affiche le même choix, et le modifier dans l’un des deux Mods le modifie pour les deux.',
+        'Au départ, DeathTracker gère les jets contre la mort et HealthColors les couleurs et les effets. Sans HealthColors, DeathTracker gère les trois.',
+        'Les versions de HealthColors antérieures à 2.5 ne partagent pas ce choix : désactivez leurs jets contre la mort avec !aura deathsaves off.',
         'Les modifications faites par TokenMod sont vues. Les autres Mods peuvent appeler DeathTracker.check(token) après avoir modifié des points de vie.',
         'DeathTracker ne retire que les marqueurs qu’il a posés lui-même.',
       ],
@@ -246,6 +252,12 @@ export default {
       colKey: 'Paramètre',
       colDesc: 'Ce qu’il fait',
       rows: {
+        deathSavesBy:
+          'Qui suit les jets contre la mort et pose les marqueurs Mourant, Stable et Mort : DeathTracker, HealthColors ou off. Partagé avec HealthColors.',
+        coloursBy:
+          'Qui colore les tokens selon leurs points de vie : DeathTracker (sa teinte), HealthColors ou off. Partagé avec HealthColors.',
+        effectsBy:
+          'Qui joue les effets de blessure et de soin : DeathTracker, HealthColors ou off. Partagé avec HealthColors.',
         language: 'Langue des menus, des messages et des handouts.',
         hpBar: 'La barre qui contient les points de vie (1, 2 ou 3).',
         bloodiedPercent:
@@ -289,7 +301,10 @@ export default {
         onStatusChange: 'Être prévenu quand un état change ({token, status, previous, isPc}).',
         observe:
           'Version 0.1 : être prévenu (token, prev) après que DeathTracker a traité un changement de points de vie.',
-        managing: 'True quand DeathTracker suit les jets contre la mort (HealthColors l’utilise).',
+        managing:
+          'True quand DeathTracker suit les jets contre la mort : ils sont activés et DeathTracker est choisi pour les gérer (HealthColors l’utilise).',
+        ownersChanged:
+          'Mettre les tokens à jour après un changement de qui gère quoi (HealthColors l’appelle).',
       },
     },
     upgrading: {

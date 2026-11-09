@@ -13,7 +13,7 @@ export default {
     migrated:
       'Twoje ustawienia z DeathTracker 0.1 zostały przeniesione. !dead nadal działa; !deathtracker to nowe polecenie.',
     healthColors:
-      'HealthColors jest zainstalowany, więc DeathTracker wyłączył własne zabarwienie i efekty obrażeń/leczenia. Włącz je w Ustawieniach, jeśli chcesz mieć oba.',
+      'HealthColors jest zainstalowany: DeathTracker obsługuje rzuty obronne przed śmiercią oraz znaczniki umierania, stabilności i śmierci, a HealthColors kolory zdrowia i efekty obrażeń/leczenia. Zmień, kto czym się zajmuje, w Ustawieniach.',
     healthColorsSaves:
       'HealthColors również śledzi rzuty obronne przed śmiercią i ustawia znaczniki umierania. Wyłącz jeden z nich (!aura deathsaves off), aby nie walczyły o znaczniki.',
     settingChanged: '{setting} ma teraz wartość {value}.',
@@ -98,6 +98,7 @@ export default {
     language: 'Język',
   },
   sections: {
+    owners: 'Kto czym się zajmuje',
     hp: 'Punkty wytrzymałości',
     markers: 'Znaczniki',
     deathSaves: 'Rzuty obronne przed śmiercią (BG)',
@@ -106,6 +107,9 @@ export default {
     general: 'Ogólne',
   },
   settings: {
+    deathSavesBy: 'Rzuty przed śmiercią i znaczniki przy 0 PW',
+    coloursBy: 'Kolory zdrowia',
+    effectsBy: 'Efekty obrażeń i leczenia',
     language: 'Język',
     hpBar: 'Pasek punktów wytrzymałości',
     bloodiedPercent: 'Zakrwawiony przy',
@@ -138,6 +142,7 @@ export default {
     deathActionsFor: { npc: 'BN', all: 'BN i BG' },
     announce: { off: 'Wył.', gm: 'MG', controllers: 'MG i gracze' },
     none: 'Brak',
+    notInstalled: 'nie zainstalowano',
   },
   help: {
     menu: 'Otwórz menu.',
@@ -224,8 +229,9 @@ export default {
     healthColors: {
       heading: 'HealthColors i inne Mody',
       points: [
-        'Gdy HealthColors jest zainstalowany, DeathTracker startuje z wyłączonym własnym zabarwieniem i efektami; rysuje je HealthColors.',
-        'Tylko jeden Mod powinien obsługiwać rzuty przed śmiercią: wyłącz te z HealthColors poleceniem !aura deathsaves off.',
+        'Kto czym się zajmuje, w Ustawieniach, określa, który Mod obsługuje rzuty przed śmiercią (wraz ze znacznikami umierania, stabilności i śmierci), kolory zdrowia oraz efekty obrażeń/leczenia: DeathTracker, HealthColors lub Wył. HealthColors 2.5 i nowsze pokazują ten sam wybór, a zmiana w jednym Modzie zmienia go w obu.',
+        'Na początku DeathTracker obsługuje rzuty przed śmiercią, a HealthColors kolory i efekty. Bez HealthColors DeathTracker obsługuje wszystkie trzy.',
+        'HealthColors w wersji starszej niż 2.5 nie współdzieli tego wyboru: wyłącz w nim rzuty przed śmiercią poleceniem !aura deathsaves off.',
         'Zmiany wprowadzone przez TokenMod są widoczne. Inne Mody mogą wywołać DeathTracker.check(token) po zmianie punktów wytrzymałości.',
         'DeathTracker usuwa tylko znaczniki, które sam nałożył.',
       ],
@@ -244,6 +250,12 @@ export default {
       colKey: 'Ustawienie',
       colDesc: 'Co robi',
       rows: {
+        deathSavesBy:
+          'Kto śledzi rzuty przed śmiercią i nakłada znaczniki umierania, stabilności i śmierci: DeathTracker, HealthColors lub off. Wspólne z HealthColors.',
+        coloursBy:
+          'Kto barwi żetony według punktów wytrzymałości: DeathTracker (jego zabarwienie), HealthColors lub off. Wspólne z HealthColors.',
+        effectsBy:
+          'Kto odtwarza efekty obrażeń i leczenia: DeathTracker, HealthColors lub off. Wspólne z HealthColors.',
         language: 'Język menu, komunikatów i notatek.',
         hpBar: 'Pasek z punktami wytrzymałości (1, 2 lub 3).',
         bloodiedPercent:
@@ -286,7 +298,10 @@ export default {
           'Otrzymuj powiadomienie, gdy stan się zmienia ({token, status, previous, isPc}).',
         observe:
           'Wersja 0.1: otrzymuj powiadomienie (token, prev) po obsłużeniu przez DeathTracker zmiany punktów wytrzymałości.',
-        managing: 'True, gdy DeathTracker śledzi rzuty przed śmiercią (używa tego HealthColors).',
+        managing:
+          'True, gdy DeathTracker śledzi rzuty przed śmiercią: są włączone, a do ich obsługi wybrano DeathTracker (używa tego HealthColors).',
+        ownersChanged:
+          'Zaktualizuj żetony po zmianie tego, kto czym się zajmuje (wywołuje to HealthColors).',
       },
     },
     upgrading: {

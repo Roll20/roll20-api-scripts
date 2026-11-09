@@ -13,7 +13,7 @@ export default {
     migrated:
       'ההגדרות שלכם מ-DeathTracker 0.1 הועברו. !dead עדיין עובד; !deathtracker היא הפקודה החדשה.',
     healthColors:
-      'HealthColors מותקן, ולכן DeathTracker השאיר כבויים את הצביעה ואת אפקטי הפגיעה והריפוי שלו. הפעילו אותם בהגדרות אם אתם רוצים את שניהם.',
+      'HealthColors מותקן: DeathTracker מטפל בהטלות הצלה מפני מוות ובסמני הגוסס, היציב והמת, ו-HealthColors בצבעי הבריאות ובאפקטי הפגיעה והריפוי. שנו מי מטפל במה בהגדרות.',
     healthColorsSaves:
       'גם HealthColors עוקב אחר הטלות הצלה מפני מוות ומציב סמני גסיסה. כבו אחד מהם (!aura deathsaves off) כדי שלא יתחרו על הסמנים.',
     settingChanged: '{setting} הוא עכשיו {value}.',
@@ -98,6 +98,7 @@ export default {
     language: 'שפה',
   },
   sections: {
+    owners: 'מי מטפל במה',
     hp: 'נקודות פגיעה',
     markers: 'סמנים',
     deathSaves: 'הטלות הצלה מפני מוות (PC)',
@@ -106,6 +107,9 @@ export default {
     general: 'כללי',
   },
   settings: {
+    deathSavesBy: 'הטלות הצלה וסמנים ב-0 HP',
+    coloursBy: 'צבעי בריאות',
+    effectsBy: 'אפקטי פגיעה וריפוי',
     language: 'שפה',
     hpBar: 'פס נקודות הפגיעה',
     bloodiedPercent: 'מדמם החל מ-',
@@ -138,6 +142,7 @@ export default {
     deathActionsFor: { npc: 'NPC', all: 'NPC ו-PC' },
     announce: { off: 'כבוי', gm: 'GM', controllers: 'GM ושחקנים' },
     none: 'ללא',
+    notInstalled: 'לא מותקן',
   },
   help: {
     menu: 'פתיחת התפריט.',
@@ -221,8 +226,9 @@ export default {
     healthColors: {
       heading: 'HealthColors ו-Mods אחרים',
       points: [
-        'כש-HealthColors מותקן, DeathTracker מתחיל כשהצביעה והאפקטים שלו כבויים; HealthColors מצייר אותם.',
-        'רק Mod אחד צריך לטפל בהטלות הצלה מפני מוות: כבו את זה של HealthColors עם !aura deathsaves off.',
+        'האפשרות "מי מטפל במה" בהגדרות קובעת איזה Mod מטפל בהטלות הצלה מפני מוות (כולל סמני הגוסס, היציב והמת), בצבעי הבריאות ובאפקטי הפגיעה והריפוי: DeathTracker, HealthColors או כבוי. HealthColors 2.5 ואילך מציג את אותה בחירה, ושינוי שלה באחד מה-Mods משנה אותה בשניהם.',
+        'בהתחלה DeathTracker מטפל בהטלות הצלה מפני מוות ו-HealthColors בצבעים ובאפקטים. בלי HealthColors, DeathTracker מטפל בשלושתם.',
+        'גרסאות HealthColors שלפני 2.5 לא משתפות את הבחירה: כבו את הטלות ההצלה מפני מוות שלהן עם !aura deathsaves off.',
         'שינויים שנעשים ב-TokenMod נקלטים. Mods אחרים יכולים לקרוא ל-DeathTracker.check(token) אחרי שינוי נקודות פגיעה.',
         'DeathTracker מסיר רק סמנים שהוא עצמו הציב.',
       ],
@@ -241,6 +247,12 @@ export default {
       colKey: 'הגדרה',
       colDesc: 'מה היא עושה',
       rows: {
+        deathSavesBy:
+          'מי עוקב אחר הטלות הצלה מפני מוות ומציב את סמני הגוסס, היציב והמת: DeathTracker, HealthColors או off. משותף עם HealthColors.',
+        coloursBy:
+          'מי צובע אסימונים לפי נקודות הפגיעה: DeathTracker (הצביעה שלו), HealthColors או off. משותף עם HealthColors.',
+        effectsBy:
+          'מי מפעיל את אפקטי הפגיעה והריפוי: DeathTracker, HealthColors או off. משותף עם HealthColors.',
         language: 'שפת התפריטים, ההודעות ודפי המידע.',
         hpBar: 'הפס שמחזיק את נקודות הפגיעה (1, 2 או 3).',
         bloodiedPercent: 'מדמם באחוז הזה מנקודות הפגיעה המרביות או מתחתיו (0 מכבה את מדמם).',
@@ -277,7 +289,9 @@ export default {
         getStatus: 'המצב של אסימון: healthy, bloodied, dying, stable, dead או null.',
         onStatusChange: 'קבלת הודעה כשמצב משתנה ({token, status, previous, isPc}).',
         observe: 'גרסה 0.1: קבלת הודעה (token, prev) אחרי ש-DeathTracker מטפל בשינוי נקודות פגיעה.',
-        managing: 'true כש-DeathTracker עוקב אחר הטלות הצלה מפני מוות (HealthColors משתמש בזה).',
+        managing:
+          'true כש-DeathTracker עוקב אחר הטלות הצלה מפני מוות: הן מופעלות, ו-DeathTracker נבחר לטפל בהן (HealthColors משתמש בזה).',
+        ownersChanged: 'עדכון האסימונים אחרי שינוי של מי מטפל במה (HealthColors קורא לזה).',
       },
     },
     upgrading: {
