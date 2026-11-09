@@ -147,7 +147,11 @@ test('2024 sheet: a store with no deathSaves yet counts as none made', () => {
   api.setHp(token, 0);
   api.command('!deathtracker status', [token]);
   assert.match(api.lastChat(), /Death saves: 0 success/);
-  assert.equal(store.get('current').hitpoints.deathSaves.open, true, 'the sheet shows its death save boxes');
+  assert.equal(
+    store.get('current').hitpoints.deathSaves.open,
+    true,
+    'the sheet shows its death save boxes'
+  );
   tickSaves(api, store, 0, 3);
   assert.equal(api.sandbox.DeathTracker.getStatus(token), 'dead');
   api.setHp(token, 5);
@@ -243,6 +247,23 @@ test('stable command, and announcements to the GM and the player', () => {
   api.command('!deathtracker stable', [token]);
   assert.equal(api.sandbox.DeathTracker.getStatus(token), 'stable');
   assert.match(api.allChat(), /is stable/);
+});
+
+test('a PC with tokens on two pages is announced once', () => {
+  const api = start();
+  const { token, character } = addPc(api);
+  const other = addToken(api, {
+    _pageid: 'page2',
+    name: 'Kildrak',
+    represents: character.id,
+    bar1_value: 10,
+    bar1_max: 10,
+    bar1_link: 'hp',
+  });
+  api.setHp(token, 0);
+  api.setHp(other, 0);
+  assert.equal(api.sandbox.DeathTracker.getStatus(other), 'dying');
+  assert.equal(api.allChat().match(/\/w gm .*is down and dying/g).length, 1);
 });
 
 test('massive damage kills a PC outright when the bar goes far enough below 0', () => {

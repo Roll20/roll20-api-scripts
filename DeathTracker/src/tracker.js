@@ -23,6 +23,11 @@ import { escapeHtml, toText } from './utils.js';
 
 const statusListeners = [];
 
+// A character's tokens on other pages change with it, so the same news can
+// come from several tokens at once: tell it once per character.
+const ANNOUNCE_REPEAT_MS = 5000;
+const lastAnnounced = new Map();
+
 /**
  * Registers a function called whenever a token's status changes.
  *
@@ -207,6 +212,13 @@ function announce(token, status, previous, pc, saves, event) {
   if (!key) {
     return;
   }
+  const who = toText(token.get('represents')) || token.id;
+  const now = Date.now();
+  const last = lastAnnounced.get(who);
+  if (last && last.key === key && now - last.at < ANNOUNCE_REPEAT_MS) {
+    return;
+  }
+  lastAnnounced.set(who, { key, at: now });
   const lang = getLang();
   const name = escapeHtml(toText(token.get('name')) || t('status.unnamed', lang));
   let body = escapeHtml(t(`announce.${key}`, lang, { name: '\u0000' })).replace(
