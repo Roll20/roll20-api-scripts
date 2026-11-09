@@ -5,7 +5,7 @@
  * Name: DeathTracker
  * Script: DeathTracker.js
  * Version: 1.0.0
- * Built: 2026-11-08T16:31:36.704Z
+ * Built: 2026-11-09T22:28:04.839Z
  */
 const DeathTrackerMod = (() => {
   'use strict';
@@ -13,7 +13,7 @@ const DeathTrackerMod = (() => {
   // Build-time placeholders replaced by rollup.config.js inject-build-metadata plugin.
   const SCRIPT_NAME = 'DeathTracker';
   const SCRIPT_VERSION = '1.0.0';
-  const SCRIPT_LAST_UPDATED = '2026-11-08T16:31:36.704Z';
+  const SCRIPT_LAST_UPDATED = '2026-11-09T22:28:04.839Z';
 
   const DEFAULT_LOCALE$1 = 'en-US';
 
@@ -179,8 +179,8 @@ const DeathTrackerMod = (() => {
     announce: ['off', 'gm', 'controllers'],
   });
 
-  // Default settings for new installs. Tint and FX are switched off on a new
-  // install when HealthColors is installed (it draws its own).
+  // Default settings for new installs. Whether DeathTracker tints and plays
+  // effects at all is chosen with HealthColors (see owners.js).
   const DEFAULT_SETTINGS = {
     language: DEFAULT_LOCALE$1,
     hpBar: 1,
@@ -769,6 +769,175 @@ const DeathTrackerMod = (() => {
     return out;
   }
 
+  // Other Mods: HealthColors, TokenMod, and the 0.1.x observer list that
+  // CombatMaster, LazyExperience and StatusInfo use.
+
+  const observers = [];
+
+  /**
+   * Says whether HealthColors is installed.
+   *
+   * @returns {boolean} True when it is.
+   */
+  function healthColorsInstalled() {
+    return typeof HealthColors !== 'undefined' && !!HealthColors;
+  }
+
+  /**
+   * Says whether HealthColors is also tracking death saves.
+   *
+   * @returns {boolean} True when its death save markers are on.
+   */
+  function healthColorsTracksSaves() {
+    return (
+      healthColorsInstalled() &&
+      typeof state !== 'undefined' &&
+      isRecord(state.HealthColors) &&
+      state.HealthColors.deathSavesOn === true
+    );
+  }
+
+  /**
+   * Adds a 0.1.x observer: called with (token, prev) after DeathTracker handles a
+   * hit point change.
+   *
+   * @param {Function} fn Observer.
+   * @returns {void}
+   */
+  function observeTokenChange(fn) {
+    if (typeof fn === 'function') {
+      observers.push(fn);
+    }
+  }
+
+  /**
+   * Tells the 0.1.x observers about a change. One failing observer does not stop
+   * the others (or DeathTracker).
+   *
+   * @param {object} token Roll20 graphic.
+   * @param {object} prev Previous attributes.
+   * @returns {void}
+   */
+  function notifyObservers(token, prev) {
+    for (const fn of observers) {
+      try {
+        fn(token, prev);
+      } catch (e) {
+        log(`DeathTracker: a token change observer failed: ${e?.message || e}`);
+      }
+    }
+  }
+
+  // Who handles the things HealthColors and DeathTracker can both do: death
+  // saves with the dying, stable and dead markers; health colours; and hurt and
+  // heal effects. Each is done by one Mod or by neither. The choice is kept in
+  // state.ModOwners, which HealthColors 2.5 and later reads and writes as well,
+  // so changing it in either Mod's settings changes it for both.
+
+  const SELF = 'DeathTracker';
+
+  /** Who can handle an area: one of the two Mods, or 'off' for neither. */
+  const OWNERS = ['DeathTracker', 'HealthColors', 'off'];
+
+  /** The settings-card keys for the areas. */
+  const OWNER_SETTINGS = {
+    deathSavesBy: 'deathSaves',
+    coloursBy: 'colours',
+    effectsBy: 'effects',
+  };
+
+  /**
+   * Who handles an area until the GM chooses: with HealthColors installed,
+   * DeathTracker does death saves and HealthColors the colours and effects;
+   * otherwise DeathTracker does them all. HealthColors works this out the same
+   * way.
+   *
+   * @param {string} area One of OWNER_AREAS.
+   * @returns {string} One of OWNERS.
+   */
+  function defaultOwner(area) {
+    if (!healthColorsInstalled()) {
+      return SELF;
+    }
+    return area === 'deathSaves' ? SELF : 'HealthColors';
+  }
+
+  /**
+   * Who handles an area now.
+   *
+   * @param {string} area One of OWNER_AREAS.
+   * @returns {string} One of OWNERS.
+   */
+  function getOwner(area) {
+    const chosen =
+      typeof state !== 'undefined' && isRecord(state.ModOwners) ? state.ModOwners[area] : undefined;
+    return OWNERS.includes(chosen) ? chosen : defaultOwner(area);
+  }
+
+  /**
+   * Says whether DeathTracker handles an area.
+   *
+   * @param {string} area One of OWNER_AREAS.
+   * @returns {boolean} True when it does.
+   */
+  function owns(area) {
+    return getOwner(area) === SELF;
+  }
+
+  /**
+   * Reads an owner typed in chat ("healthcolors", "DeathTracker", "off").
+   *
+   * @param {*} raw Value as typed.
+   * @returns {string|null} One of OWNERS, or null when it is none of them.
+   */
+  function parseOwner(raw) {
+    const value = toText(raw).trim().toLowerCase();
+    if (['none', 'disabled', 'disable', 'no'].includes(value)) {
+      return 'off';
+    }
+    return OWNERS.find((o) => o.toLowerCase() === value) || null;
+  }
+
+  /**
+   * Chooses who handles an area, for both Mods.
+   *
+   * @param {string} area One of OWNER_AREAS.
+   * @param {string} owner One of OWNERS.
+   * @returns {void}
+   */
+  function setOwner(area, owner) {
+    if (!isRecord(state.ModOwners)) {
+      state.ModOwners = {};
+    }
+    state.ModOwners[area] = owner;
+  }
+
+  /**
+   * Says whether the installed HealthColors reads the shared choice (2.5 and
+   * later). Older versions do their own thing whatever is chosen.
+   *
+   * @returns {boolean} True when it does.
+   */
+  function healthColorsShares() {
+    return healthColorsInstalled() && typeof HealthColors.ownersChanged === 'function';
+  }
+
+  /**
+   * Asks HealthColors to bring its tokens up to date after the choice changed.
+   *
+   * @returns {void}
+   */
+  function tellHealthColors() {
+    if (!healthColorsShares()) {
+      return;
+    }
+    try {
+      HealthColors.ownersChanged();
+    } catch (e) {
+      log(`DeathTracker: HealthColors could not refresh: ${e?.message || e}`);
+    }
+  }
+
   // Reading characters: the D&D 2024 (Beacon) sheet's "store" attribute, plain
   // attributes for other sheets, and who controls a character.
   //
@@ -1032,7 +1201,7 @@ const DeathTrackerMod = (() => {
       migrated:
         'Jou DeathTracker 0.1-instellings is oorgedra. !dead werk steeds; !deathtracker is die nuwe opdrag.',
       healthColors:
-        'HealthColors is geïnstalleer, so DeathTracker het sy eie tint en seer-/genesingseffekte afgelaat. Skakel hulle aan in Instellings as jy albei wil hê.',
+        'HealthColors is geïnstalleer: DeathTracker hanteer doodsreddingsgooie en die sterwend-, stabiel- en dood-merkers, en HealthColors die gesondheidskleure en seer-/genesingseffekte. Verander in Instellings wie wat hanteer.',
       healthColorsSaves:
         'HealthColors hou ook doodsreddingsgooie dop en sit sterwend-merkers. Skakel een van die twee af (!aura deathsaves off) sodat hulle nie oor merkers baklei nie.',
       settingChanged: '{setting} is nou {value}.',
@@ -1118,6 +1287,7 @@ const DeathTrackerMod = (() => {
       language: 'Taal',
     },
     sections: {
+      owners: 'Wie hanteer wat',
       hp: 'Lewenspunte',
       markers: 'Merkers',
       deathSaves: 'Doodsreddingsgooie (PC’s)',
@@ -1126,6 +1296,9 @@ const DeathTrackerMod = (() => {
       general: 'Algemeen',
     },
     settings: {
+      deathSavesBy: 'Doodsreddingsgooie en 0-LP-merkers',
+      coloursBy: 'Gesondheidskleure',
+      effectsBy: 'Seer- en genesingseffekte',
       language: 'Taal',
       hpBar: 'Lewenspuntebalk',
       bloodiedPercent: 'Bebloed op',
@@ -1158,6 +1331,7 @@ const DeathTrackerMod = (() => {
       deathActionsFor: { npc: 'NPC’s', all: 'NPC’s en PC’s' },
       announce: { off: 'Af', gm: 'GM', controllers: 'GM en spelers' },
       none: 'Geen',
+      notInstalled: 'nie geïnstalleer nie',
     },
     help: {
       menu: 'Maak die kieslys oop.',
@@ -1244,8 +1418,9 @@ const DeathTrackerMod = (() => {
       healthColors: {
         heading: 'HealthColors en ander Mods',
         points: [
-          'Met HealthColors geïnstalleer begin DeathTracker met sy eie tint en effekte af; HealthColors teken dié.',
-          'Net een Mod moet doodsreddingsgooie hanteer: skakel HealthColors s’n af met !aura deathsaves off.',
+          'Wie hanteer wat, in Instellings, bepaal watter Mod doodsreddingsgooie (met die sterwend-, stabiel- en dood-merkers), gesondheidskleure en seer-/genesingseffekte hanteer: DeathTracker, HealthColors of Af. HealthColors 2.5 en later wys dieselfde keuse, en ’n verandering in enige van die twee Mods geld vir albei.',
+          'Aanvanklik hanteer DeathTracker doodsreddingsgooie en HealthColors die kleure en effekte. Sonder HealthColors hanteer DeathTracker al drie.',
+          'HealthColors voor 2.5 deel nie die keuse nie: skakel sy doodsreddingsgooie af met !aura deathsaves off.',
           'Veranderings wat TokenMod maak, word raakgesien. Ander Mods kan DeathTracker.check(token) roep nadat hulle lewenspunte verander het.',
           'DeathTracker haal net merkers af wat dit self opgesit het.',
         ],
@@ -1264,6 +1439,12 @@ const DeathTrackerMod = (() => {
         colKey: 'Instelling',
         colDesc: 'Wat dit doen',
         rows: {
+          deathSavesBy:
+            'Wie doodsreddingsgooie dophou en die sterwend-, stabiel- en dood-merkers sit: DeathTracker, HealthColors of off. Gedeel met HealthColors.',
+          coloursBy:
+            'Wie tokens volgens lewenspunte kleur: DeathTracker (sy tint), HealthColors of off. Gedeel met HealthColors.',
+          effectsBy:
+            'Wie die seer- en genesingseffekte speel: DeathTracker, HealthColors of off. Gedeel met HealthColors.',
           language: 'Taal van kieslyste, boodskappe en uitdeelstukke.',
           hpBar: 'Die balk wat die lewenspunte hou (1, 2 of 3).',
           bloodiedPercent:
@@ -1306,7 +1487,9 @@ const DeathTrackerMod = (() => {
           observe:
             'Weergawe 0.1: word laat weet (token, prev) nadat DeathTracker ’n lewenspunteverandering hanteer het.',
           managing:
-            'True wanneer DeathTracker doodsreddingsgooie dophou (HealthColors gebruik dit).',
+            'True wanneer DeathTracker doodsreddingsgooie dophou: hulle is aan, en DeathTracker is gekies om hulle te hanteer (HealthColors gebruik dit).',
+          ownersChanged:
+            'Bring tokens op datum nadat verander het wie wat hanteer (HealthColors roep dit).',
         },
       },
       upgrading: {
@@ -1365,7 +1548,7 @@ const DeathTrackerMod = (() => {
       migrated:
         'S’ha conservat la teva configuració de DeathTracker 0.1. !dead encara funciona; !deathtracker és l’ordre nova.',
       healthColors:
-        'HealthColors està instal·lat, així que DeathTracker ha deixat desactivats el seu propi tint i els seus efectes de ferida i curació. Activa’ls a Configuració si vols tots dos.',
+        'HealthColors està instal·lat: DeathTracker s’encarrega de les salvacions contra la mort i dels marcadors de moribund, estable i mort, i HealthColors dels colors de salut i dels efectes de ferida i curació. Canvia qui s’encarrega de què a Configuració.',
       healthColorsSaves:
         'HealthColors també porta les tirades de salvació contra la mort i posa marcadors de moribund. Desactiva’n un (!aura deathsaves off) perquè no es barallin pels marcadors.',
       settingChanged: '{setting} ara és {value}.',
@@ -1450,6 +1633,7 @@ const DeathTrackerMod = (() => {
       language: 'Idioma',
     },
     sections: {
+      owners: 'Qui s’encarrega de què',
       hp: 'Punts de cop',
       markers: 'Marcadors',
       deathSaves: 'Salvacions contra la mort (PJ)',
@@ -1458,6 +1642,9 @@ const DeathTrackerMod = (() => {
       general: 'General',
     },
     settings: {
+      deathSavesBy: 'Salvacions i marcadors a 0 PC',
+      coloursBy: 'Colors de salut',
+      effectsBy: 'Efectes de ferida i curació',
       language: 'Idioma',
       hpBar: 'Barra de punts de cop',
       bloodiedPercent: 'Ensangonat a',
@@ -1490,6 +1677,7 @@ const DeathTrackerMod = (() => {
       deathActionsFor: { npc: 'PNJ', all: 'PNJ i PJ' },
       announce: { off: 'Desactivat', gm: 'DJ', controllers: 'DJ i jugadors' },
       none: 'Cap',
+      notInstalled: 'no instal·lat',
     },
     help: {
       menu: 'Obre el menú.',
@@ -1576,8 +1764,9 @@ const DeathTrackerMod = (() => {
       healthColors: {
         heading: 'HealthColors i altres Mods',
         points: [
-          'Amb HealthColors instal·lat, DeathTracker comença amb el seu propi tint i els seus efectes desactivats; HealthColors se n’encarrega.',
-          'Només un Mod s’ha d’encarregar de les salvacions contra la mort: desactiva les de HealthColors amb !aura deathsaves off.',
+          'Qui s’encarrega de què, a Configuració, tria quin Mod porta les salvacions contra la mort (amb els marcadors de moribund, estable i mort), els colors de salut i els efectes de ferida i curació: DeathTracker, HealthColors o Desactivat. HealthColors 2.5 i posteriors mostren la mateixa opció, i canviar-la en qualsevol dels dos Mods la canvia per a tots dos.',
+          'Al principi DeathTracker s’encarrega de les salvacions contra la mort i HealthColors dels colors i els efectes. Sense HealthColors, DeathTracker s’encarrega de les tres coses.',
+          'HealthColors anterior a la 2.5 no comparteix l’opció: desactiva’n les salvacions contra la mort amb !aura deathsaves off.',
           'Es detecten els canvis fets per TokenMod. Altres Mods poden cridar DeathTracker.check(token) després de canviar els punts de cop.',
           'DeathTracker només treu els marcadors que ha posat ell mateix.',
         ],
@@ -1596,6 +1785,12 @@ const DeathTrackerMod = (() => {
         colKey: 'Opció',
         colDesc: 'Què fa',
         rows: {
+          deathSavesBy:
+            'Qui porta les salvacions contra la mort i posa els marcadors de moribund, estable i mort: DeathTracker, HealthColors o off. Compartit amb HealthColors.',
+          coloursBy:
+            'Qui acoloreix els tokens segons els punts de cop: DeathTracker (el seu tint), HealthColors o off. Compartit amb HealthColors.',
+          effectsBy:
+            'Qui reprodueix els efectes de ferida i curació: DeathTracker, HealthColors o off. Compartit amb HealthColors.',
           language: 'Idioma dels menús, missatges i handouts.',
           hpBar: 'La barra que conté els punts de cop (1, 2 o 3).',
           bloodiedPercent:
@@ -1637,7 +1832,9 @@ const DeathTrackerMod = (() => {
           observe:
             'Versió 0.1: rep (token, prev) després que DeathTracker gestioni un canvi de punts de cop.',
           managing:
-            'True quan DeathTracker porta les salvacions contra la mort (HealthColors ho fa servir).',
+            'True quan DeathTracker porta les salvacions contra la mort: estan activades i DeathTracker és qui se n’encarrega (HealthColors ho fa servir).',
+          ownersChanged:
+            'Posa al dia els tokens després que canviï qui s’encarrega de què (HealthColors ho crida).',
         },
       },
       upgrading: {
@@ -1695,7 +1892,7 @@ const DeathTrackerMod = (() => {
       readyHint: '輸入 !deathtracker 開啟選單。',
       migrated: '已沿用你的 DeathTracker 0.1 設定。!dead 仍可使用；新指令是 !deathtracker。',
       healthColors:
-        '已安裝 HealthColors，因此 DeathTracker 關閉了自己的染色與受傷/治療特效。如果兩者都想要，請在設定中開啟。',
+        '已安裝 HealthColors：DeathTracker 負責死亡豁免檢定與瀕死、穩定、死亡標記，HealthColors 負責生命值顏色與受傷/治療特效。可在設定中變更由誰負責。',
       healthColorsSaves:
         'HealthColors 也在追蹤死亡豁免檢定並設定瀕死標記。請關閉其中一個 (!aura deathsaves off)，以免兩者搶著改標記。',
       settingChanged: '{setting} 已設為 {value}。',
@@ -1780,6 +1977,7 @@ const DeathTrackerMod = (() => {
       language: '語言',
     },
     sections: {
+      owners: '由誰負責',
       hp: '生命值',
       markers: '狀態標記',
       deathSaves: '死亡豁免檢定 (PC)',
@@ -1788,6 +1986,9 @@ const DeathTrackerMod = (() => {
       general: '一般',
     },
     settings: {
+      deathSavesBy: '死亡豁免與 0 生命值標記',
+      coloursBy: '生命值顏色',
+      effectsBy: '受傷與治療特效',
       language: '語言',
       hpBar: '生命值數值條',
       bloodiedPercent: '重傷門檻',
@@ -1820,6 +2021,7 @@ const DeathTrackerMod = (() => {
       deathActionsFor: { npc: 'NPC', all: 'NPC 與 PC' },
       announce: { off: '關', gm: 'GM', controllers: 'GM 與玩家' },
       none: '無',
+      notInstalled: '未安裝',
     },
     help: {
       menu: '開啟選單。',
@@ -1903,8 +2105,9 @@ const DeathTrackerMod = (() => {
       healthColors: {
         heading: 'HealthColors 與其他 Mod',
         points: [
-          '安裝 HealthColors 時，DeathTracker 一開始會關閉自己的染色與特效；由 HealthColors 繪製。',
-          '只應由一個 Mod 處理死亡豁免檢定：用 !aura deathsaves off 關閉 HealthColors 的。',
+          '設定中的「由誰負責」可選擇由哪個 Mod 處理死亡豁免檢定 (含瀕死、穩定與死亡標記)、生命值顏色與受傷/治療特效：DeathTracker、HealthColors 或關。HealthColors 2.5 以上版本會顯示相同的選項，在任一 Mod 中變更都會同時套用到兩者。',
+          '預設由 DeathTracker 處理死亡豁免檢定，HealthColors 處理顏色與特效。未安裝 HealthColors 時，三者都由 DeathTracker 處理。',
+          'HealthColors 2.5 之前的版本不會共用此選項：請用 !aura deathsaves off 關閉它的死亡豁免檢定。',
           'TokenMod 做的變更會被偵測到。其他 Mod 可以在變更生命值後呼叫 DeathTracker.check(token)。',
           'DeathTracker 只會移除它自己加上的標記。',
         ],
@@ -1922,6 +2125,12 @@ const DeathTrackerMod = (() => {
         colKey: '設定',
         colDesc: '功能',
         rows: {
+          deathSavesBy:
+            '由誰追蹤死亡豁免檢定並設定瀕死、穩定與死亡標記：DeathTracker、HealthColors 或關閉。與 HealthColors 共用。',
+          coloursBy:
+            '由誰依生命值為指示物上色：DeathTracker (其染色)、HealthColors 或關閉。與 HealthColors 共用。',
+          effectsBy:
+            '由誰播放受傷與治療特效：DeathTracker、HealthColors 或關閉。與 HealthColors 共用。',
           language: '選單、訊息與講義的語言。',
           hpBar: '存放生命值的數值條 (1、2 或 3)。',
           bloodiedPercent: '等於或低於最大生命值的此百分比時為重傷 (0 會關閉重傷)。',
@@ -1958,7 +2167,9 @@ const DeathTrackerMod = (() => {
           getStatus: '指示物的狀態：healthy、bloodied、dying、stable、dead 或 null。',
           onStatusChange: '狀態改變時收到通知 ({token, status, previous, isPc})。',
           observe: '0.1 版：DeathTracker 處理生命值變化後，以 (token, prev) 收到通知。',
-          managing: 'DeathTracker 正在追蹤死亡豁免檢定時為 true (HealthColors 會使用)。',
+          managing:
+            'DeathTracker 正在追蹤死亡豁免檢定時為 true：檢定已開啟，且選擇由 DeathTracker 處理 (HealthColors 會使用)。',
+          ownersChanged: '在「由誰負責」變更後更新指示物 (HealthColors 會呼叫)。',
         },
       },
       upgrading: {
@@ -2017,7 +2228,7 @@ const DeathTrackerMod = (() => {
       migrated:
         'Vaše nastavení z DeathTracker 0.1 bylo převzato. !dead stále funguje; !deathtracker je nový příkaz.',
       healthColors:
-        'HealthColors je nainstalován, takže DeathTracker nechal své vlastní zabarvení a efekty zranění/léčení vypnuté. Zapněte je v Nastavení, pokud chcete obojí.',
+        'HealthColors je nainstalován: DeathTracker obsluhuje hody proti smrti a značky umírání, stabilizace a smrti, HealthColors barvy zdraví a efekty zranění/léčení. Kdo co obsluhuje, změníte v Nastavení.',
       healthColorsSaves:
         'HealthColors také sleduje záchranné hody proti smrti a nastavuje značky umírání. Jeden z nich vypněte (!aura deathsaves off), aby se o značky nepřetahovaly.',
       settingChanged: '{setting} je nyní {value}.',
@@ -2102,6 +2313,7 @@ const DeathTrackerMod = (() => {
       language: 'Jazyk',
     },
     sections: {
+      owners: 'Kdo co obsluhuje',
       hp: 'Životy',
       markers: 'Značky',
       deathSaves: 'Záchranné hody proti smrti (PC)',
@@ -2110,6 +2322,9 @@ const DeathTrackerMod = (() => {
       general: 'Obecné',
     },
     settings: {
+      deathSavesBy: 'Hody proti smrti a značky při 0 životech',
+      coloursBy: 'Barvy zdraví',
+      effectsBy: 'Efekty zranění a léčení',
       language: 'Jazyk',
       hpBar: 'Lišta životů',
       bloodiedPercent: 'Zakrvácený při',
@@ -2142,6 +2357,7 @@ const DeathTrackerMod = (() => {
       deathActionsFor: { npc: 'NPC', all: 'NPC i PC' },
       announce: { off: 'Vyp', gm: 'PJ', controllers: 'PJ a hráči' },
       none: 'Žádná',
+      notInstalled: 'není nainstalován',
     },
     help: {
       menu: 'Otevřít nabídku.',
@@ -2226,8 +2442,9 @@ const DeathTrackerMod = (() => {
       healthColors: {
         heading: 'HealthColors a další Mody',
         points: [
-          'Když je nainstalován HealthColors, DeathTracker začíná s vypnutým vlastním zabarvením a efekty; ty kreslí HealthColors.',
-          'Hody proti smrti by měl obsluhovat jen jeden Mod: vypněte ty v HealthColors příkazem !aura deathsaves off.',
+          'Kdo co obsluhuje (v Nastavení) určuje, který Mod obsluhuje hody proti smrti (se značkami umírání, stabilizace a smrti), barvy zdraví a efekty zranění/léčení: DeathTracker, HealthColors nebo Vyp. HealthColors 2.5 a novější nabízí stejnou volbu a její změna v kterémkoli z obou Modů platí pro oba.',
+          'Na začátku obsluhuje DeathTracker hody proti smrti a HealthColors barvy a efekty. Bez HealthColors obsluhuje DeathTracker všechny tři.',
+          'HealthColors starší než 2.5 volbu nesdílí: vypněte v něm hody proti smrti příkazem !aura deathsaves off.',
           'Změny provedené TokenModem jsou zachyceny. Ostatní Mody mohou po změně životů zavolat DeathTracker.check(token).',
           'DeathTracker odstraňuje jen značky, které sám nastavil.',
         ],
@@ -2246,6 +2463,12 @@ const DeathTrackerMod = (() => {
         colKey: 'Nastavení',
         colDesc: 'Co dělá',
         rows: {
+          deathSavesBy:
+            'Kdo sleduje hody proti smrti a nastavuje značky umírání, stabilizace a smrti: DeathTracker, HealthColors nebo off. Sdíleno s HealthColors.',
+          coloursBy:
+            'Kdo barví tokeny podle životů: DeathTracker (jeho zabarvení), HealthColors nebo off. Sdíleno s HealthColors.',
+          effectsBy:
+            'Kdo přehrává efekty zranění a léčení: DeathTracker, HealthColors nebo off. Sdíleno s HealthColors.',
           language: 'Jazyk nabídek, zpráv a podkladů.',
           hpBar: 'Lišta, ve které jsou životy (1, 2 nebo 3).',
           bloodiedPercent:
@@ -2285,7 +2508,10 @@ const DeathTrackerMod = (() => {
           onStatusChange: 'Dostat zprávu, když se stav změní ({token, status, previous, isPc}).',
           observe:
             'Verze 0.1: dostat zprávu (token, prev) poté, co DeathTracker zpracuje změnu životů.',
-          managing: 'True, když DeathTracker sleduje hody proti smrti (používá to HealthColors).',
+          managing:
+            'True, když DeathTracker sleduje hody proti smrti: jsou zapnuté a jejich obsluhou je pověřen DeathTracker (používá to HealthColors).',
+          ownersChanged:
+            'Aktualizovat tokeny poté, co se změnilo, kdo co obsluhuje (volá to HealthColors).',
         },
       },
       upgrading: {
@@ -2344,7 +2570,7 @@ const DeathTrackerMod = (() => {
       migrated:
         'Dine indstillinger fra DeathTracker 0.1 er overført. !dead virker stadig; !deathtracker er den nye kommando.',
       healthColors:
-        'HealthColors er installeret, så DeathTracker har slået sin egen farvetone og sine skade-/helingseffekter fra. Slå dem til under Indstillinger, hvis du vil have begge.',
+        'HealthColors er installeret: DeathTracker håndterer dødsredningsslag og døende-, stabil- og død-markørerne, og HealthColors helbredsfarverne og skade-/helingseffekterne. Skift, hvem der håndterer hvad, under Indstillinger.',
       healthColorsSaves:
         'HealthColors holder også styr på dødsredningsslag og sætter døende-markører. Slå en af dem fra (!aura deathsaves off), så de ikke kæmper om markørerne.',
       settingChanged: '{setting} er nu {value}.',
@@ -2429,6 +2655,7 @@ const DeathTrackerMod = (() => {
       language: 'Sprog',
     },
     sections: {
+      owners: 'Hvem håndterer hvad',
       hp: 'Livspoint',
       markers: 'Markører',
       deathSaves: 'Dødsredningsslag (PC’er)',
@@ -2437,6 +2664,9 @@ const DeathTrackerMod = (() => {
       general: 'Generelt',
     },
     settings: {
+      deathSavesBy: 'Dødsredningsslag og 0 LP-markører',
+      coloursBy: 'Helbredsfarver',
+      effectsBy: 'Skade- og helingseffekter',
       language: 'Sprog',
       hpBar: 'Livspointbjælke',
       bloodiedPercent: 'Blødende ved',
@@ -2469,6 +2699,7 @@ const DeathTrackerMod = (() => {
       deathActionsFor: { npc: 'NPC’er', all: 'NPC’er og PC’er' },
       announce: { off: 'Fra', gm: 'GM', controllers: 'GM og spillere' },
       none: 'Ingen',
+      notInstalled: 'ikke installeret',
     },
     help: {
       menu: 'Åbn menuen.',
@@ -2553,8 +2784,9 @@ const DeathTrackerMod = (() => {
       healthColors: {
         heading: 'HealthColors og andre Mods',
         points: [
-          'Med HealthColors installeret starter DeathTracker med sin egen farvetone og sine effekter slået fra; HealthColors tegner dem.',
-          'Kun én Mod bør håndtere dødsredningsslag: slå HealthColors’ fra med !aura deathsaves off.',
+          'Hvem håndterer hvad, under Indstillinger, vælger, hvilken Mod der står for dødsredningsslag (med døende-, stabil- og død-markørerne), helbredsfarver og skade-/helingseffekter: DeathTracker, HealthColors eller Fra. HealthColors 2.5 og nyere viser samme valg, og ændrer du det i den ene Mod, ændres det i begge.',
+          'Fra start håndterer DeathTracker dødsredningsslag og HealthColors farverne og effekterne. Uden HealthColors håndterer DeathTracker alle tre.',
+          'HealthColors før 2.5 deler ikke valget: slå dens dødsredningsslag fra med !aura deathsaves off.',
           'Ændringer foretaget af TokenMod opfanges. Andre Mods kan kalde DeathTracker.check(token) efter at have ændret livspoint.',
           'DeathTracker fjerner kun markører, den selv har sat på.',
         ],
@@ -2573,6 +2805,12 @@ const DeathTrackerMod = (() => {
         colKey: 'Indstilling',
         colDesc: 'Hvad den gør',
         rows: {
+          deathSavesBy:
+            'Hvem der følger dødsredningsslag og sætter døende-, stabil- og død-markørerne: DeathTracker, HealthColors eller off. Delt med HealthColors.',
+          coloursBy:
+            'Hvem der farver tokens efter livspoint: DeathTracker (dens farvetone), HealthColors eller off. Delt med HealthColors.',
+          effectsBy:
+            'Hvem der afspiller skade- og helingseffekterne: DeathTracker, HealthColors eller off. Delt med HealthColors.',
           language: 'Sprog for menuer, beskeder og handouts.',
           hpBar: 'Bjælken, der indeholder livspoint (1, 2 eller 3).',
           bloodiedPercent:
@@ -2614,7 +2852,10 @@ const DeathTrackerMod = (() => {
           onStatusChange: 'Få besked, når en status ændres ({token, status, previous, isPc}).',
           observe:
             'Version 0.1: få besked (token, prev), efter at DeathTracker har håndteret en ændring af livspoint.',
-          managing: 'True, når DeathTracker følger dødsredningsslag (HealthColors bruger dette).',
+          managing:
+            'True, når DeathTracker følger dødsredningsslag: de er slået til, og DeathTracker er valgt til at håndtere dem (HealthColors bruger dette).',
+          ownersChanged:
+            'Opdatér tokens, efter at det er ændret, hvem der håndterer hvad (HealthColors kalder dette).',
         },
       },
       upgrading: {
@@ -2673,7 +2914,7 @@ const DeathTrackerMod = (() => {
       migrated:
         'Je instellingen van DeathTracker 0.1 zijn overgenomen. !dead werkt nog; !deathtracker is het nieuwe commando.',
       healthColors:
-        'HealthColors is geïnstalleerd, dus DeathTracker heeft zijn eigen kleuring en schade-/genezingseffecten uitgezet. Zet ze aan in Instellingen als je beide wilt.',
+        'HealthColors is geïnstalleerd: DeathTracker handelt doodsreddingsworpen en de markeringen Stervend, Stabiel en Dood af, en HealthColors de gezondheidskleuren en schade-/genezingseffecten. Wie wat doet, wijzig je in Instellingen.',
       healthColorsSaves:
         'HealthColors houdt ook doodsreddingsworpen bij en zet stervend-markeringen. Zet een van de twee uit (!aura deathsaves off) zodat ze niet om markeringen vechten.',
       settingChanged: '{setting} is nu {value}.',
@@ -2758,6 +2999,7 @@ const DeathTrackerMod = (() => {
       language: 'Taal',
     },
     sections: {
+      owners: 'Wie doet wat',
       hp: 'Levenspunten',
       markers: 'Markeringen',
       deathSaves: 'Doodsreddingsworpen (PC’s)',
@@ -2766,6 +3008,9 @@ const DeathTrackerMod = (() => {
       general: 'Algemeen',
     },
     settings: {
+      deathSavesBy: 'Doodsreddingsworpen en markeringen bij 0 LP',
+      coloursBy: 'Gezondheidskleuren',
+      effectsBy: 'Schade- en genezingseffecten',
       language: 'Taal',
       hpBar: 'Levenspuntenbalk',
       bloodiedPercent: 'Bebloed op',
@@ -2798,6 +3043,7 @@ const DeathTrackerMod = (() => {
       deathActionsFor: { npc: 'NPC’s', all: 'NPC’s en PC’s' },
       announce: { off: 'Uit', gm: 'GM', controllers: 'GM en spelers' },
       none: 'Geen',
+      notInstalled: 'niet geïnstalleerd',
     },
     help: {
       menu: 'Open het menu.',
@@ -2884,8 +3130,9 @@ const DeathTrackerMod = (() => {
       healthColors: {
         heading: 'HealthColors en andere Mods',
         points: [
-          'Met HealthColors geïnstalleerd begint DeathTracker met zijn eigen kleuring en effecten uit; HealthColors tekent die.',
-          'Slechts één Mod moet doodsreddingsworpen afhandelen: zet die van HealthColors uit met !aura deathsaves off.',
+          'Wie doet wat, in Instellingen, bepaalt welke Mod doodsreddingsworpen (met de markeringen Stervend, Stabiel en Dood), gezondheidskleuren en schade-/genezingseffecten afhandelt: DeathTracker, HealthColors of Uit. HealthColors 2.5 en later toont dezelfde keuze, en een wijziging in de ene Mod geldt ook voor de andere.',
+          'Eerst handelt DeathTracker de doodsreddingsworpen af en HealthColors de kleuren en effecten. Zonder HealthColors handelt DeathTracker alle drie af.',
+          'HealthColors vóór 2.5 deelt de keuze niet: zet daar de doodsreddingsworpen uit met !aura deathsaves off.',
           'Wijzigingen door TokenMod worden opgemerkt. Andere Mods kunnen DeathTracker.check(token) aanroepen na het wijzigen van levenspunten.',
           'DeathTracker haalt alleen markeringen weg die het zelf heeft gezet.',
         ],
@@ -2904,6 +3151,12 @@ const DeathTrackerMod = (() => {
         colKey: 'Instelling',
         colDesc: 'Wat het doet',
         rows: {
+          deathSavesBy:
+            'Wie doodsreddingsworpen bijhoudt en de markeringen Stervend, Stabiel en Dood zet: DeathTracker, HealthColors of off. Gedeeld met HealthColors.',
+          coloursBy:
+            'Wie tokens kleurt op basis van levenspunten: DeathTracker (zijn kleuring), HealthColors of off. Gedeeld met HealthColors.',
+          effectsBy:
+            'Wie de schade- en genezingseffecten afspeelt: DeathTracker, HealthColors of off. Gedeeld met HealthColors.',
           language: 'Taal van menu’s, berichten en handouts.',
           hpBar: 'De balk met de levenspunten (1, 2 of 3).',
           bloodiedPercent:
@@ -2947,7 +3200,9 @@ const DeathTrackerMod = (() => {
           observe:
             'Versie 0.1: krijg (token, prev) nadat DeathTracker een wijziging in levenspunten heeft afgehandeld.',
           managing:
-            'True wanneer DeathTracker doodsreddingsworpen bijhoudt (HealthColors gebruikt dit).',
+            'True wanneer DeathTracker doodsreddingsworpen bijhoudt: ze staan aan en DeathTracker is gekozen om ze af te handelen (HealthColors gebruikt dit).',
+          ownersChanged:
+            'Werk tokens bij nadat is gewijzigd wie wat doet (HealthColors roept dit aan).',
         },
       },
       upgrading: {
@@ -3006,7 +3261,7 @@ const DeathTrackerMod = (() => {
       migrated:
         'Your DeathTracker 0.1 settings were carried over. !dead still works; !deathtracker is the new command.',
       healthColors:
-        'HealthColors is installed, so DeathTracker left its own tint and hurt/heal effects off. Turn them on in Settings if you want both.',
+        'HealthColors is installed: DeathTracker handles death saves and the dying, stable and dead markers, and HealthColors the health colours and hurt/heal effects. Change who handles what in Settings.',
       healthColorsSaves:
         'HealthColors is also tracking death saves and setting dying markers. Turn one of them off (!aura deathsaves off) so they do not fight over markers.',
       settingChanged: '{setting} is now {value}.',
@@ -3091,6 +3346,7 @@ const DeathTrackerMod = (() => {
       language: 'Language',
     },
     sections: {
+      owners: 'Who handles what',
       hp: 'Hit points',
       markers: 'Markers',
       deathSaves: 'Death saves (PCs)',
@@ -3099,6 +3355,9 @@ const DeathTrackerMod = (() => {
       general: 'General',
     },
     settings: {
+      deathSavesBy: 'Death saves and 0 HP markers',
+      coloursBy: 'Health colours',
+      effectsBy: 'Hurt and heal effects',
       language: 'Language',
       hpBar: 'Hit point bar',
       bloodiedPercent: 'Bloodied at',
@@ -3131,6 +3390,7 @@ const DeathTrackerMod = (() => {
       deathActionsFor: { npc: 'NPCs', all: 'NPCs and PCs' },
       announce: { off: 'Off', gm: 'GM', controllers: 'GM and players' },
       none: 'None',
+      notInstalled: 'not installed',
     },
     help: {
       menu: 'Open the menu.',
@@ -3214,8 +3474,9 @@ const DeathTrackerMod = (() => {
       healthColors: {
         heading: 'HealthColors and other Mods',
         points: [
-          'With HealthColors installed, DeathTracker starts with its own tint and effects off; HealthColors draws those.',
-          "Only one Mod should handle death saves: turn off HealthColors' with !aura deathsaves off.",
+          'Who handles what, in Settings, chooses which Mod does death saves (with the dying, stable and dead markers), health colours and hurt/heal effects: DeathTracker, HealthColors or Off. HealthColors 2.5 and later shows the same choice, and changing it in either Mod changes it for both.',
+          'At first DeathTracker handles death saves and HealthColors the colours and effects. Without HealthColors, DeathTracker handles all three.',
+          'HealthColors before 2.5 does not share the choice: turn its death saves off with !aura deathsaves off.',
           'Changes made by TokenMod are seen. Other Mods can call DeathTracker.check(token) after changing hit points.',
           'DeathTracker only takes away markers it put on itself.',
         ],
@@ -3234,6 +3495,12 @@ const DeathTrackerMod = (() => {
         colKey: 'Setting',
         colDesc: 'What it does',
         rows: {
+          deathSavesBy:
+            'Who tracks death saves and sets the dying, stable and dead markers: DeathTracker, HealthColors or off. Shared with HealthColors.',
+          coloursBy:
+            'Who colours tokens by hit points: DeathTracker (its tint), HealthColors or off. Shared with HealthColors.',
+          effectsBy:
+            'Who plays the hurt and heal effects: DeathTracker, HealthColors or off. Shared with HealthColors.',
           language: 'Language of menus, messages and handouts.',
           hpBar: 'The bar that holds hit points (1, 2 or 3).',
           bloodiedPercent:
@@ -3274,7 +3541,10 @@ const DeathTrackerMod = (() => {
           onStatusChange: 'Be told when a status changes ({token, status, previous, isPc}).',
           observe:
             'Version 0.1: be told (token, prev) after DeathTracker handles a hit point change.',
-          managing: 'True when DeathTracker is tracking death saves (HealthColors uses this).',
+          managing:
+            'True when DeathTracker is tracking death saves: they are on, and DeathTracker is chosen to handle them (HealthColors uses this).',
+          ownersChanged:
+            'Bring tokens up to date after who handles what changed (HealthColors calls this).',
         },
       },
       upgrading: {
@@ -3333,7 +3603,7 @@ const DeathTrackerMod = (() => {
       migrated:
         'DeathTracker 0.1:n asetuksesi siirrettiin. !dead toimii yhä; !deathtracker on uusi komento.',
       healthColors:
-        'HealthColors on asennettu, joten DeathTracker jätti oman sävytyksensä sekä vahinko- ja parannustehosteensa pois päältä. Kytke ne päälle Asetuksista, jos haluat molemmat.',
+        'HealthColors on asennettu: DeathTracker hoitaa kuolemanpelastusheitot sekä kuolevan, vakaan ja kuolleen merkit, ja HealthColors terveysvärit sekä vahinko- ja parannustehosteet. Muuta sitä, kuka hoitaa mitä, Asetuksista.',
       healthColorsSaves:
         'Myös HealthColors seuraa kuolemanpelastusheittoja ja asettaa kuolevan merkkejä. Kytke toinen niistä pois (!aura deathsaves off), jotta ne eivät kiistele merkeistä.',
       settingChanged: '{setting} on nyt {value}.',
@@ -3419,6 +3689,7 @@ const DeathTrackerMod = (() => {
       language: 'Kieli',
     },
     sections: {
+      owners: 'Kuka hoitaa mitä',
       hp: 'Osumapisteet',
       markers: 'Merkit',
       deathSaves: 'Kuolemanpelastusheitot (PH)',
@@ -3427,6 +3698,9 @@ const DeathTrackerMod = (() => {
       general: 'Yleiset',
     },
     settings: {
+      deathSavesBy: 'Pelastusheitot ja 0 OP:n merkit',
+      coloursBy: 'Terveysvärit',
+      effectsBy: 'Vahinko- ja parannustehosteet',
       language: 'Kieli',
       hpBar: 'Osumapistepalkki',
       bloodiedPercent: 'Verinen kun',
@@ -3459,6 +3733,7 @@ const DeathTrackerMod = (() => {
       deathActionsFor: { npc: 'EPH:t', all: 'EPH:t ja PH:t' },
       announce: { off: 'Pois', gm: 'PJ', controllers: 'PJ ja pelaajat' },
       none: 'Ei mitään',
+      notInstalled: 'ei asennettu',
     },
     help: {
       menu: 'Avaa valikko.',
@@ -3543,8 +3818,9 @@ const DeathTrackerMod = (() => {
       healthColors: {
         heading: 'HealthColors ja muut Modit',
         points: [
-          'Kun HealthColors on asennettu, DeathTrackerin oma sävytys ja tehosteet ovat aluksi pois päältä; HealthColors piirtää ne.',
-          'Vain yhden Modin tulisi hoitaa kuolemanpelastusheitot: kytke HealthColorsin omat pois komennolla !aura deathsaves off.',
+          'Asetusten kohdassa Kuka hoitaa mitä valitaan, mikä Mod hoitaa kuolemanpelastusheitot (kuolevan, vakaan ja kuolleen merkkeineen), terveysvärit sekä vahinko- ja parannustehosteet: DeathTracker, HealthColors tai Pois. HealthColors 2.5 ja uudemmat näyttävät saman valinnan, ja sen muuttaminen kummassa tahansa Modissa muuttaa sen molemmissa.',
+          'Aluksi DeathTracker hoitaa kuolemanpelastusheitot ja HealthColors värit ja tehosteet. Ilman HealthColorsia DeathTracker hoitaa kaikki kolme.',
+          'HealthColorsin 2.5:tä vanhemmat versiot eivät jaa valintaa: kytke niiden kuolemanpelastusheitot pois komennolla !aura deathsaves off.',
           'TokenModin tekemät muutokset huomataan. Muut Modit voivat kutsua DeathTracker.check(token) muutettuaan osumapisteitä.',
           'DeathTracker poistaa vain merkit, jotka se on itse asettanut.',
         ],
@@ -3563,6 +3839,12 @@ const DeathTrackerMod = (() => {
         colKey: 'Asetus',
         colDesc: 'Mitä se tekee',
         rows: {
+          deathSavesBy:
+            'Kuka seuraa kuolemanpelastusheittoja ja asettaa kuolevan, vakaan ja kuolleen merkit: DeathTracker, HealthColors tai off. Yhteinen HealthColorsin kanssa.',
+          coloursBy:
+            'Kuka värittää nappulat osumapisteiden mukaan: DeathTracker (sen sävytys), HealthColors tai off. Yhteinen HealthColorsin kanssa.',
+          effectsBy:
+            'Kuka toistaa vahinko- ja parannustehosteet: DeathTracker, HealthColors tai off. Yhteinen HealthColorsin kanssa.',
           language: 'Valikoiden, viestien ja monisteiden kieli.',
           hpBar: 'Palkki, jossa osumapisteet ovat (1, 2 tai 3).',
           bloodiedPercent:
@@ -3606,7 +3888,9 @@ const DeathTrackerMod = (() => {
           observe:
             'Versio 0.1: saa tieto (token, prev), kun DeathTracker on käsitellyt osumapisteiden muutoksen.',
           managing:
-            'True, kun DeathTracker seuraa kuolemanpelastusheittoja (HealthColors käyttää tätä).',
+            'True, kun DeathTracker seuraa kuolemanpelastusheittoja: ne ovat päällä, ja DeathTracker on valittu hoitamaan ne (HealthColors käyttää tätä).',
+          ownersChanged:
+            'Päivitä nappulat, kun valinta siitä, kuka hoitaa mitä, on muuttunut (HealthColors kutsuu tätä).',
         },
       },
       upgrading: {
@@ -3666,7 +3950,7 @@ const DeathTrackerMod = (() => {
       migrated:
         'Vos paramètres de DeathTracker 0.1 ont été repris. !dead fonctionne toujours ; !deathtracker est la nouvelle commande.',
       healthColors:
-        'HealthColors est installé, DeathTracker a donc désactivé sa propre teinte et ses effets de blessure et de soin. Activez-les dans les Paramètres si vous voulez les deux.',
+        'HealthColors est installé : DeathTracker gère les jets contre la mort et les marqueurs Mourant, Stable et Mort, et HealthColors les couleurs de santé et les effets de blessure et de soin. Changez qui gère quoi dans les Paramètres.',
       healthColorsSaves:
         'HealthColors suit aussi les jets de sauvegarde contre la mort et pose des marqueurs Mourant. Désactivez l’un des deux (!aura deathsaves off) pour qu’ils ne se disputent pas les marqueurs.',
       settingChanged: '{setting} vaut maintenant {value}.',
@@ -3752,6 +4036,7 @@ const DeathTrackerMod = (() => {
       language: 'Langue',
     },
     sections: {
+      owners: 'Qui gère quoi',
       hp: 'Points de vie',
       markers: 'Marqueurs',
       deathSaves: 'Jets de sauvegarde contre la mort (PJ)',
@@ -3760,6 +4045,9 @@ const DeathTrackerMod = (() => {
       general: 'Général',
     },
     settings: {
+      deathSavesBy: 'Jets contre la mort et marqueurs à 0 PV',
+      coloursBy: 'Couleurs de santé',
+      effectsBy: 'Effets de blessure et de soin',
       language: 'Langue',
       hpBar: 'Barre des points de vie',
       bloodiedPercent: 'Ensanglanté à',
@@ -3792,6 +4080,7 @@ const DeathTrackerMod = (() => {
       deathActionsFor: { npc: 'PNJ', all: 'PNJ et PJ' },
       announce: { off: 'Désactivé', gm: 'MJ', controllers: 'MJ et joueurs' },
       none: 'Aucun',
+      notInstalled: 'non installé',
     },
     help: {
       menu: 'Ouvrir le menu.',
@@ -3879,8 +4168,9 @@ const DeathTrackerMod = (() => {
       healthColors: {
         heading: 'HealthColors et autres Mods',
         points: [
-          'Avec HealthColors installé, DeathTracker démarre avec sa propre teinte et ses effets désactivés ; HealthColors les dessine.',
-          'Un seul Mod doit gérer les jets contre la mort : désactivez ceux de HealthColors avec !aura deathsaves off.',
+          'Qui gère quoi, dans les Paramètres, choisit quel Mod s’occupe des jets contre la mort (avec les marqueurs Mourant, Stable et Mort), des couleurs de santé et des effets de blessure et de soin : DeathTracker, HealthColors ou Désactivé. À partir de la version 2.5, HealthColors affiche le même choix, et le modifier dans l’un des deux Mods le modifie pour les deux.',
+          'Au départ, DeathTracker gère les jets contre la mort et HealthColors les couleurs et les effets. Sans HealthColors, DeathTracker gère les trois.',
+          'Les versions de HealthColors antérieures à 2.5 ne partagent pas ce choix : désactivez leurs jets contre la mort avec !aura deathsaves off.',
           'Les modifications faites par TokenMod sont vues. Les autres Mods peuvent appeler DeathTracker.check(token) après avoir modifié des points de vie.',
           'DeathTracker ne retire que les marqueurs qu’il a posés lui-même.',
         ],
@@ -3899,6 +4189,12 @@ const DeathTrackerMod = (() => {
         colKey: 'Paramètre',
         colDesc: 'Ce qu’il fait',
         rows: {
+          deathSavesBy:
+            'Qui suit les jets contre la mort et pose les marqueurs Mourant, Stable et Mort : DeathTracker, HealthColors ou off. Partagé avec HealthColors.',
+          coloursBy:
+            'Qui colore les tokens selon leurs points de vie : DeathTracker (sa teinte), HealthColors ou off. Partagé avec HealthColors.',
+          effectsBy:
+            'Qui joue les effets de blessure et de soin : DeathTracker, HealthColors ou off. Partagé avec HealthColors.',
           language: 'Langue des menus, des messages et des handouts.',
           hpBar: 'La barre qui contient les points de vie (1, 2 ou 3).',
           bloodiedPercent:
@@ -3943,7 +4239,9 @@ const DeathTrackerMod = (() => {
           observe:
             'Version 0.1 : être prévenu (token, prev) après que DeathTracker a traité un changement de points de vie.',
           managing:
-            'True quand DeathTracker suit les jets contre la mort (HealthColors l’utilise).',
+            'True quand DeathTracker suit les jets contre la mort : ils sont activés et DeathTracker est choisi pour les gérer (HealthColors l’utilise).',
+          ownersChanged:
+            'Mettre les tokens à jour après un changement de qui gère quoi (HealthColors l’appelle).',
         },
       },
       upgrading: {
@@ -4002,7 +4300,7 @@ const DeathTrackerMod = (() => {
       migrated:
         'Deine Einstellungen aus DeathTracker 0.1 wurden übernommen. !dead funktioniert weiterhin; !deathtracker ist der neue Befehl.',
       healthColors:
-        'HealthColors ist installiert, daher hat DeathTracker seine eigene Tönung und seine Schadens-/Heileffekte ausgeschaltet. Schalte sie in den Einstellungen ein, wenn du beides willst.',
+        'HealthColors ist installiert: DeathTracker übernimmt Todesrettungswürfe und die Sterbend-, Stabil- und Tot-Marker, HealthColors die Gesundheitsfarben und Schadens-/Heileffekte. Wer was übernimmt, änderst du in den Einstellungen.',
       healthColorsSaves:
         'HealthColors verfolgt ebenfalls Todesrettungswürfe und setzt Sterbend-Marker. Schalte eines davon aus (!aura deathsaves off), damit sie sich nicht um die Marker streiten.',
       settingChanged: '{setting} ist jetzt {value}.',
@@ -4088,6 +4386,7 @@ const DeathTrackerMod = (() => {
       language: 'Sprache',
     },
     sections: {
+      owners: 'Wer übernimmt was',
       hp: 'Trefferpunkte',
       markers: 'Marker',
       deathSaves: 'Todesrettungswürfe (SC)',
@@ -4096,6 +4395,9 @@ const DeathTrackerMod = (() => {
       general: 'Allgemein',
     },
     settings: {
+      deathSavesBy: 'Todesrettungswürfe und 0-TP-Marker',
+      coloursBy: 'Gesundheitsfarben',
+      effectsBy: 'Schadens- und Heileffekte',
       language: 'Sprache',
       hpBar: 'Trefferpunkte-Leiste',
       bloodiedPercent: 'Angeschlagen bei',
@@ -4128,6 +4430,7 @@ const DeathTrackerMod = (() => {
       deathActionsFor: { npc: 'NSC', all: 'NSC und SC' },
       announce: { off: 'Aus', gm: 'SL', controllers: 'SL und Spieler' },
       none: 'Keiner',
+      notInstalled: 'nicht installiert',
     },
     help: {
       menu: 'Das Menü öffnen.',
@@ -4215,8 +4518,9 @@ const DeathTrackerMod = (() => {
       healthColors: {
         heading: 'HealthColors und andere Mods',
         points: [
-          'Ist HealthColors installiert, startet DeathTracker mit eigener Tönung und Effekten aus; HealthColors zeichnet diese.',
-          'Nur ein Mod sollte Todesrettungswürfe übernehmen: schalte die von HealthColors mit !aura deathsaves off aus.',
+          '„Wer übernimmt was“ in den Einstellungen legt fest, welcher Mod Todesrettungswürfe (mit den Sterbend-, Stabil- und Tot-Markern), Gesundheitsfarben und Schadens-/Heileffekte übernimmt: DeathTracker, HealthColors oder Aus. HealthColors ab 2.5 zeigt dieselbe Auswahl, und eine Änderung in einem der beiden Mods gilt für beide.',
+          'Anfangs übernimmt DeathTracker die Todesrettungswürfe und HealthColors die Farben und Effekte. Ohne HealthColors übernimmt DeathTracker alle drei.',
+          'HealthColors vor 2.5 teilt die Auswahl nicht: schalte seine Todesrettungswürfe mit !aura deathsaves off aus.',
           'Änderungen durch TokenMod werden erkannt. Andere Mods können DeathTracker.check(token) aufrufen, nachdem sie Trefferpunkte geändert haben.',
           'DeathTracker entfernt nur Marker, die es selbst gesetzt hat.',
         ],
@@ -4235,6 +4539,12 @@ const DeathTrackerMod = (() => {
         colKey: 'Einstellung',
         colDesc: 'Was sie tut',
         rows: {
+          deathSavesBy:
+            'Wer Todesrettungswürfe verfolgt und die Sterbend-, Stabil- und Tot-Marker setzt: DeathTracker, HealthColors oder off. Mit HealthColors geteilt.',
+          coloursBy:
+            'Wer Tokens nach Trefferpunkten färbt: DeathTracker (seine Tönung), HealthColors oder off. Mit HealthColors geteilt.',
+          effectsBy:
+            'Wer die Schadens- und Heileffekte abspielt: DeathTracker, HealthColors oder off. Mit HealthColors geteilt.',
           language: 'Sprache der Menüs, Nachrichten und Handouts.',
           hpBar: 'Die Leiste mit den Trefferpunkten (1, 2 oder 3).',
           bloodiedPercent:
@@ -4279,7 +4589,10 @@ const DeathTrackerMod = (() => {
             'Benachrichtigt werden, wenn sich ein Status ändert ({token, status, previous, isPc}).',
           observe:
             'Version 0.1: (token, prev) erhalten, nachdem DeathTracker eine Trefferpunkte-Änderung verarbeitet hat.',
-          managing: 'True, wenn DeathTracker Todesrettungswürfe verfolgt (HealthColors nutzt das).',
+          managing:
+            'True, wenn DeathTracker Todesrettungswürfe verfolgt: sie sind an, und DeathTracker ist dafür ausgewählt (HealthColors nutzt das).',
+          ownersChanged:
+            'Tokens aktualisieren, nachdem sich geändert hat, wer was übernimmt (HealthColors ruft das auf).',
         },
       },
       upgrading: {
@@ -4338,7 +4651,7 @@ const DeathTrackerMod = (() => {
       migrated:
         'Οι ρυθμίσεις σας από το DeathTracker 0.1 μεταφέρθηκαν. Το !dead λειτουργεί ακόμα· η νέα εντολή είναι !deathtracker.',
       healthColors:
-        'Το HealthColors είναι εγκατεστημένο, οπότε το DeathTracker απενεργοποίησε τον δικό του χρωματισμό και τα εφέ τραυματισμού και θεραπείας. Ενεργοποιήστε τα στις Ρυθμίσεις αν θέλετε και τα δύο.',
+        'Το HealthColors είναι εγκατεστημένο: το DeathTracker χειρίζεται τις ρίψεις διάσωσης θανάτου και τους δείκτες ετοιμοθάνατου, σταθερού και νεκρού, και το HealthColors τα χρώματα υγείας και τα εφέ τραυματισμού και θεραπείας. Αλλάξτε ποιος χειρίζεται τι στις Ρυθμίσεις.',
       healthColorsSaves:
         'Το HealthColors παρακολουθεί κι αυτό τις ρίψεις διάσωσης θανάτου και βάζει δείκτες ετοιμοθάνατου. Απενεργοποιήστε το ένα από τα δύο (!aura deathsaves off) ώστε να μη συγκρούονται για τους δείκτες.',
       settingChanged: 'Η ρύθμιση {setting} είναι τώρα {value}.',
@@ -4423,6 +4736,7 @@ const DeathTrackerMod = (() => {
       language: 'Γλώσσα',
     },
     sections: {
+      owners: 'Ποιος χειρίζεται τι',
       hp: 'Πόντοι ζωής',
       markers: 'Δείκτες',
       deathSaves: 'Ρίψεις διάσωσης θανάτου (PC)',
@@ -4431,6 +4745,9 @@ const DeathTrackerMod = (() => {
       general: 'Γενικά',
     },
     settings: {
+      deathSavesBy: 'Ρίψεις διάσωσης και δείκτες 0 ΠΖ',
+      coloursBy: 'Χρώματα υγείας',
+      effectsBy: 'Εφέ τραυματισμού και θεραπείας',
       language: 'Γλώσσα',
       hpBar: 'Μπάρα πόντων ζωής',
       bloodiedPercent: 'Αιμόφυρτος στο',
@@ -4463,6 +4780,7 @@ const DeathTrackerMod = (() => {
       deathActionsFor: { npc: 'NPC', all: 'NPC και PC' },
       announce: { off: 'Όχι', gm: 'GM', controllers: 'GM και παίκτες' },
       none: 'Κανένας',
+      notInstalled: 'δεν είναι εγκατεστημένο',
     },
     help: {
       menu: 'Άνοιγμα του μενού.',
@@ -4550,8 +4868,9 @@ const DeathTrackerMod = (() => {
       healthColors: {
         heading: 'HealthColors και άλλα Mod',
         points: [
-          'Με εγκατεστημένο το HealthColors, το DeathTracker ξεκινά με ανενεργό τον δικό του χρωματισμό και τα εφέ· τα σχεδιάζει το HealthColors.',
-          'Μόνο ένα Mod πρέπει να χειρίζεται τις ρίψεις διάσωσης θανάτου: απενεργοποιήστε του HealthColors με !aura deathsaves off.',
+          'Το «Ποιος χειρίζεται τι», στις Ρυθμίσεις, ορίζει ποιο Mod χειρίζεται τις ρίψεις διάσωσης θανάτου (με τους δείκτες ετοιμοθάνατου, σταθερού και νεκρού), τα χρώματα υγείας και τα εφέ τραυματισμού και θεραπείας: DeathTracker, HealthColors ή Όχι. Το HealthColors 2.5 και νεότερο δείχνει την ίδια επιλογή, και η αλλαγή της σε οποιοδήποτε από τα δύο Mod ισχύει και για τα δύο.',
+          'Αρχικά το DeathTracker χειρίζεται τις ρίψεις διάσωσης θανάτου και το HealthColors τα χρώματα και τα εφέ. Χωρίς το HealthColors, το DeathTracker χειρίζεται και τα τρία.',
+          'Το HealthColors πριν από την 2.5 δεν μοιράζεται την επιλογή: απενεργοποιήστε τις ρίψεις διάσωσης θανάτου του με !aura deathsaves off.',
           'Οι αλλαγές από το TokenMod γίνονται αντιληπτές. Άλλα Mod μπορούν να καλούν το DeathTracker.check(token) αφού αλλάξουν πόντους ζωής.',
           'Το DeathTracker αφαιρεί μόνο δείκτες που έβαλε το ίδιο.',
         ],
@@ -4570,6 +4889,12 @@ const DeathTrackerMod = (() => {
         colKey: 'Ρύθμιση',
         colDesc: 'Τι κάνει',
         rows: {
+          deathSavesBy:
+            'Ποιος παρακολουθεί τις ρίψεις διάσωσης θανάτου και βάζει τους δείκτες ετοιμοθάνατου, σταθερού και νεκρού: DeathTracker, HealthColors ή off. Κοινή με το HealthColors.',
+          coloursBy:
+            'Ποιος χρωματίζει τα πιόνια ανάλογα με τους πόντους ζωής: DeathTracker (ο χρωματισμός του), HealthColors ή off. Κοινή με το HealthColors.',
+          effectsBy:
+            'Ποιος αναπαράγει τα εφέ τραυματισμού και θεραπείας: DeathTracker, HealthColors ή off. Κοινή με το HealthColors.',
           language: 'Γλώσσα των μενού, των μηνυμάτων και των εντύπων.',
           hpBar: 'Η μπάρα που κρατά τους πόντους ζωής (1, 2 ή 3).',
           bloodiedPercent:
@@ -4613,7 +4938,9 @@ const DeathTrackerMod = (() => {
           observe:
             'Έκδοση 0.1: ειδοποίηση (token, prev) αφού το DeathTracker χειριστεί μια αλλαγή πόντων ζωής.',
           managing:
-            'True όταν το DeathTracker παρακολουθεί ρίψεις διάσωσης θανάτου (το χρησιμοποιεί το HealthColors).',
+            'True όταν το DeathTracker παρακολουθεί ρίψεις διάσωσης θανάτου: είναι ενεργές και έχει επιλεγεί το DeathTracker για να τις χειρίζεται (το χρησιμοποιεί το HealthColors).',
+          ownersChanged:
+            'Ενημέρωση των πιονιών αφού αλλάξει ποιος χειρίζεται τι (το καλεί το HealthColors).',
         },
       },
       upgrading: {
@@ -4673,7 +5000,7 @@ const DeathTrackerMod = (() => {
       migrated:
         'ההגדרות שלכם מ-DeathTracker 0.1 הועברו. !dead עדיין עובד; !deathtracker היא הפקודה החדשה.',
       healthColors:
-        'HealthColors מותקן, ולכן DeathTracker השאיר כבויים את הצביעה ואת אפקטי הפגיעה והריפוי שלו. הפעילו אותם בהגדרות אם אתם רוצים את שניהם.',
+        'HealthColors מותקן: DeathTracker מטפל בהטלות הצלה מפני מוות ובסמני הגוסס, היציב והמת, ו-HealthColors בצבעי הבריאות ובאפקטי הפגיעה והריפוי. שנו מי מטפל במה בהגדרות.',
       healthColorsSaves:
         'גם HealthColors עוקב אחר הטלות הצלה מפני מוות ומציב סמני גסיסה. כבו אחד מהם (!aura deathsaves off) כדי שלא יתחרו על הסמנים.',
       settingChanged: '{setting} הוא עכשיו {value}.',
@@ -4758,6 +5085,7 @@ const DeathTrackerMod = (() => {
       language: 'שפה',
     },
     sections: {
+      owners: 'מי מטפל במה',
       hp: 'נקודות פגיעה',
       markers: 'סמנים',
       deathSaves: 'הטלות הצלה מפני מוות (PC)',
@@ -4766,6 +5094,9 @@ const DeathTrackerMod = (() => {
       general: 'כללי',
     },
     settings: {
+      deathSavesBy: 'הטלות הצלה וסמנים ב-0 HP',
+      coloursBy: 'צבעי בריאות',
+      effectsBy: 'אפקטי פגיעה וריפוי',
       language: 'שפה',
       hpBar: 'פס נקודות הפגיעה',
       bloodiedPercent: 'מדמם החל מ-',
@@ -4798,6 +5129,7 @@ const DeathTrackerMod = (() => {
       deathActionsFor: { npc: 'NPC', all: 'NPC ו-PC' },
       announce: { off: 'כבוי', gm: 'GM', controllers: 'GM ושחקנים' },
       none: 'ללא',
+      notInstalled: 'לא מותקן',
     },
     help: {
       menu: 'פתיחת התפריט.',
@@ -4881,8 +5213,9 @@ const DeathTrackerMod = (() => {
       healthColors: {
         heading: 'HealthColors ו-Mods אחרים',
         points: [
-          'כש-HealthColors מותקן, DeathTracker מתחיל כשהצביעה והאפקטים שלו כבויים; HealthColors מצייר אותם.',
-          'רק Mod אחד צריך לטפל בהטלות הצלה מפני מוות: כבו את זה של HealthColors עם !aura deathsaves off.',
+          'האפשרות "מי מטפל במה" בהגדרות קובעת איזה Mod מטפל בהטלות הצלה מפני מוות (כולל סמני הגוסס, היציב והמת), בצבעי הבריאות ובאפקטי הפגיעה והריפוי: DeathTracker, HealthColors או כבוי. HealthColors 2.5 ואילך מציג את אותה בחירה, ושינוי שלה באחד מה-Mods משנה אותה בשניהם.',
+          'בהתחלה DeathTracker מטפל בהטלות הצלה מפני מוות ו-HealthColors בצבעים ובאפקטים. בלי HealthColors, DeathTracker מטפל בשלושתם.',
+          'גרסאות HealthColors שלפני 2.5 לא משתפות את הבחירה: כבו את הטלות ההצלה מפני מוות שלהן עם !aura deathsaves off.',
           'שינויים שנעשים ב-TokenMod נקלטים. Mods אחרים יכולים לקרוא ל-DeathTracker.check(token) אחרי שינוי נקודות פגיעה.',
           'DeathTracker מסיר רק סמנים שהוא עצמו הציב.',
         ],
@@ -4901,6 +5234,12 @@ const DeathTrackerMod = (() => {
         colKey: 'הגדרה',
         colDesc: 'מה היא עושה',
         rows: {
+          deathSavesBy:
+            'מי עוקב אחר הטלות הצלה מפני מוות ומציב את סמני הגוסס, היציב והמת: DeathTracker, HealthColors או off. משותף עם HealthColors.',
+          coloursBy:
+            'מי צובע אסימונים לפי נקודות הפגיעה: DeathTracker (הצביעה שלו), HealthColors או off. משותף עם HealthColors.',
+          effectsBy:
+            'מי מפעיל את אפקטי הפגיעה והריפוי: DeathTracker, HealthColors או off. משותף עם HealthColors.',
           language: 'שפת התפריטים, ההודעות ודפי המידע.',
           hpBar: 'הפס שמחזיק את נקודות הפגיעה (1, 2 או 3).',
           bloodiedPercent: 'מדמם באחוז הזה מנקודות הפגיעה המרביות או מתחתיו (0 מכבה את מדמם).',
@@ -4938,7 +5277,9 @@ const DeathTrackerMod = (() => {
           onStatusChange: 'קבלת הודעה כשמצב משתנה ({token, status, previous, isPc}).',
           observe:
             'גרסה 0.1: קבלת הודעה (token, prev) אחרי ש-DeathTracker מטפל בשינוי נקודות פגיעה.',
-          managing: 'true כש-DeathTracker עוקב אחר הטלות הצלה מפני מוות (HealthColors משתמש בזה).',
+          managing:
+            'true כש-DeathTracker עוקב אחר הטלות הצלה מפני מוות: הן מופעלות, ו-DeathTracker נבחר לטפל בהן (HealthColors משתמש בזה).',
+          ownersChanged: 'עדכון האסימונים אחרי שינוי של מי מטפל במה (HealthColors קורא לזה).',
         },
       },
       upgrading: {
@@ -4997,7 +5338,7 @@ const DeathTrackerMod = (() => {
       migrated:
         'A DeathTracker 0.1 beállításaid átkerültek. A !dead továbbra is működik; a !deathtracker az új parancs.',
       healthColors:
-        'A HealthColors telepítve van, ezért a DeathTracker kikapcsolva hagyta a saját színezését és sebződés/gyógyulás effektjeit. Kapcsold be őket a Beállításokban, ha mindkettőt szeretnéd.',
+        'A HealthColors telepítve van: a DeathTracker kezeli a halál elleni mentődobásokat és a haldokló, stabil és halott jelölőket, a HealthColors pedig az életerő-színeket és a sebződés/gyógyulás effekteket. Hogy ki mit kezel, azt a Beállításokban módosíthatod.',
       healthColorsSaves:
         'A HealthColors is követi a halál elleni mentődobásokat és haldokló jelölőket tesz fel. Kapcsold ki az egyiket (!aura deathsaves off), hogy ne harcoljanak a jelölőkön.',
       settingChanged: '{setting} új értéke: {value}.',
@@ -5082,6 +5423,7 @@ const DeathTrackerMod = (() => {
       language: 'Nyelv',
     },
     sections: {
+      owners: 'Ki mit kezel',
       hp: 'Életerőpontok',
       markers: 'Jelölők',
       deathSaves: 'Halál elleni mentődobások (JK)',
@@ -5090,6 +5432,9 @@ const DeathTrackerMod = (() => {
       general: 'Általános',
     },
     settings: {
+      deathSavesBy: 'Halálmentők és 0 ÉP-s jelölők',
+      coloursBy: 'Életerő-színek',
+      effectsBy: 'Sebződés/gyógyulás effektek',
       language: 'Nyelv',
       hpBar: 'Életerőpont-sáv',
       bloodiedPercent: 'Vérző ennél',
@@ -5122,6 +5467,7 @@ const DeathTrackerMod = (() => {
       deathActionsFor: { npc: 'NJK-k', all: 'NJK-k és JK-k' },
       announce: { off: 'Ki', gm: 'KM', controllers: 'KM és játékosok' },
       none: 'Nincs',
+      notInstalled: 'nincs telepítve',
     },
     help: {
       menu: 'Megnyitja a menüt.',
@@ -5210,8 +5556,9 @@ const DeathTrackerMod = (() => {
       healthColors: {
         heading: 'HealthColors és más Modok',
         points: [
-          'Ha a HealthColors telepítve van, a DeathTracker saját színezése és effektjei kikapcsolva indulnak; ezeket a HealthColors rajzolja.',
-          'Csak egy Mod kezelje a halál elleni mentődobásokat: a HealthColors-ét kapcsold ki a !aura deathsaves off paranccsal.',
+          'A Beállítások "Ki mit kezel" része határozza meg, melyik Mod kezeli a halál elleni mentődobásokat (a haldokló, stabil és halott jelölőkkel együtt), az életerő-színeket és a sebződés/gyógyulás effekteket: DeathTracker, HealthColors vagy Ki. A HealthColors 2.5-ös és újabb verziói ugyanezt a választást mutatják, és ha bármelyik Modban módosítod, mindkettőben megváltozik.',
+          'Kezdetben a DeathTracker kezeli a halál elleni mentődobásokat, a HealthColors pedig a színeket és az effekteket. HealthColors nélkül a DeathTracker kezeli mindhármat.',
+          'A HealthColors 2.5 előtti verziói nem osztják meg a választást: a halálmentőiket a !aura deathsaves off paranccsal kapcsold ki.',
           'A TokenMod által végzett változtatásokat észleli. Más Modok az életerőpontok módosítása után meghívhatják a DeathTracker.check(token) függvényt.',
           'A DeathTracker csak azokat a jelölőket veszi le, amelyeket maga tett fel.',
         ],
@@ -5230,6 +5577,12 @@ const DeathTrackerMod = (() => {
         colKey: 'Beállítás',
         colDesc: 'Mit csinál',
         rows: {
+          deathSavesBy:
+            'Ki követi a halál elleni mentődobásokat és teszi fel a haldokló, stabil és halott jelölőket: DeathTracker, HealthColors vagy off. Közös a HealthColors-szal.',
+          coloursBy:
+            'Ki színezi a tokeneket az életerőpontok szerint: DeathTracker (a saját színezése), HealthColors vagy off. Közös a HealthColors-szal.',
+          effectsBy:
+            'Ki játssza le a sebződés/gyógyulás effekteket: DeathTracker, HealthColors vagy off. Közös a HealthColors-szal.',
           language: 'A menük, üzenetek és segédletek nyelve.',
           hpBar: 'Az életerőpontokat tartalmazó sáv (1, 2 vagy 3).',
           bloodiedPercent:
@@ -5273,7 +5626,10 @@ const DeathTrackerMod = (() => {
             'Értesítés, amikor egy állapot megváltozik ({token, status, previous, isPc}).',
           observe:
             '0.1-es verzió: értesítés (token, prev) azután, hogy a DeathTracker kezelt egy életerőpont-változást.',
-          managing: 'True, ha a DeathTracker követi a halálmentőket (a HealthColors használja).',
+          managing:
+            'True, ha a DeathTracker követi a halálmentőket: be vannak kapcsolva, és a DeathTracker van kiválasztva a kezelésükre (a HealthColors használja).',
+          ownersChanged:
+            'Frissíti a tokeneket, miután megváltozott, hogy ki mit kezel (a HealthColors hívja meg).',
         },
       },
       upgrading: {
@@ -5332,7 +5688,7 @@ const DeathTrackerMod = (() => {
       migrated:
         'Le tue impostazioni di DeathTracker 0.1 sono state riprese. !dead funziona ancora; !deathtracker è il nuovo comando.',
       healthColors:
-        'HealthColors è installato, quindi DeathTracker ha lasciato spenti la sua tinta e i suoi effetti di ferita e cura. Attivali nelle Impostazioni se li vuoi entrambi.',
+        'HealthColors è installato: DeathTracker gestisce i tiri contro morte e i segnalini di morente, stabile e morto, e HealthColors i colori della salute e gli effetti di ferita e cura. Cambia chi gestisce cosa nelle Impostazioni.',
       healthColorsSaves:
         'Anche HealthColors tiene traccia dei tiri salvezza contro morte e mette i segnalini di morente. Disattivane uno (!aura deathsaves off) così non si contendono i segnalini.',
       settingChanged: '{setting} ora è {value}.',
@@ -5418,6 +5774,7 @@ const DeathTrackerMod = (() => {
       language: 'Lingua',
     },
     sections: {
+      owners: 'Chi gestisce cosa',
       hp: 'Punti ferita',
       markers: 'Segnalini',
       deathSaves: 'Tiri salvezza contro morte (PG)',
@@ -5426,6 +5783,9 @@ const DeathTrackerMod = (() => {
       general: 'Generale',
     },
     settings: {
+      deathSavesBy: 'Tiri contro morte e segnalini a 0 PF',
+      coloursBy: 'Colori della salute',
+      effectsBy: 'Effetti di ferita e cura',
       language: 'Lingua',
       hpBar: 'Barra dei punti ferita',
       bloodiedPercent: 'Sanguinante a',
@@ -5458,6 +5818,7 @@ const DeathTrackerMod = (() => {
       deathActionsFor: { npc: 'PNG', all: 'PNG e PG' },
       announce: { off: 'Spento', gm: 'GM', controllers: 'GM e giocatori' },
       none: 'Nessuno',
+      notInstalled: 'non installata',
     },
     help: {
       menu: 'Apri il menu.',
@@ -5543,8 +5904,9 @@ const DeathTrackerMod = (() => {
       healthColors: {
         heading: 'HealthColors e altre Mod',
         points: [
-          'Con HealthColors installato, DeathTracker parte con la sua tinta e i suoi effetti spenti; ci pensa HealthColors.',
-          'Solo una Mod deve gestire i tiri contro morte: spegni quelli di HealthColors con !aura deathsaves off.',
+          'Chi gestisce cosa, nelle Impostazioni, sceglie quale Mod si occupa dei tiri contro morte (con i segnalini di morente, stabile e morto), dei colori della salute e degli effetti di ferita e cura: DeathTracker, HealthColors o Spento. HealthColors dalla 2.5 in poi mostra la stessa scelta, e cambiarla in una delle due Mod la cambia per entrambe.',
+          'All’inizio DeathTracker gestisce i tiri contro morte e HealthColors i colori e gli effetti. Senza HealthColors, DeathTracker gestisce tutti e tre.',
+          'Le versioni di HealthColors precedenti alla 2.5 non condividono la scelta: spegni i loro tiri contro morte con !aura deathsaves off.',
           'Le modifiche fatte da TokenMod vengono viste. Le altre Mod possono chiamare DeathTracker.check(token) dopo aver cambiato i punti ferita.',
           'DeathTracker toglie solo i segnalini che ha messo lui.',
         ],
@@ -5563,6 +5925,12 @@ const DeathTrackerMod = (() => {
         colKey: 'Impostazione',
         colDesc: 'Cosa fa',
         rows: {
+          deathSavesBy:
+            'Chi tiene traccia dei tiri contro morte e mette i segnalini di morente, stabile e morto: DeathTracker, HealthColors o off. Condiviso con HealthColors.',
+          coloursBy:
+            'Chi colora i token in base ai punti ferita: DeathTracker (la sua tinta), HealthColors o off. Condiviso con HealthColors.',
+          effectsBy:
+            'Chi riproduce gli effetti di ferita e cura: DeathTracker, HealthColors o off. Condiviso con HealthColors.',
           language: 'Lingua di menu, messaggi e handout.',
           hpBar: 'La barra che contiene i punti ferita (1, 2 o 3).',
           bloodiedPercent:
@@ -5607,7 +5975,9 @@ const DeathTrackerMod = (() => {
           observe:
             'Versione 0.1: ricevere (token, prev) dopo che DeathTracker ha gestito un cambio di punti ferita.',
           managing:
-            'True quando DeathTracker tiene traccia dei tiri contro morte (HealthColors lo usa).',
+            'True quando DeathTracker tiene traccia dei tiri contro morte: sono attivi e DeathTracker è scelto per gestirli (HealthColors lo usa).',
+          ownersChanged:
+            'Aggiorna i token dopo che è cambiato chi gestisce cosa (HealthColors la chiama).',
         },
       },
       upgrading: {
@@ -5666,7 +6036,7 @@ const DeathTrackerMod = (() => {
       migrated:
         'DeathTracker 0.1 の設定を引き継ぎました。!dead も引き続き使えますが、新しいコマンドは !deathtracker です。',
       healthColors:
-        'HealthColors が導入されているため、DeathTracker の色付けとダメージ/回復エフェクトはオフにしました。両方使いたい場合は設定でオンにしてください。',
+        'HealthColors が導入されています。死亡セーヴと瀕死・安定状態・死亡のマーカーは DeathTracker が、HP に応じた色付けとダメージ/回復エフェクトは HealthColors が担当します。担当は設定で変更できます。',
       healthColorsSaves:
         'HealthColors も死亡セーヴを記録し、瀕死マーカーを付けています。マーカーが競合しないよう、どちらか一方をオフにしてください (!aura deathsaves off)。',
       settingChanged: '{setting} を {value} にしました。',
@@ -5751,6 +6121,7 @@ const DeathTrackerMod = (() => {
       language: '言語',
     },
     sections: {
+      owners: '担当する Mod',
       hp: 'ヒット・ポイント',
       markers: 'マーカー',
       deathSaves: '死亡セーヴ (PC)',
@@ -5759,6 +6130,9 @@ const DeathTrackerMod = (() => {
       general: '一般',
     },
     settings: {
+      deathSavesBy: '死亡セーヴと HP 0 のマーカー',
+      coloursBy: 'HP に応じた色付け',
+      effectsBy: 'ダメージと回復のエフェクト',
       language: '言語',
       hpBar: 'ヒット・ポイントのバー',
       bloodiedPercent: '重傷の基準',
@@ -5791,6 +6165,7 @@ const DeathTrackerMod = (() => {
       deathActionsFor: { npc: 'NPC', all: 'NPC と PC' },
       announce: { off: 'オフ', gm: 'GM', controllers: 'GM とプレイヤー' },
       none: 'なし',
+      notInstalled: '未導入',
     },
     help: {
       menu: 'メニューを開きます。',
@@ -5874,8 +6249,9 @@ const DeathTrackerMod = (() => {
       healthColors: {
         heading: 'HealthColors とほかの Mod',
         points: [
-          'HealthColors が導入されている場合、DeathTracker は自身の色付けとエフェクトをオフにして始めます。それらは HealthColors が描きます。',
-          '死亡セーヴを扱う Mod は 1 つだけにしてください。HealthColors 側は !aura deathsaves off でオフにします。',
+          '設定の「担当する Mod」で、死亡セーヴ (瀕死・安定状態・死亡のマーカーを含む)、HP に応じた色付け、ダメージ/回復エフェクトをどの Mod が扱うかを選びます: DeathTracker、HealthColors、オフ。HealthColors 2.5 以降にも同じ選択肢があり、どちらの Mod で変更しても両方に反映されます。',
+          '最初は死亡セーヴを DeathTracker が、色付けとエフェクトを HealthColors が担当します。HealthColors がなければ、3 つとも DeathTracker が担当します。',
+          '2.5 より前の HealthColors はこの選択を共有しません。!aura deathsaves off で HealthColors 側の死亡セーヴをオフにしてください。',
           'TokenMod による変更は検知されます。ほかの Mod はヒット・ポイントを変えた後に DeathTracker.check(token) を呼べます。',
           'DeathTracker は自分が付けたマーカーだけを外します。',
         ],
@@ -5894,6 +6270,12 @@ const DeathTrackerMod = (() => {
         colKey: '設定',
         colDesc: '内容',
         rows: {
+          deathSavesBy:
+            '死亡セーヴを記録し、瀕死・安定状態・死亡のマーカーを付ける Mod: DeathTracker、HealthColors、off。HealthColors と共有します。',
+          coloursBy:
+            'ヒット・ポイントに応じてトークンを色付けする Mod: DeathTracker (自身の色付け)、HealthColors、off。HealthColors と共有します。',
+          effectsBy:
+            'ダメージと回復のエフェクトを再生する Mod: DeathTracker、HealthColors、off。HealthColors と共有します。',
           language: 'メニュー、メッセージ、ハンドアウトの言語。',
           hpBar: 'ヒット・ポイントを入れるバー (1、2、3)。',
           bloodiedPercent: '最大ヒット・ポイントに対してこの割合以下で重傷 (0 で重傷はオフ)。',
@@ -5933,7 +6315,10 @@ const DeathTrackerMod = (() => {
           onStatusChange: '状態が変わったときに通知を受けます ({token, status, previous, isPc})。',
           observe:
             'バージョン 0.1: DeathTracker がヒット・ポイントの変化を処理した後に (token, prev) で通知を受けます。',
-          managing: 'DeathTracker が死亡セーヴを記録しているとき true (HealthColors が使用)。',
+          managing:
+            'DeathTracker が死亡セーヴを記録しているとき true。死亡セーヴがオンで、担当に DeathTracker が選ばれている場合です (HealthColors が使用)。',
+          ownersChanged:
+            '担当する Mod が変わった後に、トークンを最新の状態にします (HealthColors が呼び出します)。',
         },
       },
       upgrading: {
@@ -5992,7 +6377,7 @@ const DeathTrackerMod = (() => {
       migrated:
         'DeathTracker 0.1 설정을 그대로 가져왔습니다. !dead도 계속 쓸 수 있으며, 새 명령어는 !deathtracker입니다.',
       healthColors:
-        'HealthColors가 설치되어 있어 DeathTracker의 색조와 피해/치유 효과를 꺼 두었습니다. 둘 다 쓰려면 설정에서 켜세요.',
+        'HealthColors가 설치되어 있습니다. 죽음 내성 굴림과 빈사·안정·사망 마커는 DeathTracker가, 히트 포인트 색상과 피해/치유 효과는 HealthColors가 맡습니다. 담당 Mod는 설정에서 바꿀 수 있습니다.',
       healthColorsSaves:
         'HealthColors도 죽음 내성 굴림을 추적하고 빈사 마커를 붙이고 있습니다. 마커를 두고 충돌하지 않도록 둘 중 하나를 끄세요 (!aura deathsaves off).',
       settingChanged: '{setting}을(를) {value}(으)로 바꿨습니다.',
@@ -6077,6 +6462,7 @@ const DeathTrackerMod = (() => {
       language: '언어',
     },
     sections: {
+      owners: '담당 Mod',
       hp: '히트 포인트',
       markers: '마커',
       deathSaves: '죽음 내성 굴림 (PC)',
@@ -6085,6 +6471,9 @@ const DeathTrackerMod = (() => {
       general: '일반',
     },
     settings: {
+      deathSavesBy: '죽음 내성 굴림과 0 HP 마커',
+      coloursBy: '히트 포인트 색상',
+      effectsBy: '피해와 치유 효과',
       language: '언어',
       hpBar: '히트 포인트 바',
       bloodiedPercent: '중상 기준',
@@ -6117,6 +6506,7 @@ const DeathTrackerMod = (() => {
       deathActionsFor: { npc: 'NPC', all: 'NPC와 PC' },
       announce: { off: '끄기', gm: 'GM', controllers: 'GM과 플레이어' },
       none: '없음',
+      notInstalled: '설치 안 됨',
     },
     help: {
       menu: '메뉴를 엽니다.',
@@ -6200,8 +6590,9 @@ const DeathTrackerMod = (() => {
       healthColors: {
         heading: 'HealthColors와 다른 Mod',
         points: [
-          'HealthColors가 설치되어 있으면 DeathTracker는 자체 색조와 효과를 끈 채로 시작합니다. 그것들은 HealthColors가 그립니다.',
-          '죽음 내성 굴림은 하나의 Mod만 다뤄야 합니다. HealthColors 쪽은 !aura deathsaves off로 끄세요.',
+          '설정의 담당 Mod에서 죽음 내성 굴림(빈사, 안정, 사망 마커 포함), 히트 포인트 색상, 피해/치유 효과를 어느 Mod가 맡을지 고릅니다: DeathTracker, HealthColors 또는 끄기. HealthColors 2.5 이상에도 같은 선택지가 있으며, 어느 Mod에서 바꾸든 양쪽에 함께 적용됩니다.',
+          '처음에는 죽음 내성 굴림은 DeathTracker가, 색상과 효과는 HealthColors가 맡습니다. HealthColors가 없으면 DeathTracker가 세 가지를 모두 맡습니다.',
+          'HealthColors 2.5 이전 버전은 이 선택을 공유하지 않습니다. !aura deathsaves off로 HealthColors 쪽의 죽음 내성 굴림을 끄세요.',
           'TokenMod가 바꾼 내용은 감지됩니다. 다른 Mod는 히트 포인트를 바꾼 뒤 DeathTracker.check(token)을 호출할 수 있습니다.',
           'DeathTracker는 자신이 붙인 마커만 제거합니다.',
         ],
@@ -6220,6 +6611,12 @@ const DeathTrackerMod = (() => {
         colKey: '설정',
         colDesc: '기능',
         rows: {
+          deathSavesBy:
+            '죽음 내성 굴림을 추적하고 빈사, 안정, 사망 마커를 붙일 Mod: DeathTracker, HealthColors 또는 off. HealthColors와 공유됩니다.',
+          coloursBy:
+            '히트 포인트에 따라 토큰에 색을 입힐 Mod: DeathTracker(자체 색조), HealthColors 또는 off. HealthColors와 공유됩니다.',
+          effectsBy:
+            '피해와 치유 효과를 재생할 Mod: DeathTracker, HealthColors 또는 off. HealthColors와 공유됩니다.',
           language: '메뉴, 메시지, 핸드아웃의 언어.',
           hpBar: '히트 포인트를 담는 바 (1, 2 또는 3).',
           bloodiedPercent: '최대 히트 포인트의 이 비율 이하이면 중상 (0이면 중상을 끔).',
@@ -6259,7 +6656,9 @@ const DeathTrackerMod = (() => {
           onStatusChange: '상태가 바뀌면 알림을 받습니다 ({token, status, previous, isPc}).',
           observe:
             '버전 0.1: DeathTracker가 히트 포인트 변화를 처리한 뒤 (token, prev)로 알림을 받습니다.',
-          managing: 'DeathTracker가 죽음 내성 굴림을 추적 중이면 true (HealthColors가 사용).',
+          managing:
+            'DeathTracker가 죽음 내성 굴림을 추적 중이면 true: 추적이 켜져 있고 DeathTracker가 담당으로 선택된 경우 (HealthColors가 사용).',
+          ownersChanged: '담당 Mod가 바뀐 뒤 토큰을 최신 상태로 맞춥니다 (HealthColors가 호출).',
         },
       },
       upgrading: {
@@ -6318,7 +6717,7 @@ const DeathTrackerMod = (() => {
       migrated:
         'Twoje ustawienia z DeathTracker 0.1 zostały przeniesione. !dead nadal działa; !deathtracker to nowe polecenie.',
       healthColors:
-        'HealthColors jest zainstalowany, więc DeathTracker wyłączył własne zabarwienie i efekty obrażeń/leczenia. Włącz je w Ustawieniach, jeśli chcesz mieć oba.',
+        'HealthColors jest zainstalowany: DeathTracker obsługuje rzuty obronne przed śmiercią oraz znaczniki umierania, stabilności i śmierci, a HealthColors kolory zdrowia i efekty obrażeń/leczenia. Zmień, kto czym się zajmuje, w Ustawieniach.',
       healthColorsSaves:
         'HealthColors również śledzi rzuty obronne przed śmiercią i ustawia znaczniki umierania. Wyłącz jeden z nich (!aura deathsaves off), aby nie walczyły o znaczniki.',
       settingChanged: '{setting} ma teraz wartość {value}.',
@@ -6403,6 +6802,7 @@ const DeathTrackerMod = (() => {
       language: 'Język',
     },
     sections: {
+      owners: 'Kto czym się zajmuje',
       hp: 'Punkty wytrzymałości',
       markers: 'Znaczniki',
       deathSaves: 'Rzuty obronne przed śmiercią (BG)',
@@ -6411,6 +6811,9 @@ const DeathTrackerMod = (() => {
       general: 'Ogólne',
     },
     settings: {
+      deathSavesBy: 'Rzuty przed śmiercią i znaczniki przy 0 PW',
+      coloursBy: 'Kolory zdrowia',
+      effectsBy: 'Efekty obrażeń i leczenia',
       language: 'Język',
       hpBar: 'Pasek punktów wytrzymałości',
       bloodiedPercent: 'Zakrwawiony przy',
@@ -6443,6 +6846,7 @@ const DeathTrackerMod = (() => {
       deathActionsFor: { npc: 'BN', all: 'BN i BG' },
       announce: { off: 'Wył.', gm: 'MG', controllers: 'MG i gracze' },
       none: 'Brak',
+      notInstalled: 'nie zainstalowano',
     },
     help: {
       menu: 'Otwórz menu.',
@@ -6530,8 +6934,9 @@ const DeathTrackerMod = (() => {
       healthColors: {
         heading: 'HealthColors i inne Mody',
         points: [
-          'Gdy HealthColors jest zainstalowany, DeathTracker startuje z wyłączonym własnym zabarwieniem i efektami; rysuje je HealthColors.',
-          'Tylko jeden Mod powinien obsługiwać rzuty przed śmiercią: wyłącz te z HealthColors poleceniem !aura deathsaves off.',
+          'Kto czym się zajmuje, w Ustawieniach, określa, który Mod obsługuje rzuty przed śmiercią (wraz ze znacznikami umierania, stabilności i śmierci), kolory zdrowia oraz efekty obrażeń/leczenia: DeathTracker, HealthColors lub Wył. HealthColors 2.5 i nowsze pokazują ten sam wybór, a zmiana w jednym Modzie zmienia go w obu.',
+          'Na początku DeathTracker obsługuje rzuty przed śmiercią, a HealthColors kolory i efekty. Bez HealthColors DeathTracker obsługuje wszystkie trzy.',
+          'HealthColors w wersji starszej niż 2.5 nie współdzieli tego wyboru: wyłącz w nim rzuty przed śmiercią poleceniem !aura deathsaves off.',
           'Zmiany wprowadzone przez TokenMod są widoczne. Inne Mody mogą wywołać DeathTracker.check(token) po zmianie punktów wytrzymałości.',
           'DeathTracker usuwa tylko znaczniki, które sam nałożył.',
         ],
@@ -6550,6 +6955,12 @@ const DeathTrackerMod = (() => {
         colKey: 'Ustawienie',
         colDesc: 'Co robi',
         rows: {
+          deathSavesBy:
+            'Kto śledzi rzuty przed śmiercią i nakłada znaczniki umierania, stabilności i śmierci: DeathTracker, HealthColors lub off. Wspólne z HealthColors.',
+          coloursBy:
+            'Kto barwi żetony według punktów wytrzymałości: DeathTracker (jego zabarwienie), HealthColors lub off. Wspólne z HealthColors.',
+          effectsBy:
+            'Kto odtwarza efekty obrażeń i leczenia: DeathTracker, HealthColors lub off. Wspólne z HealthColors.',
           language: 'Język menu, komunikatów i notatek.',
           hpBar: 'Pasek z punktami wytrzymałości (1, 2 lub 3).',
           bloodiedPercent:
@@ -6592,7 +7003,10 @@ const DeathTrackerMod = (() => {
             'Otrzymuj powiadomienie, gdy stan się zmienia ({token, status, previous, isPc}).',
           observe:
             'Wersja 0.1: otrzymuj powiadomienie (token, prev) po obsłużeniu przez DeathTracker zmiany punktów wytrzymałości.',
-          managing: 'True, gdy DeathTracker śledzi rzuty przed śmiercią (używa tego HealthColors).',
+          managing:
+            'True, gdy DeathTracker śledzi rzuty przed śmiercią: są włączone, a do ich obsługi wybrano DeathTracker (używa tego HealthColors).',
+          ownersChanged:
+            'Zaktualizuj żetony po zmianie tego, kto czym się zajmuje (wywołuje to HealthColors).',
         },
       },
       upgrading: {
@@ -6651,7 +7065,7 @@ const DeathTrackerMod = (() => {
       migrated:
         'As suas definições do DeathTracker 0.1 foram mantidas. !dead continua a funcionar; !deathtracker é o novo comando.',
       healthColors:
-        'O HealthColors está instalado, por isso o DeathTracker deixou desligados a sua própria tonalidade e os efeitos de dano/cura. Ligue-os nas Definições se quiser os dois.',
+        'O HealthColors está instalado: o DeathTracker trata dos testes contra a morte e dos marcadores de a morrer, estável e morto, e o HealthColors das cores de vida e dos efeitos de dano/cura. Altere quem trata do quê nas Definições.',
       healthColorsSaves:
         'O HealthColors também está a seguir os testes contra a morte e a colocar marcadores de a morrer. Desligue um deles (!aura deathsaves off) para que não disputem os marcadores.',
       settingChanged: '{setting} passa a ser {value}.',
@@ -6738,6 +7152,7 @@ const DeathTrackerMod = (() => {
       language: 'Idioma',
     },
     sections: {
+      owners: 'Quem trata do quê',
       hp: 'Pontos de vida',
       markers: 'Marcadores',
       deathSaves: 'Testes contra a morte (PJs)',
@@ -6746,6 +7161,9 @@ const DeathTrackerMod = (() => {
       general: 'Geral',
     },
     settings: {
+      deathSavesBy: 'Testes contra a morte e marcadores a 0 PV',
+      coloursBy: 'Cores de vida',
+      effectsBy: 'Efeitos de dano e cura',
       language: 'Idioma',
       hpBar: 'Barra de pontos de vida',
       bloodiedPercent: 'Ensanguentado a',
@@ -6778,6 +7196,7 @@ const DeathTrackerMod = (() => {
       deathActionsFor: { npc: 'PNJs', all: 'PNJs e PJs' },
       announce: { off: 'Desligado', gm: 'MJ', controllers: 'MJ e jogadores' },
       none: 'Nenhum',
+      notInstalled: 'não instalado',
     },
     help: {
       menu: 'Abre o menu.',
@@ -6865,8 +7284,9 @@ const DeathTrackerMod = (() => {
       healthColors: {
         heading: 'HealthColors e outros Mods',
         points: [
-          'Com o HealthColors instalado, o DeathTracker começa com a sua própria tonalidade e efeitos desligados; é o HealthColors que os desenha.',
-          'Só um Mod deve tratar dos testes contra a morte: desligue os do HealthColors com !aura deathsaves off.',
+          'Quem trata do quê, nas Definições, escolhe que Mod trata dos testes contra a morte (com os marcadores de a morrer, estável e morto), das cores de vida e dos efeitos de dano/cura: DeathTracker, HealthColors ou Desligado. O HealthColors 2.5 ou posterior mostra a mesma escolha, e alterá-la num dos Mods altera-a nos dois.',
+          'De início, o DeathTracker trata dos testes contra a morte e o HealthColors das cores e dos efeitos. Sem o HealthColors, o DeathTracker trata dos três.',
+          'O HealthColors anterior à 2.5 não partilha a escolha: desligue os testes contra a morte dele com !aura deathsaves off.',
           'As alterações feitas pelo TokenMod são detetadas. Outros Mods podem chamar DeathTracker.check(token) depois de alterar os pontos de vida.',
           'O DeathTracker só retira os marcadores que ele próprio colocou.',
         ],
@@ -6885,6 +7305,12 @@ const DeathTrackerMod = (() => {
         colKey: 'Definição',
         colDesc: 'O que faz',
         rows: {
+          deathSavesBy:
+            'Quem segue os testes contra a morte e coloca os marcadores de a morrer, estável e morto: DeathTracker, HealthColors ou off. Partilhado com o HealthColors.',
+          coloursBy:
+            'Quem tinge os tokens consoante os pontos de vida: DeathTracker (a sua tonalidade), HealthColors ou off. Partilhado com o HealthColors.',
+          effectsBy:
+            'Quem mostra os efeitos de dano e cura: DeathTracker, HealthColors ou off. Partilhado com o HealthColors.',
           language: 'Idioma dos menus, mensagens e folhetos.',
           hpBar: 'A barra que contém os pontos de vida (1, 2 ou 3).',
           bloodiedPercent:
@@ -6928,7 +7354,9 @@ const DeathTrackerMod = (() => {
           observe:
             'Versão 0.1: avisa (token, prev) depois de o DeathTracker tratar uma alteração de pontos de vida.',
           managing:
-            'Verdadeiro quando o DeathTracker está a seguir os testes contra a morte (o HealthColors usa isto).',
+            'Verdadeiro quando o DeathTracker está a seguir os testes contra a morte: estão ligados e o DeathTracker foi escolhido para tratar deles (o HealthColors usa isto).',
+          ownersChanged:
+            'Atualiza os tokens depois de mudar quem trata do quê (o HealthColors chama isto).',
         },
       },
       upgrading: {
@@ -6987,7 +7415,7 @@ const DeathTrackerMod = (() => {
       migrated:
         'Suas configurações do DeathTracker 0.1 foram mantidas. !dead ainda funciona; !deathtracker é o novo comando.',
       healthColors:
-        'O HealthColors está instalado, então o DeathTracker deixou desligados sua própria tonalidade e os efeitos de dano/cura. Ligue-os nas Configurações se quiser os dois.',
+        'O HealthColors está instalado: o DeathTracker cuida dos testes contra a morte e dos marcadores de morrendo, estável e morto, e o HealthColors das cores de vida e dos efeitos de dano/cura. Mude quem cuida do quê nas Configurações.',
       healthColorsSaves:
         'O HealthColors também está acompanhando os testes contra a morte e colocando marcadores de morrendo. Desligue um deles (!aura deathsaves off) para que não briguem pelos marcadores.',
       settingChanged: '{setting} agora é {value}.',
@@ -7072,6 +7500,7 @@ const DeathTrackerMod = (() => {
       language: 'Idioma',
     },
     sections: {
+      owners: 'Quem cuida do quê',
       hp: 'Pontos de vida',
       markers: 'Marcadores',
       deathSaves: 'Testes contra a morte (PJs)',
@@ -7080,6 +7509,9 @@ const DeathTrackerMod = (() => {
       general: 'Geral',
     },
     settings: {
+      deathSavesBy: 'Testes contra a morte e marcadores de 0 PV',
+      coloursBy: 'Cores de vida',
+      effectsBy: 'Efeitos de dano e cura',
       language: 'Idioma',
       hpBar: 'Barra de pontos de vida',
       bloodiedPercent: 'Ensanguentado com',
@@ -7112,6 +7544,7 @@ const DeathTrackerMod = (() => {
       deathActionsFor: { npc: 'PdMs', all: 'PdMs e PJs' },
       announce: { off: 'Desligado', gm: 'Mestre', controllers: 'Mestre e jogadores' },
       none: 'Nenhum',
+      notInstalled: 'não instalado',
     },
     help: {
       menu: 'Abre o menu.',
@@ -7199,8 +7632,9 @@ const DeathTrackerMod = (() => {
       healthColors: {
         heading: 'HealthColors e outros Mods',
         points: [
-          'Com o HealthColors instalado, o DeathTracker começa com sua própria tonalidade e efeitos desligados; o HealthColors cuida deles.',
-          'Só um Mod deve cuidar dos testes contra a morte: desligue os do HealthColors com !aura deathsaves off.',
+          'Quem cuida do quê, nas Configurações, escolhe qual Mod cuida dos testes contra a morte (com os marcadores de morrendo, estável e morto), das cores de vida e dos efeitos de dano/cura: DeathTracker, HealthColors ou Desligado. O HealthColors 2.5 ou mais recente mostra a mesma escolha, e mudá-la em um dos Mods muda nos dois.',
+          'No início, o DeathTracker cuida dos testes contra a morte e o HealthColors das cores e efeitos. Sem o HealthColors, o DeathTracker cuida dos três.',
+          'O HealthColors anterior à 2.5 não compartilha a escolha: desligue os testes contra a morte dele com !aura deathsaves off.',
           'As mudanças feitas pelo TokenMod são percebidas. Outros Mods podem chamar DeathTracker.check(token) depois de mudar os pontos de vida.',
           'O DeathTracker só remove os marcadores que ele mesmo colocou.',
         ],
@@ -7219,6 +7653,12 @@ const DeathTrackerMod = (() => {
         colKey: 'Configuração',
         colDesc: 'O que faz',
         rows: {
+          deathSavesBy:
+            'Quem acompanha os testes contra a morte e coloca os marcadores de morrendo, estável e morto: DeathTracker, HealthColors ou off. Compartilhado com o HealthColors.',
+          coloursBy:
+            'Quem tinge os tokens conforme os pontos de vida: DeathTracker (sua tonalidade), HealthColors ou off. Compartilhado com o HealthColors.',
+          effectsBy:
+            'Quem mostra os efeitos de dano e cura: DeathTracker, HealthColors ou off. Compartilhado com o HealthColors.',
           language: 'Idioma dos menus, mensagens e folhetos.',
           hpBar: 'A barra que contém os pontos de vida (1, 2 ou 3).',
           bloodiedPercent:
@@ -7261,7 +7701,9 @@ const DeathTrackerMod = (() => {
           observe:
             'Versão 0.1: avisa (token, prev) depois que o DeathTracker trata uma mudança de pontos de vida.',
           managing:
-            'Verdadeiro quando o DeathTracker está acompanhando os testes contra a morte (o HealthColors usa isso).',
+            'Verdadeiro quando o DeathTracker está acompanhando os testes contra a morte: estão ligados e o DeathTracker foi escolhido para cuidar deles (o HealthColors usa isso).',
+          ownersChanged:
+            'Atualiza os tokens depois que muda quem cuida do quê (o HealthColors chama isso).',
         },
       },
       upgrading: {
@@ -7320,7 +7762,7 @@ const DeathTrackerMod = (() => {
       migrated:
         'Ваши настройки DeathTracker 0.1 перенесены. !dead по-прежнему работает; новая команда — !deathtracker.',
       healthColors:
-        'Установлен HealthColors, поэтому DeathTracker выключил свою окраску и эффекты урона и лечения. Включите их в настройках, если нужны оба.',
+        'Установлен HealthColors: DeathTracker ведёт спасброски от смерти и маркеры «При смерти», «Стабилен» и «Мёртв», а HealthColors — цвета здоровья и эффекты урона и лечения. Кто чем занимается, можно изменить в настройках.',
       healthColorsSaves:
         'HealthColors тоже отслеживает спасброски от смерти и ставит маркеры умирающих. Выключите один из них (!aura deathsaves off), чтобы они не спорили из-за маркеров.',
       settingChanged: '{setting} теперь {value}.',
@@ -7405,6 +7847,7 @@ const DeathTrackerMod = (() => {
       language: 'Язык',
     },
     sections: {
+      owners: 'Кто чем занимается',
       hp: 'Хиты',
       markers: 'Маркеры',
       deathSaves: 'Спасброски от смерти (ИП)',
@@ -7413,6 +7856,9 @@ const DeathTrackerMod = (() => {
       general: 'Общие',
     },
     settings: {
+      deathSavesBy: 'Спасброски и маркеры 0 хитов',
+      coloursBy: 'Цвета здоровья',
+      effectsBy: 'Эффекты урона и лечения',
       language: 'Язык',
       hpBar: 'Полоса хитов',
       bloodiedPercent: 'Окровавлен при',
@@ -7445,6 +7891,7 @@ const DeathTrackerMod = (() => {
       deathActionsFor: { npc: 'НИП', all: 'НИП и ИП' },
       announce: { off: 'Выкл.', gm: 'Мастеру', controllers: 'Мастеру и игрокам' },
       none: 'Нет',
+      notInstalled: 'не установлен',
     },
     help: {
       menu: 'Открыть меню.',
@@ -7529,8 +7976,9 @@ const DeathTrackerMod = (() => {
       healthColors: {
         heading: 'HealthColors и другие Моды',
         points: [
-          'Если установлен HealthColors, DeathTracker запускается с выключенными окраской и эффектами; их рисует HealthColors.',
-          'Спасбросками от смерти должен заниматься только один Мод: выключите их в HealthColors командой !aura deathsaves off.',
+          '«Кто чем занимается» в настройках определяет, какой Мод ведёт спасброски от смерти (с маркерами «При смерти», «Стабилен» и «Мёртв»), цвета здоровья и эффекты урона и лечения: DeathTracker, HealthColors или «Выкл.». HealthColors 2.5 и новее показывает тот же выбор, и изменение в любом из Модов меняет его для обоих.',
+          'Изначально DeathTracker ведёт спасброски от смерти, а HealthColors — цвета и эффекты. Без HealthColors DeathTracker занимается всеми тремя.',
+          'HealthColors до версии 2.5 не разделяет этот выбор: выключите в нём спасброски от смерти командой !aura deathsaves off.',
           'Изменения, сделанные TokenMod, видны. Другие Моды могут вызывать DeathTracker.check(token) после изменения хитов.',
           'DeathTracker снимает только те маркеры, которые поставил сам.',
         ],
@@ -7549,6 +7997,12 @@ const DeathTrackerMod = (() => {
         colKey: 'Настройка',
         colDesc: 'Что делает',
         rows: {
+          deathSavesBy:
+            'Кто отслеживает спасброски от смерти и ставит маркеры «При смерти», «Стабилен» и «Мёртв»: DeathTracker, HealthColors или никто. Общая с HealthColors.',
+          coloursBy:
+            'Кто окрашивает жетоны по хитам: DeathTracker (своей окраской), HealthColors или никто. Общая с HealthColors.',
+          effectsBy:
+            'Кто показывает эффекты урона и лечения: DeathTracker, HealthColors или никто. Общая с HealthColors.',
           language: 'Язык меню, сообщений и раздаточных материалов.',
           hpBar: 'Полоса, в которой хранятся хиты (1, 2 или 3).',
           bloodiedPercent:
@@ -7591,7 +8045,9 @@ const DeathTrackerMod = (() => {
           observe:
             'Версия 0.1: получать (token, prev) после того, как DeathTracker обработает изменение хитов.',
           managing:
-            'True, когда DeathTracker отслеживает спасброски от смерти (это использует HealthColors).',
+            'True, когда DeathTracker отслеживает спасброски от смерти: они включены, и вести их выбран DeathTracker (это использует HealthColors).',
+          ownersChanged:
+            'Обновить жетоны после того, как изменилось, кто чем занимается (это вызывает HealthColors).',
         },
       },
       upgrading: {
@@ -7650,7 +8106,7 @@ const DeathTrackerMod = (() => {
       migrated:
         'Se han conservado tus ajustes de DeathTracker 0.1. !dead sigue funcionando; !deathtracker es el nuevo comando.',
       healthColors:
-        'HealthColors está instalado, así que DeathTracker ha dejado desactivados su propio tinte y sus efectos de daño y curación. Actívalos en Ajustes si quieres ambos.',
+        'HealthColors está instalado: DeathTracker se encarga de las salvaciones de muerte y de los marcadores de moribundo, estable y muerto, y HealthColors de los colores de salud y los efectos de daño y curación. Cambia quién se encarga de qué en Ajustes.',
       healthColorsSaves:
         'HealthColors también lleva las tiradas de salvación de muerte y pone marcadores de moribundo. Desactiva uno de los dos (!aura deathsaves off) para que no se peleen por los marcadores.',
       settingChanged: '{setting} ahora es {value}.',
@@ -7735,6 +8191,7 @@ const DeathTrackerMod = (() => {
       language: 'Idioma',
     },
     sections: {
+      owners: 'Quién se encarga de qué',
       hp: 'Puntos de golpe',
       markers: 'Marcadores',
       deathSaves: 'Salvaciones de muerte (PJ)',
@@ -7743,6 +8200,9 @@ const DeathTrackerMod = (() => {
       general: 'General',
     },
     settings: {
+      deathSavesBy: 'Salvaciones y marcadores a 0 PG',
+      coloursBy: 'Colores de salud',
+      effectsBy: 'Efectos de daño y curación',
       language: 'Idioma',
       hpBar: 'Barra de puntos de golpe',
       bloodiedPercent: 'Ensangrentado en',
@@ -7775,6 +8235,7 @@ const DeathTrackerMod = (() => {
       deathActionsFor: { npc: 'PNJ', all: 'PNJ y PJ' },
       announce: { off: 'Desactivado', gm: 'DJ', controllers: 'DJ y jugadores' },
       none: 'Ninguno',
+      notInstalled: 'no instalado',
     },
     help: {
       menu: 'Abrir el menú.',
@@ -7861,8 +8322,9 @@ const DeathTrackerMod = (() => {
       healthColors: {
         heading: 'HealthColors y otros Mods',
         points: [
-          'Con HealthColors instalado, DeathTracker empieza con su propio tinte y sus efectos desactivados; HealthColors se encarga de ellos.',
-          'Solo un Mod debe encargarse de las salvaciones de muerte: desactiva las de HealthColors con !aura deathsaves off.',
+          'Quién se encarga de qué, en Ajustes, elige qué Mod lleva las salvaciones de muerte (con los marcadores de moribundo, estable y muerto), los colores de salud y los efectos de daño y curación: DeathTracker, HealthColors o Desactivado. HealthColors 2.5 o posterior muestra la misma elección, y cambiarla en cualquiera de los dos Mods la cambia en ambos.',
+          'Al principio, DeathTracker se encarga de las salvaciones de muerte y HealthColors de los colores y los efectos. Sin HealthColors, DeathTracker se encarga de las tres cosas.',
+          'Las versiones de HealthColors anteriores a la 2.5 no comparten la elección: desactiva sus salvaciones de muerte con !aura deathsaves off.',
           'Se detectan los cambios hechos por TokenMod. Otros Mods pueden llamar a DeathTracker.check(token) después de cambiar los puntos de golpe.',
           'DeathTracker solo quita los marcadores que ha puesto él mismo.',
         ],
@@ -7881,6 +8343,12 @@ const DeathTrackerMod = (() => {
         colKey: 'Ajuste',
         colDesc: 'Qué hace',
         rows: {
+          deathSavesBy:
+            'Quién lleva las salvaciones de muerte y pone los marcadores de moribundo, estable y muerto: DeathTracker, HealthColors u off. Compartido con HealthColors.',
+          coloursBy:
+            'Quién colorea los tokens según sus puntos de golpe: DeathTracker (su tinte), HealthColors u off. Compartido con HealthColors.',
+          effectsBy:
+            'Quién reproduce los efectos de daño y curación: DeathTracker, HealthColors u off. Compartido con HealthColors.',
           language: 'Idioma de los menús, mensajes y handouts.',
           hpBar: 'La barra que contiene los puntos de golpe (1, 2 o 3).',
           bloodiedPercent:
@@ -7924,7 +8392,9 @@ const DeathTrackerMod = (() => {
           observe:
             'Versión 0.1: recibir (token, prev) después de que DeathTracker procese un cambio de puntos de golpe.',
           managing:
-            'True cuando DeathTracker lleva las salvaciones de muerte (HealthColors lo usa).',
+            'True cuando DeathTracker lleva las salvaciones de muerte: están activadas y DeathTracker es quien se encarga de ellas (HealthColors lo usa).',
+          ownersChanged:
+            'Poner los tokens al día después de cambiar quién se encarga de qué (HealthColors lo llama).',
         },
       },
       upgrading: {
@@ -7984,7 +8454,7 @@ const DeathTrackerMod = (() => {
       migrated:
         'Dina inställningar från DeathTracker 0.1 har förts över. !dead fungerar fortfarande; !deathtracker är det nya kommandot.',
       healthColors:
-        'HealthColors är installerat, så DeathTracker har stängt av sin egen färgton och sina skade-/läkeeffekter. Slå på dem i Inställningar om du vill ha båda.',
+        'HealthColors är installerat: DeathTracker sköter dödsräddningsslag och markörerna för döende, stabil och död, och HealthColors sköter hälsofärgerna och skade-/läkeeffekterna. Ändra vem som sköter vad i Inställningar.',
       healthColorsSaves:
         'HealthColors följer också dödsräddningsslag och sätter markörer för döende. Stäng av ett av dem (!aura deathsaves off) så att de inte bråkar om markörerna.',
       settingChanged: '{setting} är nu {value}.',
@@ -8069,6 +8539,7 @@ const DeathTrackerMod = (() => {
       language: 'Språk',
     },
     sections: {
+      owners: 'Vem sköter vad',
       hp: 'Träffpoäng',
       markers: 'Markörer',
       deathSaves: 'Dödsräddningsslag (RP)',
@@ -8077,6 +8548,9 @@ const DeathTrackerMod = (() => {
       general: 'Allmänt',
     },
     settings: {
+      deathSavesBy: 'Dödsräddningsslag och markörer vid 0 TP',
+      coloursBy: 'Hälsofärger',
+      effectsBy: 'Skade- och läkeeffekter',
       language: 'Språk',
       hpBar: 'Mätare för träffpoäng',
       bloodiedPercent: 'Blödande vid',
@@ -8109,6 +8583,7 @@ const DeathTrackerMod = (() => {
       deathActionsFor: { npc: 'SLP', all: 'SLP och RP' },
       announce: { off: 'Av', gm: 'SL', controllers: 'SL och spelare' },
       none: 'Ingen',
+      notInstalled: 'inte installerat',
     },
     help: {
       menu: 'Öppna menyn.',
@@ -8193,8 +8668,9 @@ const DeathTrackerMod = (() => {
       healthColors: {
         heading: 'HealthColors och andra Mods',
         points: [
-          'Med HealthColors installerat startar DeathTracker med sin egen färgton och sina effekter avstängda; HealthColors ritar dem.',
-          'Bara en Mod bör hantera dödsräddningsslag: stäng av HealthColors med !aura deathsaves off.',
+          'Vem sköter vad, i Inställningar, väljer vilken Mod som sköter dödsräddningsslag (med markörerna för döende, stabil och död), hälsofärger och skade-/läkeeffekter: DeathTracker, HealthColors eller Av. HealthColors 2.5 och senare visar samma val, och en ändring i någon av dem gäller för båda.',
+          'Från början sköter DeathTracker dödsräddningsslag och HealthColors färgerna och effekterna. Utan HealthColors sköter DeathTracker alla tre.',
+          'HealthColors före 2.5 delar inte valet: stäng av dess dödsräddningsslag med !aura deathsaves off.',
           'Ändringar gjorda av TokenMod uppfattas. Andra Mods kan anropa DeathTracker.check(token) efter att ha ändrat träffpoäng.',
           'DeathTracker tar bara bort markörer som den själv har satt.',
         ],
@@ -8213,6 +8689,12 @@ const DeathTrackerMod = (() => {
         colKey: 'Inställning',
         colDesc: 'Vad den gör',
         rows: {
+          deathSavesBy:
+            'Vem som följer dödsräddningsslag och sätter markörerna för döende, stabil och död: DeathTracker, HealthColors eller av. Delas med HealthColors.',
+          coloursBy:
+            'Vem som färgar tokens efter träffpoäng: DeathTracker (dess färgton), HealthColors eller av. Delas med HealthColors.',
+          effectsBy:
+            'Vem som spelar skade- och läkeeffekterna: DeathTracker, HealthColors eller av. Delas med HealthColors.',
           language: 'Språk för menyer, meddelanden och handouts.',
           hpBar: 'Mätaren som innehåller träffpoängen (1, 2 eller 3).',
           bloodiedPercent:
@@ -8253,7 +8735,10 @@ const DeathTrackerMod = (() => {
           onStatusChange: 'Få veta när en status ändras ({token, status, previous, isPc}).',
           observe:
             'Version 0.1: få veta (token, prev) efter att DeathTracker har hanterat en ändring av träffpoäng.',
-          managing: 'True när DeathTracker följer dödsräddningsslag (HealthColors använder detta).',
+          managing:
+            'True när DeathTracker följer dödsräddningsslag: de är på och DeathTracker är vald att sköta dem (HealthColors använder detta).',
+          ownersChanged:
+            'Uppdatera tokens efter att vem som sköter vad har ändrats (HealthColors anropar detta).',
         },
       },
       upgrading: {
@@ -8312,7 +8797,7 @@ const DeathTrackerMod = (() => {
       migrated:
         'DeathTracker 0.1 ayarlarınız aktarıldı. !dead hâlâ çalışıyor; yeni komut !deathtracker.',
       healthColors:
-        'HealthColors kurulu olduğu için DeathTracker kendi renklendirmesini ve hasar/iyileşme efektlerini kapattı. İkisini birden istiyorsanız Ayarlar’dan açın.',
+        'HealthColors kurulu: ölüm kurtarma atışlarını ve ölmekte, stabil ve ölü işaretçilerini DeathTracker, sağlık renklerini ve hasar/iyileşme efektlerini HealthColors yönetiyor. Neyi kimin yöneteceğini Ayarlar’dan değiştirin.',
       healthColorsSaves:
         'HealthColors da ölüm kurtarma atışlarını izliyor ve ölmekte işaretçileri koyuyor. İşaretçiler için çakışmamaları adına birini kapatın (!aura deathsaves off).',
       settingChanged: '{setting} artık {value}.',
@@ -8397,6 +8882,7 @@ const DeathTrackerMod = (() => {
       language: 'Dil',
     },
     sections: {
+      owners: 'Kim neyi yönetir',
       hp: 'Can puanları',
       markers: 'İşaretçiler',
       deathSaves: 'Ölüm kurtarma atışları (PC’ler)',
@@ -8405,6 +8891,9 @@ const DeathTrackerMod = (() => {
       general: 'Genel',
     },
     settings: {
+      deathSavesBy: 'Ölüm kurtarma ve 0 CP işaretçileri',
+      coloursBy: 'Sağlık renkleri',
+      effectsBy: 'Hasar ve iyileşme efektleri',
       language: 'Dil',
       hpBar: 'Can puanı çubuğu',
       bloodiedPercent: 'Kanlı eşiği',
@@ -8437,6 +8926,7 @@ const DeathTrackerMod = (() => {
       deathActionsFor: { npc: 'NPC’ler', all: 'NPC’ler ve PC’ler' },
       announce: { off: 'Kapalı', gm: 'GM', controllers: 'GM ve oyuncular' },
       none: 'Yok',
+      notInstalled: 'kurulu değil',
     },
     help: {
       menu: 'Menüyü açar.',
@@ -8521,8 +9011,9 @@ const DeathTrackerMod = (() => {
       healthColors: {
         heading: 'HealthColors ve diğer Mod’lar',
         points: [
-          'HealthColors kuruluysa DeathTracker kendi renklendirmesi ve efektleri kapalı başlar; bunları HealthColors çizer.',
-          'Ölüm kurtarma atışlarıyla yalnızca bir Mod ilgilenmeli: HealthColors’ınkini !aura deathsaves off ile kapatın.',
+          'Ayarlar’daki Kim neyi yönetir bölümü, ölüm kurtarma atışlarını (ölmekte, stabil ve ölü işaretçileriyle birlikte), sağlık renklerini ve hasar/iyileşme efektlerini hangi Mod’un yöneteceğini seçer: DeathTracker, HealthColors veya Kapalı. HealthColors 2.5 ve sonrası aynı seçimi gösterir; iki Mod’dan birinde değiştirmek ikisinde de değiştirir.',
+          'Başlangıçta ölüm kurtarma atışlarını DeathTracker, renkleri ve efektleri HealthColors yönetir. HealthColors yoksa üçünü de DeathTracker yönetir.',
+          '2.5’ten önceki HealthColors bu seçimi paylaşmaz: onun ölüm kurtarma atışlarını !aura deathsaves off ile kapatın.',
           'TokenMod’un yaptığı değişiklikler görülür. Diğer Mod’lar can puanlarını değiştirdikten sonra DeathTracker.check(token) çağırabilir.',
           'DeathTracker yalnızca kendi koyduğu işaretçileri kaldırır.',
         ],
@@ -8541,6 +9032,12 @@ const DeathTrackerMod = (() => {
         colKey: 'Ayar',
         colDesc: 'Ne yapar',
         rows: {
+          deathSavesBy:
+            'Ölüm kurtarma atışlarını kimin izleyip ölmekte, stabil ve ölü işaretçilerini koyacağı: DeathTracker, HealthColors veya kapalı. HealthColors ile ortaktır.',
+          coloursBy:
+            'Jetonları can puanına göre kimin renklendireceği: DeathTracker (kendi renklendirmesi), HealthColors veya kapalı. HealthColors ile ortaktır.',
+          effectsBy:
+            'Hasar ve iyileşme efektlerini kimin oynatacağı: DeathTracker, HealthColors veya kapalı. HealthColors ile ortaktır.',
           language: 'Menülerin, mesajların ve belgelerin dili.',
           hpBar: 'Can puanlarını tutan çubuk (1, 2 veya 3).',
           bloodiedPercent:
@@ -8584,7 +9081,9 @@ const DeathTrackerMod = (() => {
           observe:
             'Sürüm 0.1: DeathTracker bir can puanı değişikliğini işledikten sonra (token, prev) bildirimi alırsınız.',
           managing:
-            'DeathTracker ölüm kurtarma atışlarını izliyorsa true (HealthColors bunu kullanır).',
+            'DeathTracker ölüm kurtarma atışlarını izliyorsa true: atışlar açıktır ve onları yönetmek için DeathTracker seçilmiştir (HealthColors bunu kullanır).',
+          ownersChanged:
+            'Neyi kimin yöneteceği değiştikten sonra jetonları günceller (HealthColors bunu çağırır).',
         },
       },
       upgrading: {
@@ -8644,7 +9143,7 @@ const DeathTrackerMod = (() => {
       migrated:
         'Ваші налаштування DeathTracker 0.1 перенесено. !dead і далі працює; нова команда — !deathtracker.',
       healthColors:
-        'Встановлено HealthColors, тому DeathTracker вимкнув власне забарвлення та ефекти поранення й лікування. Увімкніть їх у налаштуваннях, якщо потрібні обидва.',
+        'Встановлено HealthColors: DeathTracker веде рятівні кидки від смерті та маркери «При смерті», «Стабільний» і «Мертвий», а HealthColors — кольори здоров’я та ефекти поранення й лікування. Хто чим займається, можна змінити в налаштуваннях.',
       healthColorsSaves:
         'HealthColors теж відстежує рятівні кидки від смерті та ставить маркери вмираючих. Вимкніть один із них (!aura deathsaves off), щоб вони не змагалися за маркери.',
       settingChanged: '{setting} тепер {value}.',
@@ -8729,6 +9228,7 @@ const DeathTrackerMod = (() => {
       language: 'Мова',
     },
     sections: {
+      owners: 'Хто чим займається',
       hp: 'Хіти',
       markers: 'Маркери',
       deathSaves: 'Рятівні кидки від смерті (ПГ)',
@@ -8737,6 +9237,9 @@ const DeathTrackerMod = (() => {
       general: 'Загальні',
     },
     settings: {
+      deathSavesBy: 'Рятівні кидки й маркери 0 хітів',
+      coloursBy: 'Кольори здоров’я',
+      effectsBy: 'Ефекти поранення й лікування',
       language: 'Мова',
       hpBar: 'Смуга хітів',
       bloodiedPercent: 'Закривавлений на',
@@ -8769,6 +9272,7 @@ const DeathTrackerMod = (() => {
       deathActionsFor: { npc: 'НІП', all: 'НІП і ПГ' },
       announce: { off: 'Вимк.', gm: 'Майстру', controllers: 'Майстру та гравцям' },
       none: 'Немає',
+      notInstalled: 'не встановлено',
     },
     help: {
       menu: 'Відкрити меню.',
@@ -8853,8 +9357,9 @@ const DeathTrackerMod = (() => {
       healthColors: {
         heading: 'HealthColors та інші Моди',
         points: [
-          'Якщо встановлено HealthColors, DeathTracker запускається з вимкненими забарвленням та ефектами; їх малює HealthColors.',
-          'Рятівними кидками від смерті має займатися лише один Мод: вимкніть їх у HealthColors командою !aura deathsaves off.',
+          '«Хто чим займається» в налаштуваннях визначає, який Мод веде рятівні кидки від смерті (з маркерами «При смерті», «Стабільний» і «Мертвий»), кольори здоров’я та ефекти поранення й лікування: DeathTracker, HealthColors або «Вимк.». HealthColors 2.5 і новіші показують той самий вибір, і зміна в будь-якому з Модів змінює його для обох.',
+          'Спочатку DeathTracker веде рятівні кидки від смерті, а HealthColors — кольори та ефекти. Без HealthColors DeathTracker займається всіма трьома.',
+          'HealthColors до версії 2.5 не поділяє цей вибір: вимкніть у ньому рятівні кидки від смерті командою !aura deathsaves off.',
           'Зміни, зроблені TokenMod, видно. Інші Моди можуть викликати DeathTracker.check(token) після зміни хітів.',
           'DeathTracker знімає лише ті маркери, які поставив сам.',
         ],
@@ -8873,6 +9378,12 @@ const DeathTrackerMod = (() => {
         colKey: 'Налаштування',
         colDesc: 'Що робить',
         rows: {
+          deathSavesBy:
+            'Хто відстежує рятівні кидки від смерті й ставить маркери «При смерті», «Стабільний» і «Мертвий»: DeathTracker, HealthColors або ніхто. Спільна з HealthColors.',
+          coloursBy:
+            'Хто забарвлює жетони за хітами: DeathTracker (своїм забарвленням), HealthColors або ніхто. Спільна з HealthColors.',
+          effectsBy:
+            'Хто показує ефекти поранення й лікування: DeathTracker, HealthColors або ніхто. Спільна з HealthColors.',
           language: 'Мова меню, повідомлень і роздаткових матеріалів.',
           hpBar: 'Смуга, у якій зберігаються хіти (1, 2 або 3).',
           bloodiedPercent:
@@ -8916,7 +9427,9 @@ const DeathTrackerMod = (() => {
           observe:
             'Версія 0.1: отримувати (token, prev) після того, як DeathTracker обробить зміну хітів.',
           managing:
-            'True, коли DeathTracker відстежує рятівні кидки від смерті (це використовує HealthColors).',
+            'True, коли DeathTracker відстежує рятівні кидки від смерті: їх увімкнено, і вести їх обрано DeathTracker (це використовує HealthColors).',
+          ownersChanged:
+            'Оновити жетони після того, як змінилося, хто чим займається (це викликає HealthColors).',
         },
       },
       upgrading: {
@@ -10177,6 +10690,9 @@ const DeathTrackerMod = (() => {
     }
     const character = getCharacter(token);
     const pc = isPc(token, character);
+    // HealthColors may be the one handling death saves, colours or effects.
+    const ownSaves = owns('deathSaves');
+    const deathSaves = settings.deathSaves && ownSaves;
     const before = record.hp ?? prevHp;
     const wasDown = [STATUS.DYING, STATUS.STABLE, STATUS.DEAD].includes(previous);
     const dropped = hp <= 0 && (before === null ? false : before > 0) && !wasDown;
@@ -10185,7 +10701,7 @@ const DeathTrackerMod = (() => {
     if (healed) {
       record.base = null;
       record.saves = null;
-      if (pc && character && settings.resetSheetSaves) {
+      if (pc && character && ownSaves && settings.resetSheetSaves) {
         clearDeathSaves(character.id, settings, false);
       }
     }
@@ -10196,7 +10712,7 @@ const DeathTrackerMod = (() => {
         massive = settings.massiveDamage && isMassiveDamage(hp, max);
         record.saves = null;
         record.base = { s: 0, f: 0 };
-        if (character && settings.deathSaves) {
+        if (character && deathSaves) {
           if (settings.resetSheetSaves) {
             clearDeathSaves(character.id, settings, true);
             record.base = { s: 0, f: 0 };
@@ -10206,7 +10722,7 @@ const DeathTrackerMod = (() => {
           }
         }
       }
-      if (character && settings.deathSaves) {
+      if (character && deathSaves) {
         const sheet = readDeathSaves(character.id, settings);
         if (sheet) {
           const counted = countSaves(sheet, record.base);
@@ -10222,7 +10738,7 @@ const DeathTrackerMod = (() => {
       isPc: pc,
       previous,
       saves: record.saves ? capSaves(record.saves) : null,
-      deathSaves: settings.deathSaves,
+      deathSaves,
       bloodiedPercent: settings.bloodiedPercent,
       massive,
     });
@@ -10230,13 +10746,16 @@ const DeathTrackerMod = (() => {
       status = STATUS.STABLE;
     }
 
-    record.markers = applyMarkers(token, record.markers, [markerFor(status, settings)]);
-    if (pc ? settings.tintPlayers : settings.tintNpcs) {
+    // The dying, stable and dead markers go with death saves.
+    const down = [STATUS.DYING, STATUS.STABLE, STATUS.DEAD].includes(status);
+    const marker = down && !ownSaves ? '' : markerFor(status, settings);
+    record.markers = applyMarkers(token, record.markers, [marker]);
+    if (owns('colours') && (pc ? settings.tintPlayers : settings.tintNpcs)) {
       applyTint(token, record, hp, max);
     } else {
       clearTint(token, record);
     }
-    if (event && prevHp !== null && hp !== prevHp) {
+    if (event && prevHp !== null && hp !== prevHp && owns('effects')) {
       if (hp < prevHp && settings.hurtFx) {
         playFx(token, settings.hurtFxType);
       } else if (hp > prevHp && settings.healFx) {
@@ -10280,8 +10799,14 @@ const DeathTrackerMod = (() => {
    */
   function announce(token, status, previous, pc, saves, event) {
     const settings = getSettings();
-    // A token first seen by `check` is not news; one just hit is.
-    if (!pc || settings.announce === 'off' || (previous === null && !event)) {
+    // A token first seen by `check` is not news; one just hit is. When
+    // HealthColors (or nobody) handles death saves, it is not DeathTracker's news.
+    if (
+      !pc ||
+      settings.announce === 'off' ||
+      (previous === null && !event) ||
+      !owns('deathSaves')
+    ) {
       return;
     }
     const down = [STATUS.DYING, STATUS.STABLE, STATUS.DEAD];
@@ -10356,7 +10881,7 @@ const DeathTrackerMod = (() => {
    */
   function handleAttributeChange(attr) {
     const settings = getSettings();
-    if (!settings.deathSaves) {
+    if (!settings.deathSaves || !owns('deathSaves')) {
       return;
     }
     const name = toText(attr.get('name')).toLowerCase();
@@ -10379,7 +10904,7 @@ const DeathTrackerMod = (() => {
   function startPoll() {
     const tick = () => {
       try {
-        if (getSettings().deathSaves) {
+        if (getSettings().deathSaves && owns('deathSaves')) {
           for (const token of downedTokens()) {
             judge(token);
           }
@@ -10459,65 +10984,6 @@ const DeathTrackerMod = (() => {
     rec.base = counted.base;
     rec.saves = counted.saves;
     return judge(token);
-  }
-
-  // Other Mods: HealthColors, TokenMod, and the 0.1.x observer list that
-  // CombatMaster, LazyExperience and StatusInfo use.
-
-  const observers = [];
-
-  /**
-   * Says whether HealthColors is installed.
-   *
-   * @returns {boolean} True when it is.
-   */
-  function healthColorsInstalled() {
-    return typeof HealthColors !== 'undefined' && !!HealthColors;
-  }
-
-  /**
-   * Says whether HealthColors is also tracking death saves.
-   *
-   * @returns {boolean} True when its death save markers are on.
-   */
-  function healthColorsTracksSaves() {
-    return (
-      healthColorsInstalled() &&
-      typeof state !== 'undefined' &&
-      isRecord(state.HealthColors) &&
-      state.HealthColors.deathSavesOn === true
-    );
-  }
-
-  /**
-   * Adds a 0.1.x observer: called with (token, prev) after DeathTracker handles a
-   * hit point change.
-   *
-   * @param {Function} fn Observer.
-   * @returns {void}
-   */
-  function observeTokenChange(fn) {
-    if (typeof fn === 'function') {
-      observers.push(fn);
-    }
-  }
-
-  /**
-   * Tells the 0.1.x observers about a change. One failing observer does not stop
-   * the others (or DeathTracker).
-   *
-   * @param {object} token Roll20 graphic.
-   * @param {object} prev Previous attributes.
-   * @returns {void}
-   */
-  function notifyObservers(token, prev) {
-    for (const fn of observers) {
-      try {
-        fn(token, prev);
-      } catch (e) {
-        log(`DeathTracker: a token change observer failed: ${e?.message || e}`);
-      }
-    }
   }
 
   // Chat cards: the main menu, status, settings, markers and help.
@@ -10698,6 +11164,15 @@ const DeathTrackerMod = (() => {
    * @returns {string} Text.
    */
   function describeValue(key, value, lang) {
+    if (key in OWNER_SETTINGS) {
+      if (value === 'off') {
+        return t('buttons.off', lang);
+      }
+      const missing =
+        (value === 'HealthColors' && !healthColorsShares()) ||
+        (value !== 'HealthColors' && value !== 'DeathTracker');
+      return missing ? `${value} (${t('choices.notInstalled', lang)})` : value;
+    }
     if (BOOLEAN_SETTINGS.includes(key)) {
       return t(value ? 'buttons.on' : 'buttons.off', lang);
     }
@@ -10726,6 +11201,9 @@ const DeathTrackerMod = (() => {
    */
   function settingCommand(key, value, lang) {
     const set = `${COMMAND} set ${key}`;
+    if (key in OWNER_SETTINGS) {
+      return `${set} ?{${queryText(t(`settings.${key}`, lang))}|DeathTracker|HealthColors|${queryText(t('buttons.off', lang))},off} --settings`;
+    }
     if (BOOLEAN_SETTINGS.includes(key)) {
       return `${set} ${value ? 'off' : 'on'} --settings`;
     }
@@ -10765,6 +11243,7 @@ const DeathTrackerMod = (() => {
 
   // The settings card's sections and what is in each.
   const SETTING_SECTIONS = [
+    ['owners', Object.keys(OWNER_SETTINGS)],
     ['hp', ['hpBar', 'bloodiedPercent', 'pcDetection']],
     ['markers', ['bloodiedMarker', 'dyingMarker', 'stableMarker', 'deadMarker']],
     [
@@ -10796,11 +11275,12 @@ const DeathTrackerMod = (() => {
     for (const [section, keys] of SETTING_SECTIONS) {
       parts.push(buildSectionLabel(t(`sections.${section}`, lang)));
       for (const key of keys) {
-        const label = describeValue(key, s[key], lang);
+        const value = key in OWNER_SETTINGS ? getOwner(OWNER_SETTINGS[key]) : s[key];
+        const label = describeValue(key, value, lang);
         parts.push(
           buildRow(
             t(`settings.${key}`, lang),
-            buildSecondaryButton(truncate(label, 24), settingCommand(key, s[key], lang))
+            buildSecondaryButton(truncate(label, 24), settingCommand(key, value, lang))
           )
         );
       }
@@ -10936,16 +11416,16 @@ const DeathTrackerMod = (() => {
       escapeHtml(t(`help.${key}`, lang)),
     ]);
     commands.push([code('--ids id1,id2'), escapeHtml(t('help.ids', lang))]);
-    const settings = Object.keys(DEFAULT_SETTINGS).map((key) => [
-      code(key),
-      escapeHtml(t(`handout.settings.rows.${key}`, lang)),
-    ]);
+    const settings = [...Object.keys(OWNER_SETTINGS), ...Object.keys(DEFAULT_SETTINGS)].map(
+      (key) => [code(key), escapeHtml(t(`handout.settings.rows.${key}`, lang))]
+    );
     const api = [
       ['check(token)', 'check'],
       ['getStatus(token)', 'getStatus'],
       ['onStatusChange(fn)', 'onStatusChange'],
       ['ObserveTokenChange(fn)', 'observe'],
       ['isManagingDeathSaves()', 'managing'],
+      ['ownersChanged()', 'ownersChanged'],
     ].map(([fn, key]) => [
       code(`DeathTracker.${fn}`),
       escapeHtml(t(`handout.api.rows.${key}`, lang)),
@@ -11154,6 +11634,57 @@ const DeathTrackerMod = (() => {
   }
 
   /**
+   * Brings tokens up to date after the choice of who handles death saves,
+   * colours and effects changed: every token DeathTracker knows, and the tokens
+   * on the players' page.
+   *
+   * @returns {void}
+   */
+  function refreshForOwners() {
+    rejudgeAll();
+    const known = getState().tokens;
+    for (const tok of tokensWithHp(Campaign().get('playerpageid'))) {
+      if (!known[tok.id]) {
+        judge(tok);
+      }
+    }
+  }
+
+  /**
+   * Chooses who handles death saves, colours or effects (for HealthColors too)
+   * and reports the result.
+   *
+   * @param {string} playerId GM's player ID.
+   * @param {string} key One of the OWNER_SETTINGS keys.
+   * @param {string} rawValue Value as typed.
+   * @param {boolean} showCard Show the settings card afterwards.
+   * @returns {void}
+   */
+  function changeOwner(playerId, key, rawValue, showCard) {
+    const lang = getLang();
+    const owner = parseOwner(rawValue);
+    if (!owner) {
+      whisperError(
+        playerId,
+        t('messages.settingRejected', lang, { setting: key, value: rawValue })
+      );
+      return;
+    }
+    setOwner(OWNER_SETTINGS[key], owner);
+    refreshForOwners();
+    tellHealthColors();
+    if (showCard) {
+      showSettings(playerId);
+      return;
+    }
+    const text = t('messages.settingChanged', lang, {
+      setting: t(`settings.${key}`, lang),
+      value: describeValue(key, owner, lang),
+    });
+    whisper(playerId, t('titles.settings', lang), escapeForChat(text));
+  }
+
+  /**
    * Changes a setting from chat and reports the result.
    *
    * @param {string} playerId GM's player ID.
@@ -11164,6 +11695,13 @@ const DeathTrackerMod = (() => {
    */
   function changeSetting(playerId, rawKey, rawValue, showCard) {
     const lang = getLang();
+    const ownerKey = Object.keys(OWNER_SETTINGS).find(
+      (k) => k.toLowerCase() === toText(rawKey).toLowerCase()
+    );
+    if (ownerKey) {
+      changeOwner(playerId, ownerKey, rawValue, showCard);
+      return;
+    }
     const key = Object.keys(DEFAULT_SETTINGS).find(
       (k) => k.toLowerCase() === toText(rawKey).toLowerCase()
     );
@@ -11539,16 +12077,6 @@ const DeathTrackerMod = (() => {
     started = true;
     const { fresh, migrated } = initialiseState();
     const s = getState();
-    // HealthColors draws its own tint and effects. One-Click options applied
-    // next still win.
-    if (fresh && healthColorsInstalled()) {
-      Object.assign(s.settings, {
-        tintPlayers: false,
-        tintNpcs: false,
-        hurtFx: false,
-        healFx: false,
-      });
-    }
     applyGlobalConfig();
     const lang = getLang();
     on('chat:message', guarded('chat:message', handleChat));
@@ -11573,12 +12101,19 @@ const DeathTrackerMod = (() => {
       if (migrated) {
         lines.push(t('messages.migrated', lang));
       }
-      if (fresh && healthColorsInstalled()) {
+      if (fresh && healthColorsShares()) {
         lines.push(t('messages.healthColors', lang));
       }
       whisper(null, t('titles.ready', lang), lines.map((l) => `<div>${l}</div>`).join(''));
     }
-    if (healthColorsTracksSaves() && getSettings().deathSaves && !s.notices.healthColors) {
+    // HealthColors before 2.5 does not read who handles what, so it may track
+    // death saves as well.
+    if (
+      !healthColorsShares() &&
+      healthColorsTracksSaves() &&
+      getSettings().deathSaves &&
+      !s.notices.healthColors
+    ) {
       s.notices.healthColors = true;
       whisperWarning(null, t('messages.healthColorsSaves', lang));
     }
@@ -11596,7 +12131,8 @@ const DeathTrackerMod = (() => {
     getStatus,
     onStatusChange,
     observeTokenChange,
-    isManagingDeathSaves: () => getSettings().deathSaves === true,
+    isManagingDeathSaves: () => getSettings().deathSaves === true && owns('deathSaves'),
+    ownersChanged: refreshForOwners,
     ObserveTokenChange: observeTokenChange,
     CheckInstall: () => {},
     RegisterEventHandlers: () => {},
