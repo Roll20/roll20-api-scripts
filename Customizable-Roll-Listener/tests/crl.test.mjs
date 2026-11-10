@@ -476,3 +476,17 @@ test('cards stay on one line, so multi-line commands never leak to players', () 
   const card = game.chat.find((c) => /Commands: Two/.test(c.text))?.text || '';
   assert.match(card, /\/em first<br>\/em second/);
 });
+
+test('the handouts get the Customizable-Roll-Listener journal icon, also handouts made before', async () => {
+  const icon = 'https://files.d20.io/images/506962411/8dTgwiRheGH8MBFxC588Zw/thumb.webp';
+  const api = createSandbox();
+  api.sandbox.createObj('handout', { name: 'Customizable Roll Listener - Help', avatar: '' });
+  await api.ready();
+  const handouts = api.sandbox
+    .findObjs({ _type: 'handout' })
+    .filter((h) => h.get('name').startsWith('Customizable Roll Listener - '));
+  assert.ok(handouts.length >= 2);
+  for (const handout of handouts) {
+    assert.equal(handout.get('avatar'), icon, handout.get('name'));
+  }
+});
