@@ -73,3 +73,17 @@ describe('handouts', () => {
     assert.match(html(game, 'PageFX - Help'), /Quick Start/);
   });
 });
+
+test('the handouts get the PageFX journal icon, also handouts made before', async () => {
+  const icon = 'https://files.d20.io/images/506962422/dshxnZh5rweJQ0TCSrZ1tQ/thumb.webp';
+  const api = createSandbox();
+  api.sandbox.createObj('handout', { name: 'PageFX - Help', avatar: '' });
+  await api.ready();
+  const handouts = api.sandbox
+    .findObjs({ _type: 'handout' })
+    .filter((h) => h.get('name').startsWith('PageFX - '));
+  assert.ok(handouts.length >= 2);
+  for (const handout of handouts) {
+    assert.equal(handout.get('avatar'), icon, handout.get('name'));
+  }
+});
