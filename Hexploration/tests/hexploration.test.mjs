@@ -602,7 +602,7 @@ describe('Legacy games and v1 upgrade', () => {
 });
 
 it('the handouts get the Hexploration journal icon, also handouts made before', async () => {
-  const icon = 'https://files.d20.io/images/506962417/DWudETDo1WcqZsqO_RuUFw/thumb.webp';
+  const icon = 'https://files.d20.io/images/506991610/wA01u-0IKz95GyhucoVyhg/thumb.webp';
   const api = createSandbox();
   api.sandbox.createObj('handout', { name: 'Hexploration - Help', avatar: '' });
   await api.ready();
