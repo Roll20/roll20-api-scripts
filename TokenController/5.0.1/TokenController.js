@@ -5,7 +5,7 @@
  * Name: TokenController
  * Script: TokenController.js
  * Version: 5.0.1
- * Built: 2026-11-07T02:06:38.836Z
+ * Built: 2026-11-10T00:57:54.682Z
  */
 const TokenControllerMod = (() => {
   'use strict';
@@ -13,7 +13,7 @@ const TokenControllerMod = (() => {
   // Build-time placeholders replaced by rollup.config.js inject-build-metadata plugin.
   const SCRIPT_NAME = 'TokenController';
   const SCRIPT_VERSION = '5.0.1';
-  const SCRIPT_LAST_UPDATED = '2026-11-07T02:06:38.836Z';
+  const SCRIPT_LAST_UPDATED = '2026-11-10T00:57:54.682Z';
 
   const DEFAULT_LOCALE$1 = 'en-US';
 
@@ -30,6 +30,11 @@ const TokenControllerMod = (() => {
 
   const HANDOUT_HELP_NAME = 'TokenController - Help';
   const HANDOUT_DECK_NAME = 'TokenController - Command Deck';
+  // Journal icon (the handouts' avatar): the plain TokenController icon in Roll20's
+  // file store. Roll20 keeps it as `.../max.webp?<number>`, so an icon is matched
+  // on its image path. Only the webp files exist (thumb.png is a 404).
+  const HANDOUT_ICON_PATH = '/images/506962431/pc4jQiRNRPyN2p2m4Hykzg/';
+  const HANDOUT_ICON = `https://files.d20.io${HANDOUT_ICON_PATH}thumb.webp`;
 
   // v4 created this handout visible to every player. It is replaced by the
   // GM-only Help handout on upgrade.
@@ -18732,11 +18737,14 @@ const TokenControllerMod = (() => {
   function upsertHandout(name, html) {
     const existing = findObjs({ _type: 'handout', name });
     const [primary, ...duplicates] = existing;
-    const handout = primary || createObj('handout', { name });
+    const handout = primary || createObj('handout', { name, avatar: HANDOUT_ICON });
     if (!handout) {
       return;
     }
     handout.set({ inplayerjournals: '', controlledby: '' });
+    if (!String(handout.get('avatar') || '').includes(HANDOUT_ICON_PATH)) {
+      handout.set('avatar', HANDOUT_ICON);
+    }
     handout.set('notes', html);
     for (const dup of duplicates) {
       dup.remove();
