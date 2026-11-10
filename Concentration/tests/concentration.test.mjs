@@ -551,3 +551,17 @@ test('a player cannot use a save button once its token is deleted', async () => 
   await api.command(`!concentration roll ${id}`, [], 'p1');
   assert.match(api.lastText(), /only change concentration for tokens you control/);
 });
+
+test('the handouts get the Concentration journal icon, also handouts made before', async () => {
+  const icon = 'https://files.d20.io/images/506962414/_CSTmdNBeCktQMiX5FyM2A/thumb.webp';
+  const api = createSandbox();
+  api.sandbox.createObj('handout', { name: 'Concentration - Help', avatar: '' });
+  await api.ready();
+  const handouts = api.sandbox
+    .findObjs({ _type: 'handout' })
+    .filter((h) => h.get('name').startsWith('Concentration - '));
+  assert.ok(handouts.length >= 2);
+  for (const handout of handouts) {
+    assert.equal(handout.get('avatar'), icon, handout.get('name'));
+  }
+});
