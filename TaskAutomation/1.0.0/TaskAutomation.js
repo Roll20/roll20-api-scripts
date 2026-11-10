@@ -5,7 +5,7 @@
  * Name: TaskAutomation
  * Script: TaskAutomation.js
  * Version: 1.0.0
- * Built: 2026-10-29T08:46:12.762Z
+ * Built: 2026-11-10T00:58:00.471Z
  */
 const TaskAutomationMod = (() => {
   'use strict';
@@ -13,7 +13,7 @@ const TaskAutomationMod = (() => {
   // Build-time placeholders replaced by rollup.config.js inject-build-metadata plugin.
   const SCRIPT_NAME = 'TaskAutomation';
   const SCRIPT_VERSION = '1.0.0';
-  const SCRIPT_LAST_UPDATED = '2026-10-29T08:46:12.762Z';
+  const SCRIPT_LAST_UPDATED = '2026-11-10T00:58:00.471Z';
 
   const DEFAULT_LOCALE$1 = 'en-US';
 
@@ -27,6 +27,11 @@ const TaskAutomationMod = (() => {
   const HANDOUT_HELP_NAME = 'TaskAutomation - Help';
   const HANDOUT_PLAYER_NAME = 'TaskAutomation - Player View';
   const HANDOUT_EXPORT_NAME = 'TaskAutomation - Export';
+  // Journal icon (the handouts' avatar): the plain TaskAutomation icon in Roll20's
+  // file store. Roll20 keeps it as `.../max.webp?<number>`, so an icon is matched
+  // on its image path. Only the webp files exist (thumb.png is a 404).
+  const HANDOUT_ICON_PATH = '/images/506962429/-xZPm0NyoBA5h3dLdKVs1g/';
+  const HANDOUT_ICON = `https://files.d20.io${HANDOUT_ICON_PATH}thumb.webp`;
 
   const AUTHOR_LINKS = {
     maintainer: {
@@ -980,7 +985,22 @@ const TaskAutomationMod = (() => {
    * @returns {object|null} Object.
    */
   function createObject(type, attrs) {
-    return createObj(type, attrs) || null;
+    const withIcon = type === 'handout' ? { avatar: HANDOUT_ICON, ...attrs } : attrs;
+    return createObj(type, withIcon) || null;
+  }
+
+  /**
+   * Gives a handout the TaskAutomation journal icon unless it already has it. Roll20
+   * stores the icon as `.../max.webp?<number>`, so it is matched on its path.
+   *
+   * @param {object|null} handout Handout.
+   * @returns {object|null} The same handout.
+   */
+  function ensureHandoutIcon(handout) {
+    if (handout && !String(handout.get('avatar') || '').includes(HANDOUT_ICON_PATH)) {
+      handout.set('avatar', HANDOUT_ICON);
+    }
+    return handout;
   }
 
   /**
@@ -12362,6 +12382,7 @@ const TaskAutomationMod = (() => {
       }
       s.dashboard.lastHash = null;
     }
+    ensureHandoutIcon(handout);
     s.dashboard.handoutId = handout?.id || null;
     return handout;
   }
@@ -12490,6 +12511,7 @@ const TaskAutomationMod = (() => {
     if (!handout) {
       return;
     }
+    ensureHandoutIcon(handout);
     const players = new Set();
     for (const record of listRecords()) {
       const access = getSnapshot(record.id)?.access;
@@ -14867,9 +14889,10 @@ const TaskAutomationMod = (() => {
     const text = JSON.stringify(body);
     if (opts.handout) {
       const name = `${HANDOUT_EXPORT_NAME}: ${opts.id}`;
-      const handout =
+      const handout = ensureHandoutIcon(
         findObjects({ _type: 'handout', name })[0] ||
-        createObject('handout', { name, inplayerjournals: '', controlledby: '' });
+          createObject('handout', { name, inplayerjournals: '', controlledby: '' })
+      );
       handout?.set('gmnotes', `<pre>${escapeHtml(text)}</pre>`);
       ok(playerId, t('messages.exportedHandout', l, { name }));
       return;
@@ -16652,6 +16675,7 @@ const TaskAutomationMod = (() => {
     if (!handout) {
       return null;
     }
+    ensureHandoutIcon(handout);
     s.dashboard.helpHandoutId = handout.id;
     const html = buildHelpHtml(getConfig().language);
     const hash = hashText(html);
