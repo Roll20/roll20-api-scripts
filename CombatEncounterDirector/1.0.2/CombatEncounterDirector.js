@@ -5,7 +5,7 @@
  * Name: Combat Encounter Director
  * Script: CombatEncounterDirector.js
  * Version: 1.0.2
- * Built: 2026-11-04T16:41:14.387Z
+ * Built: 2026-11-10T00:58:06.818Z
  */
 const CombatEncounterDirectorMod = (() => {
   'use strict';
@@ -13,7 +13,7 @@ const CombatEncounterDirectorMod = (() => {
   // Build-time placeholders replaced by rollup.config.js inject-build-metadata plugin.
   const SCRIPT_NAME = 'Combat Encounter Director';
   const SCRIPT_VERSION = '1.0.2';
-  const SCRIPT_LAST_UPDATED = '2026-11-04T16:41:14.387Z';
+  const SCRIPT_LAST_UPDATED = '2026-11-10T00:58:06.818Z';
 
   const DEFAULT_LOCALE$1 = 'en-US';
 
@@ -29,6 +29,11 @@ const CombatEncounterDirectorMod = (() => {
 
   const JOURNAL_PANEL_NAME = 'Combat Encounter Director - Command Deck';
   const JOURNAL_STATUS_NAME = 'Combat Encounter Director - Status';
+  // Journal icon (the handouts' avatar): the plain Combat Encounter Director icon in Roll20's
+  // file store. Roll20 keeps it as `.../max.webp?<number>`, so an icon is matched
+  // on its image path. Only the webp files exist (thumb.png is a 404).
+  const HANDOUT_ICON_PATH = '/images/506962413/Dl7htCrGBI5b8h3BP0Xsdg/';
+  const HANDOUT_ICON = `https://files.d20.io${HANDOUT_ICON_PATH}thumb.webp`;
 
   // Command Deck views
   const DECK_VIEW_KEYS = ['all', 'scaling', 'positioning', 'admin'];
@@ -405,6 +410,20 @@ const CombatEncounterDirectorMod = (() => {
       return '0';
     }
     return mod > 0 ? `+${mod}` : String(mod);
+  }
+
+  /**
+   * Gives a handout the Combat Encounter Director journal icon unless it already has it. Roll20
+   * stores the icon as `.../max.webp?<number>`, so it is matched on its path.
+   *
+   * @param {object|null} handout Handout.
+   * @returns {object|null} The same handout.
+   */
+  function ensureHandoutIcon(handout) {
+    if (handout && !String(handout.get('avatar') || '').includes(HANDOUT_ICON_PATH)) {
+      handout.set('avatar', HANDOUT_ICON);
+    }
+    return handout;
   }
 
   const CHAT_CARD_STYLE = [
@@ -8668,14 +8687,16 @@ const CombatEncounterDirectorMod = (() => {
     if (legacy) {
       legacy.set('name', JOURNAL_PANEL_NAME);
       legacy.set('notes', html);
+      ensureHandoutIcon(legacy);
       return;
     }
 
     const existing = findObjs({ type: 'handout', name: JOURNAL_PANEL_NAME })[0];
     if (existing) {
       existing.set('notes', html);
+      ensureHandoutIcon(existing);
     } else {
-      createObj('handout', { name: JOURNAL_PANEL_NAME, notes: html });
+      createObj('handout', { name: JOURNAL_PANEL_NAME, notes: html, avatar: HANDOUT_ICON });
     }
   }
 
@@ -8690,8 +8711,10 @@ const CombatEncounterDirectorMod = (() => {
       `<div style="color:${COLOR_MUTED};font-style:italic">Run <strong>!ced report refresh</strong> to populate this report.</div>`
     );
     const existing = findObjs({ type: 'handout', name: JOURNAL_STATUS_NAME })[0];
-    if (!existing) {
-      createObj('handout', { name: JOURNAL_STATUS_NAME, notes: placeholder });
+    if (existing) {
+      ensureHandoutIcon(existing);
+    } else {
+      createObj('handout', { name: JOURNAL_STATUS_NAME, notes: placeholder, avatar: HANDOUT_ICON });
     }
   }
 
@@ -8869,10 +8892,12 @@ const CombatEncounterDirectorMod = (() => {
     const existing = findObjs({ type: 'handout', name: JOURNAL_STATUS_NAME })[0];
     if (existing) {
       existing.set('notes', content);
+      ensureHandoutIcon(existing);
     } else {
       createObj('handout', {
         name: JOURNAL_STATUS_NAME,
         notes: content,
+        avatar: HANDOUT_ICON,
       });
     }
   }
