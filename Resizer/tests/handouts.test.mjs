@@ -102,7 +102,7 @@ describe('handouts', () => {
 });
 
 test('the handouts get the Resizer journal icon, also handouts made before', async () => {
-  const icon = 'https://files.d20.io/images/506962423/4MSJH6EYPpN-NmPIvrMEBw/thumb.webp';
+  const icon = 'https://files.d20.io/images/506991619/3DZJhMh6YuER4N0loSSkrQ/thumb.webp';
   const api = createSandbox();
   api.sandbox.createObj('handout', { name: 'Resizer - Help', avatar: '' });
   await api.ready();
