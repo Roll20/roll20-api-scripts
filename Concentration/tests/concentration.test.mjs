@@ -553,7 +553,7 @@ test('a player cannot use a save button once its token is deleted', async () => 
 });
 
 test('the handouts get the Concentration journal icon, also handouts made before', async () => {
-  const icon = 'https://files.d20.io/images/506962414/_CSTmdNBeCktQMiX5FyM2A/thumb.webp';
+  const icon = 'https://files.d20.io/images/506991604/a1UiVOI8fGKK8iOrNd_Cdw/thumb.webp';
   const api = createSandbox();
   api.sandbox.createObj('handout', { name: 'Concentration - Help', avatar: '' });
   await api.ready();

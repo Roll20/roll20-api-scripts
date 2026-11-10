@@ -20,7 +20,7 @@ export const HANDOUT_DECK_NAME = 'Concentration - Command Deck';
 // Journal icon (the handouts' avatar): the plain Concentration icon in Roll20's
 // file store. Roll20 keeps it as `.../max.webp?<number>`, so an icon is matched
 // on its image path. Only the webp files exist (thumb.png is a 404).
-export const HANDOUT_ICON_PATH = '/images/506962414/_CSTmdNBeCktQMiX5FyM2A/';
+export const HANDOUT_ICON_PATH = '/images/506991604/a1UiVOI8fGKK8iOrNd_Cdw/';
 export const HANDOUT_ICON = `https://files.d20.io${HANDOUT_ICON_PATH}thumb.webp`;
 
 export const AUTHOR_LINKS = {
