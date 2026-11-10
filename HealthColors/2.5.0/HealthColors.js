@@ -4028,6 +4028,11 @@ var HealthColors =
     // ————— HELP HANDOUT —————
     /** Name of the GM-only help handout HealthColors creates and keeps up to date. */
     const HANDOUT_NAME = `${SCRIPT_NAME} — Help & Reference`;
+    // Journal icon (the handout's avatar): the plain HealthColors icon in Roll20's file store.
+    // Roll20 keeps it as `.../max.webp?<number>`, so it is matched on its image path.
+    // Only the webp files exist (thumb.png is a 404).
+    const HANDOUT_ICON_PATH = '/images/506962416/NpJZoBz3OO6sJToWc2j1xw/';
+    const HANDOUT_ICON = `https://files.d20.io${HANDOUT_ICON_PATH}thumb.webp`;
 
     /**
      * Command reference shown in the help handout, grouped by section. Each row is
@@ -4449,9 +4454,17 @@ var HealthColors =
         const html = buildHandoutHtml();
         const handout =
           findObjs({ _type: 'handout', name: HANDOUT_NAME })[0] ||
-          createObj('handout', { name: HANDOUT_NAME, inplayerjournals: '', controlledby: '' });
+          createObj('handout', {
+            name: HANDOUT_NAME,
+            inplayerjournals: '',
+            controlledby: '',
+            avatar: HANDOUT_ICON,
+          });
         if (!handout) return undefined;
         handout.set({ inplayerjournals: '', controlledby: '' });
+        if (!String(handout.get('avatar') || '').includes(HANDOUT_ICON_PATH)) {
+          handout.set('avatar', HANDOUT_ICON);
+        }
         handout.set('notes', html);
         return handout;
       } catch (err) {
