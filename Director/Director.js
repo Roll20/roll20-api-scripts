@@ -12,12 +12,13 @@
 // 1.0.7 Bug fix on JB+ button, corrected the captions-on test
 // 1.0.8 Added search-again button on search results, improved backup handout selection, added move up/down/rename/redefine item buttons in edit mode, improved table rolling, Supernotes integration
 // 1.1.0 Backdrop changes now fade smoothly instead of snapping instantly, are restricted to proper Director stage pages, and only affect the scene actually live on the tabletop — browsing or pre-selecting a backdrop for a different scene no longer disturbs the live display. Fixed several star-highlight bugs: wrong color, highlighting the wrong token when two tokens shared a name, and lagging one step behind after switching backdrops. Backup and restore are more reliable, fixing a bug that could corrupt or fail to restore certain backups. Fixed Capture Image, which was documented but didn't work, along with a crash it could cause. Fixed the Repair function unexpectedly stopping any music that was playing. Fixed act/scene names or image titles containing a "|" character breaking rename/delete buttons or turning an editable rename prompt into a confusing dropdown. Added a new lightweight item type, Actor, that displays live from a single reference token instead of storing its own copy, with a one-click tool to convert existing Character or Variant items to Actor (including automatically finding and converting matching duplicates), a safeguard against placing its reference token somewhere it would get wiped, and fixes for duplicate-token creation and a non-working name-click during conversion. Fixed the Supernotes button sometimes pointing at a token that no longer existed. Rewrote and reorganized the in-program Help documentation to match how the script works today, including a new interface diagram, working jump-links to each section, and a collapsible section for advanced details so new users aren't overwhelmed. Added two new macro-friendly commands, --set and --reveal, that jump straight to any act, scene, and backdrop by name in a single click — --set fully cuts to the new scene, --reveal just crossfades the backdrop without disturbing anything else already set up — both matching names in any capitalization and explaining clearly in chat if a name can't be found. Added a Margins setting so the interface displays correctly whether the handout is docked in the VTT or popped out into its own window.
+// 1.1.1 Added a Slide Show button next to Set as Grid/Scene: sets the current scene live, then cycles its images through the backdrop on a timed loop, crossfading between them like a normal backdrop click. The interval is a new Settings control, Slide Interval (default 10 seconds). Only the caption updates while cycling; star highlights and track switching are applied once, to whichever image is showing, whenever the loop stops — by clicking the button again, clicking an image, Set Scene, Set Grid, or Wipe the Scene. The loop pauses on its own when no player or GM is viewing the stage page, and resumes once someone is. Does nothing if the scene has fewer than two images. Also fixed: making a backup didn't refresh the interface, so the Restore menu's list of backups could be out of date until something else happened to redraw it — most noticeably, a brand-new first backup wouldn't show up as an option right after you made it. Backup now refreshes the interface right away, so Restore always offers the one you just made.
 
 
 on('ready', () =>
     {
 
-        const version = '1.1.0'; //version number set here
+        const version = '1.1.1'; //version number set here
         log('-=> Director v' + version + ' is loaded. Command !director creates control handout and provides link. Click that to open.');
 
         // NPC/Actor features require Roll20's v1.5+ API sandbox.
@@ -1436,6 +1437,9 @@ const createOrUpdateCaption = (actName, sceneName, imageTitle, pageId) =>
                 return sendStyledMessage('Set Scene', `Current page "${page.get('name')}" cannot be used as a Director page. The page title must contain one of these words:<br><i>stage, scene, theater, or theatre</i>.<br><br>Skipping scene setup.`);
             }
 
+            // Cancel any running Slide Show on this page before pushing a fresh scene.
+            cancelSlideShow(pageId);
+
             disableDynamicLighting(pageId);
 
             page.set(
@@ -1772,6 +1776,9 @@ const placeNextToken = () => {
             const page = getObj('page', pageId);
             if(!page)
                 return sendStyledMessage('Set Grid', 'No valid player page found, including fallback.');
+
+            // Cancel any running Slide Show on this page before pushing a fresh layout.
+            cancelSlideShow(pageId);
 
             enableDynamicLighting(pageId);
 
@@ -2157,7 +2164,7 @@ const placeNextToken = () => {
   <img src="https://files.d20.io/images/501300273/C2EKEI0PH17ZYP4zAJP_9g/original.webp?1789660087" alt="Diagram labeling the interface's four main sections" style="float:right; width:280px; height:auto; margin:0 0 10px 14px; border:1px solid #666; border-radius:4px;">
   <p>The interface appears in a Roll20 handout. It consists of five main sections:</p>
   <ul>
-    <li><a href="${helpAnchor('Header Buttons')}" style="color:inherit;"><b>Header</b></a> — search, edit mode, help toggle, and scene controls (Set as Grid/Scene, Wipe the Scene, Stop Audio)</li>
+    <li><a href="${helpAnchor('Header Buttons')}" style="color:inherit;"><b>Header</b></a> — search, edit mode, help toggle, and scene controls (Set as Grid/Scene, Slide Show, Wipe the Scene, Stop Audio)</li>
     <li><a href="${helpAnchor('Acts & Scenes')}" style="color:inherit;"><b>Acts & Scenes</b></a> — scene navigation and management</li>
     <li><a href="${helpAnchor('Images')}" style="color:inherit;"><b>Images</b></a> — a scene's list of images: click any one to make it the backdrop; the rest are highlights</li>
     <li><a href="${helpAnchor('Items (Actor, Character, Variant, Handout, Tracks, Macros, Rollable Tables)')}" style="color:inherit;"><b>Items</b></a> — Actors, Characters, Variants, Handouts, Tracks, Macros, and Rollable Tables</li>
@@ -2338,6 +2345,8 @@ const placeNextToken = () => {
 <p>Each page can define its own caption style. Manual tweaks (move, recolor, resize) persist until the caption is refreshed by redefining or changing scenes. Captions are always brought to the front, so place any decorative graphics (scrolls, nameplates, etc.) behind them manually. Note that captions are not supported in Grid Mode.</p>
 <h4>Margins</h4>
 <p>Use Margins Off if you use the Director interface docked in the VTT, and turn them On if you use it popped out into its own window. Off is the default.</p>
+<h4>Slide Interval</h4>
+<p>How many seconds Slide Show holds each image before crossfading to the next. Default is 10 seconds. Click Set to enter a new value.</p>
 <h4>Backup</h4>
 <ul>
 <li><b>make: </b> creates a sequentially numbered handout called Director Backup ###. This handout can be used to restore a corrupted database, or transferred between campaigns to copy scene, act, and image definitions. Does not transfer Item buttons, but can restore them to the same campaign from which the backup was made </li>
@@ -2370,6 +2379,16 @@ const placeNextToken = () => {
     </ul>
   </p>
   <p>Only works if the current page name contains: <i>scene, stage, theater, theatre</i></p>
+
+  <h4>Slide Show</h4>
+  <p><span style="${css.headerSubButton}; float:none; position:relative;">Slide Show ▶</span> sets the current scene live (same as Scene, above) and then cycles every image in the scene through the backdrop slot on a timed loop, crossfading between them exactly like clicking an image does. The icon changes to <span style="${css.headerSubButton}; float:none; position:relative;">■</span> while it's running.</p>
+  <ul>
+    <li>The time between images is set by the Slide Interval setting (default 10 seconds)</li>
+    <li>While cycling, only the caption updates with each image — star highlights and track start/stop are held until the loop stops, then applied to whichever image is showing, same as a normal click</li>
+    <li>Pauses on its own (without stopping) whenever no player or GM is actually viewing the stage page, and resumes once someone is</li>
+    <li>Stops on any of: clicking the button again, clicking an image to set it as backdrop, Set Scene, Set Grid, or Wipe the Scene</li>
+    <li>Does nothing if the scene has fewer than two images</li>
+  </ul>
 
   <h4>Wipe Scene</h4>
   <p><span style="${css.headerButton}; float:none; position:relative;">Wipe the Scene</span> removes all placed images and stops all audio.</p>
@@ -3552,10 +3571,15 @@ Set as
    title="Place all Current Scene's Images on the page in a grid. All Characters are off to the right.">
   Grid
 </a>
-<a href="!director --set-scene" 
-   style="${css.headerSubButton}" 
+<a href="!director --set-scene"
+   style="${css.headerSubButton}"
    title="Place the Current Scene's Images and Characters on the Map">
   Scene
+</a>
+<a href="!director --toggle-slideshow"
+   style="${css.headerSubButton}"
+   title="${Object.keys(slideShowState).length ? 'Stop Slide Show' : 'Set the Scene, then cycle its images through the backdrop on a timed loop'}">
+  Slide Show ${Object.keys(slideShowState).length ? '■' : '▶'}
 </a>
 </div>
 <a href="!director --wipe-scene" 
@@ -3615,6 +3639,12 @@ ${getJukeboxPlusHandoutLink()}
   Margins
   <a href="!director --margins|on" style="${css.utilitySubButton}${st.settings.marginsOn ? `; border: 1px solid #44aa44;` : ''}">On</a>
   <a href="!director --margins|off" style="${css.utilitySubButton}${!st.settings.marginsOn ? `; border: 1px solid #44aa44;` : ''}">Off</a>
+</div>
+
+<div style="${css.utilityContainer}">
+  Slide Interval
+  <span style="${css.utilitySubButton}; cursor:default;">${st.settings.slideShowInterval || SLIDE_SHOW_DEFAULT_INTERVAL}s</span>
+  <a href="!director --slide-interval|?{Slide Interval (seconds)|${st.settings.slideShowInterval || SLIDE_SHOW_DEFAULT_INTERVAL}}" style="${css.utilitySubButton}">Set</a>
 </div>
 
                 <div style="${css.utilityContainer}">
@@ -3726,6 +3756,10 @@ const doWipeScene = (playerid) =>
     }
 
     const pageId = getPageForPlayer(playerid) || Campaign().get('playerpageid');
+
+    // Cancel any running Slide Show on this page before clearing it.
+    if(pageId) cancelSlideShow(pageId);
+
     wipeScene(currentScene, playerid);
 
     // Remove caption for this page
@@ -3733,6 +3767,271 @@ const doWipeScene = (playerid) =>
     {
         removeCaption(pageId);
     }
+};
+
+// Finds the graphic currently standing in for img on pid's map layer (matches imgsrc,
+// falling back to name).
+const findLiveBackdropGraphic = (pid, img) =>
+{
+    if(!img) return null;
+    const allGraphics = findObjs(
+    {
+        _type: 'graphic',
+        _pageid: pid,
+        layer: 'map'
+    });
+    let g = allGraphics.find(gr => cleanImg(gr.get('imgsrc')) === cleanImg(img.url));
+    if(!g && img.title)
+    {
+        g = allGraphics.find(gr => gr.get('name') === img.title);
+    }
+    return g || null;
+};
+
+// Crossfades oldGraphic (if any) out and newImg in on pid's map layer. Shared by
+// doSetBackdrop and the Slide Show loop, which both want the fade without necessarily
+// the bookkeeping that follows it (see finalizeBackdropChange).
+const swapBackdropGraphic = (pid, oldGraphic, newImg, pageWidth, pageHeight) =>
+{
+    const centerX = pageWidth / 2;
+    const centerY = pageHeight / 2;
+    const maxWidth = pageWidth - 140;
+    const maxHeight = pageHeight - 140;
+    const dims = getScaledToFit(newImg.ratio, maxWidth, maxHeight);
+
+    const newGraphic = createObj('graphic',
+    {
+        _pageid: pid,
+        layer: 'map',
+        imgsrc: cleanImg(newImg.url),
+        left: centerX,
+        top: centerY,
+        width: dims.w,
+        height: dims.h,
+        isdrawing: true,
+        name: newImg.title || 'Backdrop',
+        showname: false,
+        showplayers_name: false,
+        baseOpacity: 0,
+    });
+    tagGraphicAsDirector(newGraphic);
+    toFront(newGraphic);
+
+    startBackdropFade(pid, oldGraphic, newGraphic);
+
+    return newGraphic;
+};
+
+// Everything a backdrop change does besides the fade: stop the outgoing track, start the
+// incoming one (unless muted), record the new backdropId, refresh star highlights, and
+// save/redraw. Shared by doSetBackdrop and Slide Show's stop handler.
+const finalizeBackdropChange = (scene, sceneName, imageId, pid, isLiveScene) =>
+{
+    const st = getState();
+
+    if(isLiveScene)
+    {
+        const oldBackdrop = scene.images.find(img => img.id === scene.backdropId);
+        if(oldBackdrop?.trackId)
+        {
+            const oldTrack = getObj('jukeboxtrack', oldBackdrop.trackId);
+            if(oldTrack?.get('playing'))
+            {
+                oldTrack.set('playing', false);
+            }
+        }
+    }
+
+    const newBackdrop = scene.images.find(img => img.id === imageId);
+
+    // Must happen before highlightStarredTokens below, which reads scene.backdropId to
+    // decide which starred list applies.
+    scene.backdropId = imageId;
+    const idx = scene.images.findIndex(img => img.id === imageId);
+    if(idx > 0)
+    {
+        const [backdrop] = scene.images.splice(idx, 1);
+        scene.images.unshift(backdrop);
+    }
+
+    if(isLiveScene)
+    {
+        if(newBackdrop?.trackId && !st.settings.muteBackdropAudio)
+        {
+            const newTrack = getObj('jukeboxtrack', newBackdrop.trackId);
+            if(newTrack && !newTrack.get('playing'))
+            {
+                newTrack.set('playing', true);
+            }
+        }
+
+        highlightStarredTokens(sceneName, pid);
+    }
+
+    updateState(st);
+    updateHandout();
+};
+
+// --- Slide Show --- cycles every image in the current scene through the backdrop slot
+// on a timed loop, reusing the backdrop crossfade. Built on chained setTimeouts (no
+// setInterval in the API sandbox), keyed by pageId like backdropFadeState.
+const slideShowState = {};
+const SLIDE_SHOW_DEFAULT_INTERVAL = 10; // seconds, until Settings' Slide Interval is set
+
+const slideShowIntervalMs = (st) =>
+    Math.max(1, Number(st.settings.slideShowInterval) || SLIDE_SHOW_DEFAULT_INTERVAL) * 1000;
+
+// True if any connected player or GM currently has pageId as their effective page.
+const isAnyoneViewingPage = (pageId) =>
+{
+    const onlinePlayers = findObjs(
+    {
+        _type: 'player'
+    }).filter(p => p.get('_online'));
+    return onlinePlayers.some(p => getPageForPlayer(p.id) === pageId);
+};
+
+// Silently cancels a running Slide Show on pid, no finalize — for handlers about to
+// change the page anyway (click an image, Set Scene, Set Grid, Wipe Scene).
+const cancelSlideShow = (pid) =>
+{
+    const show = slideShowState[pid];
+    if(!show) return;
+    clearTimeout(show.timeoutId);
+    delete slideShowState[pid];
+};
+
+// Explicit stop (the button, while running): freezes on whichever image is showing and
+// applies the normal click's bookkeeping to it.
+const stopSlideShow = (pid) =>
+{
+    const show = slideShowState[pid];
+    if(!show) return;
+
+    clearTimeout(show.timeoutId);
+    delete slideShowState[pid];
+
+    const st = getState();
+    let scene = null;
+    for(const act of Object.values(st.acts))
+    {
+        if(act.scenes?.[show.sceneName])
+        {
+            scene = act.scenes[show.sceneName];
+            break;
+        }
+    }
+    if(!scene) return;
+
+    finalizeBackdropChange(scene, show.sceneName, show.snapshot[show.index], pid, true);
+};
+
+const tickSlideShow = (pid) =>
+{
+    const show = slideShowState[pid];
+    if(!show) return;
+
+    const st = getState();
+    const intervalMs = slideShowIntervalMs(st);
+
+    if(!isAnyoneViewingPage(pid))
+    {
+        show.timeoutId = setTimeout(() => tickSlideShow(pid), intervalMs);
+        return;
+    }
+
+    let scene = null;
+    for(const act of Object.values(st.acts))
+    {
+        if(act.scenes?.[show.sceneName])
+        {
+            scene = act.scenes[show.sceneName];
+            break;
+        }
+    }
+    if(!scene)
+    {
+        delete slideShowState[pid];
+        return;
+    }
+
+    const page = getObj('page', pid);
+    if(!page)
+    {
+        delete slideShowState[pid];
+        return;
+    }
+
+    const currentImg = scene.images.find(img => img.id === show.snapshot[show.index]) || null;
+
+    let nextIdx = show.index;
+    let nextImg = null;
+    for(let step = 0; step < show.snapshot.length; step++)
+    {
+        nextIdx = (nextIdx + 1) % show.snapshot.length;
+        nextImg = scene.images.find(img => img.id === show.snapshot[nextIdx]);
+        if(nextImg) break;
+    }
+    if(!nextImg)
+    {
+        delete slideShowState[pid];
+        return;
+    }
+
+    const pageWidth = page.get('width') * 70;
+    const pageHeight = page.get('height') * 70;
+    swapBackdropGraphic(pid, findLiveBackdropGraphic(pid, currentImg), nextImg, pageWidth, pageHeight);
+
+    show.index = nextIdx;
+
+    // Captions keep up every tick; star highlights/track switching wait for the stop.
+    createOrUpdateCaption(getActiveAct(), show.sceneName, nextImg.title || 'Backdrop', pid);
+
+    show.timeoutId = setTimeout(() => tickSlideShow(pid), intervalMs);
+};
+
+const startSlideShow = (playerid) =>
+{
+    const st = getState();
+    const currentScene = st.activeScene;
+    if(!currentScene) return sendStyledMessage('Slide Show', 'No active scene is selected.');
+
+    let scene = null;
+    for(const act of Object.values(st.acts))
+    {
+        if(act.scenes?.[currentScene])
+        {
+            scene = act.scenes[currentScene];
+            break;
+        }
+    }
+    if(!scene) return sendStyledMessage('Slide Show', 'Active scene data not found.');
+
+    if(!scene.images || scene.images.length < 2) return;
+
+    handleSetScene(playerid); // full push; also sets st.lastSetScene
+
+    const pid = getPageForPlayer(playerid) || Campaign().get('playerpageid');
+    if(!pid) return;
+
+    // Snapshot taken once, up front, starting from whichever image handleSetScene just
+    // placed — avoids the cycle order getting scrambled by backdrop clicks reshuffling
+    // scene.images mid-loop.
+    const orderedIds = scene.images.map(img => img.id);
+    const startIdx = Math.max(0, orderedIds.indexOf(scene.backdropId));
+    const snapshot = orderedIds.slice(startIdx).concat(orderedIds.slice(0, startIdx));
+
+    slideShowState[pid] =
+    {
+        sceneName: currentScene,
+        snapshot,
+        index: 0,
+        timeoutId: null,
+    };
+
+    slideShowState[pid].timeoutId = setTimeout(() => tickSlideShow(pid), slideShowIntervalMs(st));
+
+    updateHandout();
 };
 
 // Core of "Set Backdrop" — shared by the standalone --set-backdrop command and the --set/
@@ -3770,18 +4069,6 @@ const doSetBackdrop = (imageId, playerid) =>
 
     if(isLiveScene)
     {
-        // Stop track for the current backdrop if it has one — must read
-        // scene.backdropId BEFORE it's overwritten further down.
-        const oldBackdrop = scene.images.find(img => img.id === scene.backdropId);
-        if(oldBackdrop?.trackId)
-        {
-            const oldTrack = getObj('jukeboxtrack', oldBackdrop.trackId);
-            if(oldTrack?.get('playing'))
-            {
-                oldTrack.set('playing', false);
-            }
-        }
-
         pid = getPageForPlayer(playerid);
         if(!pid)
         {
@@ -3815,61 +4102,17 @@ const doSetBackdrop = (imageId, playerid) =>
             return;
         }
 
+        // Clicking a backdrop thumbnail stops any Slide Show running on this page.
+        cancelSlideShow(pid);
 
         const pageWidth = page.get('width') * 70;
         const pageHeight = page.get('height') * 70;
-        const centerX = pageWidth / 2;
-        const centerY = pageHeight / 2;
-
-        // Find existing backdrop graphic (by matching imgsrc OR name)
-        const allGraphics = findObjs(
-        {
-            _type: 'graphic',
-            _pageid: pid,
-            layer: 'map'
-        });
-        const cleanNewUrl = cleanImg(newBackdrop.url);
-        let targetGraphic = allGraphics.find(g => cleanImg(g.get('imgsrc')) === cleanImg(oldBackdrop?.url));
-        if(!targetGraphic && oldBackdrop?.title)
-        {
-            targetGraphic = allGraphics.find(g => g.get('name') === oldBackdrop.title);
-        }
-
-        const maxWidth = pageWidth - 140;
-        const maxHeight = pageHeight - 140;
-        const dims = getScaledToFit(newBackdrop.ratio, maxWidth, maxHeight);
+        const oldBackdrop = scene.images.find(img => img.id === scene.backdropId);
+        const targetGraphic = findLiveBackdropGraphic(pid, oldBackdrop);
 
         // Crossfade in the new image rather than mutating targetGraphic's imgsrc directly.
         // If there's no existing backdrop graphic, this just fades the new one in from nothing.
-        const newGraphic = createObj('graphic',
-        {
-            _pageid: pid,
-            layer: 'map',
-            imgsrc: cleanNewUrl,
-            left: centerX,
-            top: centerY,
-            width: dims.w,
-            height: dims.h,
-            isdrawing: true,
-            name: newBackdrop.title || 'Backdrop',
-            showname: false,
-            showplayers_name: false,
-            baseOpacity: 0,
-        });
-        tagGraphicAsDirector(newGraphic);
-        toFront(newGraphic);
-
-        startBackdropFade(pid, targetGraphic, newGraphic);
-
-        // If the new backdrop has a track, start playing it — unless muted
-        if(newBackdrop.trackId && !st.settings.muteBackdropAudio)
-        {
-            const newTrack = getObj('jukeboxtrack', newBackdrop.trackId);
-            if(newTrack && !newTrack.get('playing'))
-            {
-                newTrack.set('playing', true);
-            }
-        }
+        swapBackdropGraphic(pid, targetGraphic, newBackdrop, pageWidth, pageHeight);
 
         // Update caption for new backdrop — uses getActiveAct() rather than the
         // separately-tracked st.activeAct, which isn't guaranteed to match.
@@ -3881,25 +4124,7 @@ const doSetBackdrop = (imageId, playerid) =>
         );
     }
 
-    // Set the new backdrop — state and handout always reflect the click regardless of
-    // whether this scene is live. Must happen before highlightStarredTokens below, which
-    // reads scene.backdropId to decide which starred list applies.
-    scene.backdropId = imageId;
-    const idx = scene.images.findIndex(img => img.id === imageId);
-    if(idx > 0)
-    {
-        const [backdrop] = scene.images.splice(idx, 1);
-        scene.images.unshift(backdrop);
-    }
-
-    if(isLiveScene)
-    {
-        // Refresh GM-only starred-token highlights
-        highlightStarredTokens(currentScene, pid);
-    }
-
-    updateState(st);
-    updateHandout();
+    finalizeBackdropChange(scene, currentScene, imageId, pid, isLiveScene);
 };
 
 
@@ -6205,6 +6430,33 @@ case 'renameitem':
                 break;
             }
 
+            case 'slide-interval':
+            {
+                const n = parseInt(val, 10);
+                if(!Number.isFinite(n) || n < 1)
+                {
+                    sendStyledMessage('Director', 'Slide Interval must be a whole number of seconds, 1 or greater.');
+                    break;
+                }
+                st.settings.slideShowInterval = n;
+                updateHandout();
+                break;
+            }
+
+            case 'toggle-slideshow':
+            {
+                const runningPid = Object.keys(slideShowState)[0];
+                if(runningPid)
+                {
+                    stopSlideShow(runningPid);
+                }
+                else
+                {
+                    startSlideShow(msg.playerid);
+                }
+                break;
+            }
+
             case 'toggle-settings':
             {
                 st.settings.settingsExpanded = !st.settings.settingsExpanded;
@@ -6215,6 +6467,7 @@ case 'renameitem':
             case 'backup':
             {
                 makeBackup();
+                updateHandout();
                 break;
             }
 
