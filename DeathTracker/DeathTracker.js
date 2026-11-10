@@ -5,7 +5,7 @@
  * Name: DeathTracker
  * Script: DeathTracker.js
  * Version: 1.0.0
- * Built: 2026-11-09T22:28:04.839Z
+ * Built: 2026-11-10T00:39:42.398Z
  */
 const DeathTrackerMod = (() => {
   'use strict';
@@ -13,7 +13,7 @@ const DeathTrackerMod = (() => {
   // Build-time placeholders replaced by rollup.config.js inject-build-metadata plugin.
   const SCRIPT_NAME = 'DeathTracker';
   const SCRIPT_VERSION = '1.0.0';
-  const SCRIPT_LAST_UPDATED = '2026-11-09T22:28:04.839Z';
+  const SCRIPT_LAST_UPDATED = '2026-11-10T00:39:42.398Z';
 
   const DEFAULT_LOCALE$1 = 'en-US';
 
@@ -35,6 +35,11 @@ const DeathTrackerMod = (() => {
   const DECK_TITLE = 'Command Deck';
   const HANDOUT_DECK_NAME = `DeathTracker - ${DECK_TITLE}`;
   const MACRO_NAME = 'DeathSaves';
+  // Journal icon (the handouts' avatar): the plain DeathTracker icon in Roll20's
+  // file store. Roll20 keeps it as `.../max.webp?<number>`, so an icon is matched
+  // on its image path. Only the webp files exist (thumb.png is a 404).
+  const HANDOUT_ICON_PATH = '/images/506962415/PhsacK45UrgrODYxZHj3Zw/';
+  const HANDOUT_ICON = `https://files.d20.io${HANDOUT_ICON_PATH}thumb.webp`;
 
   const AUTHOR_LINKS = {
     original: {
@@ -11492,7 +11497,9 @@ const DeathTrackerMod = (() => {
   }
 
   /**
-   * Creates or updates a handout, removing duplicates with the same name.
+   * Creates or updates a handout, removing duplicates with the same name. The
+   * handout gets DeathTracker's journal icon, which is also put back on older
+   * handouts that have no icon or another one.
    *
    * @param {string} name Handout name.
    * @param {string} html Handout notes HTML.
@@ -11500,11 +11507,14 @@ const DeathTrackerMod = (() => {
    */
   function upsertHandout(name, html) {
     const [primary, ...duplicates] = findObjs({ _type: 'handout', name });
-    const handout = primary || createObj('handout', { name });
+    const handout = primary || createObj('handout', { name, avatar: HANDOUT_ICON });
     if (!handout) {
       return;
     }
     handout.set({ inplayerjournals: '', controlledby: '' });
+    if (!String(handout.get('avatar') || '').includes(HANDOUT_ICON_PATH)) {
+      handout.set('avatar', HANDOUT_ICON);
+    }
     handout.set('notes', html);
     for (const dup of duplicates) {
       dup.remove();
