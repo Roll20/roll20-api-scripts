@@ -20,6 +20,8 @@ import {
   DECK_TITLE,
   HANDOUT_DECK_NAME,
   HANDOUT_HELP_NAME,
+  HANDOUT_ICON,
+  HANDOUT_ICON_PATH,
   SCRIPT_NAME,
   SCRIPT_VERSION,
   SETTINGS,
@@ -200,11 +202,14 @@ export function buildDeckHtml(locale) {
  */
 function upsertHandout(name, html) {
   const [primary, ...duplicates] = findObjs({ _type: 'handout', name });
-  const handout = primary || createObj('handout', { name });
+  const handout = primary || createObj('handout', { name, avatar: HANDOUT_ICON });
   if (!handout) {
     return;
   }
   handout.set({ inplayerjournals: '', controlledby: '' });
+  if (!String(handout.get('avatar') || '').includes(HANDOUT_ICON_PATH)) {
+    handout.set('avatar', HANDOUT_ICON);
+  }
   handout.set('notes', html);
   for (const dup of duplicates) {
     dup.remove();

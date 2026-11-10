@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { LIB_IMG, MARKET_IMG, start, token, walls } from './roll20-stub.mjs';
+import { createSandbox, LIB_IMG, MARKET_IMG, start, token, walls } from './roll20-stub.mjs';
 
 // Values from the sandbox come from another realm, so compare them as JSON.
 const deepEq = (a, b, m) => assert.deepEqual(JSON.parse(JSON.stringify(a)), b, m);
@@ -631,4 +631,18 @@ describe('API and handouts', () => {
       []
     );
   });
+});
+
+it('the handouts get the SyncPage journal icon, also handouts made before', async () => {
+  const icon = 'https://files.d20.io/images/506962428/QIXCGGweq2LZqLjRtfP98w/thumb.webp';
+  const api = createSandbox();
+  api.sandbox.createObj('handout', { name: 'SyncPage - Help', avatar: '' });
+  await api.ready();
+  const handouts = api.sandbox
+    .findObjs({ _type: 'handout' })
+    .filter((h) => h.get('name').startsWith('SyncPage - '));
+  assert.ok(handouts.length >= 2);
+  for (const handout of handouts) {
+    assert.equal(handout.get('avatar'), icon, handout.get('name'));
+  }
 });

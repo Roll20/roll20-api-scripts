@@ -19,6 +19,11 @@ export const HANDOUT_HELP_NAME = 'SyncPage - Help';
 // The deck's name is not translated, so it always matches the handout's name.
 export const DECK_TITLE = 'Command Deck';
 export const HANDOUT_DECK_NAME = `SyncPage - ${DECK_TITLE}`;
+// Journal icon (the handouts' avatar): the plain SyncPage icon in Roll20's
+// file store. Roll20 keeps it as `.../max.webp?<number>`, so an icon is matched
+// on its image path. Only the webp files exist (thumb.png is a 404).
+export const HANDOUT_ICON_PATH = '/images/506962428/QIXCGGweq2LZqLjRtfP98w/';
+export const HANDOUT_ICON = `https://files.d20.io${HANDOUT_ICON_PATH}thumb.webp`;
 
 export const AUTHOR_LINKS = {
   original: {
