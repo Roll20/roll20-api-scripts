@@ -84,7 +84,7 @@ test('a burst of 1,000 due jobs drains in bounded slices', async () => {
 });
 
 test('the handouts get the TaskAutomation journal icon, also handouts made before', async () => {
-  const icon = 'https://files.d20.io/images/506962429/-xZPm0NyoBA5h3dLdKVs1g/thumb.webp';
+  const icon = 'https://files.d20.io/images/506991625/0JoCwHkveKNlTBifkhPxeA/thumb.webp';
   const api = createSandbox();
   api.sandbox.createObj('handout', { name: 'TaskAutomation - Help', avatar: '' });
   await api.ready();

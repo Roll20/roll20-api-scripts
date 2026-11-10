@@ -18,7 +18,7 @@ export const HANDOUT_EXPORT_NAME = 'TaskAutomation - Export';
 // Journal icon (the handouts' avatar): the plain TaskAutomation icon in Roll20's
 // file store. Roll20 keeps it as `.../max.webp?<number>`, so an icon is matched
 // on its image path. Only the webp files exist (thumb.png is a 404).
-export const HANDOUT_ICON_PATH = '/images/506962429/-xZPm0NyoBA5h3dLdKVs1g/';
+export const HANDOUT_ICON_PATH = '/images/506991625/0JoCwHkveKNlTBifkhPxeA/';
 export const HANDOUT_ICON = `https://files.d20.io${HANDOUT_ICON_PATH}thumb.webp`;
 
 export const AUTHOR_LINKS = {
