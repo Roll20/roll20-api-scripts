@@ -2,7 +2,7 @@
 // reached through here, so the rest of the code reads as plain functions and
 // tests can run the bundle in a stub sandbox.
 
-import { SCRIPT_NAME } from './constants.js';
+import { HANDOUT_ICON, HANDOUT_ICON_PATH, SCRIPT_NAME } from './constants.js';
 import { isRecord, toText } from './utils.js';
 
 /**
@@ -86,7 +86,22 @@ export function findObjects(filter) {
  * @returns {object|null} Object.
  */
 export function createObject(type, attrs) {
-  return createObj(type, attrs) || null;
+  const withIcon = type === 'handout' ? { avatar: HANDOUT_ICON, ...attrs } : attrs;
+  return createObj(type, withIcon) || null;
+}
+
+/**
+ * Gives a handout the TaskAutomation journal icon unless it already has it. Roll20
+ * stores the icon as `.../max.webp?<number>`, so it is matched on its path.
+ *
+ * @param {object|null} handout Handout.
+ * @returns {object|null} The same handout.
+ */
+export function ensureHandoutIcon(handout) {
+  if (handout && !String(handout.get('avatar') || '').includes(HANDOUT_ICON_PATH)) {
+    handout.set('avatar', HANDOUT_ICON);
+  }
+  return handout;
 }
 
 /**

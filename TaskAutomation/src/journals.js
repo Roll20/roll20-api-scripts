@@ -16,7 +16,7 @@ import {
   SCRIPT_NAME,
   SCRIPT_VERSION,
 } from './constants.js';
-import { createObject, findObjects, getObject } from './host.js';
+import { createObject, ensureHandoutIcon, findObjects, getObject } from './host.js';
 import { getDirectionStyle, getLocale, t, tRaw } from './i18n.js';
 import { getConfig, getState } from './state.js';
 import { escapeHtml, hashText } from './utils.js';
@@ -133,6 +133,7 @@ export function installHelpHandout() {
   if (!handout) {
     return null;
   }
+  ensureHandoutIcon(handout);
   s.dashboard.helpHandoutId = handout.id;
   const html = buildHelpHtml(getConfig().language);
   const hash = hashText(html);

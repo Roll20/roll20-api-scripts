@@ -31,7 +31,7 @@ import {
 } from './constants.js';
 import { getSnapshot, listRecords } from './definitions.js';
 import { currentStep, listInstances } from './executor.js';
-import { createObject, findObjects, getObject, logLine, now } from './host.js';
+import { createObject, ensureHandoutIcon, findObjects, getObject, logLine, now } from './host.js';
 import { t } from './i18n.js';
 import { listAdapters } from './integrations.js';
 import { targetLabel } from './objects.js';
@@ -834,6 +834,7 @@ export function ensureDashboard() {
     }
     s.dashboard.lastHash = null;
   }
+  ensureHandoutIcon(handout);
   s.dashboard.handoutId = handout?.id || null;
   return handout;
 }
@@ -962,6 +963,7 @@ function writePlayerView() {
   if (!handout) {
     return;
   }
+  ensureHandoutIcon(handout);
   const players = new Set();
   for (const record of listRecords()) {
     const access = getSnapshot(record.id)?.access;

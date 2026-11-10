@@ -65,7 +65,15 @@ import {
   rerun,
   resumeRun,
 } from './executor.js';
-import { createObject, findObjects, isGm, logLine, now, playerName } from './host.js';
+import {
+  createObject,
+  ensureHandoutIcon,
+  findObjects,
+  isGm,
+  logLine,
+  now,
+  playerName,
+} from './host.js';
 import { getLocale, t } from './i18n.js';
 import { listAdapters } from './integrations.js';
 import { resolveBindings, targetLabel } from './objects.js';
@@ -911,9 +919,10 @@ function exportCommand(playerId, opts) {
   const text = JSON.stringify(body);
   if (opts.handout) {
     const name = `${HANDOUT_EXPORT_NAME}: ${opts.id}`;
-    const handout =
+    const handout = ensureHandoutIcon(
       findObjects({ _type: 'handout', name })[0] ||
-      createObject('handout', { name, inplayerjournals: '', controlledby: '' });
+        createObject('handout', { name, inplayerjournals: '', controlledby: '' })
+    );
     handout?.set('gmnotes', `<pre>${escapeHtml(text)}</pre>`);
     ok(playerId, t('messages.exportedHandout', l, { name }));
     return;

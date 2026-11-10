@@ -82,3 +82,17 @@ test('a burst of 1,000 due jobs drains in bounded slices', async () => {
   assert.equal(wakes, 40);
   assert.equal(sched.stats().yields, 39);
 });
+
+test('the handouts get the TaskAutomation journal icon, also handouts made before', async () => {
+  const icon = 'https://files.d20.io/images/506962429/-xZPm0NyoBA5h3dLdKVs1g/thumb.webp';
+  const api = createSandbox();
+  api.sandbox.createObj('handout', { name: 'TaskAutomation - Help', avatar: '' });
+  await api.ready();
+  const handouts = api.sandbox
+    .findObjs({ _type: 'handout' })
+    .filter((h) => h.get('name').startsWith('TaskAutomation - '));
+  assert.ok(handouts.length >= 2);
+  for (const handout of handouts) {
+    assert.equal(handout.get('avatar'), icon, handout.get('name'));
+  }
+});
