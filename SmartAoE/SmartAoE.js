@@ -5235,7 +5235,7 @@ const SmartAoE = (() => {
   // Journal icon (the handout's avatar): the plain SmartAoE icon in Roll20's file store.
   // Roll20 keeps it as `.../max.webp?<number>`, so it is matched on its image path.
   // Only the webp files exist (thumb.png is a 404).
-  const HANDOUT_ICON_PATH = '/images/506962424/8VKpgbDMBSu1YJsHkLN1XQ/';
+  const HANDOUT_ICON_PATH = '/images/506991622/UiyREC5ekQllPFSj4ul1EQ/';
   const HANDOUT_ICON = `https://files.d20.io${HANDOUT_ICON_PATH}thumb.webp`;
 
   /** Chat commands for the help handout: [command, description]. Keep in step with COMMAND_HANDLERS and the README. */
