@@ -600,3 +600,17 @@ describe('Legacy games and v1 upgrade', () => {
     assert.ok(game.chat.some((c) => /no longer exist/.test(c.text)));
   });
 });
+
+it('the handouts get the Hexploration journal icon, also handouts made before', async () => {
+  const icon = 'https://files.d20.io/images/506962417/DWudETDo1WcqZsqO_RuUFw/thumb.webp';
+  const api = createSandbox();
+  api.sandbox.createObj('handout', { name: 'Hexploration - Help', avatar: '' });
+  await api.ready();
+  const handouts = api.sandbox
+    .findObjs({ _type: 'handout' })
+    .filter((h) => h.get('name').startsWith('Hexploration - '));
+  assert.ok(handouts.length >= 2);
+  for (const handout of handouts) {
+    assert.equal(handout.get('avatar'), icon, handout.get('name'));
+  }
+});

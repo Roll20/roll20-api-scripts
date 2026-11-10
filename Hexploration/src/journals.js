@@ -17,6 +17,8 @@ import {
   DEMO_GIF_URL,
   HANDOUT_DECK_NAME,
   HANDOUT_HELP_NAME,
+  HANDOUT_ICON,
+  HANDOUT_ICON_PATH,
   PAGE_SETTING_KEYS,
   SCRIPT_NAME,
   SCRIPT_VERSION,
@@ -208,11 +210,14 @@ export function buildDeckHtml(locale) {
 function upsertHandout(name, html) {
   const existing = findObjs({ _type: 'handout', name });
   const [primary, ...duplicates] = existing;
-  const handout = primary || createObj('handout', { name });
+  const handout = primary || createObj('handout', { name, avatar: HANDOUT_ICON });
   if (!handout) {
     return;
   }
   handout.set({ inplayerjournals: '', controlledby: '' });
+  if (!String(handout.get('avatar') || '').includes(HANDOUT_ICON_PATH)) {
+    handout.set('avatar', HANDOUT_ICON);
+  }
   handout.set('notes', html);
   for (const dup of duplicates) {
     dup.remove();
