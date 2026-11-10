@@ -43,7 +43,7 @@ const HexplorationMod = (() => {
   // Journal icon (the handouts' avatar): the plain Hexploration icon in Roll20's
   // file store. Roll20 keeps it as `.../max.webp?<number>`, so an icon is matched
   // on its image path. Only the webp files exist (thumb.png is a 404).
-  const HANDOUT_ICON_PATH = '/images/506962417/DWudETDo1WcqZsqO_RuUFw/';
+  const HANDOUT_ICON_PATH = '/images/506991610/wA01u-0IKz95GyhucoVyhg/';
   const HANDOUT_ICON = `https://files.d20.io${HANDOUT_ICON_PATH}thumb.webp`;
 
   const AUTHOR_LINKS = {
