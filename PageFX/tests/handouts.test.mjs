@@ -75,7 +75,7 @@ describe('handouts', () => {
 });
 
 test('the handouts get the PageFX journal icon, also handouts made before', async () => {
-  const icon = 'https://files.d20.io/images/506962422/dshxnZh5rweJQ0TCSrZ1tQ/thumb.webp';
+  const icon = 'https://files.d20.io/images/506991616/o-2KBIgum0flCxdYDGD2GQ/thumb.webp';
   const api = createSandbox();
   api.sandbox.createObj('handout', { name: 'PageFX - Help', avatar: '' });
   await api.ready();
