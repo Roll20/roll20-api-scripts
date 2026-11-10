@@ -100,3 +100,17 @@ describe('handouts', () => {
     assert.match(html(game, 'Resizer - Help'), /Quick start/);
   });
 });
+
+test('the handouts get the Resizer journal icon, also handouts made before', async () => {
+  const icon = 'https://files.d20.io/images/506962423/4MSJH6EYPpN-NmPIvrMEBw/thumb.webp';
+  const api = createSandbox();
+  api.sandbox.createObj('handout', { name: 'Resizer - Help', avatar: '' });
+  await api.ready();
+  const handouts = api.sandbox
+    .findObjs({ _type: 'handout' })
+    .filter((h) => h.get('name').startsWith('Resizer - '));
+  assert.ok(handouts.length >= 2);
+  for (const handout of handouts) {
+    assert.equal(handout.get('avatar'), icon, handout.get('name'));
+  }
+});
