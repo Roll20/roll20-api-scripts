@@ -34,7 +34,7 @@ const SyncPageMod = (() => {
   // Journal icon (the handouts' avatar): the plain SyncPage icon in Roll20's
   // file store. Roll20 keeps it as `.../max.webp?<number>`, so an icon is matched
   // on its image path. Only the webp files exist (thumb.png is a 404).
-  const HANDOUT_ICON_PATH = '/images/506962428/QIXCGGweq2LZqLjRtfP98w/';
+  const HANDOUT_ICON_PATH = '/images/506991624/5G6swsn3lbW42tzyylIiPg/';
   const HANDOUT_ICON = `https://files.d20.io${HANDOUT_ICON_PATH}thumb.webp`;
 
   const AUTHOR_LINKS = {
