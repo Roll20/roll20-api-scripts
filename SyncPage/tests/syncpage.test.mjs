@@ -634,7 +634,7 @@ describe('API and handouts', () => {
 });
 
 it('the handouts get the SyncPage journal icon, also handouts made before', async () => {
-  const icon = 'https://files.d20.io/images/506962428/QIXCGGweq2LZqLjRtfP98w/thumb.webp';
+  const icon = 'https://files.d20.io/images/506991624/5G6swsn3lbW42tzyylIiPg/thumb.webp';
   const api = createSandbox();
   api.sandbox.createObj('handout', { name: 'SyncPage - Help', avatar: '' });
   await api.ready();
