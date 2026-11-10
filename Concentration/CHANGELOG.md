@@ -5,6 +5,49 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-11-02
+
+Brings Concentration up to the standard of the other Mods maintained by MidNiteShadow7. Version 1.0 settings, macros and commands keep working.
+
+### Fixed
+
+- Ending concentration posted nothing, so the last line in chat was often the earlier "is now concentrating on …" message, which read as if ending had started it again. Every way concentration ends now says so, and on which spell.
+- Players clicking a reminder's Roll or Advantage button started or ended concentration on whatever token they had selected instead of rolling. The buttons now roll for the GM and the token's players.
+- Damage was compared as text, so a bar going from 10 to 9 was not seen as damage. Bar values are compared as numbers.
+- The One-Click settings on the Mod's page were never read. They now apply on startup when changed.
+- Changing the HP Bar needed a restart.
+- A failed save on one goblin took the marker off every token made from the same sheet. Unlinked tokens now concentrate on their own.
+- Send Reminder To `character` whispered to the first word of the token's name. Whispers now go to the character by its full name, with a copy to the GM.
+- 5e OGL spell cards that list `charname` before `name` gave the caster's name as the spell.
+
+### Added
+
+- End messages: "is no longer concentrating on …", "loses concentration on …" after a failed save, and "drops to 0 hit points and loses concentration on …".
+- Spell switching: naming a different spell, or casting another concentration spell from a sheet, switches to it and says so.
+- Putting the marker on or taking it off by hand starts or ends concentration, with a message.
+- **End at 0 HP** setting (on by default): concentration ends without a save at 0 hit points.
+- Save DCs stop at 30, as in the 2024 rules.
+- `end` and `status` commands, with End buttons on the status card; `help` and `journal`.
+- **Concentration - Help** and **Concentration - Command Deck** handouts (GM only).
+- Custom token markers can be the Status Marker; changing it moves the marker on concentrating tokens.
+- Commands from other Mods (playerid `API`) are accepted, and a `globalThis.Concentration` API (`isConcentrating`, `spellOf`, `start`, `end`, `list`).
+- Translations into 24 languages, with a **Language** setting.
+- D&D 2024 spell cards use the message's character ID when Roll20 provides it.
+- Deleting a concentrating token ends its concentration; new linked tokens of a concentrating character get the marker; pasted marked tokens are tracked.
+
+### Security
+
+- Spell cards only start concentration for characters the sender controls (or from the GM and other Mods); version 1.0 let anyone mark any character by posting a card with its name.
+
+### Changed
+
+- A D&D 2024 card that only mentions concentration in its text can start concentration but no longer counts as casting a concentration spell over an existing one. Repeated cards for the current spell are ignored.
+
+- New chat cards in the same style as the other Mods, with the settings as buttons in one card.
+- `reset` asks for confirmation and keeps who is concentrating.
+- Source split into ES modules under `src/`, bundled with Rollup; Node tests run the bundle against a Roll20 stub.
+- `docs/` folded into `README.md`, `TESTING.md` and `DEVELOPERS.md`.
+
 ## [1.0.0] - 2026-05-23
 
 ### Added

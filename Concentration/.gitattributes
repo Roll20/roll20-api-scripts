@@ -1,0 +1,9 @@
+# Enforce LF line endings for all text files in this project
+* text=auto eol=lf
+
+# Treat these as binary to avoid any line-ending normalisation
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
