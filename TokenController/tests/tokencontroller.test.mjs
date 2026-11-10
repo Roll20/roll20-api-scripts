@@ -741,3 +741,17 @@ test('menus, settings, status and help render without errors', () => {
   assert.equal(api.tcState().config.language, 'fr');
   assertNoErrors(api);
 });
+
+test('the handouts get the TokenController journal icon, also handouts made before', async () => {
+  const icon = 'https://files.d20.io/images/506962431/pc4jQiRNRPyN2p2m4Hykzg/thumb.webp';
+  const api = createSandbox();
+  api.sandbox.createObj('handout', { name: 'TokenController - Help', avatar: '' });
+  await api.ready();
+  const handouts = api.sandbox
+    .findObjs({ _type: 'handout' })
+    .filter((h) => h.get('name').startsWith('TokenController - '));
+  assert.ok(handouts.length >= 2);
+  for (const handout of handouts) {
+    assert.equal(handout.get('avatar'), icon, handout.get('name'));
+  }
+});
