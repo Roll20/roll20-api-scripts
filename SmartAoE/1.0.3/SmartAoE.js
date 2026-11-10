@@ -5232,6 +5232,11 @@ const SmartAoE = (() => {
   // ————— HELP HANDOUT —————
   /** Name of the GM-only help handout SmartAoE creates and keeps up to date. */
   const HANDOUT_NAME = `${scriptName} — Help & Reference`;
+  // Journal icon (the handout's avatar): the plain SmartAoE icon in Roll20's file store.
+  // Roll20 keeps it as `.../max.webp?<number>`, so it is matched on its image path.
+  // Only the webp files exist (thumb.png is a 404).
+  const HANDOUT_ICON_PATH = '/images/506962424/8VKpgbDMBSu1YJsHkLN1XQ/';
+  const HANDOUT_ICON = `https://files.d20.io${HANDOUT_ICON_PATH}thumb.webp`;
 
   /** Chat commands for the help handout: [command, description]. Keep in step with COMMAND_HANDLERS and the README. */
   const HANDOUT_COMMANDS = [
@@ -5621,9 +5626,17 @@ const SmartAoE = (() => {
     try {
       const handout =
         findObjs({ _type: 'handout', name: HANDOUT_NAME })[0] ||
-        createObj('handout', { name: HANDOUT_NAME, inplayerjournals: '', controlledby: '' });
+        createObj('handout', {
+          name: HANDOUT_NAME,
+          inplayerjournals: '',
+          controlledby: '',
+          avatar: HANDOUT_ICON,
+        });
       if (!handout) return undefined;
       handout.set({ inplayerjournals: '', controlledby: '' });
+      if (!String(handout.get('avatar') || '').includes(HANDOUT_ICON_PATH)) {
+        handout.set('avatar', HANDOUT_ICON);
+      }
       handout.set('notes', buildHandoutHtml());
       return handout;
     } catch (err) {
