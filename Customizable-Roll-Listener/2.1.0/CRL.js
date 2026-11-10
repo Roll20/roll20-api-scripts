@@ -5,7 +5,7 @@
  * Name: Customizable Roll Listener
  * Script: CRL.js
  * Version: 2.1.0
- * Built: 2026-11-01T17:33:57.897Z
+ * Built: 2026-11-10T00:57:23.170Z
  */
 const CustomizableRollListenerMod = (() => {
   'use strict';
@@ -625,7 +625,7 @@ const CustomizableRollListenerMod = (() => {
   // Build-time placeholders replaced by rollup.config.js inject-build-metadata plugin.
   const SCRIPT_NAME = 'Customizable Roll Listener';
   const SCRIPT_VERSION = '2.1.0';
-  const SCRIPT_LAST_UPDATED = '2026-11-01T17:33:57.897Z';
+  const SCRIPT_LAST_UPDATED = '2026-11-10T00:57:23.170Z';
 
   const DEFAULT_LOCALE$1 = 'en-US';
 
@@ -646,6 +646,11 @@ const CustomizableRollListenerMod = (() => {
 
   const HANDOUT_HELP_NAME = 'Customizable Roll Listener - Help';
   const HANDOUT_DECK_NAME = 'Customizable Roll Listener - Command Deck';
+  // Journal icon (the handouts' avatar): the plain Customizable-Roll-Listener icon in Roll20's
+  // file store. Roll20 keeps it as `.../max.webp?<number>`, so an icon is matched
+  // on its image path. Only the webp files exist (thumb.png is a 404).
+  const HANDOUT_ICON_PATH = '/images/506962411/8dTgwiRheGH8MBFxC588Zw/';
+  const HANDOUT_ICON = `https://files.d20.io${HANDOUT_ICON_PATH}thumb.webp`;
 
   const AUTHOR_LINKS = {
     original: {
@@ -13638,11 +13643,14 @@ const CustomizableRollListenerMod = (() => {
   function upsertHandout(name, html) {
     const existing = findObjs({ _type: 'handout', name });
     const [primary, ...duplicates] = existing;
-    const handout = primary || createObj('handout', { name });
+    const handout = primary || createObj('handout', { name, avatar: HANDOUT_ICON });
     if (!handout) {
       return;
     }
     handout.set({ inplayerjournals: '', controlledby: '' });
+    if (!String(handout.get('avatar') || '').includes(HANDOUT_ICON_PATH)) {
+      handout.set('avatar', HANDOUT_ICON);
+    }
     handout.set('notes', html);
     for (const dup of duplicates) {
       dup.remove();
