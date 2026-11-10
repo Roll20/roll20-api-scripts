@@ -21,6 +21,8 @@ import {
   DEFAULT_SETTINGS,
   HANDOUT_DECK_NAME,
   HANDOUT_HELP_NAME,
+  HANDOUT_ICON,
+  HANDOUT_ICON_PATH,
   SCRIPT_NAME,
   SCRIPT_VERSION,
 } from './constants.js';
@@ -187,7 +189,9 @@ export function buildDeckHtml(locale) {
 }
 
 /**
- * Creates or updates a handout, removing duplicates with the same name.
+ * Creates or updates a handout, removing duplicates with the same name. The
+ * handout gets DeathTracker's journal icon, which is also put back on older
+ * handouts that have no icon or another one.
  *
  * @param {string} name Handout name.
  * @param {string} html Handout notes HTML.
@@ -195,11 +199,14 @@ export function buildDeckHtml(locale) {
  */
 function upsertHandout(name, html) {
   const [primary, ...duplicates] = findObjs({ _type: 'handout', name });
-  const handout = primary || createObj('handout', { name });
+  const handout = primary || createObj('handout', { name, avatar: HANDOUT_ICON });
   if (!handout) {
     return;
   }
   handout.set({ inplayerjournals: '', controlledby: '' });
+  if (!String(handout.get('avatar') || '').includes(HANDOUT_ICON_PATH)) {
+    handout.set('avatar', HANDOUT_ICON);
+  }
   handout.set('notes', html);
   for (const dup of duplicates) {
     dup.remove();

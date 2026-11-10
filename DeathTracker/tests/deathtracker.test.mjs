@@ -25,6 +25,39 @@ test('loads, publishes the DeathTracker object and builds the handouts', () => {
   assert.equal(api.dtState().schemaVersion, 1);
 });
 
+const ICON = 'https://files.d20.io/images/506962415/PhsacK45UrgrODYxZHj3Zw/thumb.webp';
+
+test('the handouts get the DeathTracker journal icon, also when they already exist', () => {
+  const fresh = start();
+  for (const handout of fresh.ofType('handout')) {
+    assert.equal(handout.get('avatar'), ICON, handout.get('name'));
+  }
+
+  const api = createSandbox();
+  api.sandbox.createObj('handout', { name: 'DeathTracker - Help', avatar: '' });
+  api.sandbox.createObj('handout', {
+    name: 'DeathTracker - Command Deck',
+    avatar: 'https://files.d20.io/images/1/old/thumb.png',
+  });
+  api.ready();
+  const handouts = api.ofType('handout');
+  assert.equal(handouts.length, 2);
+  for (const handout of handouts) {
+    assert.equal(handout.get('avatar'), ICON, handout.get('name'));
+  }
+
+  // A rebuild puts a removed icon back.
+  handouts[0].set('avatar', '');
+  api.command('!deathtracker journal rebuild');
+  assert.equal(handouts[0].get('avatar'), ICON);
+
+  // Roll20 stores the icon as max.webp with a number; that counts as set.
+  const stored = 'https://files.d20.io/images/506962415/PhsacK45UrgrODYxZHj3Zw/max.webp?123';
+  handouts[0].set('avatar', stored);
+  api.command('!deathtracker journal rebuild');
+  assert.equal(handouts[0].get('avatar'), stored);
+});
+
 test('an NPC at 0 is marked dead, and healing takes the marker away', () => {
   const api = start();
   const goblin = addNpc(api);
