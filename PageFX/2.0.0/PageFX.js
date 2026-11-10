@@ -5,7 +5,7 @@
  * Name: Page FX
  * Script: PageFX.js
  * Version: 2.0.0
- * Built: 2026-11-07T14:22:32.154Z
+ * Built: 2026-11-10T00:57:41.216Z
  */
 const PageFXMod = (() => {
   'use strict';
@@ -13,7 +13,7 @@ const PageFXMod = (() => {
   // Build-time placeholders replaced by rollup.config.js inject-build-metadata plugin.
   const SCRIPT_NAME = 'Page FX';
   const SCRIPT_VERSION = '2.0.0';
-  const SCRIPT_LAST_UPDATED = '2026-11-07T14:22:32.154Z';
+  const SCRIPT_LAST_UPDATED = '2026-11-10T00:57:41.216Z';
 
   const DEFAULT_LOCALE$1 = 'en-US';
 
@@ -38,6 +38,11 @@ const PageFXMod = (() => {
   // The deck's name is not translated, so it always matches the handout's name.
   const DECK_TITLE = 'Command Deck';
   const HANDOUT_DECK_NAME = `PageFX - ${DECK_TITLE}`;
+  // Journal icon (the handouts' avatar): the plain PageFX icon in Roll20's
+  // file store. Roll20 keeps it as `.../max.webp?<number>`, so an icon is matched
+  // on its image path. Only the webp files exist (thumb.png is a 404).
+  const HANDOUT_ICON_PATH = '/images/506962422/dshxnZh5rweJQ0TCSrZ1tQ/';
+  const HANDOUT_ICON = `https://files.d20.io${HANDOUT_ICON_PATH}thumb.webp`;
 
   const AUTHOR_LINKS = {
     original: {
@@ -14895,11 +14900,14 @@ const PageFXMod = (() => {
    */
   function upsertHandout(name, html) {
     const [primary, ...duplicates] = findObjs({ _type: 'handout', name });
-    const handout = primary || createObj('handout', { name });
+    const handout = primary || createObj('handout', { name, avatar: HANDOUT_ICON });
     if (!handout) {
       return;
     }
     handout.set({ inplayerjournals: '', controlledby: '' });
+    if (!String(handout.get('avatar') || '').includes(HANDOUT_ICON_PATH)) {
+      handout.set('avatar', HANDOUT_ICON);
+    }
     handout.set('notes', html);
     for (const dup of duplicates) {
       dup.remove();
