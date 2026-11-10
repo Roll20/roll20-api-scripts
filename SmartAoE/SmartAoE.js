@@ -1,10 +1,10 @@
 // ========================
-// === SmartAoE v1.0.0 ===
+// === SmartAoE v1.0.3 ===
 // ========================
 
 // AUTHORS:
 //  - David M. (djmoorehead): https://app.roll20.net/users/3987469 (original author, 0.x)
-//  - MidNiteShadow7: https://app.roll20.net/users/16506286/midniteshadow7 (1.0.0 fixes and refactor)
+//  - MidNiteShadow7: https://app.roll20.net/users/16506286/midniteshadow7 (1.0.x fixes and refactor)
 
 // Draws areas of effect on gridded maps, decides which squares and tokens they cover, and can roll
 // saves, apply damage and markers, and post a results card. Requires libInline.
@@ -16,7 +16,7 @@ const SmartAoE = (() => {
 
   // ————— CONSTANTS & STATE —————
   const scriptName = 'SmartAoE';
-  const version = '1.0.0';
+  const version = '1.0.3';
   const schemaVersion = '0.1';
 
   let cardParameters = {};
@@ -1391,6 +1391,7 @@ const SmartAoE = (() => {
     casterCondition,
     casterConditionOnFail,
     affectsCaster,
+    blockedBy,
   ) {
     const link = {
       //tokName: state[scriptName].links.length.toString(),
@@ -1457,6 +1458,7 @@ const SmartAoE = (() => {
       casterCondition: casterCondition,
       casterConditionOnFail: casterConditionOnFail,
       affectsCaster: affectsCaster,
+      blockedBy: blockedBy,
     };
 
     state[scriptName].links.push(link);
@@ -3409,6 +3411,285 @@ const SmartAoE = (() => {
     return allPts;
   };
 
+  // ————— WALLS —————
+  // `--blockedBy|walls` stops an AoE at dynamic lighting walls (pathv2 in Jumpgate, path in Legacy, on the walls
+  // layer) and at closed doors and windows. Doors and windows are placed by x and -y (y measured upwards), with two
+  // handles relative to that point. The wall geometry matches TokenController's.
+
+  const WALL_CURVE_SEGMENTS = 8;
+  const WALL_ELLIPSE_SEGMENTS = 16;
+
+  /**
+   * Converts points relative to a drawing's bounding box into page pixels, scaling and rotating them about the
+   * drawing's centre.
+   *
+   * @param {number[][]} points - Points in the drawing's own coordinates.
+   * @param {object} box - { width, height, cx, cy, scaleX, scaleY, rotation }.
+   * @returns {{x:number, y:number}[]} Page points.
+   */
+  const placeWallPoints = function (points, box) {
+    const angle = ((Number(box.rotation) || 0) * Math.PI) / 180;
+    const cos = Math.cos(angle);
+    const sin = Math.sin(angle);
+    return points.map(([x, y]) => {
+      const lx = (x - box.width / 2) * (box.scaleX || 1);
+      const ly = (y - box.height / 2) * (box.scaleY || 1);
+      return { x: box.cx + lx * cos - ly * sin, y: box.cy + lx * sin + ly * cos };
+    });
+  };
+
+  /**
+   * Parses JSON, returning null when it is not valid.
+   *
+   * @param {string} text - JSON text.
+   * @returns {*} Parsed value, or null.
+   */
+  const parseWallJson = function (text) {
+    try {
+      return JSON.parse(text);
+    } catch {
+      return null;
+    }
+  };
+
+  /**
+   * Reads the lines of a wall drawing in page pixels: a Jumpgate pathv2 (points, shape, x, y, rotation) or a Legacy
+   * path (_path commands M, L, Q and C, placed by left/top and scaled by scaleX/scaleY).
+   *
+   * @param {object} wall - Roll20 path or pathv2 on the walls layer.
+   * @param {object} page - Roll20 page (for Legacy paths that use mapWidth/mapHeight).
+   * @returns {{x:number, y:number}[][]} Lines, each a list of points.
+   */
+  const wallLines = function (wall, page) {
+    if (wall.get('_type') === 'pathv2') {
+      const raw = (parseWallJson(wall.get('points')) || [])
+        .filter((p) => Array.isArray(p) && p.length >= 2)
+        .map(([x, y]) => [Number(x), Number(y)]);
+      if (raw.length < 2) return [];
+      const minX = Math.min(...raw.map((p) => p[0]));
+      const minY = Math.min(...raw.map((p) => p[1]));
+      const local = raw.map(([x, y]) => [x - minX, y - minY]);
+      const width = Math.max(...local.map((p) => p[0]));
+      const height = Math.max(...local.map((p) => p[1]));
+      let ring = local;
+      if (wall.get('shape') === 'rec') {
+        ring = [
+          [0, 0],
+          [width, 0],
+          [width, height],
+          [0, height],
+          [0, 0],
+        ];
+      } else if (wall.get('shape') === 'eli') {
+        ring = [];
+        for (let i = 0; i <= WALL_ELLIPSE_SEGMENTS; i++) {
+          const a = (i / WALL_ELLIPSE_SEGMENTS) * Math.PI * 2;
+          ring.push([width / 2 + (Math.cos(a) * width) / 2, height / 2 + (Math.sin(a) * height) / 2]);
+        }
+      }
+      const box = {
+        width,
+        height,
+        cx: Number(wall.get('x')) || 0,
+        cy: Number(wall.get('y')) || 0,
+        rotation: wall.get('rotation'),
+      };
+      return [placeWallPoints(ring, box)];
+    }
+
+    const text = String(wall.get('_path') || '')
+      .replaceAll('mapWidth', String((Number(page && page.get('width')) || 0) * 70))
+      .replaceAll('mapHeight', String((Number(page && page.get('height')) || 0) * 70));
+    const commands = parseWallJson(text);
+    if (!Array.isArray(commands)) return [];
+    const lines = [];
+    let line = [];
+    let prevType = null;
+    //samples a Bezier curve given its weights at t: [[weight, point], ...]
+    const curve = (weights) => {
+      for (let i = 1; i <= WALL_CURVE_SEGMENTS; i++) {
+        const w = weights(i / WALL_CURVE_SEGMENTS);
+        line.push([w.reduce((sum, [k, p]) => sum + k * p[0], 0), w.reduce((sum, [k, p]) => sum + k * p[1], 0)]);
+      }
+    };
+    for (const cmd of commands) {
+      if (!Array.isArray(cmd)) continue;
+      const [type, ...args] = cmd;
+      const n = args.map(Number);
+      const prev = line[line.length - 1];
+      if (type === 'M' && prevType !== 'M') {
+        if (line.length > 0) lines.push(line);
+        line = [[n[0], n[1]]];
+      } else if (type === 'L' || type === 'M') {
+        line.push([n[0], n[1]]);
+      } else if (type === 'Q' && prev) {
+        const c = [n[0], n[1]];
+        const e = [n[2], n[3]];
+        curve((t) => [
+          [(1 - t) ** 2, prev],
+          [2 * (1 - t) * t, c],
+          [t * t, e],
+        ]);
+      } else if (type === 'C' && prev) {
+        const c1 = [n[0], n[1]];
+        const c2 = [n[2], n[3]];
+        const e = [n[4], n[5]];
+        curve((t) => [
+          [(1 - t) ** 3, prev],
+          [3 * (1 - t) ** 2 * t, c1],
+          [3 * (1 - t) * t * t, c2],
+          [t ** 3, e],
+        ]);
+      }
+      prevType = type;
+    }
+    if (line.length > 0) lines.push(line);
+    const box = {
+      width: Number(wall.get('width')) || 0,
+      height: Number(wall.get('height')) || 0,
+      cx: Number(wall.get('left')) || 0,
+      cy: Number(wall.get('top')) || 0,
+      scaleX: Number(wall.get('scaleX')) || 1,
+      scaleY: Number(wall.get('scaleY')) || 1,
+      rotation: wall.get('rotation'),
+    };
+    return lines.map((l) => placeWallPoints(l, box));
+  };
+
+  /**
+   * Returns the segments of every barrier on a page: walls of any kind (wall, one-way, transparent) and closed doors
+   * and windows. Open doors and windows let an AoE through.
+   *
+   * @param {string} pageID - Page id.
+   * @returns {{a:{x:number, y:number}, b:{x:number, y:number}}[]} Barrier segments in pixels.
+   */
+  const getBarrierSegments = function (pageID) {
+    const page = getObj('page', pageID);
+    const segments = [];
+    for (const type of ['pathv2', 'path']) {
+      for (const wall of findObjs({ _type: type, _pageid: pageID, layer: 'walls' })) {
+        for (const line of wallLines(wall, page)) {
+          for (let i = 1; i < line.length; i++) {
+            segments.push({ a: line[i - 1], b: line[i] });
+          }
+        }
+      }
+    }
+    for (const type of ['door', 'window']) {
+      for (const portal of findObjs({ _type: type, _pageid: pageID })) {
+        if (portal.get('isOpen') === true) continue;
+        let handles = portal.get('path');
+        if (typeof handles === 'string') handles = parseWallJson(handles);
+        if (!handles || !handles.handle0 || !handles.handle1) continue;
+        const x = Number(portal.get('x')) || 0;
+        const y = Number(portal.get('y')) || 0;
+        const end = (h) => ({ x: x + (Number(h.x) || 0), y: -(y + (Number(h.y) || 0)) });
+        segments.push({ a: end(handles.handle0), b: end(handles.handle1) });
+      }
+    }
+    return segments;
+  };
+
+  /**
+   * Returns true when a straight line between two points touches or crosses any barrier.
+   *
+   * @param {{x:number, y:number}} from - Start point.
+   * @param {{x:number, y:number}} to - End point.
+   * @param {object[]} segments - From getBarrierSegments.
+   * @returns {boolean} True when blocked.
+   */
+  const isLineBlocked = function (from, to, segments) {
+    return segments.some((s) => getIntersectionPt(from.x, from.y, to.x, to.y, s.a.x, s.a.y, s.b.x, s.b.y) !== null);
+  };
+
+  /**
+   * Removes the grid cells an AoE cannot reach past walls and closed doors.
+   *
+   * 'line' keeps a cell when a straight line from the point of origin reaches it unblocked, as D&D 5e rules it. The
+   * cell's centre and four points near its corners are tried, so a cell seen through a doorway counts. 'spread'
+   * also lets the effect flow round corners from cell to cell, as the 2014 Fireball does, as long as the distance
+   * travelled is no more than the AoE's reach.
+   *
+   * @param {{xVals:number[], yVals:number[]}} locations - Cell centres from getPathLocations.
+   * @param {string} mode - 'line' or 'spread'.
+   * @param {pt} originPt - Point of origin, in pixels.
+   * @param {pt} casterPt - Centre of the origin token. The origin is nudged 1 px towards it, so an origin on the
+   *   caster's edge is not blocked by a wall the caster stands against.
+   * @param {string} pageID - Page id.
+   * @param {number} pageGridIncrement - Page snapping_increment.
+   * @returns {{xVals:number[], yVals:number[]}} The cells left.
+   */
+  const filterLocationsByWalls = function (locations, mode, originPt, casterPt, pageID, pageGridIncrement) {
+    const segments = getBarrierSegments(pageID);
+    if (segments.length === 0 || !locations || locations.xVals.length === 0) return locations;
+
+    let origin = { x: originPt.x, y: originPt.y };
+    const toCaster = Math.hypot(casterPt.x - originPt.x, casterPt.y - originPt.y);
+    if (toCaster > 1) {
+      origin = {
+        x: originPt.x + (casterPt.x - originPt.x) / toCaster,
+        y: originPt.y + (casterPt.y - originPt.y) / toCaster,
+      };
+    }
+    const half = 35 * pageGridIncrement;
+    const inset = half * 0.8;
+    const samples = [
+      [0, 0],
+      [-inset, -inset],
+      [inset, -inset],
+      [-inset, inset],
+      [inset, inset],
+    ];
+    const cells = locations.xVals.map((x, i) => ({ x, y: locations.yVals[i] }));
+    const key = (c) => `${Math.round(c.x)},${Math.round(c.y)}`;
+    const seen = (c) => samples.some(([dx, dy]) => !isLineBlocked(origin, { x: c.x + dx, y: c.y + dy }, segments));
+
+    const kept = new Set();
+    const distance = new Map();
+    for (const c of cells) {
+      if (seen(c)) {
+        kept.add(key(c));
+        distance.set(key(c), Math.hypot(c.x - origin.x, c.y - origin.y));
+      }
+    }
+
+    if (mode === 'spread') {
+      //flow from the cells the origin can see to their neighbours, round corners, up to the AoE's reach
+      const reach = Math.max(...cells.map((c) => Math.hypot(c.x - origin.x, c.y - origin.y)));
+      const byKey = new Map(cells.map((c) => [key(c), c]));
+      const step = 2 * half;
+      const neighbours = [
+        [1, 0],
+        [-1, 0],
+        [0, 1],
+        [0, -1],
+        [1, 1],
+        [1, -1],
+        [-1, 1],
+        [-1, -1],
+      ];
+      const queue = cells.filter((c) => kept.has(key(c)));
+      while (queue.length > 0) {
+        queue.sort((p, q) => distance.get(key(p)) - distance.get(key(q)));
+        const c = queue.shift();
+        for (const [dx, dy] of neighbours) {
+          const next = byKey.get(key({ x: c.x + dx * step, y: c.y + dy * step }));
+          if (!next || isLineBlocked(c, next, segments)) continue;
+          const d = distance.get(key(c)) + step * Math.hypot(dx, dy);
+          const k = key(next);
+          if (d <= reach + 1 && (!distance.has(k) || d < distance.get(k))) {
+            distance.set(k, d);
+            kept.add(k);
+            queue.push(next);
+          }
+        }
+      }
+    }
+
+    const left = cells.filter((c) => kept.has(key(c)));
+    return { xVals: left.map((c) => c.x), yVals: left.map((c) => c.y) };
+  };
+
   /**
    * Works out the grid cells covered by an AoE link by building the page's grid-cell centres and calling the
    * shape-specific function for link.aoeType (cone types, square, wall, circle types, otherwise line). For a
@@ -3688,6 +3969,18 @@ const SmartAoE = (() => {
           pageScaleNumber,
           wallParams,
         );
+
+        //cut the AoE off at walls and closed doors (--blockedBy|walls)
+        if (aoeLinks.links[a].blockedBy === 'line' || aoeLinks.links[a].blockedBy === 'spread') {
+          pathLocations = filterLocationsByWalls(
+            pathLocations,
+            aoeLinks.links[a].blockedBy,
+            originPtPx,
+            new pt(oTok.get('left'), oTok.get('top')),
+            pageID,
+            pageGridIncrement,
+          );
+        }
 
         //define the bounding box of affected grid squares
         const ptUL = new pt(
@@ -4038,19 +4331,33 @@ const SmartAoE = (() => {
    * Replaces each $[[n]] placeholder in a string with that roll's total from libInline data, and collects the
    * roll objects that were used.
    *
-   * @param {string} str - Text containing $[[n]] placeholders.
+   * A placeholder with no roll data means the message lost its inline rolls on the way, which happens when another
+   * Mod such as SelectManager's !forselected sends the command on with sendChat. That is thrown as a message for the
+   * caller rather than crashing on the missing total.
+   *
+   * @param {string} [str] - Text containing $[[n]] placeholders (missing when an argument has no "|value").
    * @param {object[]} parsedInlines - Inline roll data from libInline.getRollData.
    * @returns {{text: string, inlines: object[]}} Substituted text and the inline rolls it referenced.
+   * @throws {string} When a placeholder has no matching inline roll.
    */
   const substituteInlineRolls = function (str, parsedInlines) {
     let index;
     const inlineArr = [];
     const reg = /\$\[\[\d+\]\]/g;
 
+    str = str === undefined || str === null ? '' : String(str);
     const foundInlines = str.match(reg) || [];
 
     foundInlines.forEach((inline) => {
       index = inline.replace(/\$\[\[/, '').replace(/\]\]/, '');
+      if (!parsedInlines[index] || parsedInlines[index].total === undefined) {
+        //Square brackets are sent as entities: sendChat would try to roll a literal [[formula]] and crash the sandbox
+        throw (
+          ` Error: Inline roll ${Number(index) + 1} has no result. Another Mod probably sent this command on without ` +
+          `its rolls, as SelectManager's !forselected does. Write the roll as &lt;&lt;formula&gt;&gt; instead of ` +
+          `&#91;&#91;formula&#93;&#93;, for example --damageFormula1|&lt;&lt;8d6&gt;&gt;, so SmartAoE rolls it itself.`
+        );
+      }
       str = str.replace(inline, parsedInlines[index].total);
       inlineArr.push(parsedInlines[index]);
     });
@@ -4129,7 +4436,8 @@ const SmartAoE = (() => {
 
   /**
    * Reads one value of a character's attribute: the legacy attribute object if there is one (case-insensitive name),
-   * otherwise the sheet item (Beacon sheets).
+   * otherwise the sheet item (Beacon sheets). An empty legacy attribute doesn't hide a sheet item: Beacon characters
+   * can carry leftover legacy attributes (e.g. from a 2014 sheet or another mod) with the same name.
    *
    * @param {string} charID - Roll20 character ID.
    * @param {string} attrName - Attribute name.
@@ -4146,9 +4454,11 @@ const SmartAoE = (() => {
       },
       { caseInsensitive: true },
     )[0];
-    if (attr) return { attr, sheetName: undefined, raw: sheetValueToString(attr.get(type)) };
+    const legacyRaw = attr ? sheetValueToString(attr.get(type)) : '';
+    if (attr && legacyRaw !== '') return { attr, sheetName: undefined, raw: legacyRaw };
     const sheetValue = await getSheetValue(charID, attrName, type);
     if (sheetValue) return { attr: undefined, sheetName: sheetValue.name, raw: sheetValueToString(sheetValue.value) };
+    if (attr) return { attr, sheetName: undefined, raw: legacyRaw };
     return undefined;
   };
 
@@ -4204,10 +4514,53 @@ const SmartAoE = (() => {
   };
 
   /**
+   * Removes the damage types that only apply to nonmagical attacks from a resistance, vulnerability or immunity list
+   * (e.g. 2014 stat blocks' "bludgeoning, piercing, and slashing from nonmagical attacks that aren't silvered"). AoEs
+   * are treated as magical, as for Magic Resistance, so these mustn't match a bludgeoning AoE.
+   *
+   * @param {string} text - Lower-cased damage type list.
+   * @returns {string} The list without the nonmagical damage types.
+   */
+  const removeNonmagicalDamage = function (text) {
+    //"bludgeoning, piercing, and slashing", "bludgeoning or piercing", ...
+    const physical = '(?:(?:bludgeoning|piercing|slashing)(?:\\s*,\\s*(?:and\\s+|or\\s+)?|\\s+(?:and|or)\\s+)?)+';
+    return text
+      .replace(new RegExp(`${physical}\\s*(?:damage\\s+)?from\\s+non-?magical[^;]*`, 'g'), '')
+      .replace(new RegExp(`non-?magical\\s+${physical}[^;]*`, 'g'), '');
+  };
+
+  /**
+   * Checks a Beacon (D&D 2024) sheet's "store" attribute for an enabled Magic Resistance feature. Only feature names
+   * are checked: the whole store also holds item and spell text, which can mention magic resistance.
+   *
+   * @param {*} store - The current value of the character's "store" attribute (an object on Beacon sheets).
+   * @returns {boolean} True if the sheet has an enabled feature named Magic Resistance.
+   */
+  const hasBeaconMagicResistance = function (store) {
+    let data = store;
+    if (typeof data === 'string') {
+      try {
+        data = JSON.parse(data);
+      } catch (err) {
+        return false;
+      }
+    }
+    const integrants = data?.integrants?.integrants;
+    if (!integrants || typeof integrants !== 'object') return false;
+    return Object.values(integrants).some(
+      (item) =>
+        item &&
+        item._enabled !== false &&
+        typeof item.name === 'string' &&
+        item.name.toLowerCase().includes('magic resistance'),
+    );
+  };
+
+  /**
    * Builds the saving-throw entry for one target token: reads its resistances, vulnerabilities and immunities from the
    * link's configured attributes, detects Magic Resistance (roll twice), and expands the save formula with the
    * character's attributes ([[0]] when the AoE has no save). Attributes not found as legacy attribute objects are
-   * read from the sheet with getSheetItem (Beacon sheets); Magic Resistance detection needs legacy attributes.
+   * read from the sheet with getSheetItem (Beacon sheets); Magic Resistance is read from a Beacon sheet's features.
    *
    * @param {object} token - Roll20 graphic (token) hit by the AoE.
    * @param {object} link - AoE link from state.
@@ -4235,8 +4588,8 @@ const SmartAoE = (() => {
     let roll2x = false;
 
     /**
-     * Joins the lower-cased values of the named attributes: legacy attribute objects where they exist, otherwise the
-     * sheet item of that name.
+     * Joins the lower-cased values of the named attributes: legacy attribute objects where they have a value,
+     * otherwise the sheet item of that name (an empty leftover legacy attribute must not hide a Beacon sheet's value).
      *
      * @param {string[]} attrNames - Attribute names configured on the link (e.g. resistAttrs).
      * @returns {Promise<string>} The values joined, '' when none are found.
@@ -4244,15 +4597,18 @@ const SmartAoE = (() => {
     const readDamageAttrs = async (attrNames) => {
       const values = [];
       for (const attrName of attrNames) {
-        const legacyAttrs = (attrs || []).filter((att) => att.get('name') === attrName);
-        if (legacyAttrs.length > 0) {
-          values.push(...legacyAttrs.map((e) => e.get('current').toLowerCase()));
+        const legacyValues = (attrs || [])
+          .filter((att) => att.get('name') === attrName)
+          .map((e) => sheetValueToString(e.get('current')).toLowerCase())
+          .filter((v) => v !== '');
+        if (legacyValues.length > 0) {
+          values.push(...legacyValues);
         } else {
           const sheetValue = await getSheetValue(charID, attrName);
           if (sheetValue) values.push(sheetValueToString(sheetValue.value).toLowerCase());
         }
       }
-      return values.join('');
+      return values.map(removeNonmagicalDamage).join('');
     };
 
     if (!character) return null;
@@ -4263,7 +4619,11 @@ const SmartAoE = (() => {
 
     if (attrs) {
       //Magic Resistance (likely 5e-only)
-      const tempAttrs = attrs.filter((att) => att.get('current').toString().toLowerCase().includes('magic resist'));
+      const tempAttrs = attrs.filter((att) => {
+        const current = att.get('current');
+        if (att.get('name') === 'store') return hasBeaconMagicResistance(current);
+        return sheetValueToString(current).toLowerCase().includes('magic resist');
+      });
       if (tempAttrs.length > 0) {
         roll2x = true;
       }
@@ -4872,6 +5232,11 @@ const SmartAoE = (() => {
   // ————— HELP HANDOUT —————
   /** Name of the GM-only help handout SmartAoE creates and keeps up to date. */
   const HANDOUT_NAME = `${scriptName} — Help & Reference`;
+  // Journal icon (the handout's avatar): the plain SmartAoE icon in Roll20's file store.
+  // Roll20 keeps it as `.../max.webp?<number>`, so it is matched on its image path.
+  // Only the webp files exist (thumb.png is a 404).
+  const HANDOUT_ICON_PATH = '/images/506991622/UiyREC5ekQllPFSj4ul1EQ/';
+  const HANDOUT_ICON = `https://files.d20.io${HANDOUT_ICON_PATH}thumb.webp`;
 
   /** Chat commands for the help handout: [command, description]. Keep in step with COMMAND_HANDLERS and the README. */
   const HANDOUT_COMMANDS = [
@@ -4915,6 +5280,11 @@ const SmartAoE = (() => {
         ['--minGridArea / --minTokArea', 'fraction (0–1) of a square / token that must be covered', '0.01'],
         ['--instant', 'delete the control token once triggered', 'false'],
         ['--affectsCaster', 'the caster can be affected', 'false'],
+        [
+          '--blockedBy',
+          'walls (stop at walls and closed doors), "walls, spread" (also flow round corners) or none',
+          'none',
+        ],
         ['--aoeLayer', 'objects/token, gm or map (map avoids the Jumpgate layering issue)', 'objects'],
         [
           '--selectedID / --playerID',
@@ -4955,7 +5325,7 @@ const SmartAoE = (() => {
         ['--bar / --autoApply', 'bar(s) to change, e.g. 3,1 / apply without the chat buttons', '1 / false'],
         [
           '--resistAttr / --vulnerableAttr / --immunityAttr',
-          'attributes listing the target’s defences',
+          'attributes listing the target’s defences; AoEs count as magical, so types resisted only from nonmagical attacks are ignored',
           'npc_resistances …',
         ],
         [
@@ -4965,7 +5335,7 @@ const SmartAoE = (() => {
         ],
         [
           '--resource',
-          'attrName, cost, alias, limit — resource (e.g. spell slot) spent by the caster: counts down to 0, or with a limit (number, max or an attribute) counts up to it',
+          'attrName, cost, alias, limit — resource (e.g. spell slot) spent by the caster: counts down to 0, or with a limit (number, max or an attribute) counts up to it. 2024-sheet spell slots (lvlN_slots_expended) count up to lvlN_slots_total without a limit',
           'cost 1',
         ],
         ['--conditionFail / --conditionPass', 'marker(s) on a failed / passed save (@# adds a number)', 'none'],
@@ -5014,26 +5384,62 @@ const SmartAoE = (() => {
     ],
   ];
 
-  /** Tips for the help handout: [title, text]. Mirrors the README. */
+  /** Tips for the help handout: [title, text]. Mirrors the README. Text in `backticks` is shown as code. */
   const HANDOUT_TIPS = [
     [
       'Jumpgate layering',
-      'In Jumpgate the AoE squares can cover tokens (a Roll20 issue). Add --aoeLayer|map, or refresh the browser. Clicking the control token may select a square instead; Trigger still works.',
+      'In Jumpgate the AoE squares can cover tokens (a Roll20 issue). Add `--aoeLayer|map`, or refresh the browser. Clicking the control token may select a square instead; Trigger still works.',
     ],
-    ['Attached squares and circles', 'Fixed-radius squares/circles without float only fit one-square casters.'],
+    ['Attached squares and circles', 'Fixed-radius squares/circles without `float` only fit one-square casters.'],
     [
       'Line lengths',
-      'Lines use true distance, so diagonals are shorter than 5e grid counting. Leave out --radius and place the token by hand for an exact count.',
+      'Lines use true distance, so diagonals are shorter than 5e grid counting. Leave out `--radius` and place the token by hand for an exact count.',
     ],
     [
       'Called from other scripts',
-      'Pass --selectedID and --playerID, or install SelectManager and run !smconfig +playerid once.',
+      'Pass `--selectedID` and `--playerID`, or install SelectManager and run `!smconfig +playerid` once.',
+    ],
+    [
+      '!forselected and inline rolls',
+      "SelectManager's `!forselected` drops inline rolls, so write rolls as `<<…>>` instead of `[[…]]`, e.g. `--damageFormula1|<<8d6>>`.",
     ],
     [
       '2024 (Beacon) sheets',
-      'The 5eSTR…5eCHA shortcuts use 2014-sheet attributes; use a custom --saveFormula and --dc on the 2024 sheet.',
+      'Use the Mod Script Sandbox v1.5. Saves, damage-type attributes, `--ignore` and `--resource` read the 2024 sheet; spell slots (`lvlN_slots_expended`) count up to `lvlN_slots_total`. Magic Resistance comes from a feature of that name.',
     ],
-    ['Stale links', 'If AoEs stop matching the map (e.g. after copying pages), run !smartclearcache.'],
+    ['Stale links', 'If AoEs stop matching the map (e.g. after copying pages), run `!smartclearcache`.'],
+  ];
+
+  /**
+   * Grid rules for the help handout: [rules, settings]. Mirrors the README's "Grid rules by game system". Text in
+   * `backticks` is shown as code.
+   */
+  const HANDOUT_GRID_RULES = [
+    [
+      'D&D 5e 2024: an area covering at least half a square affects the whole square',
+      '`--minGridArea|0.5`; cones with `--aoeType|5econe`',
+    ],
+    [
+      'D&D 5e 2014, DMG: the half-square rule is given for circular areas (spheres, cylinders)',
+      '`--minGridArea|0.5` on circles; the defaults on other shapes',
+    ],
+    [
+      "D&D 5e 2014, Xanathar's template method: a square counts if any part of it is under the template",
+      'The defaults (`0.01` / `0.01`); cones with `5econe`',
+    ],
+    [
+      'Pathfinder 1e, D&D 3.5, Starfinder 1e: bursts and cones start at a grid intersection, every second diagonal counts double, and a square is in the area if its far edge is',
+      "`--aoeType|PFcircle, float` or `PFcone` with `--forceIntersection|1` (tests each square's farthest corner)",
+    ],
+    [
+      'Pathfinder 2e, Starfinder 2e: bursts start at a grid corner and are measured like movement; a creature is hit if any square of its space is in the area',
+      "`PFcircle` with `--forceIntersection|1` for bursts, `PFcone` for cones, `line` for lines; keep `--minTokArea` at `0.01`. Emanations (from the sides of a creature's space) aren't modelled exactly: a `PFcircle` from a Medium creature's centre is closest",
+    ],
+    ['Templates where any creature the template touches is affected', 'The defaults (`0.01` / `0.01`)'],
+    [
+      'A square counts only if its centre is in the area',
+      'No exact setting; `--minGridArea|0.5` is closest for circles',
+    ],
   ];
 
   /**
@@ -5052,7 +5458,7 @@ const SmartAoE = (() => {
     table: 'width:100%;border-collapse:collapse;margin:4px 0 10px 0;',
     th: 'background-color:#a8401f;color:#fff;text-align:left;padding:4px 6px;',
     td: 'padding:4px 6px;border-bottom:1px solid rgba(128,128,128,0.35);vertical-align:top;',
-    code: 'font-family:monospace;',
+    code: 'font-family:monospace;background-color:rgba(128,128,128,0.2);border:1px solid rgba(128,128,128,0.35);border-radius:3px;padding:0 3px;',
     pre: 'font-family:monospace;background-color:rgba(128,128,128,0.12);border:1px solid rgba(128,128,128,0.35);padding:6px;white-space:pre-wrap;margin:4px 0 10px 0;',
     footer: 'margin-top:16px;font-size:11px;opacity:0.75;',
   };
@@ -5106,6 +5512,24 @@ const SmartAoE = (() => {
   };
 
   /**
+   * Escapes text for the handout, showing the parts in `backticks` as inline code that doesn't break across lines
+   * (e.g. after the "--" of a parameter).
+   *
+   * @param {string} text - Plain text with optional `code` spans.
+   * @returns {string} HTML.
+   */
+  const handoutText = function (text) {
+    return String(text ?? '')
+      .split('`')
+      .map((part, i) =>
+        i % 2 === 1
+          ? `<span style="${HANDOUT_STYLE.code}white-space:nowrap;">${escapeHandoutHtml(part)}</span>`
+          : escapeHandoutHtml(part),
+      )
+      .join('');
+  };
+
+  /**
    * Generates the help handout HTML.
    *
    * @returns {string} Handout notes HTML.
@@ -5155,6 +5579,24 @@ const SmartAoE = (() => {
         ([title, macro]) =>
           `<h3 style="${S.h3}">${escapeHandoutHtml(title)}</h3><pre style="${S.pre}">${escapeHandoutHtml(macro)}</pre>`,
       ).join('');
+    const gridRules =
+      `<h2 style="${S.h2}">Grid rules by game system</h2>` +
+      p(
+        `Two settings decide which squares and creatures an AoE hits: ${handoutCode('--minGridArea')} (how much of a square must be covered for it to count) and ${handoutCode('--minTokArea')} (how much of a token must be in the counted squares). Both default to ${handoutCode('0.01')}, so almost any overlap counts. Set them to match your game’s rules:`,
+      ) +
+      handoutTable(
+        ['Rules', 'Settings'],
+        HANDOUT_GRID_RULES.map(([rules, settings]) => [escapeHandoutHtml(rules), handoutText(settings)]),
+      ) +
+      p(
+        '<b>The drawn squares are the ruling.</b> SmartAoE works out how much of each square the shape covers and draws only the squares that count, so there is no template edge to judge by eye, whichever rule you use.',
+      ) +
+      p(
+        `<b>Creature size.</b> Hits are decided by squares, not by how much of a creature the area covers. A token is hit when at least ${handoutCode('--minTokArea')} of it lies in counted squares. With the default ${handoutCode('0.01')}, a Tiny creature in a counted square is hit however small its token, and a token that straddles squares is hit if any part of it is in a counted square. Raise ${handoutCode('--minTokArea')} (e.g. ${handoutCode('0.5')}) only if your table wants most of a creature’s space to be inside.`,
+      ) +
+      p(
+        'SmartAoE needs a gridded page. These are guides: check your rulebook, as tables often house-rule areas of effect.',
+      );
     const integration =
       `<h2 style="${S.h2}">Other scripts</h2>` +
       p(
@@ -5163,14 +5605,14 @@ const SmartAoE = (() => {
     const tips =
       `<h2 style="${S.h2}">Tips &amp; known limitations</h2><ul style="${S.p}">` +
       HANDOUT_TIPS.map(
-        ([t, x]) => `<li style="margin-bottom:4px;"><b>${escapeHandoutHtml(t)}:</b> ${escapeHandoutHtml(x)}</li>`,
+        ([t, x]) => `<li style="margin-bottom:4px;"><b>${escapeHandoutHtml(t)}:</b> ${handoutText(x)}</li>`,
       ).join('') +
       '</ul>';
     const footer = `<p style="${S.footer}">${scriptName} v${version} · Author David M. (djmoorehead) · Full documentation: wiki.roll20.net/SmartAoE</p>`;
     return (
       `<div style="${S.outer}"><div style="${S.header}"><h1 style="${S.h1}">${scriptName}</h1>` +
       `<p style="${S.subtitle}">Version ${version} · Help &amp; Reference</p></div>` +
-      `${overview}${quickStart}${commands}${params}${examples}${integration}${tips}${footer}</div>`
+      `${overview}${quickStart}${commands}${params}${examples}${gridRules}${integration}${tips}${footer}</div>`
     );
   };
 
@@ -5184,9 +5626,17 @@ const SmartAoE = (() => {
     try {
       const handout =
         findObjs({ _type: 'handout', name: HANDOUT_NAME })[0] ||
-        createObj('handout', { name: HANDOUT_NAME, inplayerjournals: '', controlledby: '' });
+        createObj('handout', {
+          name: HANDOUT_NAME,
+          inplayerjournals: '',
+          controlledby: '',
+          avatar: HANDOUT_ICON,
+        });
       if (!handout) return undefined;
       handout.set({ inplayerjournals: '', controlledby: '' });
+      if (!String(handout.get('avatar') || '').includes(HANDOUT_ICON_PATH)) {
+        handout.set('avatar', HANDOUT_ICON);
+      }
       handout.set('notes', buildHandoutHtml());
       return handout;
     } catch (err) {
@@ -5636,6 +6086,19 @@ const SmartAoE = (() => {
         //rolls and targets belong to this AoE only: each link posts its own card (they used to pile up across links)
         let tokenRolls = [];
         const damageRolls = [];
+        //an AoE whose control token hasn't moved yet has no squares (or bounding box) to test against
+        if (!aoeLinks.links[a].boundingBox || aoeLinks.links[a].boundingBox.length === 0) {
+          sendChat(
+            scriptName,
+            `${whisperString} Move the AoE's control token to draw the area before triggering it.`,
+            null,
+            {
+              noarchive: true,
+            },
+          );
+          continue;
+        }
+
         //first, filter for "ignore" attributes (legacy attribute objects, else the sheet item on Beacon sheets)
         let thisValidToks = [];
         for (const obj of validToks) {
@@ -5644,20 +6107,8 @@ const SmartAoE = (() => {
           if (!represents || name === aoeLinks.links[a].controlTokName) continue;
           const ignoreAttr = aoeLinks.links[a].ignoreAttr;
           const ignoreVal = aoeLinks.links[a].ignoreVal.toString();
-          const attrs = findObjs(
-            {
-              _type: 'attribute',
-              _characterid: represents,
-              name: ignoreAttr,
-            },
-            { caseInsensitive: true },
-          );
-          if (attrs.length > 0) {
-            if (attrs[0].get('current') !== ignoreVal) thisValidToks.push(obj);
-          } else {
-            const sheetValue = ignoreAttr !== '' ? await getSheetValue(represents, ignoreAttr) : undefined;
-            if (!sheetValue || sheetValueToString(sheetValue.value) !== ignoreVal) thisValidToks.push(obj);
-          }
+          const ignoreValue = ignoreAttr !== '' ? await readCharacterValue(represents, ignoreAttr) : undefined;
+          if (!ignoreValue || ignoreValue.raw !== ignoreVal) thisValidToks.push(obj);
         }
 
         //Next, omit origin token and any tokens that don't have at least one corner in the AoE bounding box (or at least one corner of AoE bounding box is within the token bounding box)
@@ -5822,6 +6273,7 @@ const SmartAoE = (() => {
     let ignoreAttr = '';
     let ignoreVal = '';
     let outlineOnly = false;
+    let blockedBy = 'none'; //'none', 'line' (stops at walls) or 'spread' (also flows round corners)
     let aoeLayer = 'objects';
     let DC = 0;
     let noSave = false;
@@ -6314,6 +6766,20 @@ const SmartAoE = (() => {
         case 'tooltip':
           tooltip = param;
           break;
+        case 'blockedby': {
+          const words = param
+            .toLowerCase()
+            .split(',')
+            .map((w) => w.trim());
+          if (_.contains(['none', 'off', 'false', 'no', '0'], words[0])) {
+            blockedBy = 'none';
+          } else if (words[0].startsWith('wall')) {
+            blockedBy = words.includes('spread') ? 'spread' : 'line';
+          } else {
+            retVal.push('Invalid --blockedBy value. Use "walls", "walls, spread" or "none"');
+          }
+          break;
+        }
         case 'outlineonly':
           if (_.contains(['true', 'yes', '1'], param.toLowerCase())) {
             outlineOnly = true;
@@ -6466,6 +6932,13 @@ const SmartAoE = (() => {
         //count-up mode: the resource tracks uses (e.g. 2024 sheet lvl3_slots_expended) up to a limit, which is a
         //number, the resource's own max ("max"), or another attribute (e.g. lvl3_slots_total)
         let limit;
+        //2024 (Beacon) spell slots count slots used, so without a limit use the sheet's slot total. 2014 sheets keep
+        //lvlN_slots_expended as a legacy attribute holding the slots left, so they still count down
+        const slotMatch = resource.sheetName && resourceName.match(/^lvl(\d)_slots_expended$/i);
+        if (resourceLimit === '' && slotMatch) {
+          const slotTotalName = `lvl${slotMatch[1]}_slots_total`;
+          if (await readCharacterValue(charID, slotTotalName)) resourceLimit = slotTotalName;
+        }
         if (resourceLimit !== '') {
           let rawLimit = resourceLimit;
           if (!isNumber(Number(resourceLimit))) {
@@ -6746,6 +7219,7 @@ const SmartAoE = (() => {
           casterCondition,
           casterConditionOnFail,
           affectsCaster,
+          blockedBy,
         );
 
         //Immediately trigger a "change:graphic" event on the origin/controlTok to generate the AoE
@@ -6903,6 +7377,7 @@ const SmartAoE = (() => {
               casterCondition,
               casterConditionOnFail,
               affectsCaster,
+              blockedBy,
             );
           } else {
             //create a link between the source and control tokens (stored in state object)
@@ -6969,6 +7444,7 @@ const SmartAoE = (() => {
               casterCondition,
               casterConditionOnFail,
               affectsCaster,
+              blockedBy,
             );
           }
         } else {

@@ -3,6 +3,48 @@
 All notable changes to this project will be documented in this file.  
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/). Dates for 0.25–0.30 are the dates each version was added to the Roll20 One-Click repository.
 
+## [1.0.3] – 2026-11-02
+
+A crash fix from user feedback. There are no breaking changes.
+
+### Changed
+
+- The README and help handout explain that SelectManager's `!forselected` drops inline rolls, so rolls in a `!forselected` command should be written as `<<…>>`.
+
+### Fixed
+
+- **Inline rolls lost by another Mod no longer crash SmartAoE.** SelectManager's `!forselected` sends the command on with `sendChat` but without the original message's inline rolls, so a roll such as `--damageFormula1|[[(5+?{Cast at what level?})d6]]` reached SmartAoE as `$[[0]]` with no result, and SmartAoE stopped with "Cannot read properties of undefined (reading 'total')". SmartAoE now whispers which roll has no result and suggests `<<…>>`, which SmartAoE rolls itself.
+- **An argument with no `|value`**, such as a bare `--instant`, no longer stops with "Cannot read properties of undefined (reading 'match')". It is read as an empty value.
+
+## [1.0.2] – 2026-10-31
+
+AoEs can stop at walls, from user feedback. There are no breaking changes.
+
+### Added
+
+- **`--blockedBy|walls`** stops an AoE at dynamic lighting walls (Jumpgate `pathv2` and Legacy `path` drawings on the walls layer) and at closed doors and windows, so a fireball no longer reaches tokens in the next room just because they are inside its radius. A square is left out when no straight line from the point of origin reaches it past a wall, as the D&D 5e rules say; its centre and four points near its corners are tried, so a square seen through a doorway still counts. Open doors and windows let the AoE through. An origin on the caster's edge is measured from just inside the caster, so a caster standing against a wall is not blocked by it.
+- **`--blockedBy|walls, spread`** also lets the AoE flow round corners from square to square, as the 2014 *Fireball* does, as far as its reach. Without `--blockedBy`, walls are ignored as before.
+
+## [1.0.1] – 2026-10-28
+
+Further D&D 2024 (Beacon) sheet fixes from the [forum report](https://app.roll20.net/forum/post/12842711/script-update-smartaoe/?pageforid=12843906#post-12843906). There are no breaking changes.
+
+### Added
+
+- **Grid rules by game system**, in the README and the help handout — the `--minGridArea`, `--minTokArea`, shape and origin settings that match D&D 5e 2014 and 2024, Pathfinder 1e and 2e, Starfinder and other systems, with notes on how creature size affects hits (a Tiny creature in a counted square is hit).
+
+### Changed
+
+- The help handout's **2024 (Beacon) sheets** tip no longer says the `5eSTR`…`5eCHA` shortcuts need a custom `--saveFormula` on the 2024 sheet (they have worked there since 1.0.0); it now gives the Sandbox v1.5 and spell-slot notes.
+- **2024-sheet spell slots count up without a limit.** On a 2024 sheet, `--resource|lvl3_slots_expended` (any level) now counts the slots used up to `lvl3_slots_total` when no limit is given. In 1.0.0 it counted down, so with no slots used it always said there weren't enough, and casting with one slot used took it back to 0. 2014 sheets, where `lvlN_slots_expended` holds the slots left, still count down.
+
+### Fixed
+
+- **Empty leftover attributes no longer hide 2024 sheet values.** A 2024 character can carry legacy attribute objects with the same names as its sheet values, for example after moving a 2014 character to the 2024 sheet or when another mod creates them. An empty `npc_immunities` (or `npc_resistances`, `npc_vulnerabilities`, `--ignore` or `--resource` attribute) was used as the value, so a Fire Giant took full fire damage even though a chat roll showed "Fire". An empty legacy attribute is now skipped and the sheet's value used.
+- **`!smarttrigger` before the control token has moved** no longer stops with "Cannot read properties of undefined (reading 'x')". The AoE has no squares yet, so SmartAoE whispers to move the control token first.
+- **Resistances to nonmagical attacks no longer apply to AoEs.** The damage-type check was a plain text search, so a 2014 stat block's "bludgeoning, piercing, and slashing from nonmagical attacks" (a Gargoyle, many devils and lycanthropes) halved or cancelled a bludgeoning AoE. AoEs count as magical, as they already did for Magic Resistance, so these damage types are now ignored. Other damage types on the same line still apply.
+- **Magic Resistance is detected on 2024 sheets.** A creature with a Magic Resistance feature, such as a Yuan-ti, now rolls its save twice and keeps the higher, shown as **A** on the card, as on the 2014 sheet. The 2024 sheet keeps its features in one `store` object, which SmartAoE read as "[object Object]". Only feature names are checked, so text elsewhere on the sheet, such as an item's description, doesn't count.
+
 ## [1.0.0] – 2026-10-25
 
 First 1.0 release: SmartAoE has been stable on the One-Click library since 0.25, so this version marks it as released. There are no breaking changes; existing macros and AoEs work as before.

@@ -2,6 +2,8 @@
 
 This checklist validates `SmartAoE.js` in a live Roll20 game before release. Run it after every change to the root script; the `X.Y.Z/SmartAoE.js` snapshot must be byte-identical to the root copy before you start. Test in a **Jumpgate** game and, if possible, a **legacy** game.
 
+Before the live checks, run the Node tests, which need nothing but Node.js: `node --test SmartAoE/tests/inline-rolls.test.cjs`.
+
 ## Setup
 
 1. Install **libInline** and paste `SmartAoE.js` into the game's Mod (API) Scripts (or install both from the One-Click library). Disable any other copy of SmartAoE.
@@ -15,9 +17,9 @@ This checklist validates `SmartAoE.js` in a live Roll20 game before release. Run
 ## Install and handout
 
 1. Restart the sandbox.
-   - Expected: The console logs `SmartAoE v1.0.0 initialized.` and no errors. On a fresh game an `AoEControlToken` character (with CW, CCW, Trigger-ALL, Trigger-Target token actions) and a GM `AoEGenerator` macro are created.
+   - Expected: The console logs `SmartAoE v1.0.3 initialized.` and no errors. On a fresh game an `AoEControlToken` character (with CW, CCW, Trigger-ALL, Trigger-Target token actions) and a GM `AoEGenerator` macro are created.
 2. Open the Journal.
-   - Expected: A **SmartAoE — Help & Reference** handout exists, is not shown to players, shows v1.0.0, and has these sections: Overview, Quick start, Commands, !smartaoe parameters (four groups), Examples, Other scripts, Tips & known limitations.
+   - Expected: A **SmartAoE — Help & Reference** handout exists, is not shown to players, shows v1.0.3, and has these sections: Overview, Quick start, Commands, !smartaoe parameters (four groups), Examples, Grid rules by game system, Other scripts, Tips & known limitations.
 3. Run `!smarthelp`.
    - Expected: A whisper with a link that opens the handout; no second handout is created.
 
@@ -25,6 +27,7 @@ This checklist validates `SmartAoE.js` in a live Roll20 game before release. Run
 
 1. Select the NPC and run `!smartaoe {{ --aoeType|circle, float --radius|10ft }}`.
    - Expected: A control token (reticle) appears; moving it draws the red squares of a 10 ft circle.
+   - Before moving it, run `!smarttrigger <controlTokenID>`. Expected: A whisper to move the control token first (before 1.0.1: "Cannot read properties of undefined (reading 'x')").
 2. Select the control token and run `!smarttrigger` (or the Trigger-ALL token action).
    - Expected: A results card listing the creatures inside.
 3. In Jumpgate, click the reticle so that one of the red squares is selected instead, then run `!smarttrigger`.
@@ -76,11 +79,14 @@ Use a game with the D&D 2024 sheet on Mod Script Sandbox v1.5: a PC caster with 
 1. Cast it with the PC selected.
    - Expected: "Level 3 slots: 1 used. Now 1 of N used.", and the sheet shows one more 3rd-level slot used. If the sheet won't let scripts change them: "Could not update …" and no AoE is drawn.
    - Cast until every slot is used, then once more. Expected: "Not enough Level 3 slots! … used = N of N" and no AoE is drawn.
-   - Without the limit (`--resource|lvl3_slots_expended`) and no slots used. Expected: "Not enough lvl3_slots_expended!" (the value counts down, as on the 2014 sheet).
+   - Without the limit (`--resource|lvl3_slots_expended`) and no slots used. Expected: it counts up to `lvl3_slots_total` as above, with `lvl3_slots_expended` as the name (before 1.0.1: "Not enough lvl3_slots_expended!").
 2. Trigger it over the Fire Giant.
    - Expected: The save includes the giant's DEX save bonus, the giant is listed as immune, and its HP doesn't change.
+   - Give the giant an empty legacy `npc_immunities` attribute object (e.g. a one-off Mod script running `createObj('attribute', { characterid: '<giant character id>', name: 'npc_immunities', current: '' })`) and trigger again. Expected: still immune (before 1.0.1 the empty attribute hid the sheet's "Fire").
+   - Give a 2014 NPC `npc_resistances` of `cold; bludgeoning, piercing, and slashing from nonmagical attacks` and hit it with a bludgeoning AoE, then a cold one. Expected: no **R** for bludgeoning (before 1.0.1 it resisted), **R** for cold.
+   - Add a 2024 creature with the Magic Resistance trait (e.g. a Yuan-ti Infiltrator) to the area and trigger again. Expected: two saves are rolled for it, the lower one greyed out, and its R/V/I column shows **A** (before 1.0.1 it rolled once).
 3. Repeat 1–2 in a 2014-sheet game.
-   - Expected: Same results as before 1.0.0; no "No attribute or sheet field found" errors in the API console.
+   - Expected: Same results as before 1.0.0 (`lvl3_slots_expended` counts down without a limit); no "No attribute or sheet field found" errors in the API console.
 
 ## Markers and removal
 
@@ -102,12 +108,33 @@ Use a game with the D&D 2024 sheet on Mod Script Sandbox v1.5: a PC caster with 
 3. Run `!smartclearcache`.
    - Expected: Stored links are cleared; existing drawings stay.
 
+## Walls
+
+On a page with dynamic lighting walls, draw two rooms side by side, divided by a wall with a door in it. Put an NPC in each room, close to the dividing wall.
+
+1. Select the PC and run `!smartaoe {{ --aoeType|circle, float --radius|20ft --blockedBy|walls }}`, then move the control token into the first room, next to the wall.
+   - Expected: Squares on the far side of the wall are not drawn. Triggering lists only the NPC in the first room.
+2. Open the door, nudge the control token, and trigger again.
+   - Expected: Squares seen through the doorway are drawn, and the second NPC is hit if it stands in one.
+3. Repeat with `--blockedBy|walls, spread` and the door closed, with the control token near the end of a wall that does not reach the outer wall.
+   - Expected: The AoE flows round the end of the wall, but no further than its radius.
+4. Repeat with a 30 ft `5econe` from a caster standing against a wall, aimed along the wall.
+   - Expected: The cone is drawn on the caster's side of the wall only.
+5. Repeat steps 1 and 2 in a Legacy game (walls drawn as `path` on the Dynamic Lighting layer).
+   - Expected: The same results.
+6. Run an AoE without `--blockedBy`.
+   - Expected: Walls are ignored, as before.
+
 ## Calls from other scripts
 
 1. From a ScriptCards or other script, call `!smartaoe` with `--selectedID|<id> --playerID|<id> --aoeColor|#00ff0050`.
    - Expected: The AoE uses the colour passed (before 1.0.0 the player's colour always replaced it).
 2. With HealthColors installed, damage a token through SmartAoE.
    - Expected: HealthColors re-colours the token straight away (`SmartAoE.ObserveTokenChange`), and `SmartAoE.ZeroHPMarkers()` lists the 0 HP markers used.
+3. With SelectManager installed and the PC selected, run `!forselected smartaoe {{ --aoeType|circle, float --radius|20ft --damageFormula1|[[8d6]] }}`.
+   - Expected: A whisper says inline roll 1 has no result and suggests `<<…>>`; no "reading 'total'" error (before 1.0.3 it crashed).
+4. Repeat with `--damageFormula1|<<8d6>>`, then trigger the AoE over the NPC.
+   - Expected: The AoE is drawn and the card shows 8d6 damage.
 
 ## Error reporting
 
