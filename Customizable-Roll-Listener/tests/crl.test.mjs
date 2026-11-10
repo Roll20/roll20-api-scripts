@@ -478,7 +478,7 @@ test('cards stay on one line, so multi-line commands never leak to players', () 
 });
 
 test('the handouts get the Customizable-Roll-Listener journal icon, also handouts made before', async () => {
-  const icon = 'https://files.d20.io/images/506962411/8dTgwiRheGH8MBFxC588Zw/thumb.webp';
+  const icon = 'https://files.d20.io/images/506991606/UTz70uZOd3kYSr77efXgxg/thumb.webp';
   const api = createSandbox();
   api.sandbox.createObj('handout', { name: 'Customizable Roll Listener - Help', avatar: '' });
   await api.ready();
