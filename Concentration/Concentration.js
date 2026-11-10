@@ -5,7 +5,7 @@
  * Name: Concentration
  * Script: Concentration.js
  * Version: 1.1.0
- * Built: 2026-11-02T11:06:41.215Z
+ * Built: 2026-11-10T00:57:19.293Z
  */
 const ConcentrationMod = (() => {
   'use strict';
@@ -13,7 +13,7 @@ const ConcentrationMod = (() => {
   // Build-time placeholders replaced by rollup.config.js inject-build-metadata plugin.
   const SCRIPT_NAME = 'Concentration';
   const SCRIPT_VERSION = '1.1.0';
-  const SCRIPT_LAST_UPDATED = '2026-11-02T11:06:41.215Z';
+  const SCRIPT_LAST_UPDATED = '2026-11-10T00:57:19.293Z';
 
   const DEFAULT_LOCALE$1 = 'en-US';
 
@@ -29,6 +29,11 @@ const ConcentrationMod = (() => {
 
   const HANDOUT_HELP_NAME = 'Concentration - Help';
   const HANDOUT_DECK_NAME = 'Concentration - Command Deck';
+  // Journal icon (the handouts' avatar): the plain Concentration icon in Roll20's
+  // file store. Roll20 keeps it as `.../max.webp?<number>`, so an icon is matched
+  // on its image path. Only the webp files exist (thumb.png is a 404).
+  const HANDOUT_ICON_PATH = '/images/506962414/_CSTmdNBeCktQMiX5FyM2A/';
+  const HANDOUT_ICON = `https://files.d20.io${HANDOUT_ICON_PATH}thumb.webp`;
 
   const AUTHOR_LINKS = {
     original: {
@@ -9088,11 +9093,14 @@ const ConcentrationMod = (() => {
   function upsertHandout(name, html) {
     const existing = findObjs({ _type: 'handout', name });
     const [primary, ...duplicates] = existing;
-    const handout = primary || createObj('handout', { name });
+    const handout = primary || createObj('handout', { name, avatar: HANDOUT_ICON });
     if (!handout) {
       return;
     }
     handout.set({ inplayerjournals: '', controlledby: '' });
+    if (!String(handout.get('avatar') || '').includes(HANDOUT_ICON_PATH)) {
+      handout.set('avatar', HANDOUT_ICON);
+    }
     handout.set('notes', html);
     for (const dup of duplicates) {
       dup.remove();
