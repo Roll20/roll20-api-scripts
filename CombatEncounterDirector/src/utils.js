@@ -1,3 +1,5 @@
+import { HANDOUT_ICON, HANDOUT_ICON_PATH } from './constants.js';
+
 /**
  * Returns true when the value is a non-null plain object.
  *
@@ -319,4 +321,18 @@ export function formatMod(mod) {
     return '0';
   }
   return mod > 0 ? `+${mod}` : String(mod);
+}
+
+/**
+ * Gives a handout the Combat Encounter Director journal icon unless it already has it. Roll20
+ * stores the icon as `.../max.webp?<number>`, so it is matched on its path.
+ *
+ * @param {object|null} handout Handout.
+ * @returns {object|null} The same handout.
+ */
+export function ensureHandoutIcon(handout) {
+  if (handout && !String(handout.get('avatar') || '').includes(HANDOUT_ICON_PATH)) {
+    handout.set('avatar', HANDOUT_ICON);
+  }
+  return handout;
 }

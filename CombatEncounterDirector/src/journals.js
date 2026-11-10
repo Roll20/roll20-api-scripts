@@ -11,6 +11,7 @@ import {
   DECK_VIEWS,
   DEFAULT_DECK_VIEW,
   DUPLICATE_OPTIONS,
+  HANDOUT_ICON,
   JOURNAL_PANEL_NAME,
   JOURNAL_STATUS_NAME,
   PARTY_PRESETS,
@@ -21,7 +22,7 @@ import { buildButton, buildCard, buildSecondaryButton, buildTable } from './chat
 import { LOCALE_DEFINITIONS, t } from './i18n.js';
 import { getConfig } from './state.js';
 import { resolvePartyPresetBySize } from './scaling.js';
-import { escapeHtml, roundAtLeastOne } from './utils.js';
+import { ensureHandoutIcon, escapeHtml, roundAtLeastOne } from './utils.js';
 
 // ---------------------------------------------------------------------------
 // Style constants shared across journal sections
@@ -708,14 +709,16 @@ export function installControlPanelHandout(view = DEFAULT_DECK_VIEW) {
   if (legacy) {
     legacy.set('name', JOURNAL_PANEL_NAME);
     legacy.set('notes', html);
+    ensureHandoutIcon(legacy);
     return;
   }
 
   const existing = findObjs({ type: 'handout', name: JOURNAL_PANEL_NAME })[0];
   if (existing) {
     existing.set('notes', html);
+    ensureHandoutIcon(existing);
   } else {
-    createObj('handout', { name: JOURNAL_PANEL_NAME, notes: html });
+    createObj('handout', { name: JOURNAL_PANEL_NAME, notes: html, avatar: HANDOUT_ICON });
   }
 }
 
@@ -730,7 +733,9 @@ export function installStatusHandout() {
     `<div style="color:${COLOR_MUTED};font-style:italic">Run <strong>!ced report refresh</strong> to populate this report.</div>`
   );
   const existing = findObjs({ type: 'handout', name: JOURNAL_STATUS_NAME })[0];
-  if (!existing) {
-    createObj('handout', { name: JOURNAL_STATUS_NAME, notes: placeholder });
+  if (existing) {
+    ensureHandoutIcon(existing);
+  } else {
+    createObj('handout', { name: JOURNAL_STATUS_NAME, notes: placeholder, avatar: HANDOUT_ICON });
   }
 }

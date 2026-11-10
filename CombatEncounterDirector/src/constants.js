@@ -17,6 +17,11 @@ export const DIRECTOR_CONFLICT_STATE_KEY = 'DIRECTOR_STATE';
 
 export const JOURNAL_PANEL_NAME = 'Combat Encounter Director - Command Deck';
 export const JOURNAL_STATUS_NAME = 'Combat Encounter Director - Status';
+// Journal icon (the handouts' avatar): the plain Combat Encounter Director icon in Roll20's
+// file store. Roll20 keeps it as `.../max.webp?<number>`, so an icon is matched
+// on its image path. Only the webp files exist (thumb.png is a 404).
+export const HANDOUT_ICON_PATH = '/images/506962413/Dl7htCrGBI5b8h3BP0Xsdg/';
+export const HANDOUT_ICON = `https://files.d20.io${HANDOUT_ICON_PATH}thumb.webp`;
 
 // Command Deck views
 export const DECK_VIEW_KEYS = ['all', 'scaling', 'positioning', 'admin'];

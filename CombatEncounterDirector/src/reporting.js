@@ -3,6 +3,7 @@ import {
   COLOR_CHANGED,
   COLOR_MUTED,
   COLOR_TEXT,
+  HANDOUT_ICON,
   JOURNAL_STATUS_NAME,
   LAYER_GM,
   LAYER_MAP,
@@ -12,6 +13,7 @@ import { t } from './i18n.js';
 import { filterTokenRecords, getConfig, getTokenRecord } from './state.js';
 import { getSelectedTokens } from './tokens.js';
 import {
+  ensureHandoutIcon,
   escapeHtml,
   formatMod,
   formatPct,
@@ -194,10 +196,12 @@ export function updateStatusHandout(content) {
   const existing = findObjs({ type: 'handout', name: JOURNAL_STATUS_NAME })[0];
   if (existing) {
     existing.set('notes', content);
+    ensureHandoutIcon(existing);
   } else {
     createObj('handout', {
       name: JOURNAL_STATUS_NAME,
       notes: content,
+      avatar: HANDOUT_ICON,
     });
   }
 }
