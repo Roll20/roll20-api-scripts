@@ -743,7 +743,7 @@ test('menus, settings, status and help render without errors', () => {
 });
 
 test('the handouts get the TokenController journal icon, also handouts made before', async () => {
-  const icon = 'https://files.d20.io/images/506962431/pc4jQiRNRPyN2p2m4Hykzg/thumb.webp';
+  const icon = 'https://files.d20.io/images/506991626/TsIVLXHTBtAe-MK1UsJ0iQ/thumb.webp';
   const api = createSandbox();
   api.sandbox.createObj('handout', { name: 'TokenController - Help', avatar: '' });
   await api.ready();
