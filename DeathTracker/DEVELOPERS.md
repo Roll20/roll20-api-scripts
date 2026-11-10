@@ -41,7 +41,7 @@ npm run format
 | `owners.js`      | Who handles death saves, colours and effects (`state.ModOwners`, shared with HealthColors 2.5+), and telling HealthColors. |
 | `commands.js`    | `!deathtracker` parsing and routing, settings changes, 0.1 `config`.                                                       |
 | `menu.js`        | Chat cards: menu, status, settings, markers, help; the command list.                                                       |
-| `journals.js`    | Help and Command Deck handouts.                                                                                            |
+| `journals.js`    | Help and Command Deck handouts and their icon.                                                                             |
 | `state.js`       | Persistent state, setting validation, 0.1 migration, One-Click options, token records, PC/NPC choices.                     |
 | `chat.js`        | Chat cards, buttons, whispers and errors.                                                                                  |
 | `i18n.js`        | Translation lookup (`t`, `tRaw`), locale normalisation and text direction.                                                 |

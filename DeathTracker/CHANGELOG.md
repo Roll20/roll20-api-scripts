@@ -25,7 +25,7 @@ A full rewrite by MidNiteShadow7 of Robin Kuiper's DeathTracker 0.1.8, which had
 - **Massive damage** option for PCs.
 - Announcements to the GM and the PC's players when a PC goes down, becomes stable, dies or gets back up.
 - A chat menu, a settings card with buttons for every setting, `status`, `check`, `stable`, `clear`, `restore`, `markers` and `--ids`.
-- **DeathTracker - Help** and **DeathTracker - Command Deck** handouts, in 24 languages.
+- **DeathTracker - Help** and **DeathTracker - Command Deck** handouts, in 24 languages, with the DeathTracker icon in the Journal (also added to handouts from earlier versions).
 - One-Click options for every setting.
 - A public API: `check`, `getStatus`, `onStatusChange`, `isManagingDeathSaves`, `ownersChanged`, alongside 0.1's `ObserveTokenChange`.
 - Commands from other Mods (player "API") are accepted.
