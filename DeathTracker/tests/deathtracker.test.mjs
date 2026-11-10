@@ -25,7 +25,7 @@ test('loads, publishes the DeathTracker object and builds the handouts', () => {
   assert.equal(api.dtState().schemaVersion, 1);
 });
 
-const ICON = 'https://files.d20.io/images/506962415/PhsacK45UrgrODYxZHj3Zw/thumb.webp';
+const ICON = 'https://files.d20.io/images/506991607/2kSFLvD0OBTxzgyz8nOeNA/thumb.webp';
 
 test('the handouts get the DeathTracker journal icon, also when they already exist', () => {
   const fresh = start();
@@ -52,7 +52,7 @@ test('the handouts get the DeathTracker journal icon, also when they already exi
   assert.equal(handouts[0].get('avatar'), ICON);
 
   // Roll20 stores the icon as max.webp with a number; that counts as set.
-  const stored = 'https://files.d20.io/images/506962415/PhsacK45UrgrODYxZHj3Zw/max.webp?123';
+  const stored = 'https://files.d20.io/images/506991607/2kSFLvD0OBTxzgyz8nOeNA/max.webp?123';
   handouts[0].set('avatar', stored);
   api.command('!deathtracker journal rebuild');
   assert.equal(handouts[0].get('avatar'), stored);
