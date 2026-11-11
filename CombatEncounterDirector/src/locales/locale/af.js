@@ -5,7 +5,6 @@ const TRANSLATION = {
     scalingPresetReady: 'Skaalvoorinstelling gereed',
     hpUpdated: 'HP-skaal opgedateer',
     acUpdated: 'AC-skaal opgedateer',
-    damageUpdated: 'Skadeskalering opgedateer',
     bossPreset: 'Baasvoorinstelling: {preset}',
     partySize: 'Partytjiegrootte: {size}',
     reinforcementsCreated: 'Versterkings Geskep',
@@ -35,7 +34,7 @@ const TRANSLATION = {
     unknownCommandHint: "Tik !ced help vir 'n lys opdragte.",
     noTokensSelected: 'Geen tokens gekies nie. Kies eers tekens op die kaart.',
     unknownScaleAction: 'Onbekende skaalhandeling: "{action}".',
-    scaleActionHint: 'Geldige aksies: voorafingestel, partytjie, hp, ac, skade, toepas',
+    scaleActionHint: 'Geldige aksies: voorafingestel, partytjie, hp, ac, toepas',
     unknownPartyPreset: 'Onbekende partyvoorafinstelling: "{preset}".',
     partyPresetHint: 'Geldige voorafinstellings: {presets}',
     missingBossPreset: 'Ontbrekende baasvooringestelde naam.',
@@ -77,8 +76,8 @@ const TRANSLATION = {
       'HP-persentasie moet tussen 1 en 1000 wees (het "{value}") gekry. Voorbeeld: 150',
     invalidAcModifier:
       'AC-wysiger moet tussen -10 en +10 wees (het "{value} gekry"). Voorbeeld: +2',
-    invalidDamagePercent:
-      'Skadepersentasie moet tussen 1 en 1000 wees (het "{value}") gekry. Voorbeeld: 125',
+    damageScalingRemoved:
+      "Skadeskaal is in weergawe 1.0.2 verwyder omdat dit nooit iets op die teken verander het nie. Voorinstellings skaal nou slegs HP en AC; pas skadegooie self aan as jy wil hê dat 'n wese harder moet slaan.",
     invalidDuplicateCount:
       'Duplikaattelling moet tussen 1 en 50 wees (het "{value}") gekry. Voorbeeld: 3',
     invalidEncounterName:
@@ -104,7 +103,6 @@ const TRANSLATION = {
     hp: 'HP',
     ac: 'AC',
     acModifier: 'AC wysiger',
-    damage: 'Skade',
     appliedTo: 'Toegepas op',
     copiesPerToken: 'Afskrifte per teken',
     totalCreated: 'Totaal geskep',
@@ -177,10 +175,12 @@ const TRANSLATION = {
     deckViewPositioning: 'Posisionering',
     deckViewAdmin: 'Admin',
     deckViewLabel: 'Bekyk:',
+    languageCode: 'Kode',
+    languageName: 'Taal',
+    languageNative: 'Naam in eie taal',
     partySizeLabel: 'Partytjie grootte:',
     hpPercentLabel: 'HP %:',
     acModLabel: 'AC wysiger:',
-    damagePercentLabel: 'Skade%:',
     load: 'Laai',
     delete: 'Vee uit',
     quickActions: 'Vinnige aksies',
@@ -210,6 +210,15 @@ const TRANSLATION = {
     setHpBar2: 'Stel HP bar 2',
     setAcBar2: 'Stel AC bar 2',
     disableAc: 'Deaktiveer AC',
+    presetReference: 'Voorafinstelling-verwysing',
+    presetReferenceDesc:
+      "Wat elke voorafinstelling verander. Die voorbeelde is vir 'n monster met {hp} HP en AC {ac}. HP word tot die naaste heelgetal afgerond, en 'n gewonde monster behou dieselfde deel van sy HP.",
+    partyPresets: 'Groep-voorafinstellings',
+    bossPresets: 'Baas-voorafinstellings',
+    presetPlayers: 'Spelers',
+    presetChanges: 'Veranderinge',
+    presetExample: 'Voorbeeld',
+    presetHpSet: 'gestel op {hp}',
   },
   report: {
     summary: 'Opsomming',
@@ -225,7 +234,6 @@ const TRANSLATION = {
     layerCol: 'Laag',
     hpCol: 'HP',
     acCol: 'AC',
-    dmgCol: 'Dmg',
     presetCol: 'Vooraf ingesteld',
   },
 };

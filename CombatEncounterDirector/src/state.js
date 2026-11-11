@@ -89,6 +89,27 @@ export function ensureState() {
 }
 
 /**
+ * Removes the damageModifier field that earlier versions stored on token
+ * records and saved encounter snapshots. Damage scaling never changed anything
+ * on the token, so it was removed; old values are simply discarded. Called once at
+ * start-up, not from ensureState(), which runs on every command.
+ *
+ * @returns {void}
+ */
+export function dropLegacyDamageModifiers() {
+  const s = ensureState();
+  for (const record of Object.values(s.tokens)) {
+    if (isRecord(record)) delete record.damageModifier;
+  }
+  for (const encounter of Object.values(s.encounters)) {
+    if (!isRecord(encounter) || !Array.isArray(encounter.tokens)) continue;
+    for (const snapshot of encounter.tokens) {
+      if (isRecord(snapshot)) delete snapshot.damageModifier;
+    }
+  }
+}
+
+/**
  * Merges a possibly incomplete config with defaults, preserving valid values.
  *
  * @param {object} config Existing config to merge.
@@ -281,7 +302,6 @@ export function createTokenRecord(tokenId, original, pageId) {
     original,
     hpModifier: 100,
     acModifier: 0,
-    damageModifier: 100,
     preset: null,
     lastModified: Date.now(),
     lastOperation: '',

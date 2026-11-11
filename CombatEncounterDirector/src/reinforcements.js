@@ -212,15 +212,19 @@ export function enumerateSelectedTokens(msg) {
 }
 
 /**
- * Strips trailing enumeration (numbers and spaces) from a token name.
+ * Strips trailing enumeration from a token name: CED's own numbers, and the "(1)" that
+ * Roll20's Advanced Transform > Enumerate Tokens adds to duplicate names.
  *
- * Example: "Goblin 3" → "Goblin", "Orc Warrior 12" → "Orc Warrior"
+ * Example: "Goblin 3" → "Goblin", "Orc Warrior 12" → "Orc Warrior", "Goblin 3 (1)" → "Goblin"
  *
  * @param {string} name Token name.
  * @returns {string} Base name without trailing number.
  */
 export function stripEnumeration(name) {
-  return name.replace(/\s+\d+$/, '').trim();
+  return name
+    .replace(/\s*\(\d+\)$/, '')
+    .replace(/\s+\d+$/, '')
+    .trim();
 }
 
 /**

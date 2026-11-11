@@ -5,7 +5,6 @@ const TRANSLATION = {
     scalingPresetReady: 'Escalat predefinit llest',
     hpUpdated: "Escalat d'HP actualitzat",
     acUpdated: 'Escalat AC actualitzat',
-    damageUpdated: "S'ha actualitzat l'escala de danys",
     bossPreset: 'Preconfiguració del cap: {preset}',
     partySize: 'Mida del grup: {size}',
     reinforcementsCreated: 'Reforços creats',
@@ -35,7 +34,7 @@ const TRANSLATION = {
     unknownCommandHint: "Escriviu !ced help per obtenir una llista d'ordres.",
     noTokensSelected: "No s'han seleccionat fitxes. Seleccioneu primer les fitxes al mapa.",
     unknownScaleAction: 'Acció d\'escala desconeguda: "{action}".',
-    scaleActionHint: 'Accions vàlides: preset, party, hp, ac, damage, apply',
+    scaleActionHint: 'Accions vàlides: preset, party, hp, ac, apply',
     unknownPartyPreset: 'Preconfiguració de la part desconeguda: "{preset}".',
     partyPresetHint: 'Valors predefinits vàlids: {presets}',
     missingBossPreset: 'Falta el nom predefinit del cap.',
@@ -78,8 +77,8 @@ const TRANSLATION = {
       'El percentatge d\'HP ha d\'estar entre 1 i 1.000 (obté "{value}"). Exemple: 150',
     invalidAcModifier:
       'El modificador de CA ha d\'estar entre -10 i +10 (obté "{value}"). Exemple: +2',
-    invalidDamagePercent:
-      'El percentatge de danys ha d\'estar entre 1 i 1.000 (s\'ha obtingut "{value}"). Exemple: 125',
+    damageScalingRemoved:
+      "L'escala de danys es va eliminar a la versió 1.0.2 perquè mai no canviava res a la fitxa. Els valors predefinits ara només escalen HP i AC; ajusta tu mateix les tirades de dany si vols que una criatura colpegi més fort.",
     invalidDuplicateCount:
       'El nombre de duplicats ha d\'estar entre 1 i 50 (obté "{value}"). Exemple: 3',
     invalidEncounterName:
@@ -105,7 +104,6 @@ const TRANSLATION = {
     hp: 'HP',
     ac: 'AC',
     acModifier: 'Modificador de CA',
-    damage: 'Danys',
     appliedTo: 'Aplicat a',
     copiesPerToken: 'Còpies per testimoni',
     totalCreated: 'Total creat',
@@ -178,10 +176,12 @@ const TRANSLATION = {
     deckViewPositioning: 'Posicionament',
     deckViewAdmin: 'Admin',
     deckViewLabel: 'Visualització:',
+    languageCode: 'Codi',
+    languageName: 'Llengua',
+    languageNative: 'Nom nadiu',
     partySizeLabel: 'Mida del partit:',
     hpPercentLabel: 'HP %:',
     acModLabel: 'Modificador de CA:',
-    damagePercentLabel: '% de dany:',
     load: 'Carrega',
     delete: 'Suprimeix',
     quickActions: 'Accions ràpides',
@@ -213,6 +213,15 @@ const TRANSLATION = {
     setHpBar2: 'Estableix la barra HP 2',
     setAcBar2: 'Estableix la barra AC 2',
     disableAc: "Desactiva l'AC",
+    presetReference: 'Referència de preajustos',
+    presetReferenceDesc:
+      "Què canvia cada preconfiguració. Els exemples són per a un monstre amb {hp} HP i AC {ac}. HP s'arrodoneix al nombre sencer més proper i un monstre ferit conserva la mateixa part dels seus HP.",
+    partyPresets: 'Preajustos de grup',
+    bossPresets: 'Preajustos de boss',
+    presetPlayers: 'Jugadors',
+    presetChanges: 'Canvis',
+    presetExample: 'Exemple',
+    presetHpSet: 'fixat a {hp}',
   },
   report: {
     summary: 'Resum',
@@ -228,7 +237,6 @@ const TRANSLATION = {
     layerCol: 'Capa',
     hpCol: 'HP',
     acCol: 'AC',
-    dmgCol: 'Dmg',
     presetCol: 'Preestablert',
   },
 };

@@ -5,7 +5,6 @@ const TRANSLATION = {
     scalingPresetReady: 'Skalierungsvoreinstellung bereit',
     hpUpdated: 'HP-Skalierung aktualisiert',
     acUpdated: 'AC-Skalierung aktualisiert',
-    damageUpdated: 'Schadensskalierung aktualisiert',
     bossPreset: 'Boss-Voreinstellung: {preset}',
     partySize: 'Gruppengröße: {size}',
     reinforcementsCreated: 'Verstärkungen erstellt',
@@ -35,7 +34,7 @@ const TRANSLATION = {
     unknownCommandHint: 'Geben Sie !ced help ein, um eine Liste mit Befehlen anzuzeigen.',
     noTokensSelected: 'Keine Token ausgewählt. Wählen Sie zuerst Token auf der Karte aus.',
     unknownScaleAction: 'Unbekannte Skalenaktion: „{action}“.',
-    scaleActionHint: 'Gültige Aktionen: Voreinstellung, Party, PS, Wechselstrom, Schaden, Anwenden',
+    scaleActionHint: 'Gültige Aktionen: Voreinstellung, Party, PS, Wechselstrom, Anwenden',
     unknownPartyPreset: 'Unbekannte Party-Voreinstellung: „{preset}“.',
     partyPresetHint: 'Gültige Voreinstellungen: {presets}',
     missingBossPreset: 'Der Name der Boss-Voreinstellung fehlt.',
@@ -78,8 +77,8 @@ const TRANSLATION = {
       'Der HP-Prozentsatz muss zwischen 1 und 1000 liegen (erhielt „{value}“). Beispiel: 150',
     invalidAcModifier:
       'Der AC-Modifikator muss zwischen -10 und +10 liegen (erhielt „{value}“). Beispiel: +2',
-    invalidDamagePercent:
-      'Der Schadensprozentsatz muss zwischen 1 und 1000 liegen (erhielt „{value}“). Beispiel: 125',
+    damageScalingRemoved:
+      'Die Schadensskalierung wurde in Version 1.0.2 entfernt, da dadurch nie etwas am Token geändert wurde. Voreinstellungen skalieren jetzt nur HP und AC; passen Sie die Schadenswürfe selbst an, wenn Sie möchten, dass eine Kreatur härter zuschlägt.',
     invalidDuplicateCount:
       'Die Anzahl der Duplikate muss zwischen 1 und 50 liegen (erhielt „{value}“). Beispiel: 3',
     invalidEncounterName:
@@ -105,7 +104,6 @@ const TRANSLATION = {
     hp: 'PS',
     ac: 'Wechselstrom',
     acModifier: 'AC-Modifikator',
-    damage: 'Schaden',
     appliedTo: 'Angewendet auf',
     copiesPerToken: 'Kopien pro Token',
     totalCreated: 'Insgesamt erstellt',
@@ -178,10 +176,12 @@ const TRANSLATION = {
     deckViewPositioning: 'Positionierung',
     deckViewAdmin: 'Admin',
     deckViewLabel: 'Sicht:',
+    languageCode: 'Code',
+    languageName: 'Sprache',
+    languageNative: 'Eigenbezeichnung',
     partySizeLabel: 'Gruppengröße:',
     hpPercentLabel: 'HP %:',
     acModLabel: 'AC-Modifikator:',
-    damagePercentLabel: 'Schaden %:',
     load: 'Laden',
     delete: 'Löschen',
     quickActions: 'Schnelle Aktionen',
@@ -214,6 +214,15 @@ const TRANSLATION = {
     setHpBar2: 'Stellen Sie HP-Leiste 2 ein',
     setAcBar2: 'AC-Leiste 2 einstellen',
     disableAc: 'Deaktivieren Sie die Klimaanlage',
+    presetReference: 'Voreinstellungen im Überblick',
+    presetReferenceDesc:
+      'Was jede Voreinstellung ändert. Die Beispiele gelten für ein Monster mit {hp} HP und AC {ac}. Die HP werden auf die nächste ganze Zahl gerundet und ein verwundetes Monster behält den gleichen Anteil seiner HP.',
+    partyPresets: 'Gruppen-Voreinstellungen',
+    bossPresets: 'Boss-Voreinstellungen',
+    presetPlayers: 'Spieler',
+    presetChanges: 'Änderungen',
+    presetExample: 'Beispiel',
+    presetHpSet: 'auf {hp} gesetzt',
   },
   report: {
     summary: 'Zusammenfassung',
@@ -229,7 +238,6 @@ const TRANSLATION = {
     layerCol: 'Schicht',
     hpCol: 'PS',
     acCol: 'Wechselstrom',
-    dmgCol: 'Schaden',
     presetCol: 'Voreingestellt',
   },
 };

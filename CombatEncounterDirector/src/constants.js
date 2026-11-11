@@ -17,6 +17,11 @@ export const DIRECTOR_CONFLICT_STATE_KEY = 'DIRECTOR_STATE';
 
 export const JOURNAL_PANEL_NAME = 'Combat Encounter Director - Command Deck';
 export const JOURNAL_STATUS_NAME = 'Combat Encounter Director - Status';
+// Journal icon (the handouts' avatar): the plain Combat Encounter Director icon in Roll20's
+// file store. Roll20 keeps it as `.../max.webp?<number>`, so an icon is matched
+// on its image path. Only the webp files exist (thumb.png is a 404).
+export const HANDOUT_ICON_PATH = '/images/506991602/k1ynPiMicjKXHx2gBPq6Dg/';
+export const HANDOUT_ICON = `https://files.d20.io${HANDOUT_ICON_PATH}thumb.webp`;
 
 // Command Deck views
 export const DECK_VIEW_KEYS = ['all', 'scaling', 'positioning', 'admin'];
@@ -43,17 +48,17 @@ export const VALID_LAYERS = new Set([LAYER_TOKEN, LAYER_GM, LAYER_MAP]);
 /**
  * Party-size scaling presets.
  *
- * hp / damage are percentages of the base value.
+ * hp is a percentage of the base value.
  * ac is a flat modifier added to base AC.
  */
 export const PARTY_PRESETS = {
-  solo: { label: 'Solo', partySize: 1, hp: 25, ac: -2, damage: 75 },
-  duo: { label: 'Duo', partySize: 2, hp: 50, ac: -1, damage: 85 },
-  small: { label: 'Small Party', partySize: 3, hp: 75, ac: 0, damage: 90 },
-  standard: { label: 'Standard Party', partySize: 4, hp: 100, ac: 0, damage: 100 },
-  large: { label: 'Large Party', partySize: 6, hp: 140, ac: 1, damage: 120 },
-  convention: { label: 'Convention Table', partySize: 10, hp: 200, ac: 2, damage: 150 },
-  massive: { label: 'Massive Table', partySize: 20, hp: 300, ac: 3, damage: 200 },
+  solo: { label: 'Solo', partySize: 1, hp: 25, ac: -2 },
+  duo: { label: 'Duo', partySize: 2, hp: 50, ac: -1 },
+  small: { label: 'Small Party', partySize: 3, hp: 75, ac: 0 },
+  standard: { label: 'Standard Party', partySize: 4, hp: 100, ac: 0 },
+  large: { label: 'Large Party', partySize: 6, hp: 140, ac: 1 },
+  convention: { label: 'Convention Table', partySize: 10, hp: 200, ac: 2 },
+  massive: { label: 'Massive Table', partySize: 20, hp: 300, ac: 3 },
 };
 
 /**
@@ -62,13 +67,12 @@ export const PARTY_PRESETS = {
  * For 'set' hpMode the hp value replaces the token's HP directly.
  * For 'percent' hpMode the hp value is a percentage of original max HP.
  * ac is a flat modifier added to original AC.
- * damage is a percentage of base damage.
  */
 export const BOSS_PRESETS = {
-  minion: { label: 'Minion', hpMode: 'set', hp: 1, ac: -2, damage: 50 },
-  elite: { label: 'Elite', hpMode: 'percent', hp: 150, ac: 1, damage: 125 },
-  boss: { label: 'Boss', hpMode: 'percent', hp: 300, ac: 2, damage: 150 },
-  legendary: { label: 'Legendary', hpMode: 'percent', hp: 500, ac: 3, damage: 200 },
+  minion: { label: 'Minion', hpMode: 'set', hp: 1, ac: -2 },
+  elite: { label: 'Elite', hpMode: 'percent', hp: 150, ac: 1 },
+  boss: { label: 'Boss', hpMode: 'percent', hp: 300, ac: 2 },
+  legendary: { label: 'Legendary', hpMode: 'percent', hp: 500, ac: 3 },
 };
 
 export const VALID_BOSS_PRESETS = new Set(Object.keys(BOSS_PRESETS));

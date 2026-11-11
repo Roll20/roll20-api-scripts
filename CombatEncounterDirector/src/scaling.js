@@ -36,7 +36,7 @@ export function resolvePartyPresetBySize(partySize) {
  * Applies a scaling profile to one token, updating its state record and token bars.
  *
  * @param {Graphic} token Roll20 Graphic object.
- * @param {{ hp: number, ac: number, damage: number }} profile Scaling values.
+ * @param {{ hp: number, ac: number }} profile Scaling values.
  * @param {string} [operation] Description of the operation for the audit log.
  * @returns {object} Updated token record.
  */
@@ -45,7 +45,6 @@ export function applyScalingToToken(token, profile, operation) {
 
   record.hpModifier = profile.hp;
   record.acModifier = profile.ac;
-  record.damageModifier = profile.damage;
   record.lastModified = Date.now();
   record.lastOperation = operation || 'scale';
 
@@ -60,7 +59,7 @@ export function applyScalingToToken(token, profile, operation) {
  * Applies a scaling profile to all selected tokens.
  *
  * @param {object} msg Roll20 chat message.
- * @param {{ hp: number, ac: number, damage: number }} profile Scaling values.
+ * @param {{ hp: number, ac: number }} profile Scaling values.
  * @param {string} [label] Human-readable label for feedback messages.
  * @returns {{ applied: string[], skipped: number }} Result summary.
  */
@@ -132,27 +131,6 @@ export function parseAcModifier(raw) {
     return {
       valid: false,
       message: `AC modifier must be between -10 and +10 (got "${raw}"). Example: +2`,
-    };
-  }
-  return { valid: true, value: n };
-}
-
-/**
- * Parses and validates a damage percentage from a string argument.
- * A trailing '%' is stripped before parsing. Rejects partial matches.
- *
- * @param {string} raw Raw argument value.
- * @returns {{ valid: boolean, value?: number, message?: string }} Parsed result.
- */
-export function parseDamagePercent(raw) {
-  const cleaned = String(raw)
-    .replace(/^(\d+)%$/, '$1')
-    .trim();
-  const n = parseStrictInt(cleaned);
-  if (!Number.isFinite(n) || n < 1 || n > 1000) {
-    return {
-      valid: false,
-      message: `Damage percentage must be between 1 and 1000 (got "${raw}"). Example: 125`,
     };
   }
   return { valid: true, value: n };

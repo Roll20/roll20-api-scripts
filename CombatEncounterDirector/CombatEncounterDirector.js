@@ -4,16 +4,16 @@
  * ------------------------------------------------
  * Name: Combat Encounter Director
  * Script: CombatEncounterDirector.js
- * Version: 1.0.1
- * Built: 2026-06-15T02:32:49.995Z
+ * Version: 1.0.2
+ * Built: 2026-11-10T00:58:06.818Z
  */
 const CombatEncounterDirectorMod = (() => {
   'use strict';
 
   // Build-time placeholders replaced by rollup.config.js inject-build-metadata plugin.
   const SCRIPT_NAME = 'Combat Encounter Director';
-  const SCRIPT_VERSION = '1.0.1';
-  const SCRIPT_LAST_UPDATED = '2026-06-15T02:32:49.995Z';
+  const SCRIPT_VERSION = '1.0.2';
+  const SCRIPT_LAST_UPDATED = '2026-11-10T00:58:06.818Z';
 
   const DEFAULT_LOCALE$1 = 'en-US';
 
@@ -29,6 +29,11 @@ const CombatEncounterDirectorMod = (() => {
 
   const JOURNAL_PANEL_NAME = 'Combat Encounter Director - Command Deck';
   const JOURNAL_STATUS_NAME = 'Combat Encounter Director - Status';
+  // Journal icon (the handouts' avatar): the plain Combat Encounter Director icon in Roll20's
+  // file store. Roll20 keeps it as `.../max.webp?<number>`, so an icon is matched
+  // on its image path. Only the webp files exist (thumb.png is a 404).
+  const HANDOUT_ICON_PATH = '/images/506991602/k1ynPiMicjKXHx2gBPq6Dg/';
+  const HANDOUT_ICON = `https://files.d20.io${HANDOUT_ICON_PATH}thumb.webp`;
 
   // Command Deck views
   const DECK_VIEW_KEYS = ['all', 'scaling', 'positioning', 'admin'];
@@ -55,17 +60,17 @@ const CombatEncounterDirectorMod = (() => {
   /**
    * Party-size scaling presets.
    *
-   * hp / damage are percentages of the base value.
+   * hp is a percentage of the base value.
    * ac is a flat modifier added to base AC.
    */
   const PARTY_PRESETS = {
-    solo: { label: 'Solo', partySize: 1, hp: 25, ac: -2, damage: 75 },
-    duo: { label: 'Duo', partySize: 2, hp: 50, ac: -1, damage: 85 },
-    small: { label: 'Small Party', partySize: 3, hp: 75, ac: 0, damage: 90 },
-    standard: { label: 'Standard Party', partySize: 4, hp: 100, ac: 0, damage: 100 },
-    large: { label: 'Large Party', partySize: 6, hp: 140, ac: 1, damage: 120 },
-    convention: { label: 'Convention Table', partySize: 10, hp: 200, ac: 2, damage: 150 },
-    massive: { label: 'Massive Table', partySize: 20, hp: 300, ac: 3, damage: 200 },
+    solo: { label: 'Solo', partySize: 1, hp: 25, ac: -2 },
+    duo: { label: 'Duo', partySize: 2, hp: 50, ac: -1 },
+    small: { label: 'Small Party', partySize: 3, hp: 75, ac: 0 },
+    standard: { label: 'Standard Party', partySize: 4, hp: 100, ac: 0 },
+    large: { label: 'Large Party', partySize: 6, hp: 140, ac: 1 },
+    convention: { label: 'Convention Table', partySize: 10, hp: 200, ac: 2 },
+    massive: { label: 'Massive Table', partySize: 20, hp: 300, ac: 3 },
   };
 
   /**
@@ -74,13 +79,12 @@ const CombatEncounterDirectorMod = (() => {
    * For 'set' hpMode the hp value replaces the token's HP directly.
    * For 'percent' hpMode the hp value is a percentage of original max HP.
    * ac is a flat modifier added to original AC.
-   * damage is a percentage of base damage.
    */
   const BOSS_PRESETS = {
-    minion: { label: 'Minion', hpMode: 'set', hp: 1, ac: -2, damage: 50 },
-    elite: { label: 'Elite', hpMode: 'percent', hp: 150, ac: 1, damage: 125 },
-    boss: { label: 'Boss', hpMode: 'percent', hp: 300, ac: 2, damage: 150 },
-    legendary: { label: 'Legendary', hpMode: 'percent', hp: 500, ac: 3, damage: 200 },
+    minion: { label: 'Minion', hpMode: 'set', hp: 1, ac: -2 },
+    elite: { label: 'Elite', hpMode: 'percent', hp: 150, ac: 1 },
+    boss: { label: 'Boss', hpMode: 'percent', hp: 300, ac: 2 },
+    legendary: { label: 'Legendary', hpMode: 'percent', hp: 500, ac: 3 },
   };
 
   const VALID_BOSS_PRESETS = new Set(Object.keys(BOSS_PRESETS));
@@ -408,6 +412,20 @@ const CombatEncounterDirectorMod = (() => {
     return mod > 0 ? `+${mod}` : String(mod);
   }
 
+  /**
+   * Gives a handout the Combat Encounter Director journal icon unless it already has it. Roll20
+   * stores the icon as `.../max.webp?<number>`, so it is matched on its path.
+   *
+   * @param {object|null} handout Handout.
+   * @returns {object|null} The same handout.
+   */
+  function ensureHandoutIcon(handout) {
+    if (handout && !String(handout.get('avatar') || '').includes(HANDOUT_ICON_PATH)) {
+      handout.set('avatar', HANDOUT_ICON);
+    }
+    return handout;
+  }
+
   const CHAT_CARD_STYLE = [
     'width:100%',
     'border-radius:4px',
@@ -467,6 +485,23 @@ const CombatEncounterDirectorMod = (() => {
   ].join(';');
 
   const DIVIDER_STYLE = `border:none;border-top:1px solid ${COLOR_BORDER};margin:4px 0`;
+
+  // Tables in handouts. Roll20's handout stylesheet gives tables borders and a white background,
+  // so every table part sets its own border and background to keep the chat card's look.
+  const TABLE_RESET = 'border:none;background:transparent';
+  const TABLE_STYLE = `width:100%;border-collapse:collapse;${TABLE_RESET};margin:0;font-size:0.9em`;
+  const TH_STYLE = [
+    TABLE_RESET,
+    `border-bottom:1px solid ${COLOR_ACCENT}`,
+    `color:${COLOR_MUTED}`,
+    'padding:2px 5px',
+    'text-align:left',
+    'font-weight:normal',
+    'font-size:0.8em',
+    'text-transform:uppercase',
+    'letter-spacing:0.08em',
+  ].join(';');
+  const TD_BASE_STYLE = `${TABLE_RESET};border-bottom:1px solid ${COLOR_BORDER};padding:3px 5px`;
 
   /**
    * Sends a whisper to a specific player.
@@ -581,6 +616,24 @@ const CombatEncounterDirectorMod = (() => {
   }
 
   /**
+   * Builds a table styled like the chat cards, safe inside a handout.
+   *
+   * @param {string[]} headings Column headings (plain text — will be escaped).
+   * @param {string[][]} rows Cells of each row (trusted HTML).
+   * @returns {string} HTML table string.
+   */
+  function buildTable(headings, rows) {
+    const head = headings.map((h) => `<th style="${TH_STYLE}">${escapeHtml(h)}</th>`).join('');
+    const body = rows
+      .map(
+        (cells) =>
+          `<tr style="${TABLE_RESET}">${cells.map((c) => `<td style="${TD_BASE_STYLE};color:${COLOR_TEXT}">${c}</td>`).join('')}</tr>`
+      )
+      .join('');
+    return `<table style="${TABLE_STYLE}"><thead><tr style="${TABLE_RESET}">${head}</tr></thead><tbody>${body}</tbody></table>`;
+  }
+
+  /**
    * Builds a horizontal divider.
    *
    * @returns {string} HTML hr string.
@@ -631,7 +684,6 @@ const CombatEncounterDirectorMod = (() => {
       scalingPresetReady: 'Skaalvoorinstelling gereed',
       hpUpdated: 'HP-skaal opgedateer',
       acUpdated: 'AC-skaal opgedateer',
-      damageUpdated: 'Skadeskalering opgedateer',
       bossPreset: 'Baasvoorinstelling: {preset}',
       partySize: 'Partytjiegrootte: {size}',
       reinforcementsCreated: 'Versterkings Geskep',
@@ -661,7 +713,7 @@ const CombatEncounterDirectorMod = (() => {
       unknownCommandHint: "Tik !ced help vir 'n lys opdragte.",
       noTokensSelected: 'Geen tokens gekies nie. Kies eers tekens op die kaart.',
       unknownScaleAction: 'Onbekende skaalhandeling: "{action}".',
-      scaleActionHint: 'Geldige aksies: voorafingestel, partytjie, hp, ac, skade, toepas',
+      scaleActionHint: 'Geldige aksies: voorafingestel, partytjie, hp, ac, toepas',
       unknownPartyPreset: 'Onbekende partyvoorafinstelling: "{preset}".',
       partyPresetHint: 'Geldige voorafinstellings: {presets}',
       missingBossPreset: 'Ontbrekende baasvooringestelde naam.',
@@ -704,8 +756,8 @@ const CombatEncounterDirectorMod = (() => {
         'HP-persentasie moet tussen 1 en 1000 wees (het "{value}") gekry. Voorbeeld: 150',
       invalidAcModifier:
         'AC-wysiger moet tussen -10 en +10 wees (het "{value} gekry"). Voorbeeld: +2',
-      invalidDamagePercent:
-        'Skadepersentasie moet tussen 1 en 1000 wees (het "{value}") gekry. Voorbeeld: 125',
+      damageScalingRemoved:
+        "Skadeskaal is in weergawe 1.0.2 verwyder omdat dit nooit iets op die teken verander het nie. Voorinstellings skaal nou slegs HP en AC; pas skadegooie self aan as jy wil hê dat 'n wese harder moet slaan.",
       invalidDuplicateCount:
         'Duplikaattelling moet tussen 1 en 50 wees (het "{value}") gekry. Voorbeeld: 3',
       invalidEncounterName:
@@ -731,7 +783,6 @@ const CombatEncounterDirectorMod = (() => {
       hp: 'HP',
       ac: 'AC',
       acModifier: 'AC wysiger',
-      damage: 'Skade',
       appliedTo: 'Toegepas op',
       copiesPerToken: 'Afskrifte per teken',
       totalCreated: 'Totaal geskep',
@@ -804,10 +855,12 @@ const CombatEncounterDirectorMod = (() => {
       deckViewPositioning: 'Posisionering',
       deckViewAdmin: 'Admin',
       deckViewLabel: 'Bekyk:',
+      languageCode: 'Kode',
+      languageName: 'Taal',
+      languageNative: 'Naam in eie taal',
       partySizeLabel: 'Partytjie grootte:',
       hpPercentLabel: 'HP %:',
       acModLabel: 'AC wysiger:',
-      damagePercentLabel: 'Skade%:',
       load: 'Laai',
       delete: 'Vee uit',
       quickActions: 'Vinnige aksies',
@@ -837,6 +890,15 @@ const CombatEncounterDirectorMod = (() => {
       setHpBar2: 'Stel HP bar 2',
       setAcBar2: 'Stel AC bar 2',
       disableAc: 'Deaktiveer AC',
+      presetReference: 'Voorafinstelling-verwysing',
+      presetReferenceDesc:
+        "Wat elke voorafinstelling verander. Die voorbeelde is vir 'n monster met {hp} HP en AC {ac}. HP word tot die naaste heelgetal afgerond, en 'n gewonde monster behou dieselfde deel van sy HP.",
+      partyPresets: 'Groep-voorafinstellings',
+      bossPresets: 'Baas-voorafinstellings',
+      presetPlayers: 'Spelers',
+      presetChanges: 'Veranderinge',
+      presetExample: 'Voorbeeld',
+      presetHpSet: 'gestel op {hp}',
     },
     report: {
       summary: 'Opsomming',
@@ -852,7 +914,6 @@ const CombatEncounterDirectorMod = (() => {
       layerCol: 'Laag',
       hpCol: 'HP',
       acCol: 'AC',
-      dmgCol: 'Dmg',
       presetCol: 'Vooraf ingesteld',
     },
   };
@@ -864,7 +925,6 @@ const CombatEncounterDirectorMod = (() => {
       scalingPresetReady: 'Escalat predefinit llest',
       hpUpdated: "Escalat d'HP actualitzat",
       acUpdated: 'Escalat AC actualitzat',
-      damageUpdated: "S'ha actualitzat l'escala de danys",
       bossPreset: 'Preconfiguració del cap: {preset}',
       partySize: 'Mida del grup: {size}',
       reinforcementsCreated: 'Reforços creats',
@@ -894,7 +954,7 @@ const CombatEncounterDirectorMod = (() => {
       unknownCommandHint: "Escriviu !ced help per obtenir una llista d'ordres.",
       noTokensSelected: "No s'han seleccionat fitxes. Seleccioneu primer les fitxes al mapa.",
       unknownScaleAction: 'Acció d\'escala desconeguda: "{action}".',
-      scaleActionHint: 'Accions vàlides: preset, party, hp, ac, damage, apply',
+      scaleActionHint: 'Accions vàlides: preset, party, hp, ac, apply',
       unknownPartyPreset: 'Preconfiguració de la part desconeguda: "{preset}".',
       partyPresetHint: 'Valors predefinits vàlids: {presets}',
       missingBossPreset: 'Falta el nom predefinit del cap.',
@@ -937,8 +997,8 @@ const CombatEncounterDirectorMod = (() => {
         'El percentatge d\'HP ha d\'estar entre 1 i 1.000 (obté "{value}"). Exemple: 150',
       invalidAcModifier:
         'El modificador de CA ha d\'estar entre -10 i +10 (obté "{value}"). Exemple: +2',
-      invalidDamagePercent:
-        'El percentatge de danys ha d\'estar entre 1 i 1.000 (s\'ha obtingut "{value}"). Exemple: 125',
+      damageScalingRemoved:
+        "L'escala de danys es va eliminar a la versió 1.0.2 perquè mai no canviava res a la fitxa. Els valors predefinits ara només escalen HP i AC; ajusta tu mateix les tirades de dany si vols que una criatura colpegi més fort.",
       invalidDuplicateCount:
         'El nombre de duplicats ha d\'estar entre 1 i 50 (obté "{value}"). Exemple: 3',
       invalidEncounterName:
@@ -964,7 +1024,6 @@ const CombatEncounterDirectorMod = (() => {
       hp: 'HP',
       ac: 'AC',
       acModifier: 'Modificador de CA',
-      damage: 'Danys',
       appliedTo: 'Aplicat a',
       copiesPerToken: 'Còpies per testimoni',
       totalCreated: 'Total creat',
@@ -1037,10 +1096,12 @@ const CombatEncounterDirectorMod = (() => {
       deckViewPositioning: 'Posicionament',
       deckViewAdmin: 'Admin',
       deckViewLabel: 'Visualització:',
+      languageCode: 'Codi',
+      languageName: 'Llengua',
+      languageNative: 'Nom nadiu',
       partySizeLabel: 'Mida del partit:',
       hpPercentLabel: 'HP %:',
       acModLabel: 'Modificador de CA:',
-      damagePercentLabel: '% de dany:',
       load: 'Carrega',
       delete: 'Suprimeix',
       quickActions: 'Accions ràpides',
@@ -1072,6 +1133,15 @@ const CombatEncounterDirectorMod = (() => {
       setHpBar2: 'Estableix la barra HP 2',
       setAcBar2: 'Estableix la barra AC 2',
       disableAc: "Desactiva l'AC",
+      presetReference: 'Referència de preajustos',
+      presetReferenceDesc:
+        "Què canvia cada preconfiguració. Els exemples són per a un monstre amb {hp} HP i AC {ac}. HP s'arrodoneix al nombre sencer més proper i un monstre ferit conserva la mateixa part dels seus HP.",
+      partyPresets: 'Preajustos de grup',
+      bossPresets: 'Preajustos de boss',
+      presetPlayers: 'Jugadors',
+      presetChanges: 'Canvis',
+      presetExample: 'Exemple',
+      presetHpSet: 'fixat a {hp}',
     },
     report: {
       summary: 'Resum',
@@ -1087,7 +1157,6 @@ const CombatEncounterDirectorMod = (() => {
       layerCol: 'Capa',
       hpCol: 'HP',
       acCol: 'AC',
-      dmgCol: 'Dmg',
       presetCol: 'Preestablert',
     },
   };
@@ -1099,7 +1168,6 @@ const CombatEncounterDirectorMod = (() => {
       scalingPresetReady: '縮放預設就緒',
       hpUpdated: 'HP 擴充功能已更新',
       acUpdated: 'AC 縮放更新',
-      damageUpdated: '傷害調整更新',
       bossPreset: 'Boss 預設：{preset}',
       partySize: '聚會人數：{size}',
       reinforcementsCreated: '增援部隊已創建',
@@ -1129,7 +1197,7 @@ const CombatEncounterDirectorMod = (() => {
       unknownCommandHint: '輸入 !ced help 以獲得命令列表。',
       noTokensSelected: '未選擇任何標記。首先選擇地圖上的標記。',
       unknownScaleAction: '未知的縮放操作：「{action}」。',
-      scaleActionHint: '有效動作：預設、派對、hp、ac、傷害、應用',
+      scaleActionHint: '有效動作：預設、派對、hp、ac、應用',
       unknownPartyPreset: '未知方預設：「{preset}」。',
       partyPresetHint: '有效預設：{presets}',
       missingBossPreset: '缺少 Boss 預設名稱。',
@@ -1169,7 +1237,8 @@ const CombatEncounterDirectorMod = (() => {
       invalidPartySize: '團體人數必須是 1 到 30 之間的數字（得到「{value}」）。',
       invalidHpPercent: 'HP 百分比必須介於 1 到 1000 之間（得到「{value}」）。範例：150',
       invalidAcModifier: 'AC 修飾符必須介於 -10 和 +10 之間（得到「{value}」）。範例：+2',
-      invalidDamagePercent: '損壞百分比必須介於 1 到 1000 之間（得到「{value}」）。範例：125',
+      damageScalingRemoved:
+        '傷害縮放在 1.0.2 版本中被刪除，因為它從未改變標記上的任何內容。預設現在僅縮放 HP 和 AC；如果您希望生物打得更重，請自行調整傷害擲骰。',
       invalidDuplicateCount: '重複計數必須介於 1 到 50 之間（得到「{value}」）。範例：3',
       invalidEncounterName:
         '遭遇名稱無效：「{name}」。名稱可以包含字母、數字、空格、連字符和底線（最多 64 個字元）。',
@@ -1193,7 +1262,6 @@ const CombatEncounterDirectorMod = (() => {
       hp: '惠普',
       ac: '交流電',
       acModifier: '交流調節器',
-      damage: '損害',
       appliedTo: '應用於',
       copiesPerToken: '每個令牌的副本',
       totalCreated: '建立總數',
@@ -1265,10 +1333,12 @@ const CombatEncounterDirectorMod = (() => {
       deckViewPositioning: '定位',
       deckViewAdmin: '行政',
       deckViewLabel: '看法：',
+      languageCode: '程式碼',
+      languageName: '語言',
+      languageNative: '本地名稱',
       partySizeLabel: '聚會規模：',
       hpPercentLabel: '生命值百分比：',
       acModLabel: '交流調節器：',
-      damagePercentLabel: '損害 ％：',
       load: '載入',
       delete: '刪除',
       quickActions: '快速行動',
@@ -1292,6 +1362,15 @@ const CombatEncounterDirectorMod = (() => {
       setHpBar2: '設定 HP 欄 2',
       setAcBar2: '設定 AC 條 2',
       disableAc: '禁用交流電',
+      presetReference: '預設參考',
+      presetReferenceDesc:
+        '每個預設會改變什麼。範例以一隻擁有 {hp} HP、AC {ac} 的怪物為準。HP 會四捨五入至最接近的整數，受傷的怪物會保留相同比例的 HP。',
+      partyPresets: '隊伍預設',
+      bossPresets: '首領預設',
+      presetPlayers: '玩家',
+      presetChanges: '變化',
+      presetExample: '範例',
+      presetHpSet: '設為 {hp}',
     },
     report: {
       summary: '概括',
@@ -1307,7 +1386,6 @@ const CombatEncounterDirectorMod = (() => {
       layerCol: '層',
       hpCol: '惠普',
       acCol: '交流電',
-      dmgCol: '劑量',
       presetCol: '預設',
     },
   };
@@ -1319,7 +1397,6 @@ const CombatEncounterDirectorMod = (() => {
       scalingPresetReady: 'Předvolba škálování připravena',
       hpUpdated: 'HP Scaling aktualizováno',
       acUpdated: 'AC Scaling aktualizováno',
-      damageUpdated: 'Měřítko poškození aktualizováno',
       bossPreset: 'Předvolba šéfa: {preset}',
       partySize: 'Velikost party: {size}',
       reinforcementsCreated: 'Posílení vytvořeno',
@@ -1349,7 +1426,7 @@ const CombatEncounterDirectorMod = (() => {
       unknownCommandHint: 'Pro seznam příkazů napište !ced help.',
       noTokensSelected: 'Nejsou vybrány žádné tokeny. Nejprve vyberte žetony na mapě.',
       unknownScaleAction: 'Neznámá akce měřítka: "{action}".',
-      scaleActionHint: 'Platné akce: přednastavení, párty, hp, ac, poškození, použít',
+      scaleActionHint: 'Platné akce: přednastavení, párty, hp, ac, použít',
       unknownPartyPreset: 'Neznámá předvolba party: „{preset}“.',
       partyPresetHint: 'Platné předvolby: {presets}',
       missingBossPreset: 'Chybí přednastavený název šéfa.',
@@ -1389,8 +1466,8 @@ const CombatEncounterDirectorMod = (() => {
       invalidPartySize: 'Velikost skupiny musí být číslo mezi 1 a 30 (získáno „{value}“).',
       invalidHpPercent: 'Procento HP musí být mezi 1 a 1000 (získáno „{value}“). Příklad: 150',
       invalidAcModifier: 'Modifikátor AC musí být mezi -10 a +10 (získáno "{value}"). Příklad: +2',
-      invalidDamagePercent:
-        'Procento poškození musí být mezi 1 a 1000 (získáno „{value}“). Příklad: 125',
+      damageScalingRemoved:
+        'Škálování poškození bylo ve verzi 1.0.2 odstraněno, protože na tokenu nikdy nic nezměnilo. Předvolby nyní škálují pouze HP a AC; upravte si házení na poškození sami, pokud chcete, aby stvoření zasáhlo tvrději.',
       invalidDuplicateCount: 'Počet duplicit musí být mezi 1 a 50 (získáno „{value}“). Příklad: 3',
       invalidEncounterName:
         'Neplatný název setkání: "{name}". Jména mohou obsahovat písmena, číslice, mezery, pomlčky a podtržítka (max. 64 znaků).',
@@ -1415,7 +1492,6 @@ const CombatEncounterDirectorMod = (() => {
       hp: 'HP',
       ac: 'AC',
       acModifier: 'AC modifikátor',
-      damage: 'Poškození',
       appliedTo: 'Aplikováno na',
       copiesPerToken: 'Počet kopií na token',
       totalCreated: 'Celkem vytvořeno',
@@ -1488,10 +1564,12 @@ const CombatEncounterDirectorMod = (() => {
       deckViewPositioning: 'Polohování',
       deckViewAdmin: 'Admin',
       deckViewLabel: 'Pohled:',
+      languageCode: 'Kód',
+      languageName: 'Jazyk',
+      languageNative: 'Vlastní název',
       partySizeLabel: 'Velikost party:',
       hpPercentLabel: '% HP:',
       acModLabel: 'AC modifikátor:',
-      damagePercentLabel: '% poškození:',
       load: 'Zatížení',
       delete: 'Vymazat',
       quickActions: 'Rychlé akce',
@@ -1521,6 +1599,15 @@ const CombatEncounterDirectorMod = (() => {
       setHpBar2: 'Nastavte HP bar 2',
       setAcBar2: 'Nastavte AC bar 2',
       disableAc: 'Zakázat AC',
+      presetReference: 'Přehled předvoleb',
+      presetReferenceDesc:
+        'Co každá předvolba mění. Příklady jsou pro monstrum s {hp} HP a AC {ac}. HP se zaokrouhlí na nejbližší celé číslo a zraněné monstrum si ponechá stejný podíl svých HP.',
+      partyPresets: 'Předvolby družiny',
+      bossPresets: 'Předvolby bossů',
+      presetPlayers: 'Hráči',
+      presetChanges: 'Změny',
+      presetExample: 'Příklad',
+      presetHpSet: 'nastaveno na {hp}',
     },
     report: {
       summary: 'Shrnutí',
@@ -1536,7 +1623,6 @@ const CombatEncounterDirectorMod = (() => {
       layerCol: 'Vrstva',
       hpCol: 'HP',
       acCol: 'AC',
-      dmgCol: 'Dmg',
       presetCol: 'Přednastaveno',
     },
   };
@@ -1548,7 +1634,6 @@ const CombatEncounterDirectorMod = (() => {
       scalingPresetReady: 'Forudindstillet skalering er klar',
       hpUpdated: 'HP Scaling opdateret',
       acUpdated: 'AC-skalering opdateret',
-      damageUpdated: 'Skadeskalering opdateret',
       bossPreset: 'Boss Preset: {preset}',
       partySize: 'Feststørrelse: {size}',
       reinforcementsCreated: 'Forstærkninger oprettet',
@@ -1578,7 +1663,7 @@ const CombatEncounterDirectorMod = (() => {
       unknownCommandHint: 'Skriv !ced help for at få en liste over kommandoer.',
       noTokensSelected: 'Ingen tokens valgt. Vælg tokens på kortet først.',
       unknownScaleAction: 'Ukendt skalahandling: "{action}".',
-      scaleActionHint: 'Gyldige handlinger: forudindstillet, fest, hp, ac, skade, anvende',
+      scaleActionHint: 'Gyldige handlinger: forudindstillet, fest, hp, ac, anvende',
       unknownPartyPreset: 'Ukendt parti forudindstilling: "{preset}".',
       partyPresetHint: 'Gyldige forudindstillinger: {presets}',
       missingBossPreset: 'Mangler forudindstillet chefnavn.',
@@ -1618,8 +1703,8 @@ const CombatEncounterDirectorMod = (() => {
       invalidPartySize: 'Partistørrelsen skal være et tal mellem 1 og 30 (fik "{value}").',
       invalidHpPercent: 'HP-procenten skal være mellem 1 og 1000 (fik "{value}"). Eksempel: 150',
       invalidAcModifier: 'AC-modifikator skal være mellem -10 og +10 (fik "{value}"). Eksempel: +2',
-      invalidDamagePercent:
-        'Skadeprocenten skal være mellem 1 og 1000 (fik "{value}"). Eksempel: 125',
+      damageScalingRemoved:
+        'Skadeskalering blev fjernet i version 1.0.2, fordi den aldrig ændrede noget på tokenet. Forudindstillinger skalerer nu kun HP og AC; juster selv skadeslag, hvis du vil have et væsen til at slå hårdere.',
       invalidDuplicateCount: 'Duplikatantal skal være mellem 1 og 50 (fik "{value}"). Eksempel: 3',
       invalidEncounterName:
         'Ugyldigt mødenavn: "{name}". Navne kan indeholde bogstaver, cifre, mellemrum, bindestreger og understregninger (maks. 64 tegn).',
@@ -1643,7 +1728,6 @@ const CombatEncounterDirectorMod = (() => {
       hp: 'HP',
       ac: 'AC',
       acModifier: 'AC modifikator',
-      damage: 'Skade',
       appliedTo: 'Anvendt til',
       copiesPerToken: 'Kopier pr. token',
       totalCreated: 'Samlet oprettet',
@@ -1716,10 +1800,12 @@ const CombatEncounterDirectorMod = (() => {
       deckViewPositioning: 'Positionering',
       deckViewAdmin: 'Admin',
       deckViewLabel: 'Udsigt:',
+      languageCode: 'Kode',
+      languageName: 'Sprog',
+      languageNative: 'Eget navn',
       partySizeLabel: 'Feststørrelse:',
       hpPercentLabel: 'HP %:',
       acModLabel: 'AC modifikator:',
-      damagePercentLabel: 'Skade %:',
       load: 'Indlæs',
       delete: 'Slet',
       quickActions: 'Hurtige handlinger',
@@ -1749,6 +1835,15 @@ const CombatEncounterDirectorMod = (() => {
       setHpBar2: 'Indstil HP bar 2',
       setAcBar2: 'Indstil AC bar 2',
       disableAc: 'Deaktiver AC',
+      presetReference: 'Oversigt over forudindstillinger',
+      presetReferenceDesc:
+        'Hvad hver forudindstilling ændrer. Eksemplerne er for et monster med {hp} HP og AC {ac}. HP afrundes til nærmeste hele tal, og et såret monster beholder den samme andel af sin HP.',
+      partyPresets: 'Gruppe-forudindstillinger',
+      bossPresets: 'Boss-forudindstillinger',
+      presetPlayers: 'Spillere',
+      presetChanges: 'Ændringer',
+      presetExample: 'Eksempel',
+      presetHpSet: 'sat til {hp}',
     },
     report: {
       summary: 'Oversigt',
@@ -1764,7 +1859,6 @@ const CombatEncounterDirectorMod = (() => {
       layerCol: 'Lag',
       hpCol: 'HP',
       acCol: 'AC',
-      dmgCol: 'Dmg',
       presetCol: 'Forudindstillet',
     },
   };
@@ -1776,7 +1870,6 @@ const CombatEncounterDirectorMod = (() => {
       scalingPresetReady: 'Schaalvoorinstelling gereed',
       hpUpdated: 'HP-schaalverdeling bijgewerkt',
       acUpdated: 'AC-schaling bijgewerkt',
-      damageUpdated: 'Schadeschaal bijgewerkt',
       bossPreset: 'Boss-voorinstelling: {preset}',
       partySize: 'Partijgrootte: {size}',
       reinforcementsCreated: 'Versterkingen gemaakt',
@@ -1806,7 +1899,7 @@ const CombatEncounterDirectorMod = (() => {
       unknownCommandHint: 'Typ !ced help voor een lijst met opdrachten.',
       noTokensSelected: 'Geen tokens geselecteerd. Selecteer eerst tokens op de kaart.',
       unknownScaleAction: 'Onbekende schaalactie: "{action}".',
-      scaleActionHint: 'Geldige acties: preset, party, hp, ac, damage, apply',
+      scaleActionHint: 'Geldige acties: preset, party, hp, ac, apply',
       unknownPartyPreset: "Onbekende partijvoorinstelling: '{preset}'.",
       partyPresetHint: 'Geldige voorinstellingen: {presets}',
       missingBossPreset: 'Ontbrekende vooraf ingestelde naam van de baas.',
@@ -1849,8 +1942,8 @@ const CombatEncounterDirectorMod = (() => {
         'Het HP-percentage moet tussen 1 en 1000 liggen (kreeg "{value}"). Voorbeeld: 150',
       invalidAcModifier:
         'AC-modifier moet tussen -10 en +10 liggen (kreeg "{value}"). Voorbeeld: +2',
-      invalidDamagePercent:
-        'Het schadepercentage moet tussen 1 en 1000 liggen (kreeg "{value}"). Voorbeeld: 125',
+      damageScalingRemoved:
+        'Schaling van schade is in versie 1.0.2 verwijderd omdat het nooit iets aan het token veranderde. Voorinstellingen schalen nu alleen HP en AC; pas de schadeworpen zelf aan als je wilt dat een wezen harder slaat.',
       invalidDuplicateCount:
         'Het dubbele aantal moet tussen 1 en 50 liggen (kreeg "{value}"). Voorbeeld: 3',
       invalidEncounterName:
@@ -1876,7 +1969,6 @@ const CombatEncounterDirectorMod = (() => {
       hp: 'PK',
       ac: 'AC',
       acModifier: 'AC-modificator',
-      damage: 'Schade',
       appliedTo: 'Toegepast op',
       copiesPerToken: 'Kopieën per token',
       totalCreated: 'Totaal gemaakt',
@@ -1949,10 +2041,12 @@ const CombatEncounterDirectorMod = (() => {
       deckViewPositioning: 'Positionering',
       deckViewAdmin: 'Beheerder',
       deckViewLabel: 'Weergave:',
+      languageCode: 'Code',
+      languageName: 'Taal',
+      languageNative: 'Eigen naam',
       partySizeLabel: 'Partijgrootte:',
       hpPercentLabel: 'PK%:',
       acModLabel: 'AC-modificator:',
-      damagePercentLabel: 'Schade %:',
       load: 'Laden',
       delete: 'Verwijderen',
       quickActions: 'Snelle acties',
@@ -1984,6 +2078,15 @@ const CombatEncounterDirectorMod = (() => {
       setHpBar2: 'Stel HP-balk 2 in',
       setAcBar2: 'AC-balk 2 instellen',
       disableAc: 'Schakel AC uit',
+      presetReference: 'Overzicht van voorinstellingen',
+      presetReferenceDesc:
+        'Wat elke preset verandert. De voorbeelden zijn voor een monster met {hp} HP en AC {ac}. HP wordt afgerond op het dichtstbijzijnde gehele getal, en een gewond monster behoudt hetzelfde deel van zijn HP.',
+      partyPresets: 'Groepsvoorinstellingen',
+      bossPresets: 'Boss-voorinstellingen',
+      presetPlayers: 'Spelers',
+      presetChanges: 'Veranderingen',
+      presetExample: 'Voorbeeld',
+      presetHpSet: 'ingesteld op {hp}',
     },
     report: {
       summary: 'Samenvatting',
@@ -1999,7 +2102,6 @@ const CombatEncounterDirectorMod = (() => {
       layerCol: 'Laag',
       hpCol: 'PK',
       acCol: 'AC',
-      dmgCol: 'Dmg',
       presetCol: 'Voorinstelling',
     },
   };
@@ -2011,7 +2113,6 @@ const CombatEncounterDirectorMod = (() => {
       scalingPresetReady: 'Scaling Preset Ready',
       hpUpdated: 'HP Scaling Updated',
       acUpdated: 'AC Scaling Updated',
-      damageUpdated: 'Damage Scaling Updated',
       bossPreset: 'Boss Preset: {preset}',
       partySize: 'Party Size: {size}',
       reinforcementsCreated: 'Reinforcements Created',
@@ -2041,7 +2142,7 @@ const CombatEncounterDirectorMod = (() => {
       unknownCommandHint: 'Type !ced help for a list of commands.',
       noTokensSelected: 'No tokens selected. Select tokens on the map first.',
       unknownScaleAction: 'Unknown scale action: "{action}".',
-      scaleActionHint: 'Valid actions: preset, party, hp, ac, damage, apply',
+      scaleActionHint: 'Valid actions: preset, party, hp, ac, apply',
       unknownPartyPreset: 'Unknown party preset: "{preset}".',
       partyPresetHint: 'Valid presets: {presets}',
       missingBossPreset: 'Missing boss preset name.',
@@ -2081,8 +2182,8 @@ const CombatEncounterDirectorMod = (() => {
       invalidPartySize: 'Party size must be a number between 1 and 30 (got "{value}").',
       invalidHpPercent: 'HP percentage must be between 1 and 1000 (got "{value}"). Example: 150',
       invalidAcModifier: 'AC modifier must be between -10 and +10 (got "{value}"). Example: +2',
-      invalidDamagePercent:
-        'Damage percentage must be between 1 and 1000 (got "{value}"). Example: 125',
+      damageScalingRemoved:
+        'Damage scaling was removed in version 1.0.2 because it never changed anything on the token. Presets now scale HP and AC only; adjust damage rolls yourself if you want a creature to hit harder.',
       invalidDuplicateCount: 'Duplicate count must be between 1 and 50 (got "{value}"). Example: 3',
       invalidEncounterName:
         'Invalid encounter name: "{name}". Names may contain letters, digits, spaces, hyphens and underscores (max 64 characters).',
@@ -2107,7 +2208,6 @@ const CombatEncounterDirectorMod = (() => {
       hp: 'HP',
       ac: 'AC',
       acModifier: 'AC modifier',
-      damage: 'Damage',
       appliedTo: 'Applied to',
       copiesPerToken: 'Copies per token',
       totalCreated: 'Total created',
@@ -2180,10 +2280,12 @@ const CombatEncounterDirectorMod = (() => {
       deckViewPositioning: 'Positioning',
       deckViewAdmin: 'Admin',
       deckViewLabel: 'View:',
+      languageCode: 'Code',
+      languageName: 'Language',
+      languageNative: 'Native name',
       partySizeLabel: 'Party size:',
       hpPercentLabel: 'HP %:',
       acModLabel: 'AC modifier:',
-      damagePercentLabel: 'Damage %:',
       load: 'Load',
       delete: 'Delete',
       quickActions: 'Quick Actions',
@@ -2213,6 +2315,15 @@ const CombatEncounterDirectorMod = (() => {
       setHpBar2: 'Set HP bar 2',
       setAcBar2: 'Set AC bar 2',
       disableAc: 'Disable AC',
+      presetReference: 'Preset Reference',
+      presetReferenceDesc:
+        'What each preset changes. The examples are for a monster with {hp} HP and AC {ac}. HP is rounded to the nearest whole number, and a wounded monster keeps the same share of its HP.',
+      partyPresets: 'Party presets',
+      bossPresets: 'Boss presets',
+      presetPlayers: 'Players',
+      presetChanges: 'Changes',
+      presetExample: 'Example',
+      presetHpSet: 'set to {hp}',
     },
     report: {
       summary: 'Summary',
@@ -2228,7 +2339,6 @@ const CombatEncounterDirectorMod = (() => {
       layerCol: 'Layer',
       hpCol: 'HP',
       acCol: 'AC',
-      dmgCol: 'Dmg',
       presetCol: 'Preset',
     },
   };
@@ -2240,7 +2350,6 @@ const CombatEncounterDirectorMod = (() => {
       scalingPresetReady: 'Skaalaus valmiiksi asetettu',
       hpUpdated: 'HP:n skaalaus päivitetty',
       acUpdated: 'AC-skaalaus päivitetty',
-      damageUpdated: 'Vahinkojen skaalaus päivitetty',
       bossPreset: 'Pomon esiasetus: {preset}',
       partySize: 'Juhlan koko: {size}',
       reinforcementsCreated: 'Vahvikkeet luotu',
@@ -2270,7 +2379,7 @@ const CombatEncounterDirectorMod = (() => {
       unknownCommandHint: 'Kirjoita komentoluettelo !ced help.',
       noTokensSelected: 'Tunnuksia ei ole valittu. Valitse ensin tunnukset kartalta.',
       unknownScaleAction: 'Tuntematon mittakaavatoiminto: "{action}".',
-      scaleActionHint: 'Kelvolliset toiminnot: esiasetus, juhla, hp, ac, vahinko, käytä',
+      scaleActionHint: 'Kelvolliset toiminnot: esiasetus, juhla, hp, ac, käytä',
       unknownPartyPreset: 'Tuntemattoman osapuolen esiasetus: "{preset}".',
       partyPresetHint: 'Kelvolliset esiasetukset: {presets}',
       missingBossPreset: 'Esiasetetun pomon nimi puuttuu.',
@@ -2311,8 +2420,8 @@ const CombatEncounterDirectorMod = (() => {
       invalidHpPercent: 'HP-prosentin on oltava välillä 1–1000 (saat "{value}"). Esimerkki: 150',
       invalidAcModifier:
         'AC-muuntimen on oltava välillä -10 ja +10 (saat "{value}"). Esimerkki: +2',
-      invalidDamagePercent:
-        'Vahinkoprosentin on oltava välillä 1–1 000 (saat "{value}"). Esimerkki: 125',
+      damageScalingRemoved:
+        'Vaurioiden skaalaus poistettiin versiossa 1.0.2, koska se ei koskaan muuttanut mitään pelimerkissä. Esiasetukset skaalaavat nyt vain HP:n ja AC:n; säädä vahinkoheitot itse, jos haluat olennon iskevän kovemmin.',
       invalidDuplicateCount: 'Kopioiden määrän on oltava 1–50 (saat "{value}"). Esimerkki: 3',
       invalidEncounterName:
         'Virheellinen kohtaamisen nimi: "{name}". Nimet voivat sisältää kirjaimia, numeroita, välilyöntejä, yhdysmerkkejä ja alaviivoja (enintään 64 merkkiä).',
@@ -2336,7 +2445,6 @@ const CombatEncounterDirectorMod = (() => {
       hp: 'HP',
       ac: 'AC',
       acModifier: 'AC muuntaja',
-      damage: 'Vahingoittaa',
       appliedTo: 'Sovellettu',
       copiesPerToken: 'Kopioita per merkki',
       totalCreated: 'Luotu yhteensä',
@@ -2409,10 +2517,12 @@ const CombatEncounterDirectorMod = (() => {
       deckViewPositioning: 'Paikannus',
       deckViewAdmin: 'Admin',
       deckViewLabel: 'Näytä:',
+      languageCode: 'Koodi',
+      languageName: 'Kieli',
+      languageNative: 'Alkuperäinen nimi',
       partySizeLabel: 'Juhlan koko:',
       hpPercentLabel: 'HP %:',
       acModLabel: 'AC-muunnin:',
-      damagePercentLabel: 'Vahinko %:',
       load: 'Ladata',
       delete: 'Poistaa',
       quickActions: 'Nopeat toiminnot',
@@ -2445,6 +2555,15 @@ const CombatEncounterDirectorMod = (() => {
       setHpBar2: 'Aseta HP bar 2',
       setAcBar2: 'Aseta AC bar 2',
       disableAc: 'Poista AC käytöstä',
+      presetReference: 'Esiasetusten viite',
+      presetReferenceDesc:
+        'Mitä kukin esiasetus muuttaa. Esimerkit koskevat hirviötä, jossa on {hp} HP ja AC {ac}. HP pyöristetään lähimpään kokonaislukuun, ja haavoittunut hirviö säilyttää saman osuuden HP:staan.',
+      partyPresets: 'Seurueen esiasetukset',
+      bossPresets: 'Pomojen esiasetukset',
+      presetPlayers: 'Pelaajat',
+      presetChanges: 'Muutokset',
+      presetExample: 'Esimerkki',
+      presetHpSet: 'asetetaan arvoon {hp}',
     },
     report: {
       summary: 'Yhteenveto',
@@ -2460,7 +2579,6 @@ const CombatEncounterDirectorMod = (() => {
       layerCol: 'Kerros',
       hpCol: 'HP',
       acCol: 'AC',
-      dmgCol: 'Dmg',
       presetCol: 'Esiasetus',
     },
   };
@@ -2472,7 +2590,6 @@ const CombatEncounterDirectorMod = (() => {
       scalingPresetReady: "Mise à l'échelle prédéfinie prête",
       hpUpdated: "Mise à l'échelle HP mise à jour",
       acUpdated: "Mise à l'échelle AC mise à jour",
-      damageUpdated: 'Échelle des dégâts mise à jour',
       bossPreset: 'Préréglage du patron : {preset}',
       partySize: 'Taille du groupe : {size}',
       reinforcementsCreated: 'Renforts créés',
@@ -2502,7 +2619,7 @@ const CombatEncounterDirectorMod = (() => {
       unknownCommandHint: 'Tapez !ced help pour une liste de commandes.',
       noTokensSelected: 'Aucun jeton sélectionné. Sélectionnez d’abord les jetons sur la carte.',
       unknownScaleAction: 'Action d\'échelle inconnue : "{action}".',
-      scaleActionHint: 'Actions valides : préréglage, fête, hp, ac, dégâts, appliquer',
+      scaleActionHint: 'Actions valides : préréglage, fête, hp, ac, appliquer',
       unknownPartyPreset: 'Préréglage de fête inconnu : "{preset}".',
       partyPresetHint: 'Préréglages valides : {presets}',
       missingBossPreset: 'Nom prédéfini du boss manquant.',
@@ -2546,8 +2663,8 @@ const CombatEncounterDirectorMod = (() => {
         'Le pourcentage de HP doit être compris entre 1 et 1000 (obtenu "{value}"). Exemple : 150',
       invalidAcModifier:
         'Le modificateur AC doit être compris entre -10 et +10 (obtenu "{value}"). Exemple : +2',
-      invalidDamagePercent:
-        'Le pourcentage de dégâts doit être compris entre 1 et 1 000 (obtenu "{value}"). Exemple : 125',
+      damageScalingRemoved:
+        "La mise à l'échelle des dégâts a été supprimée dans la version 1.0.2 car elle n'a jamais rien changé sur le jeton. Les préréglages mettent désormais à l'échelle HP et AC uniquement ; ajustez vous-même les jets de dégâts si vous voulez qu'une créature frappe plus fort.",
       invalidDuplicateCount:
         'Le nombre de doublons doit être compris entre 1 et 50 (obtenu "{value}"). Exemple : 3',
       invalidEncounterName:
@@ -2574,7 +2691,6 @@ const CombatEncounterDirectorMod = (() => {
       hp: 'HP',
       ac: 'CA',
       acModifier: 'Modificateur AC',
-      damage: 'Dommage',
       appliedTo: 'Appliqué à',
       copiesPerToken: 'Copies par jeton',
       totalCreated: 'Total créé',
@@ -2647,10 +2763,12 @@ const CombatEncounterDirectorMod = (() => {
       deckViewPositioning: 'Positionnement',
       deckViewAdmin: 'Administrateur',
       deckViewLabel: 'Voir:',
+      languageCode: 'Code',
+      languageName: 'Langue',
+      languageNative: 'Nom natif',
       partySizeLabel: 'Taille du groupe :',
       hpPercentLabel: '% de PV :',
       acModLabel: 'Modificateur AC :',
-      damagePercentLabel: 'Dommage %:',
       load: 'Charger',
       delete: 'Supprimer',
       quickActions: 'Actions rapides',
@@ -2683,6 +2801,15 @@ const CombatEncounterDirectorMod = (() => {
       setHpBar2: 'Définir la barre HP 2',
       setAcBar2: 'Définir la barre AC 2',
       disableAc: 'Désactiver la climatisation',
+      presetReference: 'Référence des préréglages',
+      presetReferenceDesc:
+        "Ce que chaque préréglage change. Les exemples concernent un monstre avec {hp} HP et AC {ac}. Les PV sont arrondis à l'entier le plus proche, et un monstre blessé conserve la même part de ses PV.",
+      partyPresets: 'Préréglages de groupe',
+      bossPresets: 'Préréglages de boss',
+      presetPlayers: 'Joueurs',
+      presetChanges: 'Changements',
+      presetExample: 'Exemple',
+      presetHpSet: 'fixés à {hp}',
     },
     report: {
       summary: 'Résumé',
@@ -2698,7 +2825,6 @@ const CombatEncounterDirectorMod = (() => {
       layerCol: 'Couche',
       hpCol: 'HP',
       acCol: 'CA',
-      dmgCol: 'Dmg',
       presetCol: 'Préréglage',
     },
   };
@@ -2710,7 +2836,6 @@ const CombatEncounterDirectorMod = (() => {
       scalingPresetReady: 'Skalierungsvoreinstellung bereit',
       hpUpdated: 'HP-Skalierung aktualisiert',
       acUpdated: 'AC-Skalierung aktualisiert',
-      damageUpdated: 'Schadensskalierung aktualisiert',
       bossPreset: 'Boss-Voreinstellung: {preset}',
       partySize: 'Gruppengröße: {size}',
       reinforcementsCreated: 'Verstärkungen erstellt',
@@ -2740,8 +2865,7 @@ const CombatEncounterDirectorMod = (() => {
       unknownCommandHint: 'Geben Sie !ced help ein, um eine Liste mit Befehlen anzuzeigen.',
       noTokensSelected: 'Keine Token ausgewählt. Wählen Sie zuerst Token auf der Karte aus.',
       unknownScaleAction: 'Unbekannte Skalenaktion: „{action}“.',
-      scaleActionHint:
-        'Gültige Aktionen: Voreinstellung, Party, PS, Wechselstrom, Schaden, Anwenden',
+      scaleActionHint: 'Gültige Aktionen: Voreinstellung, Party, PS, Wechselstrom, Anwenden',
       unknownPartyPreset: 'Unbekannte Party-Voreinstellung: „{preset}“.',
       partyPresetHint: 'Gültige Voreinstellungen: {presets}',
       missingBossPreset: 'Der Name der Boss-Voreinstellung fehlt.',
@@ -2785,8 +2909,8 @@ const CombatEncounterDirectorMod = (() => {
         'Der HP-Prozentsatz muss zwischen 1 und 1000 liegen (erhielt „{value}“). Beispiel: 150',
       invalidAcModifier:
         'Der AC-Modifikator muss zwischen -10 und +10 liegen (erhielt „{value}“). Beispiel: +2',
-      invalidDamagePercent:
-        'Der Schadensprozentsatz muss zwischen 1 und 1000 liegen (erhielt „{value}“). Beispiel: 125',
+      damageScalingRemoved:
+        'Die Schadensskalierung wurde in Version 1.0.2 entfernt, da dadurch nie etwas am Token geändert wurde. Voreinstellungen skalieren jetzt nur HP und AC; passen Sie die Schadenswürfe selbst an, wenn Sie möchten, dass eine Kreatur härter zuschlägt.',
       invalidDuplicateCount:
         'Die Anzahl der Duplikate muss zwischen 1 und 50 liegen (erhielt „{value}“). Beispiel: 3',
       invalidEncounterName:
@@ -2812,7 +2936,6 @@ const CombatEncounterDirectorMod = (() => {
       hp: 'PS',
       ac: 'Wechselstrom',
       acModifier: 'AC-Modifikator',
-      damage: 'Schaden',
       appliedTo: 'Angewendet auf',
       copiesPerToken: 'Kopien pro Token',
       totalCreated: 'Insgesamt erstellt',
@@ -2885,10 +3008,12 @@ const CombatEncounterDirectorMod = (() => {
       deckViewPositioning: 'Positionierung',
       deckViewAdmin: 'Admin',
       deckViewLabel: 'Sicht:',
+      languageCode: 'Code',
+      languageName: 'Sprache',
+      languageNative: 'Eigenbezeichnung',
       partySizeLabel: 'Gruppengröße:',
       hpPercentLabel: 'HP %:',
       acModLabel: 'AC-Modifikator:',
-      damagePercentLabel: 'Schaden %:',
       load: 'Laden',
       delete: 'Löschen',
       quickActions: 'Schnelle Aktionen',
@@ -2921,6 +3046,15 @@ const CombatEncounterDirectorMod = (() => {
       setHpBar2: 'Stellen Sie HP-Leiste 2 ein',
       setAcBar2: 'AC-Leiste 2 einstellen',
       disableAc: 'Deaktivieren Sie die Klimaanlage',
+      presetReference: 'Voreinstellungen im Überblick',
+      presetReferenceDesc:
+        'Was jede Voreinstellung ändert. Die Beispiele gelten für ein Monster mit {hp} HP und AC {ac}. Die HP werden auf die nächste ganze Zahl gerundet und ein verwundetes Monster behält den gleichen Anteil seiner HP.',
+      partyPresets: 'Gruppen-Voreinstellungen',
+      bossPresets: 'Boss-Voreinstellungen',
+      presetPlayers: 'Spieler',
+      presetChanges: 'Änderungen',
+      presetExample: 'Beispiel',
+      presetHpSet: 'auf {hp} gesetzt',
     },
     report: {
       summary: 'Zusammenfassung',
@@ -2936,7 +3070,6 @@ const CombatEncounterDirectorMod = (() => {
       layerCol: 'Schicht',
       hpCol: 'PS',
       acCol: 'Wechselstrom',
-      dmgCol: 'Schaden',
       presetCol: 'Voreingestellt',
     },
   };
@@ -2948,7 +3081,6 @@ const CombatEncounterDirectorMod = (() => {
       scalingPresetReady: 'Προκαθορισμένη κλιμάκωση έτοιμο',
       hpUpdated: 'Η κλιμάκωση HP ενημερώθηκε',
       acUpdated: 'Ενημερώθηκε η κλιμάκωση AC',
-      damageUpdated: 'Ενημερώθηκε η κλιμάκωση ζημιών',
       bossPreset: 'Προκαθορισμένο αφεντικό: {preset}',
       partySize: 'Μέγεθος πάρτι: {size}',
       reinforcementsCreated: 'Δημιουργήθηκαν ενισχύσεις',
@@ -2978,7 +3110,7 @@ const CombatEncounterDirectorMod = (() => {
       unknownCommandHint: 'Πληκτρολογήστε !ced help για μια λίστα εντολών.',
       noTokensSelected: 'Δεν επιλέχθηκαν διακριτικά. Επιλέξτε πρώτα διακριτικά στο χάρτη.',
       unknownScaleAction: 'Άγνωστη ενέργεια κλίμακας: "{action}".',
-      scaleActionHint: 'Έγκυρες ενέργειες: προεπιλογή, πάρτι, hp, ac, ζημιά, εφαρμογή',
+      scaleActionHint: 'Έγκυρες ενέργειες: προεπιλογή, πάρτι, hp, ac, εφαρμογή',
       unknownPartyPreset: 'Άγνωστο προκαθορισμένο μέρος: "{preset}".',
       partyPresetHint: 'Έγκυρες προεπιλογές: {presets}',
       missingBossPreset: 'Λείπει το προκαθορισμένο όνομα του αφεντικού.',
@@ -3022,8 +3154,8 @@ const CombatEncounterDirectorMod = (() => {
         'Το ποσοστό HP πρέπει να είναι μεταξύ 1 και 1000 (έχει "{value}"). Παράδειγμα: 150',
       invalidAcModifier:
         'Ο τροποποιητής AC πρέπει να είναι μεταξύ -10 και +10 (έλαβε "{value}"). Παράδειγμα: +2',
-      invalidDamagePercent:
-        'Το ποσοστό ζημιάς πρέπει να είναι μεταξύ 1 και 1000 (έλαβε "{value}"). Παράδειγμα: 125',
+      damageScalingRemoved:
+        'Η κλιμάκωση ζημιών καταργήθηκε στην έκδοση 1.0.2 επειδή δεν άλλαξε ποτέ τίποτα στο διακριτικό. Οι προεπιλογές τώρα κλιμακώνουν μόνο HP και AC. Ρυθμίστε μόνοι σας τις ρίψεις ζημιάς εάν θέλετε ένα πλάσμα να χτυπήσει πιο δυνατά.',
       invalidDuplicateCount:
         'Ο αριθμός των διπλότυπων πρέπει να είναι μεταξύ 1 και 50 (λήφθηκε "{value}"). Παράδειγμα: 3',
       invalidEncounterName:
@@ -3049,7 +3181,6 @@ const CombatEncounterDirectorMod = (() => {
       hp: 'ιπποδύναμη',
       ac: 'AC',
       acModifier: 'Τροποποιητής AC',
-      damage: 'Βλάβη',
       appliedTo: 'Εφαρμόστηκε σε',
       copiesPerToken: 'Αντίγραφα ανά διακριτικό',
       totalCreated: 'Σύνολο δημιουργήθηκε',
@@ -3122,10 +3253,12 @@ const CombatEncounterDirectorMod = (() => {
       deckViewPositioning: 'Τοποθέτηση',
       deckViewAdmin: 'Διαχειρ',
       deckViewLabel: 'Θέα:',
+      languageCode: 'Κώδικας',
+      languageName: 'Γλώσσα',
+      languageNative: 'Εγγενές όνομα',
       partySizeLabel: 'Μέγεθος πάρτι:',
       hpPercentLabel: '% HP:',
       acModLabel: 'Τροποποιητής AC:',
-      damagePercentLabel: '% ζημιάς:',
       load: 'Φορτίο',
       delete: 'Διαγράφω',
       quickActions: 'Γρήγορες Ενέργειες',
@@ -3158,6 +3291,15 @@ const CombatEncounterDirectorMod = (() => {
       setHpBar2: 'Ρυθμίστε τη γραμμή HP 2',
       setAcBar2: 'Ρυθμίστε τη γραμμή AC 2',
       disableAc: 'Απενεργοποιήστε το AC',
+      presetReference: 'Αναφορά προεπιλογών',
+      presetReferenceDesc:
+        'Τι αλλάζει κάθε προεπιλογή. Τα παραδείγματα αφορούν ένα τέρας με {hp} HP και AC {ac}. Το HP στρογγυλοποιείται στον πλησιέστερο ακέραιο αριθμό και ένα πληγωμένο τέρας διατηρεί το ίδιο μερίδιο του HP του.',
+      partyPresets: 'Προεπιλογές ομάδας',
+      bossPresets: 'Προεπιλογές boss',
+      presetPlayers: 'Παίκτες',
+      presetChanges: 'Αλλαγές',
+      presetExample: 'Παράδειγμα',
+      presetHpSet: 'ορίζεται σε {hp}',
     },
     report: {
       summary: 'Περίληψη',
@@ -3173,7 +3315,6 @@ const CombatEncounterDirectorMod = (() => {
       layerCol: 'Στρώμα',
       hpCol: 'ιπποδύναμη',
       acCol: 'AC',
-      dmgCol: 'Dmg',
       presetCol: 'Προκαθορισμένη',
     },
   };
@@ -3185,7 +3326,6 @@ const CombatEncounterDirectorMod = (() => {
       scalingPresetReady: 'קנה מידה מוגדר מראש מוכן',
       hpUpdated: 'קנה המידה של HP מעודכן',
       acUpdated: 'קנה מידה AC מעודכן',
-      damageUpdated: 'קנה מידה נזק עודכן',
       bossPreset: 'בוס מוגדר מראש: {preset}',
       partySize: 'גודל מסיבה: {size}',
       reinforcementsCreated: 'חיזוקים נוצרו',
@@ -3215,7 +3355,7 @@ const CombatEncounterDirectorMod = (() => {
       unknownCommandHint: 'הקלד !ced help לקבלת רשימה של פקודות.',
       noTokensSelected: 'לא נבחרו אסימונים. תחילה בחר אסימונים במפה.',
       unknownScaleAction: 'פעולת קנה מידה לא ידועה: "{action}".',
-      scaleActionHint: 'פעולות חוקיות: מוגדר מראש, מסיבה, hp, ac, נזק, החל',
+      scaleActionHint: 'פעולות חוקיות: מוגדר מראש, מסיבה, hp, ac, החל',
       unknownPartyPreset: 'קבוצה לא ידועה מראש: "{preset}".',
       partyPresetHint: 'קביעות מוגדרות מראש חוקיות: {presets}',
       missingBossPreset: 'חסר שם מוגדר מראש של הבוס.',
@@ -3255,7 +3395,8 @@ const CombatEncounterDirectorMod = (() => {
       invalidPartySize: 'גודל המפלגה חייב להיות מספר בין 1 ל-30 (יש "{value}").',
       invalidHpPercent: 'אחוז HP חייב להיות בין 1 ל-1000 (קיבלתי "{value}"). דוגמה: 150',
       invalidAcModifier: 'משנה AC חייב להיות בין -10 ל-+10 (יש "{value}"). דוגמה: +2',
-      invalidDamagePercent: 'אחוז הנזק חייב להיות בין 1 ל-1000 (קיבלתי "{value}"). דוגמה: 125',
+      damageScalingRemoved:
+        'קנה מידה נזק הוסר בגרסה 1.0.2 מכיוון שהוא מעולם לא שינה שום דבר באסימון. הגדרות קבועות מראש משנות כעת את קנה המידה של HP ו-AC בלבד; התאם את הטלות הנזק בעצמך אם אתה רוצה שיצור יפגע חזק יותר.',
       invalidDuplicateCount: 'ספירת כפילויות חייבת להיות בין 1 ל-50 (יש "{value}"). דוגמה: 3',
       invalidEncounterName:
         'שם מפגש לא חוקי: "{name}". שמות עשויים להכיל אותיות, ספרות, רווחים, מקפים וקווים תחתונים (מקסימום 64 תווים).',
@@ -3279,7 +3420,6 @@ const CombatEncounterDirectorMod = (() => {
       hp: 'HP',
       ac: 'AC',
       acModifier: 'משנה AC',
-      damage: 'נֵזֶק',
       appliedTo: 'הוחל על',
       copiesPerToken: 'עותקים לכל אסימון',
       totalCreated: 'סך הכל נוצר',
@@ -3352,10 +3492,12 @@ const CombatEncounterDirectorMod = (() => {
       deckViewPositioning: 'מיקום',
       deckViewAdmin: 'מנהל מערכת',
       deckViewLabel: 'נוֹף:',
+      languageCode: 'קוד',
+      languageName: 'שפה',
+      languageNative: 'שם מקורי',
       partySizeLabel: 'גודל מסיבה:',
       hpPercentLabel: 'HP %:',
       acModLabel: 'משנה AC:',
-      damagePercentLabel: '% נזק:',
       load: 'לִטעוֹן',
       delete: 'לִמְחוֹק',
       quickActions: 'פעולות מהירות',
@@ -3379,6 +3521,15 @@ const CombatEncounterDirectorMod = (() => {
       setHpBar2: 'הגדר את HP bar 2',
       setAcBar2: 'הגדר AC בר 2',
       disableAc: 'השבת AC',
+      presetReference: 'מדריך הגדרות מראש',
+      presetReferenceDesc:
+        'מה כל הגדרה מראש משנה. הדוגמאות מיועדות למפלצת עם {hp} HP ו-AC {ac}. HP מעוגל למספר השלם הקרוב ביותר, ומפלצת פצועה שומרת על אותו חלק מה-HP שלה.',
+      partyPresets: 'הגדרות מראש לקבוצה',
+      bossPresets: 'הגדרות מראש לבוס',
+      presetPlayers: 'שחקנים',
+      presetChanges: 'שינויים',
+      presetExample: 'דוּגמָה',
+      presetHpSet: 'נקבע ל-{hp}',
     },
     report: {
       summary: 'תַקצִיר',
@@ -3394,7 +3545,6 @@ const CombatEncounterDirectorMod = (() => {
       layerCol: 'שִׁכבָה',
       hpCol: 'HP',
       acCol: 'AC',
-      dmgCol: 'Dmg',
       presetCol: 'מוגדר מראש',
     },
   };
@@ -3406,7 +3556,6 @@ const CombatEncounterDirectorMod = (() => {
       scalingPresetReady: 'Méretezési előbeállítás kész',
       hpUpdated: 'A HP méretezés frissítve',
       acUpdated: 'AC skálázás frissítve',
-      damageUpdated: 'A sérülések skálázása frissítve',
       bossPreset: 'Főnök előbeállítása: {preset}',
       partySize: 'Parti mérete: {size}',
       reinforcementsCreated: 'Erősítések létrehozva',
@@ -3436,7 +3585,7 @@ const CombatEncounterDirectorMod = (() => {
       unknownCommandHint: 'Írja be a !ced help parancsot a parancsok listájához.',
       noTokensSelected: 'Nincs kiválasztva token. Először válassza ki a tokeneket a térképen.',
       unknownScaleAction: 'Ismeretlen léptékművelet: „{action}”.',
-      scaleActionHint: 'Érvényes műveletek: előre beállított, party, hp, ac, kár, alkalmaz',
+      scaleActionHint: 'Érvényes műveletek: előre beállított, party, hp, ac, alkalmaz',
       unknownPartyPreset: 'Ismeretlen fél előbeállítása: "{preset}".',
       partyPresetHint: 'Érvényes előbeállítások: {presets}',
       missingBossPreset: 'Hiányzik a főnök előre beállított neve.',
@@ -3480,8 +3629,8 @@ const CombatEncounterDirectorMod = (() => {
         'A HP százalékának 1 és 1000 között kell lennie (a "{value}" értéket kapta). Példa: 150',
       invalidAcModifier:
         'Az AC módosítónak -10 és +10 között kell lennie (a "{value}" értéket kapta). Példa: +2',
-      invalidDamagePercent:
-        'A kár százalékának 1 és 1000 között kell lennie (a "{value}" érték). Példa: 125',
+      damageScalingRemoved:
+        'A sérülések méretezését eltávolították az 1.0.2-es verzióban, mert soha nem változtatott semmit a tokenen. Az előbeállítások most csak a HP-t és az AC-t skálázzák; állítsa be maga a sebzésdobásokat, ha azt szeretné, hogy egy lény erősebben üssön.',
       invalidDuplicateCount:
         'Az ismétlődések számának 1 és 50 között kell lennie (a következőt kapta: „{value}”). Példa: 3',
       invalidEncounterName:
@@ -3508,7 +3657,6 @@ const CombatEncounterDirectorMod = (() => {
       hp: 'HP',
       ac: 'AC',
       acModifier: 'AC módosító',
-      damage: 'Kár',
       appliedTo: 'Alkalmazva',
       copiesPerToken: 'Példányok tokenenként',
       totalCreated: 'Összesen létrehozva',
@@ -3581,10 +3729,12 @@ const CombatEncounterDirectorMod = (() => {
       deckViewPositioning: 'Elhelyezés',
       deckViewAdmin: 'Admin',
       deckViewLabel: 'Kilátás:',
+      languageCode: 'Kód',
+      languageName: 'Nyelv',
+      languageNative: 'Saját név',
       partySizeLabel: 'A társaság mérete:',
       hpPercentLabel: 'HP %:',
       acModLabel: 'AC módosító:',
-      damagePercentLabel: 'Sebzés %:',
       load: 'Terhelés',
       delete: 'Töröl',
       quickActions: 'Gyors műveletek',
@@ -3617,6 +3767,15 @@ const CombatEncounterDirectorMod = (() => {
       setHpBar2: 'Állítsa be a HP bar 2-t',
       setAcBar2: 'Állítsa be az AC sávot 2',
       disableAc: 'Az AC letiltása',
+      presetReference: 'Előbeállítások áttekintése',
+      presetReferenceDesc:
+        'Mit változtatnak az egyes előbeállítások. A példák egy {hp} HP-s, AC {ac} értékű szörnyre vonatkoznak. A HP-t a legközelebbi egész számra kerekítjük, és a sebesült szörny HP-jának ugyanakkora hányadát tartja meg.',
+      partyPresets: 'Csapat-előbeállítások',
+      bossPresets: 'Boss-előbeállítások',
+      presetPlayers: 'Játékosok',
+      presetChanges: 'Változások',
+      presetExample: 'Példa',
+      presetHpSet: 'beállítva: {hp}',
     },
     report: {
       summary: 'Összegzés',
@@ -3632,7 +3791,6 @@ const CombatEncounterDirectorMod = (() => {
       layerCol: 'Réteg',
       hpCol: 'HP',
       acCol: 'AC',
-      dmgCol: 'Dmg',
       presetCol: 'Előre beállított',
     },
   };
@@ -3644,7 +3802,6 @@ const CombatEncounterDirectorMod = (() => {
       scalingPresetReady: 'Preimpostazione ridimensionamento pronta',
       hpUpdated: 'Ridimensionamento HP aggiornato',
       acUpdated: 'Ridimensionamento CA aggiornato',
-      damageUpdated: 'Ridimensionamento dei danni aggiornato',
       bossPreset: 'Preimpostazione Boss: {preset}',
       partySize: 'Dimensioni della festa: {size}',
       reinforcementsCreated: 'Rinforzi creati',
@@ -3674,7 +3831,7 @@ const CombatEncounterDirectorMod = (() => {
       unknownCommandHint: 'Digitare !ced help per un elenco di comandi.',
       noTokensSelected: 'Nessun token selezionato. Seleziona prima i token sulla mappa.',
       unknownScaleAction: 'Azione scala sconosciuta: "{action}".',
-      scaleActionHint: 'Azioni valide: preset, party, hp, ac, danno, applica',
+      scaleActionHint: 'Azioni valide: preset, party, hp, ac, applica',
       unknownPartyPreset: 'Preimpostazione gruppo sconosciuto: "{preset}".',
       partyPresetHint: 'Preimpostazioni valide: {presets}',
       missingBossPreset: 'Nome preimpostato del boss mancante.',
@@ -3719,8 +3876,8 @@ const CombatEncounterDirectorMod = (() => {
         'La percentuale di HP deve essere compresa tra 1 e 1000 (ottenuto "{value}"). Esempio: 150',
       invalidAcModifier:
         'Il modificatore CA deve essere compreso tra -10 e +10 (ottenuto "{value}"). Esempio: +2',
-      invalidDamagePercent:
-        'La percentuale di danno deve essere compresa tra 1 e 1000 (ottenuto "{value}"). Esempio: 125',
+      damageScalingRemoved:
+        'Il ridimensionamento del danno è stato rimosso nella versione 1.0.2 perché non ha mai cambiato nulla sul token. Le preimpostazioni ora scalano solo HP e AC; modifica tu stesso i tiri per i danni se vuoi che una creatura colpisca più duramente.',
       invalidDuplicateCount:
         'Il conteggio dei duplicati deve essere compreso tra 1 e 50 (ottenuto "{value}"). Esempio: 3',
       invalidEncounterName:
@@ -3746,7 +3903,6 @@ const CombatEncounterDirectorMod = (() => {
       hp: 'HP',
       ac: 'AC',
       acModifier: 'Modificatore CA',
-      damage: 'Danno',
       appliedTo: 'Applicato a',
       copiesPerToken: 'Copie per token',
       totalCreated: 'Totale creato',
@@ -3819,10 +3975,12 @@ const CombatEncounterDirectorMod = (() => {
       deckViewPositioning: 'Posizionamento',
       deckViewAdmin: 'Ammin',
       deckViewLabel: 'Visualizzazione:',
+      languageCode: 'Codice',
+      languageName: 'Lingua',
+      languageNative: 'Nome nativo',
       partySizeLabel: 'Dimensione del gruppo:',
       hpPercentLabel: '% HP:',
       acModLabel: 'Modificatore CA:',
-      damagePercentLabel: 'Danno %:',
       load: 'Carico',
       delete: 'Eliminare',
       quickActions: 'Azioni rapide',
@@ -3855,6 +4013,15 @@ const CombatEncounterDirectorMod = (() => {
       setHpBar2: 'Imposta la barra HP 2',
       setAcBar2: 'Impostare la barra CA 2',
       disableAc: 'Disabilita AC',
+      presetReference: 'Riepilogo dei preset',
+      presetReferenceDesc:
+        'Ciò che cambia ogni preimpostazione. Gli esempi sono per un mostro con {hp} HP e AC {ac}. Gli HP vengono arrotondati al numero intero più vicino e un mostro ferito mantiene la stessa quota dei suoi HP.',
+      partyPresets: 'Preset per il gruppo',
+      bossPresets: 'Preset per i boss',
+      presetPlayers: 'Giocatori',
+      presetChanges: 'Cambiamenti',
+      presetExample: 'Esempio',
+      presetHpSet: 'impostati a {hp}',
     },
     report: {
       summary: 'Riepilogo',
@@ -3870,7 +4037,6 @@ const CombatEncounterDirectorMod = (() => {
       layerCol: 'Strato',
       hpCol: 'HP',
       acCol: 'AC',
-      dmgCol: 'Accidenti',
       presetCol: 'Preimpostato',
     },
   };
@@ -3882,7 +4048,6 @@ const CombatEncounterDirectorMod = (() => {
       scalingPresetReady: 'スケーリングプリセット対応',
       hpUpdated: 'HPスケーリングが更新されました',
       acUpdated: 'AC スケーリングが更新されました',
-      damageUpdated: 'ダメージスケーリングが更新されました',
       bossPreset: 'ボスプリセット: {preset}',
       partySize: 'パーティーの規模: {size}',
       reinforcementsCreated: '増援が作成されました',
@@ -3912,7 +4077,7 @@ const CombatEncounterDirectorMod = (() => {
       unknownCommandHint: 'コマンドのリストを表示するには、「!ced help」と入力します。',
       noTokensSelected: 'トークンが選択されていません。まずマップ上のトークンを選択します。',
       unknownScaleAction: '不明なスケール アクション: "{action}"。',
-      scaleActionHint: '有効なアクション: プリセット、パーティー、HP、AC、ダメージ、適用',
+      scaleActionHint: '有効なアクション: プリセット、パーティー、HP、AC、適用',
       unknownPartyPreset: '不明なパーティのプリセット:「{preset}」。',
       partyPresetHint: '有効なプリセット: {presets}',
       missingBossPreset: 'ボスのプリセット名がありません。',
@@ -3954,8 +4119,8 @@ const CombatEncounterDirectorMod = (() => {
       invalidHpPercent:
         'HP パーセンテージは 1 ～ 1000 でなければなりません (「{value}」を取得)。例: 150',
       invalidAcModifier: 'AC 修飾子は -10 ～ +10 でなければなりません (「{value}」を取得)。例: +2',
-      invalidDamagePercent:
-        'ダメージの割合は 1 ～ 1000 でなければなりません (「{value}」を取得)。例: 125',
+      damageScalingRemoved:
+        'ダメージ スケーリングはトークンに何も変更を加えなかったため、バージョン 1.0.2 で削除されました。プリセットは HP と AC のみをスケールするようになりました。クリーチャーの攻撃を強くしたい場合は、ダメージロールを自分で調整してください。',
       invalidDuplicateCount: '重複数は 1 ～ 50 である必要があります (「{value}」を取得)。例: 3',
       invalidEncounterName:
         '無効なエンカウント名:「{name}」。名前には文字、数字、スペース、ハイフン、アンダースコアを含めることができます (最大 64 文字)。',
@@ -3980,7 +4145,6 @@ const CombatEncounterDirectorMod = (() => {
       hp: 'HP',
       ac: '交流',
       acModifier: 'ACモディファイアー',
-      damage: 'ダメージ',
       appliedTo: '適用対象',
       copiesPerToken: 'トークンあたりのコピー数',
       totalCreated: '作成された合計',
@@ -4053,10 +4217,12 @@ const CombatEncounterDirectorMod = (() => {
       deckViewPositioning: '位置決め',
       deckViewAdmin: '管理者',
       deckViewLabel: 'ビュー：',
+      languageCode: 'コード',
+      languageName: '言語',
+      languageNative: '現地名',
       partySizeLabel: 'パーティーの規模:',
       hpPercentLabel: 'HP %:',
       acModLabel: 'AC モディファイア:',
-      damagePercentLabel: 'ダメージ ％：',
       load: '負荷',
       delete: '消去',
       quickActions: 'クイックアクション',
@@ -4088,6 +4254,15 @@ const CombatEncounterDirectorMod = (() => {
       setHpBar2: 'HPバー2を設定する',
       setAcBar2: 'ACバー2の設定',
       disableAc: 'ACを無効にする',
+      presetReference: 'プリセット一覧',
+      presetReferenceDesc:
+        '各プリセットの変更内容。例は、HP {hp} および AC {ac} を持つモンスターの場合です。 HP は最も近い整数に四捨五入され、負傷したモンスターはその HP の同じ割合を維持します。',
+      partyPresets: 'パーティープリセット',
+      bossPresets: 'ボスプリセット',
+      presetPlayers: 'プレイヤー数',
+      presetChanges: '変更点',
+      presetExample: '例',
+      presetHpSet: '{hp} に固定',
     },
     report: {
       summary: 'まとめ',
@@ -4103,7 +4278,6 @@ const CombatEncounterDirectorMod = (() => {
       layerCol: '層',
       hpCol: 'HP',
       acCol: '交流',
-      dmgCol: 'ダメージ',
       presetCol: 'プリセット',
     },
   };
@@ -4115,7 +4289,6 @@ const CombatEncounterDirectorMod = (() => {
       scalingPresetReady: '스케일링 프리셋 준비',
       hpUpdated: 'HP 스케일링 업데이트됨',
       acUpdated: 'AC 스케일링 업데이트됨',
-      damageUpdated: '피해 규모가 업데이트되었습니다.',
       bossPreset: '보스 사전 설정: {preset}',
       partySize: '파티 규모: {size}',
       reinforcementsCreated: '지원군 생성됨',
@@ -4145,7 +4318,7 @@ const CombatEncounterDirectorMod = (() => {
       unknownCommandHint: '명령 목록을 보려면 !ced help를 입력하세요.',
       noTokensSelected: '선택된 토큰이 없습니다. 먼저 지도에서 토큰을 선택하세요.',
       unknownScaleAction: '알 수 없는 크기 조정 작업: "{action}".',
-      scaleActionHint: '유효한 작업: 사전 설정, 파티, hp, ac, 손상, 적용',
+      scaleActionHint: '유효한 작업: 사전 설정, 파티, hp, ac, 적용',
       unknownPartyPreset: '알 수 없는 파티 사전 설정: "{preset}".',
       partyPresetHint: '유효한 사전 설정: {presets}',
       missingBossPreset: '보스 사전 설정 이름이 없습니다.',
@@ -4185,7 +4358,8 @@ const CombatEncounterDirectorMod = (() => {
       invalidPartySize: '파티 규모는 1에서 30 사이의 숫자여야 합니다("{value}" 있음).',
       invalidHpPercent: 'HP 비율은 1에서 1000 사이여야 합니다("{value}" 있음). 예: 150',
       invalidAcModifier: 'AC 수정자는 -10에서 +10 사이여야 합니다("{value}" 있음). 예: +2',
-      invalidDamagePercent: '피해 비율은 1에서 1000 사이여야 합니다("{value}" 있음). 예: 125',
+      damageScalingRemoved:
+        '피해 스케일링은 토큰의 어떤 것도 바꾸지 않았기 때문에 버전 1.0.2에서 제거되었습니다. 이제 사전 설정은 HP와 AC만 조정합니다. 생물이 더 세게 공격하게 하려면 피해 굴림을 직접 조정하세요.',
       invalidDuplicateCount: '중복 개수는 1에서 50 사이여야 합니다("{value}" 있음). 예: 3',
       invalidEncounterName:
         '잘못된 만남 이름: "{name}". 이름에는 문자, 숫자, 공백, 하이픈, 밑줄(최대 64자)이 포함될 수 있습니다.',
@@ -4209,7 +4383,6 @@ const CombatEncounterDirectorMod = (() => {
       hp: 'HP',
       ac: '교류',
       acModifier: 'AC 수정자',
-      damage: '손상',
       appliedTo: '적용대상',
       copiesPerToken: '토큰당 복사본',
       totalCreated: '생성된 총계',
@@ -4282,10 +4455,12 @@ const CombatEncounterDirectorMod = (() => {
       deckViewPositioning: '포지셔닝',
       deckViewAdmin: '관리자',
       deckViewLabel: '보다:',
+      languageCode: '암호',
+      languageName: '언어',
+      languageNative: '현지 이름',
       partySizeLabel: '파티 규모:',
       hpPercentLabel: 'HP %:',
       acModLabel: 'AC 수정자:',
-      damagePercentLabel: '손상 %:',
       load: '짐',
       delete: '삭제',
       quickActions: '빠른 작업',
@@ -4312,6 +4487,15 @@ const CombatEncounterDirectorMod = (() => {
       setHpBar2: 'HP 바 2 설정',
       setAcBar2: 'AC 바 2 설정',
       disableAc: 'AC 비활성화',
+      presetReference: '프리셋 안내',
+      presetReferenceDesc:
+        '각 사전 설정이 변경되는 사항. 예는 {hp} HP와 AC {ac}을 가진 몬스터에 대한 것입니다. HP는 가장 가까운 정수로 반올림되며, 부상당한 몬스터는 HP의 동일한 비율을 유지합니다.',
+      partyPresets: '파티 프리셋',
+      bossPresets: '보스 프리셋',
+      presetPlayers: '플레이어',
+      presetChanges: '변경 사항',
+      presetExample: '예시',
+      presetHpSet: '{hp}(으)로 고정',
     },
     report: {
       summary: '요약',
@@ -4327,7 +4511,6 @@ const CombatEncounterDirectorMod = (() => {
       layerCol: '층',
       hpCol: 'HP',
       acCol: '교류',
-      dmgCol: '데미지',
       presetCol: '프리셋',
     },
   };
@@ -4339,7 +4522,6 @@ const CombatEncounterDirectorMod = (() => {
       scalingPresetReady: 'Gotowe ustawienie wstępne skalowania',
       hpUpdated: 'Zaktualizowano skalowanie HP',
       acUpdated: 'Zaktualizowano skalowanie AC',
-      damageUpdated: 'Zaktualizowano skalowanie obrażeń',
       bossPreset: 'Ustawienie szefa: {preset}',
       partySize: 'Rozmiar imprezy: {size}',
       reinforcementsCreated: 'Utworzono posiłki',
@@ -4369,8 +4551,7 @@ const CombatEncounterDirectorMod = (() => {
       unknownCommandHint: 'Wpisz !ced help, aby wyświetlić listę poleceń.',
       noTokensSelected: 'Nie wybrano tokenów. Najpierw wybierz żetony na mapie.',
       unknownScaleAction: 'Nieznana akcja skali: „{action}”.',
-      scaleActionHint:
-        'Prawidłowe akcje: ustawienie wstępne, impreza, hp, ac, obrażenia, zastosowanie',
+      scaleActionHint: 'Prawidłowe akcje: ustawienie wstępne, impreza, hp, ac, zastosowanie',
       unknownPartyPreset: 'Nieznane ustawienie grupy: „{preset}”.',
       partyPresetHint: 'Prawidłowe ustawienia wstępne: {presets}',
       missingBossPreset: 'Brakuje wstępnie ustawionej nazwy szefa.',
@@ -4412,8 +4593,8 @@ const CombatEncounterDirectorMod = (() => {
         'Procent HP musi mieścić się w przedziale od 1 do 1000 (otrzymano „{value}”). Przykład: 150',
       invalidAcModifier:
         'Modyfikator AC musi mieścić się w przedziale od -10 do +10 (otrzymano „{value}”). Przykład: +2',
-      invalidDamagePercent:
-        'Procent obrażeń musi mieścić się w przedziale od 1 do 1000 (otrzymano „{value}”). Przykład: 125',
+      damageScalingRemoved:
+        'Skalowanie obrażeń zostało usunięte w wersji 1.0.2, ponieważ nigdy nie zmieniało niczego na tokenie. Ustawienia wstępne skalują teraz tylko HP i AC; samodzielnie dostosuj rzuty na obrażenia, jeśli chcesz, aby stworzenie uderzało mocniej.',
       invalidDuplicateCount:
         'Liczba duplikatów musi mieścić się w przedziale od 1 do 50 (otrzymano „{value}”). Przykład: 3',
       invalidEncounterName:
@@ -4439,7 +4620,6 @@ const CombatEncounterDirectorMod = (() => {
       hp: 'HP',
       ac: 'AC',
       acModifier: 'Modyfikator AC',
-      damage: 'Szkoda',
       appliedTo: 'Zastosowano do',
       copiesPerToken: 'Kopie na token',
       totalCreated: 'Razem utworzono',
@@ -4512,10 +4692,12 @@ const CombatEncounterDirectorMod = (() => {
       deckViewPositioning: 'Pozycjonowanie',
       deckViewAdmin: 'Administrator',
       deckViewLabel: 'Pogląd:',
+      languageCode: 'Kod',
+      languageName: 'Język',
+      languageNative: 'Nazwa rodzima',
       partySizeLabel: 'Rozmiar imprezy:',
       hpPercentLabel: '% HP:',
       acModLabel: 'Modyfikator AC:',
-      damagePercentLabel: 'Szkoda %:',
       load: 'Obciążenie',
       delete: 'Usuwać',
       quickActions: 'Szybkie działania',
@@ -4547,6 +4729,15 @@ const CombatEncounterDirectorMod = (() => {
       setHpBar2: 'Ustaw pasek HP 2',
       setAcBar2: 'Ustaw pasek AC 2',
       disableAc: 'Wyłącz klimatyzację',
+      presetReference: 'Przegląd ustawień wstępnych',
+      presetReferenceDesc:
+        'Co zmienia każde ustawienie wstępne. Przykłady dotyczą potwora z {hp} HP i KP {ac}. HP jest zaokrąglane do najbliższej liczby całkowitej, a ranny potwór zachowuje tę samą część swojego HP.',
+      partyPresets: 'Ustawienia dla drużyny',
+      bossPresets: 'Ustawienia dla bossów',
+      presetPlayers: 'Gracze',
+      presetChanges: 'Zmiany',
+      presetExample: 'Przykład',
+      presetHpSet: 'ustawione na {hp}',
     },
     report: {
       summary: 'Streszczenie',
@@ -4562,7 +4753,6 @@ const CombatEncounterDirectorMod = (() => {
       layerCol: 'Warstwa',
       hpCol: 'HP',
       acCol: 'AC',
-      dmgCol: 'DMG',
       presetCol: 'Wstępnie ustawione',
     },
   };
@@ -4574,7 +4764,6 @@ const CombatEncounterDirectorMod = (() => {
       scalingPresetReady: 'Dimensionamento predefinido pronto',
       hpUpdated: 'Dimensionamento HP atualizado',
       acUpdated: 'Escala AC atualizada',
-      damageUpdated: 'Escala de dano atualizada',
       bossPreset: 'Predefinição do chefe: {preset}',
       partySize: 'Tamanho do grupo: {size}',
       reinforcementsCreated: 'Reforços criados',
@@ -4604,7 +4793,7 @@ const CombatEncounterDirectorMod = (() => {
       unknownCommandHint: 'Digite !ced help para obter uma lista de comandos.',
       noTokensSelected: 'Nenhum token selecionado. Selecione primeiro os tokens no mapa.',
       unknownScaleAction: 'Ação de escala desconhecida: "{action}".',
-      scaleActionHint: 'Ações válidas: predefinição, grupo, hp, ac, dano, aplicar',
+      scaleActionHint: 'Ações válidas: predefinição, grupo, hp, ac, aplicar',
       unknownPartyPreset: 'Predefinição de grupo desconhecido: "{preset}".',
       partyPresetHint: 'Predefinições válidas: {presets}',
       missingBossPreset: 'Nome predefinido do chefe ausente.',
@@ -4646,8 +4835,8 @@ const CombatEncounterDirectorMod = (() => {
         'A percentagem de HP deve estar entre 1 e 1000 (obteve "{value}"). Exemplo: 150',
       invalidAcModifier:
         'O modificador AC deve estar entre -10 e +10 (obteve "{value}"). Exemplo: +2',
-      invalidDamagePercent:
-        'A percentagem de dano deve estar entre 1 e 1000 (obteve "{value}"). Exemplo: 125',
+      damageScalingRemoved:
+        'A escala de dano foi removida na versão 1.0.2 porque nunca mudou nada no token. As predefinições agora apenas dimensionam HP e AC; ajuste você mesmo as jogadas de dano se quiser que uma criatura atinja com mais força.',
       invalidDuplicateCount:
         'A contagem de duplicados deve estar entre 1 e 50 (obtido "{value}"). Exemplo: 3',
       invalidEncounterName:
@@ -4673,7 +4862,6 @@ const CombatEncounterDirectorMod = (() => {
       hp: 'HP',
       ac: 'AC',
       acModifier: 'Modificador AC',
-      damage: 'Dano',
       appliedTo: 'Aplicado a',
       copiesPerToken: 'Cópias por token',
       totalCreated: 'Total criado',
@@ -4746,10 +4934,12 @@ const CombatEncounterDirectorMod = (() => {
       deckViewPositioning: 'Posicionamento',
       deckViewAdmin: 'Administrador',
       deckViewLabel: 'Ver:',
+      languageCode: 'Código',
+      languageName: 'Idioma',
+      languageNative: 'Nome nativo',
       partySizeLabel: 'Tamanho da festa:',
       hpPercentLabel: '% de HP:',
       acModLabel: 'Modificador AC:',
-      damagePercentLabel: 'Dano %:',
       load: 'Carga',
       delete: 'Eliminar',
       quickActions: 'Ações rápidas',
@@ -4782,6 +4972,15 @@ const CombatEncounterDirectorMod = (() => {
       setHpBar2: 'Definir barra HP 2',
       setAcBar2: 'Definir barra AC 2',
       disableAc: 'Desativar CA',
+      presetReference: 'Referência de predefinições',
+      presetReferenceDesc:
+        'O que cada predefinição muda. Os exemplos são para um monstro com {hp} HP e AC {ac}. O HP é arredondado para o número inteiro mais próximo, e um monstro ferido mantém a mesma quota-parte do seu HP.',
+      partyPresets: 'Predefinições de grupo',
+      bossPresets: 'Predefinições de chefe',
+      presetPlayers: 'Jogadores',
+      presetChanges: 'Mudanças',
+      presetExample: 'Exemplo',
+      presetHpSet: 'definido como {hp}',
     },
     report: {
       summary: 'Resumo',
@@ -4797,7 +4996,6 @@ const CombatEncounterDirectorMod = (() => {
       layerCol: 'Camada',
       hpCol: 'HP',
       acCol: 'AC',
-      dmgCol: 'Dano',
       presetCol: 'Predefinido',
     },
   };
@@ -4809,7 +5007,6 @@ const CombatEncounterDirectorMod = (() => {
       scalingPresetReady: 'Dimensionamento predefinido pronto',
       hpUpdated: 'Dimensionamento HP atualizado',
       acUpdated: 'Escala AC atualizada',
-      damageUpdated: 'Escala de dano atualizada',
       bossPreset: 'Predefinição de chefe: {preset}',
       partySize: 'Tamanho do grupo: {size}',
       reinforcementsCreated: 'Reforços criados',
@@ -4839,7 +5036,7 @@ const CombatEncounterDirectorMod = (() => {
       unknownCommandHint: 'Digite !ced help para obter uma lista de comandos.',
       noTokensSelected: 'Nenhum token selecionado. Selecione os tokens no mapa primeiro.',
       unknownScaleAction: 'Ação de escala desconhecida: "{action}".',
-      scaleActionHint: 'Ações válidas: predefinição, grupo, hp, ac, dano, aplicar',
+      scaleActionHint: 'Ações válidas: predefinição, grupo, hp, ac, aplicar',
       unknownPartyPreset: 'Predefinição de grupo desconhecido: "{preset}".',
       partyPresetHint: 'Predefinições válidas: {presets}',
       missingBossPreset: 'Nome predefinido do chefe ausente.',
@@ -4881,8 +5078,8 @@ const CombatEncounterDirectorMod = (() => {
         'A porcentagem de HP deve estar entre 1 e 1000 (obteve "{value}"). Exemplo: 150',
       invalidAcModifier:
         'O modificador AC deve estar entre -10 e +10 (obteve "{value}"). Exemplo: +2',
-      invalidDamagePercent:
-        'A porcentagem de dano deve estar entre 1 e 1000 (obteve "{value}"). Exemplo: 125',
+      damageScalingRemoved:
+        'A escala de dano foi removida na versão 1.0.2 porque nunca mudou nada no token. As predefinições agora dimensionam apenas HP e AC; ajuste você mesmo as jogadas de dano se quiser que uma criatura atinja com mais força.',
       invalidDuplicateCount:
         'A contagem de duplicatas deve estar entre 1 e 50 (obtido "{value}"). Exemplo: 3',
       invalidEncounterName:
@@ -4908,7 +5105,6 @@ const CombatEncounterDirectorMod = (() => {
       hp: 'HP',
       ac: 'AC',
       acModifier: 'Modificador AC',
-      damage: 'Dano',
       appliedTo: 'Aplicado a',
       copiesPerToken: 'Cópias por token',
       totalCreated: 'Total criado',
@@ -4981,10 +5177,12 @@ const CombatEncounterDirectorMod = (() => {
       deckViewPositioning: 'Posicionamento',
       deckViewAdmin: 'Administrador',
       deckViewLabel: 'Visualizar:',
+      languageCode: 'Código',
+      languageName: 'Idioma',
+      languageNative: 'Nome nativo',
       partySizeLabel: 'Tamanho da festa:',
       hpPercentLabel: '% de HP:',
       acModLabel: 'Modificador AC:',
-      damagePercentLabel: 'Dano %:',
       load: 'Carregar',
       delete: 'Excluir',
       quickActions: 'Ações rápidas',
@@ -5016,6 +5214,15 @@ const CombatEncounterDirectorMod = (() => {
       setHpBar2: 'Definir barra HP 2',
       setAcBar2: 'Definir barra AC 2',
       disableAc: 'Desativar CA',
+      presetReference: 'Referência de predefinições',
+      presetReferenceDesc:
+        'O que cada predefinição muda. Os exemplos são para um monstro com {hp} HP e AC {ac}. O HP é arredondado para o número inteiro mais próximo, e um monstro ferido mantém a mesma parcela de seu HP.',
+      partyPresets: 'Predefinições de grupo',
+      bossPresets: 'Predefinições de chefe',
+      presetPlayers: 'Jogadores',
+      presetChanges: 'Mudanças',
+      presetExample: 'Exemplo',
+      presetHpSet: 'definido como {hp}',
     },
     report: {
       summary: 'Resumo',
@@ -5031,7 +5238,6 @@ const CombatEncounterDirectorMod = (() => {
       layerCol: 'Camada',
       hpCol: 'HP',
       acCol: 'AC',
-      dmgCol: 'Dano',
       presetCol: 'Predefinido',
     },
   };
@@ -5043,7 +5249,6 @@ const CombatEncounterDirectorMod = (() => {
       scalingPresetReady: 'Предустановка масштабирования готова',
       hpUpdated: 'Обновление масштабирования HP',
       acUpdated: 'Обновлено масштабирование переменного тока',
-      damageUpdated: 'Обновлено масштабирование урона.',
       bossPreset: 'Предустановка босса: {preset}',
       partySize: 'Размер вечеринки: {size}',
       reinforcementsCreated: 'Подкрепления созданы',
@@ -5073,8 +5278,7 @@ const CombatEncounterDirectorMod = (() => {
       unknownCommandHint: 'Введите !ced help для получения списка команд.',
       noTokensSelected: 'Токены не выбраны. Сначала выберите жетоны на карте.',
       unknownScaleAction: 'Неизвестное масштабное действие: «{action}».',
-      scaleActionHint:
-        'Допустимые действия: предустановка, группа, здоровье, ток, урон, применить.',
+      scaleActionHint: 'Допустимые действия: предустановка, группа, здоровье, ток, применить.',
       unknownPartyPreset: 'Неизвестная предустановка участника: «{preset}».',
       partyPresetHint: 'Допустимые настройки: {presets}.',
       missingBossPreset: 'Отсутствует имя предустановки босса.',
@@ -5116,8 +5320,8 @@ const CombatEncounterDirectorMod = (() => {
       invalidHpPercent: 'Процент HP должен быть между 1 и 1000 (получено "{value}"). Пример: 150',
       invalidAcModifier:
         'Модификатор AC должен быть между -10 и +10 (получено «{value}»). Пример: +2',
-      invalidDamagePercent:
-        'Процент урона должен быть от 1 до 1000 (получено "{value}"). Пример: 125',
+      damageScalingRemoved:
+        'Масштабирование урона было удалено в версии 1.0.2, поскольку оно никогда ничего не меняло в токене. Пресеты теперь масштабируют только HP и AC; отрегулируйте броски урона самостоятельно, если хотите, чтобы существо било сильнее.',
       invalidDuplicateCount:
         'Число дубликатов должно быть от 1 до 50 (получено "{value}"). Пример: 3',
       invalidEncounterName:
@@ -5143,7 +5347,6 @@ const CombatEncounterDirectorMod = (() => {
       hp: 'HP',
       ac: 'переменного тока',
       acModifier: 'модификатор переменного тока',
-      damage: 'Повреждать',
       appliedTo: 'Применяется к',
       copiesPerToken: 'Копий на токен',
       totalCreated: 'Всего создано',
@@ -5216,10 +5419,12 @@ const CombatEncounterDirectorMod = (() => {
       deckViewPositioning: 'Позиционирование',
       deckViewAdmin: 'Админ',
       deckViewLabel: 'Вид:',
+      languageCode: 'Код',
+      languageName: 'Язык',
+      languageNative: 'Самоназвание',
       partySizeLabel: 'Размер вечеринки:',
       hpPercentLabel: 'ХП %:',
       acModLabel: 'Модификатор переменного тока:',
-      damagePercentLabel: 'Повреждать %:',
       load: 'Нагрузка',
       delete: 'Удалить',
       quickActions: 'Быстрые действия',
@@ -5252,6 +5457,15 @@ const CombatEncounterDirectorMod = (() => {
       setHpBar2: 'Установить планку HP 2',
       setAcBar2: 'Установите переменную панель 2',
       disableAc: 'Отключить переменный ток',
+      presetReference: 'Справка по пресетам',
+      presetReferenceDesc:
+        'Что меняет каждый пресет. Примеры приведены для монстра с {hp} HP и AC {ac}. HP округляется до ближайшего целого числа, и раненый монстр сохраняет ту же долю своего HP.',
+      partyPresets: 'Пресеты для группы',
+      bossPresets: 'Пресеты боссов',
+      presetPlayers: 'Игроки',
+      presetChanges: 'Изменения',
+      presetExample: 'Пример',
+      presetHpSet: 'устанавливается на {hp}',
     },
     report: {
       summary: 'Краткое содержание',
@@ -5267,7 +5481,6 @@ const CombatEncounterDirectorMod = (() => {
       layerCol: 'Слой',
       hpCol: 'HP',
       acCol: 'переменного тока',
-      dmgCol: 'урон',
       presetCol: 'Предустановка',
     },
   };
@@ -5279,7 +5492,6 @@ const CombatEncounterDirectorMod = (() => {
       scalingPresetReady: 'Escala preestablecida lista',
       hpUpdated: 'Escalado de HP actualizado',
       acUpdated: 'Escalado de CA actualizado',
-      damageUpdated: 'Escala de daños actualizada',
       bossPreset: 'Preajuste de jefe: {preset}',
       partySize: 'Tamaño del grupo: {size}',
       reinforcementsCreated: 'Refuerzos creados',
@@ -5309,7 +5521,7 @@ const CombatEncounterDirectorMod = (() => {
       unknownCommandHint: 'Escriba !ced help para obtener una lista de comandos.',
       noTokensSelected: 'No hay tokens seleccionados. Primero selecciona fichas en el mapa.',
       unknownScaleAction: 'Acción de escala desconocida: "{action}".',
-      scaleActionHint: 'Acciones válidas: preestablecer, fiesta, hp, ac, dañar, aplicar',
+      scaleActionHint: 'Acciones válidas: preestablecer, fiesta, hp, ac, aplicar',
       unknownPartyPreset: 'Preajuste de grupo desconocido: "{preset}".',
       partyPresetHint: 'Ajustes preestablecidos válidos: {presets}',
       missingBossPreset: 'Falta el nombre preestablecido del jefe.',
@@ -5352,8 +5564,8 @@ const CombatEncounterDirectorMod = (() => {
         'El porcentaje de HP debe estar entre 1 y 1000 (obtuvo "{value}"). Ejemplo: 150',
       invalidAcModifier:
         'El modificador AC debe estar entre -10 y +10 (obtuvo "{value}"). Ejemplo: +2',
-      invalidDamagePercent:
-        'El porcentaje de daño debe estar entre 1 y 1000 (obtuvo "{value}"). Ejemplo: 125',
+      damageScalingRemoved:
+        'La escala de daño se eliminó en la versión 1.0.2 porque nunca cambió nada en el token. Los ajustes preestablecidos ahora escalan HP y AC únicamente; ajusta las tiradas de daño tú mismo si quieres que una criatura golpee más fuerte.',
       invalidDuplicateCount:
         'El recuento de duplicados debe estar entre 1 y 50 (obtuvo "{value}"). Ejemplo: 3',
       invalidEncounterName:
@@ -5379,7 +5591,6 @@ const CombatEncounterDirectorMod = (() => {
       hp: 'caballos de fuerza',
       ac: 'C.A.',
       acModifier: 'modificador de CA',
-      damage: 'Daño',
       appliedTo: 'Aplicado a',
       copiesPerToken: 'Copias por token',
       totalCreated: 'Total creado',
@@ -5452,10 +5663,12 @@ const CombatEncounterDirectorMod = (() => {
       deckViewPositioning: 'Posicionamiento',
       deckViewAdmin: 'Administración',
       deckViewLabel: 'Vista:',
+      languageCode: 'Código',
+      languageName: 'Idioma',
+      languageNative: 'Nombre nativo',
       partySizeLabel: 'Tamaño del grupo:',
       hpPercentLabel: '% de vida:',
       acModLabel: 'Modificador de CA:',
-      damagePercentLabel: 'Daño %:',
       load: 'Carga',
       delete: 'Borrar',
       quickActions: 'Acciones Rápidas',
@@ -5488,6 +5701,15 @@ const CombatEncounterDirectorMod = (() => {
       setHpBar2: 'Establecer barra de HP 2',
       setAcBar2: 'Establecer barra de CA 2',
       disableAc: 'Desactivar aire acondicionado',
+      presetReference: 'Referencia de preajustes',
+      presetReferenceDesc:
+        'Qué cambia cada preset. Los ejemplos son para un monstruo con {hp} HP y AC {ac}. Los HP se redondean al número entero más cercano y un monstruo herido conserva la misma proporción de sus HP.',
+      partyPresets: 'Preajustes de grupo',
+      bossPresets: 'Preajustes de jefe',
+      presetPlayers: 'Jugadores',
+      presetChanges: 'Cambios',
+      presetExample: 'Ejemplo',
+      presetHpSet: 'fijado en {hp}',
     },
     report: {
       summary: 'Resumen',
@@ -5503,7 +5725,6 @@ const CombatEncounterDirectorMod = (() => {
       layerCol: 'Capa',
       hpCol: 'caballos de fuerza',
       acCol: 'C.A.',
-      dmgCol: 'Daño',
       presetCol: 'Programar',
     },
   };
@@ -5515,7 +5736,6 @@ const CombatEncounterDirectorMod = (() => {
       scalingPresetReady: 'Skalningsförinställning redo',
       hpUpdated: 'HP Scaling uppdaterad',
       acUpdated: 'AC-skalning uppdaterad',
-      damageUpdated: 'Skadeskalning uppdaterad',
       bossPreset: 'Boss Preset: {preset}',
       partySize: 'Feststorlek: {size}',
       reinforcementsCreated: 'Förstärkningar skapade',
@@ -5545,7 +5765,7 @@ const CombatEncounterDirectorMod = (() => {
       unknownCommandHint: 'Skriv !ced help för en lista med kommandon.',
       noTokensSelected: 'Inga tokens har valts. Välj tokens på kartan först.',
       unknownScaleAction: 'Okänd skalåtgärd: "{action}".',
-      scaleActionHint: 'Giltiga åtgärder: förinställd, fest, hp, ac, skada, tillämpa',
+      scaleActionHint: 'Giltiga åtgärder: förinställd, fest, hp, ac, tillämpa',
       unknownPartyPreset: 'Okänd part förinställning: "{preset}".',
       partyPresetHint: 'Giltiga förinställningar: {presets}',
       missingBossPreset: 'Förinställningsnamn för chef saknas.',
@@ -5586,8 +5806,8 @@ const CombatEncounterDirectorMod = (() => {
       invalidHpPercent: 'HP-procenten måste vara mellan 1 och 1000 (fick "{value}"). Exempel: 150',
       invalidAcModifier:
         'AC-modifieraren måste vara mellan -10 och +10 (fick "{value}"). Exempel: +2',
-      invalidDamagePercent:
-        'Skadeprocenten måste vara mellan 1 och 1000 (fick "{value}"). Exempel: 125',
+      damageScalingRemoved:
+        'Skadeskalning togs bort i version 1.0.2 eftersom det aldrig ändrade något på token. Förinställningar skalar nu endast HP och AC; justera skadeslag själv om du vill att en varelse ska slå hårdare.',
       invalidDuplicateCount:
         'Dubblettantalet måste vara mellan 1 och 50 (fick "{value}"). Exempel: 3',
       invalidEncounterName:
@@ -5613,7 +5833,6 @@ const CombatEncounterDirectorMod = (() => {
       hp: 'HP',
       ac: 'AC',
       acModifier: 'AC modifierare',
-      damage: 'Skada',
       appliedTo: 'Tillämpas på',
       copiesPerToken: 'Kopior per token',
       totalCreated: 'Totalt skapat',
@@ -5686,10 +5905,12 @@ const CombatEncounterDirectorMod = (() => {
       deckViewPositioning: 'Positionering',
       deckViewAdmin: 'Administration',
       deckViewLabel: 'Se:',
+      languageCode: 'Koda',
+      languageName: 'Språk',
+      languageNative: 'Eget namn',
       partySizeLabel: 'Feststorlek:',
       hpPercentLabel: 'HP %:',
       acModLabel: 'AC modifierare:',
-      damagePercentLabel: 'Skador %:',
       load: 'Ladda',
       delete: 'Radera',
       quickActions: 'Snabba åtgärder',
@@ -5720,6 +5941,15 @@ const CombatEncounterDirectorMod = (() => {
       setHpBar2: 'Ställ in HP bar 2',
       setAcBar2: 'Ställ in AC bar 2',
       disableAc: 'Inaktivera AC',
+      presetReference: 'Översikt över förinställningar',
+      presetReferenceDesc:
+        'Vad varje förinställning ändrar. Exemplen är för ett monster med {hp} HP och AC {ac}. HP avrundas till närmaste heltal, och ett skadat monster behåller samma andel av sin HP.',
+      partyPresets: 'Gruppförinställningar',
+      bossPresets: 'Bossförinställningar',
+      presetPlayers: 'Spelare',
+      presetChanges: 'Ändringar',
+      presetExample: 'Exempel',
+      presetHpSet: 'sätts till {hp}',
     },
     report: {
       summary: 'Sammanfattning',
@@ -5735,7 +5965,6 @@ const CombatEncounterDirectorMod = (() => {
       layerCol: 'Lager',
       hpCol: 'HP',
       acCol: 'AC',
-      dmgCol: 'Dmg',
       presetCol: 'Förinställa',
     },
   };
@@ -5747,7 +5976,6 @@ const CombatEncounterDirectorMod = (() => {
       scalingPresetReady: 'Ölçeklendirme Ön Ayarı Hazır',
       hpUpdated: 'HP Ölçeklendirme Güncellendi',
       acUpdated: 'AC Ölçeklendirme Güncellendi',
-      damageUpdated: 'Hasar Ölçeklendirmesi Güncellendi',
       bossPreset: 'Patron Ön Ayarı: {preset}',
       partySize: 'Parti Boyutu: {size}',
       reinforcementsCreated: 'Takviyeler Oluşturuldu',
@@ -5777,7 +6005,7 @@ const CombatEncounterDirectorMod = (() => {
       unknownCommandHint: 'Komutların listesi için !ced help yazın.',
       noTokensSelected: 'Hiçbir jeton seçilmedi. Önce haritada jetonları seçin.',
       unknownScaleAction: 'Bilinmeyen ölçek eylemi: "{action}".',
-      scaleActionHint: 'Geçerli eylemler: ön ayar, parti, hp, ac, hasar, uygulama',
+      scaleActionHint: 'Geçerli eylemler: ön ayar, parti, hp, ac, uygulama',
       unknownPartyPreset: 'Bilinmeyen taraf ön ayarı: "{preset}".',
       partyPresetHint: 'Geçerli ön ayarlar: {presets}',
       missingBossPreset: 'Patronun ön ayar adı eksik.',
@@ -5820,8 +6048,8 @@ const CombatEncounterDirectorMod = (() => {
       invalidHpPercent: 'HP yüzdesi 1 ile 1000 arasında olmalıdır ("{value}" aldı). Örnek: 150',
       invalidAcModifier:
         'AC değiştirici -10 ile +10 arasında olmalıdır ("{value}" alır). Örnek: +2',
-      invalidDamagePercent:
-        'Hasar yüzdesi 1 ile 1000 arasında olmalıdır ("{value}" aldı). Örnek: 125',
+      damageScalingRemoved:
+        "Hasar ölçeklendirmesi sürüm 1.0.2'de kaldırıldı çünkü token üzerinde hiçbir şeyi değiştirmiyordu. Ön ayarlar artık yalnızca HP ve AC'yi ölçeklendiriyor; bir yaratığın daha sert vurmasını istiyorsanız hasar atışlarını kendiniz ayarlayın.",
       invalidDuplicateCount:
         'Yinelenen kopya sayısı 1 ile 50 arasında olmalıdır ("{value}" aldı). Örnek: 3',
       invalidEncounterName:
@@ -5847,7 +6075,6 @@ const CombatEncounterDirectorMod = (() => {
       hp: 'HP',
       ac: 'klima',
       acModifier: 'AC değiştirici',
-      damage: 'Zarar',
       appliedTo: 'Uygulanan',
       copiesPerToken: 'Belirteç başına kopya sayısı',
       totalCreated: 'Toplam oluşturulan',
@@ -5920,10 +6147,12 @@ const CombatEncounterDirectorMod = (() => {
       deckViewPositioning: 'Konumlandırma',
       deckViewAdmin: 'Yönetici',
       deckViewLabel: 'Görüş:',
+      languageCode: 'Kod',
+      languageName: 'Dil',
+      languageNative: 'Yerel ad',
       partySizeLabel: 'Parti büyüklüğü:',
       hpPercentLabel: "HP %'si:",
       acModLabel: 'AC değiştirici:',
-      damagePercentLabel: 'Zarar %:',
       load: 'Yük',
       delete: 'Silmek',
       quickActions: 'Hızlı Eylemler',
@@ -5956,6 +6185,15 @@ const CombatEncounterDirectorMod = (() => {
       setHpBar2: "HP çubuğu 2'yi ayarlayın",
       setAcBar2: "AC çubuğu 2'yi ayarlayın",
       disableAc: "AC'yi devre dışı bırak",
+      presetReference: 'Ön Ayar Başvurusu',
+      presetReferenceDesc:
+        "Her ön ayarın neleri değiştirdiği. Örnekler {hp} HP ve AC {ac} olan bir canavar içindir. HP, en yakın tam sayıya yuvarlanır ve yaralı bir canavar, HP'sinin aynı payını korur.",
+      partyPresets: 'Grup ön ayarları',
+      bossPresets: 'Boss ön ayarları',
+      presetPlayers: 'Oyuncular',
+      presetChanges: 'Değişiklikler',
+      presetExample: 'Örnek',
+      presetHpSet: '{hp} olarak ayarlanır',
     },
     report: {
       summary: 'Özet',
@@ -5971,7 +6209,6 @@ const CombatEncounterDirectorMod = (() => {
       layerCol: 'Katman',
       hpCol: 'HP',
       acCol: 'klima',
-      dmgCol: 'hasar',
       presetCol: 'Ön ayar',
     },
   };
@@ -5983,7 +6220,6 @@ const CombatEncounterDirectorMod = (() => {
       scalingPresetReady: 'Попереднє налаштування масштабування готове',
       hpUpdated: 'Оновлено масштабування HP',
       acUpdated: 'Масштабування змінного струму оновлено',
-      damageUpdated: 'Оновлено шкалу пошкоджень',
       bossPreset: 'Попереднє налаштування боса: {preset}',
       partySize: 'Розмір групи: {size}',
       reinforcementsCreated: 'Підкріплення створено',
@@ -6013,7 +6249,7 @@ const CombatEncounterDirectorMod = (() => {
       unknownCommandHint: 'Введіть !ced help, щоб отримати список команд.',
       noTokensSelected: 'Токенів не вибрано. Спочатку виберіть жетони на карті.',
       unknownScaleAction: 'Невідома дія масштабу: "{action}".',
-      scaleActionHint: 'Допустимі дії: preset, party, hp, ac, damage, apply',
+      scaleActionHint: 'Допустимі дії: preset, party, hp, ac, apply',
       unknownPartyPreset: 'Налаштування невідомої сторони: "{preset}".',
       partyPresetHint: 'Дійсні попередні налаштування: {presets}',
       missingBossPreset: 'Відсутня назва боса.',
@@ -6054,8 +6290,8 @@ const CombatEncounterDirectorMod = (() => {
       invalidPartySize: 'Розмір групи має бути числом від 1 до 30 (отримано "{value}").',
       invalidHpPercent: 'Відсоток HP має бути від 1 до 1000 (отримано "{value}"). Приклад: 150',
       invalidAcModifier: 'Модифікатор AC має бути від -10 до +10 (отримано "{value}"). Приклад: +2',
-      invalidDamagePercent:
-        'Відсоток шкоди має бути від 1 до 1000 (отримано «{value}»). Приклад: 125',
+      damageScalingRemoved:
+        'Масштабування пошкоджень було видалено у версії 1.0.2, оскільки воно ніколи нічого не змінювало на маркері. Попередні налаштування тепер масштабують лише HP і AC; налаштуйте кидки шкоди самостійно, якщо хочете, щоб істота завдавала сильніших ударів.',
       invalidDuplicateCount:
         'Кількість дублікатів має бути від 1 до 50 (отримано "{value}"). Приклад: 3',
       invalidEncounterName:
@@ -6081,7 +6317,6 @@ const CombatEncounterDirectorMod = (() => {
       hp: 'HP',
       ac: 'AC',
       acModifier: 'Модифікатор змінного струму',
-      damage: 'Пошкодження',
       appliedTo: 'Застосовується до',
       copiesPerToken: 'Копії на токен',
       totalCreated: 'Всього створено',
@@ -6154,10 +6389,12 @@ const CombatEncounterDirectorMod = (() => {
       deckViewPositioning: 'Позиціонування',
       deckViewAdmin: 'адмін',
       deckViewLabel: 'Переглянути:',
+      languageCode: 'Код',
+      languageName: 'Мова',
+      languageNative: 'Рідна назва',
       partySizeLabel: 'Розмір партії:',
       hpPercentLabel: 'HP %:',
       acModLabel: 'Модифікатор змінного струму:',
-      damagePercentLabel: 'Пошкодження %:',
       load: 'навантаження',
       delete: 'Видалити',
       quickActions: 'Швидкі дії',
@@ -6189,6 +6426,15 @@ const CombatEncounterDirectorMod = (() => {
       setHpBar2: 'Встановіть шкалу HP 2',
       setAcBar2: 'Встановіть AC бар 2',
       disableAc: 'Вимкнути AC',
+      presetReference: 'Довідка з пресетів',
+      presetReferenceDesc:
+        'Що змінює кожен пресет. Приклади для монстра з {hp} HP і AC {ac}. HP округлюється до найближчого цілого числа, і поранений монстр зберігає ту саму частку свого HP.',
+      partyPresets: 'Пресети для групи',
+      bossPresets: 'Пресети босів',
+      presetPlayers: 'Гравці',
+      presetChanges: 'Зміни',
+      presetExample: 'Приклад',
+      presetHpSet: 'встановлюється {hp}',
     },
     report: {
       summary: 'Резюме',
@@ -6204,7 +6450,6 @@ const CombatEncounterDirectorMod = (() => {
       layerCol: 'Шар',
       hpCol: 'HP',
       acCol: 'AC',
-      dmgCol: 'Dmg',
       presetCol: 'Попереднє налаштування',
     },
   };
@@ -6635,6 +6880,27 @@ const CombatEncounterDirectorMod = (() => {
   }
 
   /**
+   * Removes the damageModifier field that earlier versions stored on token
+   * records and saved encounter snapshots. Damage scaling never changed anything
+   * on the token, so it was removed; old values are simply discarded. Called once at
+   * start-up, not from ensureState(), which runs on every command.
+   *
+   * @returns {void}
+   */
+  function dropLegacyDamageModifiers() {
+    const s = ensureState();
+    for (const record of Object.values(s.tokens)) {
+      if (isRecord(record)) delete record.damageModifier;
+    }
+    for (const encounter of Object.values(s.encounters)) {
+      if (!isRecord(encounter) || !Array.isArray(encounter.tokens)) continue;
+      for (const snapshot of encounter.tokens) {
+        if (isRecord(snapshot)) delete snapshot.damageModifier;
+      }
+    }
+  }
+
+  /**
    * Merges a possibly incomplete config with defaults, preserving valid values.
    *
    * @param {object} config Existing config to merge.
@@ -6827,7 +7093,6 @@ const CombatEncounterDirectorMod = (() => {
       original,
       hpModifier: 100,
       acModifier: 0,
-      damageModifier: 100,
       preset: null,
       lastModified: Date.now(),
       lastOperation: '',
@@ -7321,7 +7586,6 @@ const CombatEncounterDirectorMod = (() => {
       record.acModifier = preset.ac;
     }
 
-    record.damageModifier = preset.damage;
     record.preset = presetKey;
     record.lastModified = Date.now();
     record.lastOperation = `boss:${presetKey}`;
@@ -7482,7 +7746,6 @@ const CombatEncounterDirectorMod = (() => {
         [`${hpBar}_max`]: snapshotBar(token, hpBar, 'max'),
         hpModifier: record?.hpModifier ?? 100,
         acModifier: record?.acModifier ?? 0,
-        damageModifier: record?.damageModifier ?? 100,
         preset: record?.preset ?? null,
         original: record?.original ?? captureOriginalValues(token),
       };
@@ -7563,7 +7826,6 @@ const CombatEncounterDirectorMod = (() => {
       const record = createTokenRecord(snapshot.tokenId, snapshot.original, tokenPageId);
       record.hpModifier = snapshot.hpModifier;
       record.acModifier = snapshot.acModifier;
-      record.damageModifier = snapshot.damageModifier;
       record.preset = snapshot.preset;
       record.lastOperation = `encounter:load:${name}`;
       record.lastModified = Date.now();
@@ -7597,55 +7859,176 @@ const CombatEncounterDirectorMod = (() => {
       .sort((a, b) => a.localeCompare(b));
   }
 
+  /**
+   * Resolves a named party preset to a scaling object.
+   *
+   * @param {string} presetKey Preset key (e.g. 'standard', 'large').
+   * @returns {object|null} Preset object or null when not found.
+   */
+  function resolvePartyPreset(presetKey) {
+    return PARTY_PRESETS[presetKey] || null;
+  }
+
+  /**
+   * Returns the party preset whose size is nearest to the given party size.
+   *
+   * @param {number} partySize Number of players.
+   * @returns {object} Nearest preset.
+   */
+  function resolvePartyPresetBySize(partySize) {
+    const presets = Object.values(PARTY_PRESETS);
+    if (presets.length === 0) {
+      return null;
+    }
+
+    return presets.reduce((best, preset) => {
+      const bestDelta = Math.abs(best.partySize - partySize);
+      const thisDelta = Math.abs(preset.partySize - partySize);
+      return thisDelta < bestDelta ? preset : best;
+    }, presets[0]);
+  }
+
+  /**
+   * Applies a scaling profile to one token, updating its state record and token bars.
+   *
+   * @param {Graphic} token Roll20 Graphic object.
+   * @param {{ hp: number, ac: number }} profile Scaling values.
+   * @param {string} [operation] Description of the operation for the audit log.
+   * @returns {object} Updated token record.
+   */
+  function applyScalingToToken(token, profile, operation) {
+    const record = ensureTokenRecord(token);
+
+    record.hpModifier = profile.hp;
+    record.acModifier = profile.ac;
+    record.lastModified = Date.now();
+    record.lastOperation = operation;
+
+    applyHpToToken(token, record);
+    applyAcToToken(token, record);
+
+    setTokenRecord(token.id, record);
+    return record;
+  }
+
+  /**
+   * Applies a scaling profile to all selected tokens.
+   *
+   * @param {object} msg Roll20 chat message.
+   * @param {{ hp: number, ac: number }} profile Scaling values.
+   * @param {string} [label] Human-readable label for feedback messages.
+   * @returns {{ applied: string[], skipped: number }} Result summary.
+   */
+  function applyScalingToSelected(msg, profile, label) {
+    const tokens = getSelectedTokens(msg);
+    if (tokens.length === 0) {
+      return { applied: [], skipped: 0 };
+    }
+
+    const applied = [];
+    for (const token of tokens) {
+      applyScalingToToken(token, profile, label || 'scale');
+      applied.push(getTokenName(token));
+    }
+
+    return { applied, skipped: 0 };
+  }
+
+  /**
+   * Parses and validates a party size integer from a string argument.
+   * Rejects partial matches such as "6players".
+   *
+   * @param {string} raw Raw argument value.
+   * @returns {{ valid: boolean, value?: number, message?: string }} Parsed result.
+   */
+  function parsePartySize(raw) {
+    const n = parseStrictInt(raw);
+    if (!Number.isFinite(n) || n < 1 || n > 30) {
+      return {
+        valid: false,
+        message: `Party size must be a number between 1 and 30 (got "${raw}").`,
+      };
+    }
+    return { valid: true, value: n };
+  }
+
+  /**
+   * Parses and validates an HP percentage from a string argument.
+   * A trailing '%' is stripped before parsing. Rejects partial matches.
+   *
+   * @param {string} raw Raw argument value (e.g. '150' or '150%').
+   * @returns {{ valid: boolean, value?: number, message?: string }} Parsed result.
+   */
+  function parseHpPercent(raw) {
+    const cleaned = String(raw)
+      .replace(/^(\d+)%$/, '$1')
+      .trim();
+    const n = parseStrictInt(cleaned);
+    if (!Number.isFinite(n) || n < 1 || n > 1000) {
+      return {
+        valid: false,
+        message: `HP percentage must be between 1 and 1000 (got "${raw}"). Example: 150`,
+      };
+    }
+    return { valid: true, value: n };
+  }
+
+  /**
+   * Parses and validates an AC modifier from a string argument.
+   * A leading '+' is stripped before parsing. Rejects partial matches.
+   *
+   * @param {string} raw Raw argument value (e.g. '+2', '-1', '0').
+   * @returns {{ valid: boolean, value?: number, message?: string }} Parsed result.
+   */
+  function parseAcModifier(raw) {
+    const cleaned = String(raw).replace(/^\+/, '').trim();
+    const n = parseStrictInt(cleaned);
+    if (!Number.isFinite(n) || n < -10 || n > 10) {
+      return {
+        valid: false,
+        message: `AC modifier must be between -10 and +10 (got "${raw}"). Example: +2`,
+      };
+    }
+    return { valid: true, value: n };
+  }
+
+  /**
+   * Returns true when the given string is a valid party preset key.
+   *
+   * @param {string} key Preset key to test.
+   * @returns {boolean} True when valid.
+   */
+  function isValidPartyPreset(key) {
+    return VALID_PARTY_PRESETS.has(key);
+  }
+
   // ---------------------------------------------------------------------------
   // Style constants shared across journal sections
   // ---------------------------------------------------------------------------
 
-  const BTN = [
-    `background:${COLOR_BUTTON_BG}`,
-    `color:${COLOR_BUTTON_TEXT}`,
-    'padding:2px 8px',
-    'border-radius:3px',
-    'text-decoration:none',
-    'font-size:0.85em',
-    'display:inline-block',
-    'margin:1px 2px',
-    'font-weight:bold',
-  ].join(';');
-
-  const BTN_DARK = [
-    'background:#2a3a5c',
-    `color:${COLOR_TEXT}`,
-    'border:1px solid #4a5a7a',
-    'padding:2px 8px',
-    'border-radius:3px',
-    'text-decoration:none',
-    'font-size:0.85em',
-    'display:inline-block',
-    'margin:1px 2px',
-  ].join(';');
-
+  // The active tab is a chat-style primary button that cannot be clicked
   const BTN_TAB_ACTIVE = [
     `background:${COLOR_ACCENT}`,
     `color:${COLOR_BUTTON_TEXT}`,
-    'padding:2px 8px',
+    'padding:2px 7px',
     'border-radius:3px',
     'font-weight:bold',
-    'font-size:0.85em',
+    'font-size:0.9em',
     'display:inline-block',
     'margin:1px 2px',
   ].join(';');
 
+  // Each section is headed like a chat card's title bar
   const SECTION_HEADER = [
-    'background:#1e2d4a',
-    `color:${COLOR_ACCENT}`,
-    'padding:3px 6px',
+    `background:${COLOR_HEADER_BG}`,
+    `color:${COLOR_HEADER_TEXT}`,
+    'padding:3px 8px',
+    `border-bottom:2px solid ${COLOR_ACCENT}`,
     'font-variant:small-caps',
     'font-weight:bold',
-    'font-size:0.9em',
+    'text-align:center',
     'letter-spacing:0.05em',
-    `border-left:3px solid ${COLOR_ACCENT}`,
-    'margin:6px 0 3px 0',
+    'margin:8px 0 3px 0',
   ].join(';');
 
   const SECTION_BODY = 'padding:2px 4px 4px 4px';
@@ -7668,8 +8051,7 @@ const CombatEncounterDirectorMod = (() => {
    * @returns {string} HTML anchor string.
    */
   function btn(label, command, dark) {
-    const style = dark ? BTN_DARK : BTN;
-    return `<a href="${escapeHtml(command)}" style="${style}">${escapeHtml(label)}</a>`;
+    return dark ? buildSecondaryButton(label, command) : buildButton(label, command);
   }
 
   /**
@@ -7791,7 +8173,7 @@ const CombatEncounterDirectorMod = (() => {
   }
 
   /**
-   * Builds the custom scaling section for HP/AC/damage adjustments.
+   * Builds the custom scaling section for HP/AC adjustments.
    *
    * @param {string} lang Locale code.
    * @returns {string} HTML string.
@@ -7804,9 +8186,6 @@ const CombatEncounterDirectorMod = (() => {
       const label = mod >= 0 ? `+${mod}` : String(mod);
       return btn(label, `${COMMAND} scale ac ${mod}`, mod === 0);
     });
-    const damageButtons = [50, 75, 100, 125, 150, 200].map((pct) =>
-      btn(`${pct}%`, `${COMMAND} scale damage ${pct}`, pct === 100)
-    );
 
     return [
       section(t('ui.customScaling', lang)),
@@ -7817,9 +8196,6 @@ const CombatEncounterDirectorMod = (() => {
       '</div>',
       `<div style="color:${COLOR_MUTED};font-size:0.8em;margin-top:3px">${escapeHtml(t('ui.acModLabel', lang))}</div><div>`,
       ...acButtons,
-      '</div>',
-      `<div style="color:${COLOR_MUTED};font-size:0.8em;margin-top:3px">${escapeHtml(t('ui.damagePercentLabel', lang))}</div><div>`,
-      ...damageButtons,
       '</div>',
       '</div>',
     ].join('');
@@ -8006,6 +8382,23 @@ const CombatEncounterDirectorMod = (() => {
       btn('Bar 3', `${COMMAND} config ac-bar bar3`, true),
       btn(t('ui.disableAc', lang), `${COMMAND} config ac-bar none`, true),
     ];
+    // One button opens a drop-down of every language; the list below it shows what is available
+    const languageQuery = LOCALE_DEFINITIONS.map((l) => `${l.nativeName || l.name},${l.code}`).join(
+      '|'
+    );
+    // The same table as the other MidNite Shadow mods: flag and code, English name, native name.
+    // The language in use is in bold.
+    const languageTable = buildTable(
+      [t('ui.languageCode', lang), t('ui.languageName', lang), t('ui.languageNative', lang)],
+      LOCALE_DEFINITIONS.map((l) => {
+        const bold = (html) => (l.code === lang ? `<b>${html}</b>` : html);
+        return [
+          `${buildLocaleFlag(l)}${bold(escapeHtml(l.code))}`,
+          bold(escapeHtml(l.name)),
+          bold(escapeHtml(l.nativeName || l.name)),
+        ];
+      })
+    );
 
     return [
       section(t('ui.config', lang)),
@@ -8016,8 +8409,48 @@ const CombatEncounterDirectorMod = (() => {
       '</div>',
       `<div style="color:${COLOR_MUTED};font-size:0.8em;margin-top:3px">${escapeHtml(t('labels.acBar', lang))}</div><div>`,
       ...acBarButtons,
-      '</div></div>',
+      '</div>',
+      `<div style="color:${COLOR_MUTED};font-size:0.8em;margin-top:3px">${escapeHtml(t('labels.language', lang))}</div><div>`,
+      btn(
+        `${t('labels.language', lang)} (${LOCALE_DEFINITIONS.length})`,
+        `${COMMAND} config language ?{${t('labels.language', lang)}|${languageQuery}}`,
+        true
+      ),
+      '</div>',
+      `<div style="margin-top:4px">${languageTable}</div>`,
+      '</div>',
     ].join('');
+  }
+
+  /**
+   * Builds a Twemoji asset URL for a locale flag.
+   *
+   * @param {string} flag Unicode regional-indicator flag.
+   * @returns {string} SVG asset URL or an empty string.
+   */
+  function flagAssetUrl(flag) {
+    const codepoints = Array.from(String(flag || '').trim())
+      .map((character) => character.codePointAt(0).toString(16))
+      .join('-');
+    return codepoints
+      ? `https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/${codepoints}.svg`
+      : '';
+  }
+
+  /**
+   * Builds a flag image for a locale. An image is used because Roll20 on Windows
+   * shows emoji flags as letter pairs.
+   *
+   * @param {object} locale Locale metadata.
+   * @returns {string} Trusted locale flag HTML.
+   */
+  function buildLocaleFlag(locale) {
+    const label = escapeHtml(locale.flagLabel || locale.name);
+    const url = flagAssetUrl(locale.flag);
+    if (!url) {
+      return '';
+    }
+    return `<img src="${escapeHtml(url)}" alt="${label}" title="${label}" style="width:1.1em;height:1.1em;vertical-align:-0.15em;margin-right:4px;" />`;
   }
 
   /**
@@ -8038,6 +8471,114 @@ const CombatEncounterDirectorMod = (() => {
   }
 
   // ---------------------------------------------------------------------------
+  // Preset reference
+  // ---------------------------------------------------------------------------
+
+  // The example monster in the preset tables. Every result below is a whole number,
+  // so the tables show exactly what the presets write to a token.
+  const EXAMPLE_HP = 40;
+  const EXAMPLE_AC = 15;
+
+  /**
+   * Formats an AC modifier with its sign, using a true minus sign.
+   *
+   * @param {number} mod AC modifier.
+   * @returns {string} Signed modifier, e.g. '+2', '0' or '−1'.
+   */
+  function signed(mod) {
+    if (mod > 0) return `+${mod}`;
+    if (mod < 0) return `−${Math.abs(mod)}`;
+    return '0';
+  }
+
+  /**
+   * Returns the party sizes that `!ced scale party <size>` maps to each party preset.
+   *
+   * @returns {Map<object, string>} Preset → size range, e.g. '6–8'.
+   */
+  function partySizeRanges() {
+    const sizes = new Map();
+    for (let size = 1; size <= 30; size += 1) {
+      const preset = resolvePartyPresetBySize(size);
+      const range = sizes.get(preset) || [size, size];
+      range[1] = size;
+      sizes.set(preset, range);
+    }
+    return new Map(
+      [...sizes].map(([preset, [from, to]]) => [preset, from === to ? `${from}` : `${from}–${to}`])
+    );
+  }
+
+  /**
+   * Builds the Changes and Example cells for one preset. HP follows the same rounding as
+   * scaling (nearest whole number, at least 1).
+   *
+   * @param {object} preset Party or boss preset.
+   * @param {string} lang Locale code.
+   * @returns {string[]} The two cells, as trusted HTML.
+   */
+  function presetCells(preset, lang) {
+    const hpLabel = escapeHtml(t('labels.hp', lang));
+    const acLabel = escapeHtml(t('labels.ac', lang));
+    const setHp = preset.hpMode === 'set';
+    const hpChange = setHp
+      ? escapeHtml(t('ui.presetHpSet', lang, { hp: preset.hp }))
+      : `${preset.hp}%`;
+    const newHp = setHp ? preset.hp : roundAtLeastOne((EXAMPLE_HP * preset.hp) / 100);
+    const lines = (rows) => rows.join('<br>');
+    return [
+      lines([`${hpLabel} ${hpChange}`, `${acLabel} ${signed(preset.ac)}`]),
+      lines([
+        `${hpLabel} ${EXAMPLE_HP} → ${newHp}`,
+        `${acLabel} ${EXAMPLE_AC} → ${EXAMPLE_AC + preset.ac}`,
+      ]),
+    ];
+  }
+
+  /**
+   * Builds the reference tables of every party and boss preset, with worked examples.
+   *
+   * @param {string} lang Locale code.
+   * @returns {string} HTML string.
+   */
+  function buildPresetReferenceSection(lang) {
+    const sizes = partySizeRanges();
+    const subheading = (text) =>
+      `<div style="color:${COLOR_MUTED};font-size:0.8em;margin:4px 0 2px 0">${escapeHtml(text)}</div>`;
+    const partyTable = buildTable(
+      [
+        t('labels.preset', lang),
+        t('ui.presetPlayers', lang),
+        t('ui.presetChanges', lang),
+        t('ui.presetExample', lang),
+      ],
+      Object.values(PARTY_PRESETS).map((preset) => [
+        escapeHtml(preset.label),
+        sizes.get(preset) || '',
+        ...presetCells(preset, lang),
+      ])
+    );
+    const bossTable = buildTable(
+      [t('labels.preset', lang), t('ui.presetChanges', lang), t('ui.presetExample', lang)],
+      Object.values(BOSS_PRESETS).map((preset) => [
+        escapeHtml(preset.label),
+        ...presetCells(preset, lang),
+      ])
+    );
+
+    return [
+      section(t('ui.presetReference', lang)),
+      desc(t('ui.presetReferenceDesc', lang, { hp: EXAMPLE_HP, ac: EXAMPLE_AC })),
+      `<div style="${SECTION_BODY}">`,
+      subheading(t('ui.partyPresets', lang)),
+      partyTable,
+      subheading(t('ui.bossPresets', lang)),
+      bossTable,
+      '</div>',
+    ].join('');
+  }
+
+  // ---------------------------------------------------------------------------
   // Section registry — maps section keys to renderer functions
   // ---------------------------------------------------------------------------
 
@@ -8054,6 +8595,7 @@ const CombatEncounterDirectorMod = (() => {
     reporting: buildReportingSection,
     config: buildConfigSection,
     help: buildHelpSection,
+    presetReference: buildPresetReferenceSection,
   };
 
   const DECK_VIEW_SECTIONS = {
@@ -8070,8 +8612,9 @@ const CombatEncounterDirectorMod = (() => {
       'reporting',
       'config',
       'help',
+      'presetReference',
     ],
-    scaling: ['quickActions', 'partyScaling', 'customScaling', 'bossTools'],
+    scaling: ['quickActions', 'partyScaling', 'customScaling', 'bossTools', 'presetReference'],
     positioning: ['reinforcements', 'layerVisibility', 'positionSaving', 'encounterTemplates'],
     admin: ['resetRecovery', 'reporting', 'config', 'help'],
   };
@@ -8090,25 +8633,8 @@ const CombatEncounterDirectorMod = (() => {
   function buildDeckHeader(activeView, lang) {
     const viewLabel = deckViewLabel(activeView, lang);
     return [
-      `<div style="background:${COLOR_HEADER_BG};color:${COLOR_HEADER_TEXT};padding:6px 10px;text-align:center;font-variant:small-caps;font-weight:bold;font-size:1.1em;letter-spacing:0.1em;border-bottom:2px solid ${COLOR_ACCENT}">`,
-      `${escapeHtml(SCRIPT_NAME)} v${escapeHtml(SCRIPT_VERSION)}`,
-      '</div>',
-      `<div style="padding:2px 6px 0 6px;font-size:0.75em;color:${COLOR_MUTED};text-align:right">`,
+      `<div style="font-size:0.75em;color:${COLOR_MUTED};text-align:right">`,
       `${escapeHtml(t('ui.deckViewLabel', lang))} ${escapeHtml(viewLabel)}`,
-      '</div>',
-    ].join('');
-  }
-
-  /**
-   * Wraps journal content in a styled card container.
-   *
-   * @param {string} innerHtml Already-assembled journal HTML body.
-   * @returns {string} Wrapped HTML string.
-   */
-  function wrapJournalContent(innerHtml) {
-    return [
-      `<div style="background-image:-webkit-linear-gradient(135deg,${COLOR_CARD_BG_TOP} 0%,${COLOR_CARD_BG_BOTTOM} 100%);color:${COLOR_TEXT};border:1px solid ${COLOR_BORDER};padding:6px;border-radius:4px">`,
-      innerHtml,
       '</div>',
     ].join('');
   }
@@ -8134,7 +8660,9 @@ const CombatEncounterDirectorMod = (() => {
       })
       .join('');
 
-    return wrapJournalContent(
+    // The deck is one chat card: the same frame, title bar and buttons as CED's chat replies
+    return buildCard(
+      `${SCRIPT_NAME} v${SCRIPT_VERSION}`,
       [buildDeckHeader(activeView, lang), buildDeckTabs(activeView, lang), sectionHtml].join('')
     );
   }
@@ -8159,14 +8687,16 @@ const CombatEncounterDirectorMod = (() => {
     if (legacy) {
       legacy.set('name', JOURNAL_PANEL_NAME);
       legacy.set('notes', html);
+      ensureHandoutIcon(legacy);
       return;
     }
 
     const existing = findObjs({ type: 'handout', name: JOURNAL_PANEL_NAME })[0];
     if (existing) {
       existing.set('notes', html);
+      ensureHandoutIcon(existing);
     } else {
-      createObj('handout', { name: JOURNAL_PANEL_NAME, notes: html });
+      createObj('handout', { name: JOURNAL_PANEL_NAME, notes: html, avatar: HANDOUT_ICON });
     }
   }
 
@@ -8176,12 +8706,15 @@ const CombatEncounterDirectorMod = (() => {
    * @returns {void}
    */
   function installStatusHandout() {
-    const placeholder = wrapJournalContent(
-      `<p style="color:${COLOR_MUTED};font-style:italic">Run <strong>!ced report refresh</strong> to populate this report.</p>`
+    const placeholder = buildCard(
+      t('report.summary', getConfig().language),
+      `<div style="color:${COLOR_MUTED};font-style:italic">Run <strong>!ced report refresh</strong> to populate this report.</div>`
     );
     const existing = findObjs({ type: 'handout', name: JOURNAL_STATUS_NAME })[0];
-    if (!existing) {
-      createObj('handout', { name: JOURNAL_STATUS_NAME, notes: placeholder });
+    if (existing) {
+      ensureHandoutIcon(existing);
+    } else {
+      createObj('handout', { name: JOURNAL_STATUS_NAME, notes: placeholder, avatar: HANDOUT_ICON });
     }
   }
 
@@ -8189,21 +8722,16 @@ const CombatEncounterDirectorMod = (() => {
   // HTML builders for the status journal
   // ---------------------------------------------------------------------------
 
-  const TABLE_STYLE = 'width:100%;border-collapse:collapse;font-size:0.85em';
-  const SUMMARY_TABLE_STYLE = 'width:100%;border-collapse:collapse;font-size:0.9em';
-  const SUMMARY_TD_LABEL_STYLE = `padding:3px 8px 3px 0;color:${COLOR_MUTED}`;
-  const SUMMARY_TD_VALUE_STYLE = `padding:3px 0 3px 8px;color:${COLOR_TEXT};font-weight:bold;text-align:right`;
-  const TH_STYLE = [
-    `background:${COLOR_HEADER_BG}`,
-    `color:${COLOR_HEADER_TEXT}`,
-    'padding:3px 5px',
-    'text-align:left',
-    'font-variant:small-caps',
-    'font-size:0.9em',
-  ].join(';');
-  const TD_STYLE = `padding:2px 5px;border-bottom:1px solid ${COLOR_BORDER};color:${COLOR_TEXT}`;
-  const TD_CHANGED_STYLE = `padding:2px 5px;border-bottom:1px solid ${COLOR_BORDER};color:${COLOR_CHANGED};font-weight:bold`;
-  const TD_MUTED_STYLE = `padding:2px 5px;border-bottom:1px solid ${COLOR_BORDER};color:${COLOR_MUTED}`;
+  // The report is built from the same cards and tables as the chat replies (chat.js)
+  const RESET = TABLE_RESET;
+  const TR_STYLE = RESET;
+  const SUMMARY_TD_LABEL_STYLE = `${RESET};padding:1px 0;color:${COLOR_MUTED}`;
+  const SUMMARY_TD_VALUE_STYLE = `${RESET};padding:1px 0;color:${COLOR_TEXT};font-weight:bold;text-align:right`;
+  const TD_BASE = TD_BASE_STYLE;
+  const TD_STYLE = `${TD_BASE};color:${COLOR_TEXT};font-weight:bold`;
+  const TD_CHANGED_STYLE = `${TD_BASE};color:${COLOR_CHANGED};font-weight:bold`;
+  const TD_MUTED_STYLE = `${TD_BASE};color:${COLOR_MUTED}`;
+  const CARD_GAP = '<div style="height:8px"></div>';
 
   /**
    * Returns a human-readable layer name using the active locale.
@@ -8243,18 +8771,15 @@ const CombatEncounterDirectorMod = (() => {
 
     const hpChanged = record.hpModifier !== 100;
     const acChanged = record.acModifier !== 0;
-    const dmgChanged = record.damageModifier !== 100;
 
+    // Minions are flagged with -999: their hit points are set to 1, not scaled
+    const hpText = record.hpModifier === -999 ? '= 1' : formatPct(record.hpModifier);
     const hpCell = hpChanged
-      ? `<td style="${TD_CHANGED_STYLE}">${formatPct(record.hpModifier)}</td>`
+      ? `<td style="${TD_CHANGED_STYLE}">${hpText}</td>`
       : `<td style="${TD_MUTED_STYLE}">—</td>`;
 
     const acCell = acChanged
       ? `<td style="${TD_CHANGED_STYLE}">${formatMod(record.acModifier)}</td>`
-      : `<td style="${TD_MUTED_STYLE}">—</td>`;
-
-    const dmgCell = dmgChanged
-      ? `<td style="${TD_CHANGED_STYLE}">${formatPct(record.damageModifier)}</td>`
       : `<td style="${TD_MUTED_STYLE}">—</td>`;
 
     const presetCell = record.preset
@@ -8262,12 +8787,11 @@ const CombatEncounterDirectorMod = (() => {
       : `<td style="${TD_MUTED_STYLE}">—</td>`;
 
     return [
-      '<tr>',
+      `<tr style="${TR_STYLE}">`,
       `<td style="${TD_STYLE}">${name}</td>`,
       `<td style="${TD_MUTED_STYLE}">${token ? escapeHtml(layer) : layer}</td>`,
       hpCell,
       acCell,
-      dmgCell,
       presetCell,
       '</tr>',
     ].join('');
@@ -8285,7 +8809,7 @@ const CombatEncounterDirectorMod = (() => {
 
     const trackedCount = records.length;
     const changedCount = records.filter(
-      (r) => r.hpModifier !== 100 || r.acModifier !== 0 || r.damageModifier !== 100 || r.preset
+      (r) => r.hpModifier !== 100 || r.acModifier !== 0 || r.preset
     ).length;
     const hiddenCount = records.filter((r) => {
       const token = getGraphicToken(r.tokenId);
@@ -8294,44 +8818,39 @@ const CombatEncounterDirectorMod = (() => {
     const bossCount = records.filter((r) => ['boss', 'legendary'].includes(r.preset)).length;
     const minionCount = records.filter((r) => r.preset === 'minion').length;
 
-    const cardStyle = [
-      `background-image:-webkit-linear-gradient(135deg,${COLOR_CARD_BG_TOP} 0%,${COLOR_CARD_BG_BOTTOM} 100%)`,
-      'border-radius:4px',
-      'padding:6px 8px',
-      'margin-bottom:8px',
-      `border:1px solid ${COLOR_BORDER}`,
-    ].join(';');
-
-    const summaryHtml = [
-      `<div style="${cardStyle}">`,
-      `<div style="font-weight:bold;font-size:1.05em;color:${COLOR_HEADER_TEXT};margin-bottom:4px">${escapeHtml(t('report.summary', lang))}</div>`,
-      `<table style="${SUMMARY_TABLE_STYLE}">`,
-      buildSummaryRow(t('report.generated', lang), formatTimestamp(meta.generatedAt)),
-      buildSummaryRow(t('report.tokensOnPage', lang), String(meta.totalOnPage)),
-      buildSummaryRow(t('report.trackedTokens', lang), String(trackedCount)),
-      buildSummaryRow(t('report.changed', lang), String(changedCount), COLOR_CHANGED),
-      buildSummaryRow(t('report.hiddenGm', lang), String(hiddenCount)),
-      buildSummaryRow(t('report.bossesLegendary', lang), String(bossCount)),
-      buildSummaryRow(t('report.minions', lang), String(minionCount)),
-      '</table>',
-      '</div>',
-    ].join('');
+    const summaryHtml = buildCard(
+      t('report.summary', lang),
+      [
+        `<table style="${TABLE_STYLE}">`,
+        buildSummaryRow(t('report.generated', lang), formatTimestamp(meta.generatedAt)),
+        buildSummaryRow(t('report.tokensOnPage', lang), String(meta.totalOnPage)),
+        buildSummaryRow(t('report.trackedTokens', lang), String(trackedCount)),
+        buildSummaryRow(t('report.changed', lang), String(changedCount), COLOR_CHANGED),
+        buildSummaryRow(t('report.hiddenGm', lang), String(hiddenCount)),
+        buildSummaryRow(t('report.bossesLegendary', lang), String(bossCount)),
+        buildSummaryRow(t('report.minions', lang), String(minionCount)),
+        '</table>',
+      ].join('')
+    );
 
     if (records.length === 0) {
       return (
         summaryHtml +
-        `<p style="color:${COLOR_MUTED};font-style:italic">${escapeHtml(t('report.noTrackedTokens', lang))}</p>`
+        CARD_GAP +
+        buildCard(
+          t('report.trackedTokens', lang),
+          `<div style="color:${COLOR_MUTED};font-style:italic">${escapeHtml(t('report.noTrackedTokens', lang))}</div>`
+        )
       );
     }
 
     const tableHtml = [
       `<table style="${TABLE_STYLE}">`,
-      '<thead><tr>',
+      `<thead><tr style="${TR_STYLE}">`,
       `<th style="${TH_STYLE}">${escapeHtml(t('report.tokenCol', lang))}</th>`,
       `<th style="${TH_STYLE}">${escapeHtml(t('report.layerCol', lang))}</th>`,
       `<th style="${TH_STYLE}">${escapeHtml(t('report.hpCol', lang))}</th>`,
       `<th style="${TH_STYLE}">${escapeHtml(t('report.acCol', lang))}</th>`,
-      `<th style="${TH_STYLE}">${escapeHtml(t('report.dmgCol', lang))}</th>`,
       `<th style="${TH_STYLE}">${escapeHtml(t('report.presetCol', lang))}</th>`,
       '</tr></thead>',
       '<tbody>',
@@ -8340,7 +8859,7 @@ const CombatEncounterDirectorMod = (() => {
       '</table>',
     ].join('');
 
-    return summaryHtml + tableHtml;
+    return summaryHtml + CARD_GAP + buildCard(t('report.trackedTokens', lang), tableHtml);
   }
 
   /**
@@ -8353,10 +8872,10 @@ const CombatEncounterDirectorMod = (() => {
    */
   function buildSummaryRow(label, value, valueColor) {
     const valStyle = valueColor
-      ? `padding:2px 0;color:${valueColor};font-weight:bold;text-align:right`
+      ? `${SUMMARY_TD_VALUE_STYLE};color:${valueColor}`
       : SUMMARY_TD_VALUE_STYLE;
     return [
-      '<tr>',
+      `<tr style="${TR_STYLE}">`,
       `<td style="${SUMMARY_TD_LABEL_STYLE}">${escapeHtml(label)}</td>`,
       `<td style="${valStyle}">${escapeHtml(value)}</td>`,
       '</tr>',
@@ -8373,10 +8892,12 @@ const CombatEncounterDirectorMod = (() => {
     const existing = findObjs({ type: 'handout', name: JOURNAL_STATUS_NAME })[0];
     if (existing) {
       existing.set('notes', content);
+      ensureHandoutIcon(existing);
     } else {
       createObj('handout', {
         name: JOURNAL_STATUS_NAME,
         notes: content,
+        avatar: HANDOUT_ICON,
       });
     }
   }
@@ -8446,7 +8967,7 @@ const CombatEncounterDirectorMod = (() => {
    */
   function reportChangedTokens(pageId) {
     const records = filterTokenRecords(
-      (r) => r.hpModifier !== 100 || r.acModifier !== 0 || r.damageModifier !== 100 || r.preset
+      (r) => r.hpModifier !== 100 || r.acModifier !== 0 || r.preset
     );
     writeFilteredReport(records, pageId);
     return { tokenCount: records.length };
@@ -8459,7 +8980,10 @@ const CombatEncounterDirectorMod = (() => {
    */
   function clearStatusReport() {
     const lang = getConfig().language;
-    const emptyHtml = `<p style="color:${COLOR_MUTED};font-style:italic">${escapeHtml(t('confirm.reportCleared', lang))}</p>`;
+    const emptyHtml = buildCard(
+      t('report.summary', lang),
+      `<div style="color:${COLOR_MUTED};font-style:italic">${escapeHtml(t('confirm.reportCleared', lang))}</div>`
+    );
     updateStatusHandout(emptyHtml);
   }
 
@@ -8672,15 +9196,19 @@ const CombatEncounterDirectorMod = (() => {
   }
 
   /**
-   * Strips trailing enumeration (numbers and spaces) from a token name.
+   * Strips trailing enumeration from a token name: CED's own numbers, and the "(1)" that
+   * Roll20's Advanced Transform > Enumerate Tokens adds to duplicate names.
    *
-   * Example: "Goblin 3" → "Goblin", "Orc Warrior 12" → "Orc Warrior"
+   * Example: "Goblin 3" → "Goblin", "Orc Warrior 12" → "Orc Warrior", "Goblin 3 (1)" → "Goblin"
    *
    * @param {string} name Token name.
    * @returns {string} Base name without trailing number.
    */
   function stripEnumeration(name) {
-    return name.replace(/\s+\d+$/, '').trim();
+    return name
+      .replace(/\s*\(\d+\)$/, '')
+      .replace(/\s+\d+$/, '')
+      .trim();
   }
 
   /**
@@ -8778,194 +9306,29 @@ const CombatEncounterDirectorMod = (() => {
     return { reset, missing };
   }
 
-  /**
-   * Resolves a named party preset to a scaling object.
-   *
-   * @param {string} presetKey Preset key (e.g. 'standard', 'large').
-   * @returns {object|null} Preset object or null when not found.
-   */
-  function resolvePartyPreset(presetKey) {
-    return PARTY_PRESETS[presetKey] || null;
-  }
-
-  /**
-   * Returns the party preset whose size is nearest to the given party size.
-   *
-   * @param {number} partySize Number of players.
-   * @returns {object} Nearest preset.
-   */
-  function resolvePartyPresetBySize(partySize) {
-    const presets = Object.values(PARTY_PRESETS);
-    if (presets.length === 0) {
-      return null;
-    }
-
-    return presets.reduce((best, preset) => {
-      const bestDelta = Math.abs(best.partySize - partySize);
-      const thisDelta = Math.abs(preset.partySize - partySize);
-      return thisDelta < bestDelta ? preset : best;
-    }, presets[0]);
-  }
-
-  /**
-   * Applies a scaling profile to one token, updating its state record and token bars.
-   *
-   * @param {Graphic} token Roll20 Graphic object.
-   * @param {{ hp: number, ac: number, damage: number }} profile Scaling values.
-   * @param {string} [operation] Description of the operation for the audit log.
-   * @returns {object} Updated token record.
-   */
-  function applyScalingToToken(token, profile, operation) {
-    const record = ensureTokenRecord(token);
-
-    record.hpModifier = profile.hp;
-    record.acModifier = profile.ac;
-    record.damageModifier = profile.damage;
-    record.lastModified = Date.now();
-    record.lastOperation = operation;
-
-    applyHpToToken(token, record);
-    applyAcToToken(token, record);
-
-    setTokenRecord(token.id, record);
-    return record;
-  }
-
-  /**
-   * Applies a scaling profile to all selected tokens.
-   *
-   * @param {object} msg Roll20 chat message.
-   * @param {{ hp: number, ac: number, damage: number }} profile Scaling values.
-   * @param {string} [label] Human-readable label for feedback messages.
-   * @returns {{ applied: string[], skipped: number }} Result summary.
-   */
-  function applyScalingToSelected(msg, profile, label) {
-    const tokens = getSelectedTokens(msg);
-    if (tokens.length === 0) {
-      return { applied: [], skipped: 0 };
-    }
-
-    const applied = [];
-    for (const token of tokens) {
-      applyScalingToToken(token, profile, label || 'scale');
-      applied.push(getTokenName(token));
-    }
-
-    return { applied, skipped: 0 };
-  }
-
-  /**
-   * Parses and validates a party size integer from a string argument.
-   * Rejects partial matches such as "6players".
-   *
-   * @param {string} raw Raw argument value.
-   * @returns {{ valid: boolean, value?: number, message?: string }} Parsed result.
-   */
-  function parsePartySize(raw) {
-    const n = parseStrictInt(raw);
-    if (!Number.isFinite(n) || n < 1 || n > 30) {
-      return {
-        valid: false,
-        message: `Party size must be a number between 1 and 30 (got "${raw}").`,
-      };
-    }
-    return { valid: true, value: n };
-  }
-
-  /**
-   * Parses and validates an HP percentage from a string argument.
-   * A trailing '%' is stripped before parsing. Rejects partial matches.
-   *
-   * @param {string} raw Raw argument value (e.g. '150' or '150%').
-   * @returns {{ valid: boolean, value?: number, message?: string }} Parsed result.
-   */
-  function parseHpPercent(raw) {
-    const cleaned = String(raw)
-      .replace(/^(\d+)%$/, '$1')
-      .trim();
-    const n = parseStrictInt(cleaned);
-    if (!Number.isFinite(n) || n < 1 || n > 1000) {
-      return {
-        valid: false,
-        message: `HP percentage must be between 1 and 1000 (got "${raw}"). Example: 150`,
-      };
-    }
-    return { valid: true, value: n };
-  }
-
-  /**
-   * Parses and validates an AC modifier from a string argument.
-   * A leading '+' is stripped before parsing. Rejects partial matches.
-   *
-   * @param {string} raw Raw argument value (e.g. '+2', '-1', '0').
-   * @returns {{ valid: boolean, value?: number, message?: string }} Parsed result.
-   */
-  function parseAcModifier(raw) {
-    const cleaned = String(raw).replace(/^\+/, '').trim();
-    const n = parseStrictInt(cleaned);
-    if (!Number.isFinite(n) || n < -10 || n > 10) {
-      return {
-        valid: false,
-        message: `AC modifier must be between -10 and +10 (got "${raw}"). Example: +2`,
-      };
-    }
-    return { valid: true, value: n };
-  }
-
-  /**
-   * Parses and validates a damage percentage from a string argument.
-   * A trailing '%' is stripped before parsing. Rejects partial matches.
-   *
-   * @param {string} raw Raw argument value.
-   * @returns {{ valid: boolean, value?: number, message?: string }} Parsed result.
-   */
-  function parseDamagePercent(raw) {
-    const cleaned = String(raw)
-      .replace(/^(\d+)%$/, '$1')
-      .trim();
-    const n = parseStrictInt(cleaned);
-    if (!Number.isFinite(n) || n < 1 || n > 1000) {
-      return {
-        valid: false,
-        message: `Damage percentage must be between 1 and 1000 (got "${raw}"). Example: 125`,
-      };
-    }
-    return { valid: true, value: n };
-  }
-
-  /**
-   * Returns true when the given string is a valid party preset key.
-   *
-   * @param {string} key Preset key to test.
-   * @returns {boolean} True when valid.
-   */
-  function isValidPartyPreset(key) {
-    return VALID_PARTY_PRESETS.has(key);
-  }
-
   // ---------------------------------------------------------------------------
   // Pending scaling state (per-player session state — not persisted)
   // ---------------------------------------------------------------------------
 
-  /** @type {Map<string, { hp: number, ac: number, damage: number }>} */
+  /** @type {Map<string, { hp: number, ac: number }>} */
   const pendingScaling = new Map();
 
   /**
-   * Returns the pending scaling profile for a player, defaulting to 100/0/100.
+   * Returns the pending scaling profile for a player, defaulting to 100/0.
    *
    * @param {string} playerId Player ID.
-   * @returns {{ hp: number, ac: number, damage: number }} Pending scaling.
+   * @returns {{ hp: number, ac: number }} Pending scaling.
    */
   function getPendingScaling(playerId) {
-    return pendingScaling.get(playerId) || { hp: 100, ac: 0, damage: 100 };
+    return pendingScaling.get(playerId) || { hp: 100, ac: 0 };
   }
 
   /**
    * Updates one or more fields in the pending scaling profile for a player.
    *
    * @param {string} playerId Player ID.
-   * @param {object} updates Partial update ({ hp, ac, damage }).
-   * @returns {{ hp: number, ac: number, damage: number }} Updated pending scaling.
+   * @param {object} updates Partial update ({ hp, ac }).
+   * @returns {{ hp: number, ac: number }} Updated pending scaling.
    */
   function updatePendingScaling(playerId, updates) {
     const current = getPendingScaling(playerId);
@@ -9174,7 +9537,8 @@ const CombatEncounterDirectorMod = (() => {
       party: () => handleScaleParty(msg, playerId, lang, value),
       hp: () => handleScaleHp(msg, playerId, lang, value),
       ac: () => handleScaleAc(msg, playerId, lang, value),
-      damage: () => handleScaleDamage(msg, playerId, lang, value),
+      // Damage scaling was removed in 1.0.2; explain rather than report an unknown action.
+      damage: () => whisperWarning(playerId, t('errors.damageScalingRemoved', lang)),
       apply: () => handleScaleApply(msg, playerId, lang),
     };
 
@@ -9210,7 +9574,7 @@ const CombatEncounterDirectorMod = (() => {
     }
 
     const preset = resolvePartyPreset(presetKey);
-    updatePendingScaling(playerId, { hp: preset.hp, ac: preset.ac, damage: preset.damage });
+    updatePendingScaling(playerId, { hp: preset.hp, ac: preset.ac });
     const tokens = getSelectedTokens(msg);
 
     if (tokens.length > 0) {
@@ -9222,7 +9586,6 @@ const CombatEncounterDirectorMod = (() => {
           buildRow(t('labels.preset', lang), preset.label),
           buildRow(t('labels.hp', lang), `${preset.hp}%`),
           buildRow(t('labels.ac', lang), formatMod(preset.ac)),
-          buildRow(t('labels.damage', lang), `${preset.damage}%`),
           buildDivider(),
           buildRow(t('labels.appliedTo', lang), `${result.applied.length}`),
         ].join('')
@@ -9236,7 +9599,6 @@ const CombatEncounterDirectorMod = (() => {
       [
         buildRow(t('labels.hp', lang), `${preset.hp}%`),
         buildRow(t('labels.ac', lang), formatMod(preset.ac)),
-        buildRow(t('labels.damage', lang), `${preset.damage}%`),
         buildDivider(),
         `<div style="font-size:0.85em">${escapeHtml(t('confirm.scalingPresetPending', lang))}</div>`,
         buildButton(t('ui.applyScalingButton', lang), `${COMMAND} scale apply`),
@@ -9265,7 +9627,7 @@ const CombatEncounterDirectorMod = (() => {
     }
 
     const preset = resolvePartyPresetBySize(parsed.value);
-    updatePendingScaling(playerId, { hp: preset.hp, ac: preset.ac, damage: preset.damage });
+    updatePendingScaling(playerId, { hp: preset.hp, ac: preset.ac });
     const tokens = getSelectedTokens(msg);
 
     if (tokens.length > 0) {
@@ -9277,7 +9639,6 @@ const CombatEncounterDirectorMod = (() => {
           buildRow(t('labels.nearestPreset', lang), preset.label),
           buildRow(t('labels.hp', lang), `${preset.hp}%`),
           buildRow(t('labels.ac', lang), formatMod(preset.ac)),
-          buildRow(t('labels.damage', lang), `${preset.damage}%`),
           buildDivider(),
           buildRow(t('labels.appliedTo', lang), `${result.applied.length}`),
         ].join('')
@@ -9292,7 +9653,6 @@ const CombatEncounterDirectorMod = (() => {
         buildRow(t('labels.nearestPreset', lang), preset.label),
         buildRow(t('labels.hp', lang), `${preset.hp}%`),
         buildRow(t('labels.ac', lang), formatMod(preset.ac)),
-        buildRow(t('labels.damage', lang), `${preset.damage}%`),
         buildDivider(),
         `<div style="font-size:0.85em">${escapeHtml(t('confirm.scalingPresetPending', lang))}</div>`,
         buildButton(t('ui.applyScalingButton', lang), `${COMMAND} scale apply`),
@@ -9349,37 +9709,6 @@ const CombatEncounterDirectorMod = (() => {
   }
 
   /**
-   * Updates pending damage percentage and applies/queues scaling.
-   *
-   * @param {object} msg Roll20 chat message.
-   * @param {string} playerId GM player ID.
-   * @param {string} lang Locale code.
-   * @param {string} damageRaw Raw damage percentage argument.
-   * @returns {void}
-   */
-  function handleScaleDamage(msg, playerId, lang, damageRaw) {
-    const parsed = parseDamagePercent(damageRaw);
-    if (!parsed.valid) {
-      whisperError(
-        playerId,
-        t('errors.invalidDamagePercent', lang, { value: damageRaw }),
-        `Example: ${COMMAND} scale damage 125`
-      );
-      return;
-    }
-
-    const next = updatePendingScaling(playerId, { damage: parsed.value });
-    reportScaleProfileUpdate(
-      msg,
-      playerId,
-      lang,
-      next,
-      t('titles.damageUpdated', lang),
-      'scale:damage'
-    );
-  }
-
-  /**
    * Applies the player's pending scaling profile to selected tokens.
    *
    * @param {object} msg Roll20 chat message.
@@ -9402,7 +9731,6 @@ const CombatEncounterDirectorMod = (() => {
       [
         buildRow(t('labels.hp', lang), `${profile.hp}%`),
         buildRow(t('labels.ac', lang), formatMod(profile.ac)),
-        buildRow(t('labels.damage', lang), `${profile.damage}%`),
         buildDivider(),
         buildRow(t('labels.appliedTo', lang), `${result.applied.length}`),
       ].join('')
@@ -9416,7 +9744,7 @@ const CombatEncounterDirectorMod = (() => {
    * @param {object} msg Roll20 chat message.
    * @param {string} playerId GM player ID.
    * @param {string} lang Locale code.
-   * @param {{ hp: number, ac: number, damage: number }} profile Scaling profile.
+   * @param {{ hp: number, ac: number }} profile Scaling profile.
    * @param {string} pendingTitle Card title used when no tokens are selected.
    * @param {string} operation Operation label stored in token records.
    * @returns {void}
@@ -9431,7 +9759,6 @@ const CombatEncounterDirectorMod = (() => {
         [
           buildRow(t('labels.hp', lang), `${profile.hp}%`),
           buildRow(t('labels.ac', lang), formatMod(profile.ac)),
-          buildRow(t('labels.damage', lang), `${profile.damage}%`),
           buildDivider(),
           buildRow(t('labels.appliedTo', lang), `${result.applied.length}`),
         ].join('')
@@ -9445,7 +9772,6 @@ const CombatEncounterDirectorMod = (() => {
       [
         buildRow(t('labels.hp', lang), `${profile.hp}%`),
         buildRow(t('labels.ac', lang), formatMod(profile.ac)),
-        buildRow(t('labels.damage', lang), `${profile.damage}%`),
         buildDivider(),
         buildButton(t('ui.applyScalingButton', lang), `${COMMAND} scale apply`),
       ].join('')
@@ -9503,7 +9829,6 @@ const CombatEncounterDirectorMod = (() => {
           t('labels.acModifier', lang),
           preset.ac >= 0 ? `+${preset.ac}` : String(preset.ac)
         ),
-        buildRow(t('labels.damage', lang), `${preset.damage}%`),
         buildDivider(),
         buildRow(t('labels.appliedTo', lang), `${result.applied.length}`),
       ].join('')
@@ -10166,6 +10491,8 @@ const CombatEncounterDirectorMod = (() => {
           return;
         }
         setConfig({ language: normalized });
+        // Rewrite the Command Deck in the new language, on the view the GM was using
+        installControlPanelHandout(getDeckView());
         // Use the NEW language for the confirmation so the GM sees it's working.
         whisper(
           playerId,
@@ -10251,7 +10578,6 @@ const CombatEncounterDirectorMod = (() => {
       ['Scale by party size', `${COMMAND} scale party 6`],
       ['Set HP %', `${COMMAND} scale hp 150`],
       ['Set AC modifier', `${COMMAND} scale ac +2`],
-      ['Set Damage %', `${COMMAND} scale damage 125`],
       ['Apply pending scaling', `${COMMAND} scale apply`],
       ['Boss preset', `${COMMAND} boss boss`],
       ['Elite / Minion', `${COMMAND} boss elite`],
@@ -10297,6 +10623,7 @@ const CombatEncounterDirectorMod = (() => {
     log(`${SCRIPT_NAME}: Starting up.`);
 
     ensureState();
+    dropLegacyDamageModifiers();
     applyGlobalConfig();
     installControlPanelHandout(getDeckView());
     installStatusHandout();

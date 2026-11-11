@@ -2,78 +2,55 @@ import {
   BOSS_PRESETS,
   COLOR_ACCENT,
   COLOR_BORDER,
-  COLOR_BUTTON_BG,
   COLOR_BUTTON_TEXT,
-  COLOR_CARD_BG_BOTTOM,
-  COLOR_CARD_BG_TOP,
   COLOR_HEADER_BG,
   COLOR_HEADER_TEXT,
   COLOR_MUTED,
-  COLOR_TEXT,
   COMMAND,
   DECK_VIEW_KEYS,
   DECK_VIEWS,
   DEFAULT_DECK_VIEW,
   DUPLICATE_OPTIONS,
+  HANDOUT_ICON,
   JOURNAL_PANEL_NAME,
   JOURNAL_STATUS_NAME,
   PARTY_PRESETS,
   SCRIPT_NAME,
   SCRIPT_VERSION,
 } from './constants.js';
-import { t } from './i18n.js';
+import { buildButton, buildCard, buildSecondaryButton, buildTable } from './chat.js';
+import { LOCALE_DEFINITIONS, t } from './i18n.js';
 import { getConfig } from './state.js';
-import { escapeHtml } from './utils.js';
+import { resolvePartyPresetBySize } from './scaling.js';
+import { ensureHandoutIcon, escapeHtml, roundAtLeastOne } from './utils.js';
 
 // ---------------------------------------------------------------------------
 // Style constants shared across journal sections
 // ---------------------------------------------------------------------------
 
-const BTN = [
-  `background:${COLOR_BUTTON_BG}`,
-  `color:${COLOR_BUTTON_TEXT}`,
-  'padding:2px 8px',
-  'border-radius:3px',
-  'text-decoration:none',
-  'font-size:0.85em',
-  'display:inline-block',
-  'margin:1px 2px',
-  'font-weight:bold',
-].join(';');
-
-const BTN_DARK = [
-  'background:#2a3a5c',
-  `color:${COLOR_TEXT}`,
-  'border:1px solid #4a5a7a',
-  'padding:2px 8px',
-  'border-radius:3px',
-  'text-decoration:none',
-  'font-size:0.85em',
-  'display:inline-block',
-  'margin:1px 2px',
-].join(';');
-
+// The active tab is a chat-style primary button that cannot be clicked
 const BTN_TAB_ACTIVE = [
   `background:${COLOR_ACCENT}`,
   `color:${COLOR_BUTTON_TEXT}`,
-  'padding:2px 8px',
+  'padding:2px 7px',
   'border-radius:3px',
   'font-weight:bold',
-  'font-size:0.85em',
+  'font-size:0.9em',
   'display:inline-block',
   'margin:1px 2px',
 ].join(';');
 
+// Each section is headed like a chat card's title bar
 const SECTION_HEADER = [
-  'background:#1e2d4a',
-  `color:${COLOR_ACCENT}`,
-  'padding:3px 6px',
+  `background:${COLOR_HEADER_BG}`,
+  `color:${COLOR_HEADER_TEXT}`,
+  'padding:3px 8px',
+  `border-bottom:2px solid ${COLOR_ACCENT}`,
   'font-variant:small-caps',
   'font-weight:bold',
-  'font-size:0.9em',
+  'text-align:center',
   'letter-spacing:0.05em',
-  `border-left:3px solid ${COLOR_ACCENT}`,
-  'margin:6px 0 3px 0',
+  'margin:8px 0 3px 0',
 ].join(';');
 
 const SECTION_BODY = 'padding:2px 4px 4px 4px';
@@ -96,8 +73,7 @@ const DIVIDER = `<hr style="border:none;border-top:1px solid ${COLOR_BORDER};mar
  * @returns {string} HTML anchor string.
  */
 function btn(label, command, dark) {
-  const style = dark ? BTN_DARK : BTN;
-  return `<a href="${escapeHtml(command)}" style="${style}">${escapeHtml(label)}</a>`;
+  return dark ? buildSecondaryButton(label, command) : buildButton(label, command);
 }
 
 /**
@@ -219,7 +195,7 @@ function buildPartyScalingSection(lang) {
 }
 
 /**
- * Builds the custom scaling section for HP/AC/damage adjustments.
+ * Builds the custom scaling section for HP/AC adjustments.
  *
  * @param {string} lang Locale code.
  * @returns {string} HTML string.
@@ -232,9 +208,6 @@ function buildCustomScalingSection(lang) {
     const label = mod >= 0 ? `+${mod}` : String(mod);
     return btn(label, `${COMMAND} scale ac ${mod}`, mod === 0);
   });
-  const damageButtons = [50, 75, 100, 125, 150, 200].map((pct) =>
-    btn(`${pct}%`, `${COMMAND} scale damage ${pct}`, pct === 100)
-  );
 
   return [
     section(t('ui.customScaling', lang)),
@@ -245,9 +218,6 @@ function buildCustomScalingSection(lang) {
     '</div>',
     `<div style="color:${COLOR_MUTED};font-size:0.8em;margin-top:3px">${escapeHtml(t('ui.acModLabel', lang))}</div><div>`,
     ...acButtons,
-    '</div>',
-    `<div style="color:${COLOR_MUTED};font-size:0.8em;margin-top:3px">${escapeHtml(t('ui.damagePercentLabel', lang))}</div><div>`,
-    ...damageButtons,
     '</div>',
     '</div>',
   ].join('');
@@ -434,6 +404,23 @@ function buildConfigSection(lang) {
     btn('Bar 3', `${COMMAND} config ac-bar bar3`, true),
     btn(t('ui.disableAc', lang), `${COMMAND} config ac-bar none`, true),
   ];
+  // One button opens a drop-down of every language; the list below it shows what is available
+  const languageQuery = LOCALE_DEFINITIONS.map((l) => `${l.nativeName || l.name},${l.code}`).join(
+    '|'
+  );
+  // The same table as the other MidNite Shadow mods: flag and code, English name, native name.
+  // The language in use is in bold.
+  const languageTable = buildTable(
+    [t('ui.languageCode', lang), t('ui.languageName', lang), t('ui.languageNative', lang)],
+    LOCALE_DEFINITIONS.map((l) => {
+      const bold = (html) => (l.code === lang ? `<b>${html}</b>` : html);
+      return [
+        `${buildLocaleFlag(l)}${bold(escapeHtml(l.code))}`,
+        bold(escapeHtml(l.name)),
+        bold(escapeHtml(l.nativeName || l.name)),
+      ];
+    })
+  );
 
   return [
     section(t('ui.config', lang)),
@@ -444,8 +431,48 @@ function buildConfigSection(lang) {
     '</div>',
     `<div style="color:${COLOR_MUTED};font-size:0.8em;margin-top:3px">${escapeHtml(t('labels.acBar', lang))}</div><div>`,
     ...acBarButtons,
-    '</div></div>',
+    '</div>',
+    `<div style="color:${COLOR_MUTED};font-size:0.8em;margin-top:3px">${escapeHtml(t('labels.language', lang))}</div><div>`,
+    btn(
+      `${t('labels.language', lang)} (${LOCALE_DEFINITIONS.length})`,
+      `${COMMAND} config language ?{${t('labels.language', lang)}|${languageQuery}}`,
+      true
+    ),
+    '</div>',
+    `<div style="margin-top:4px">${languageTable}</div>`,
+    '</div>',
   ].join('');
+}
+
+/**
+ * Builds a Twemoji asset URL for a locale flag.
+ *
+ * @param {string} flag Unicode regional-indicator flag.
+ * @returns {string} SVG asset URL or an empty string.
+ */
+function flagAssetUrl(flag) {
+  const codepoints = Array.from(String(flag || '').trim())
+    .map((character) => character.codePointAt(0).toString(16))
+    .join('-');
+  return codepoints
+    ? `https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/${codepoints}.svg`
+    : '';
+}
+
+/**
+ * Builds a flag image for a locale. An image is used because Roll20 on Windows
+ * shows emoji flags as letter pairs.
+ *
+ * @param {object} locale Locale metadata.
+ * @returns {string} Trusted locale flag HTML.
+ */
+function buildLocaleFlag(locale) {
+  const label = escapeHtml(locale.flagLabel || locale.name);
+  const url = flagAssetUrl(locale.flag);
+  if (!url) {
+    return '';
+  }
+  return `<img src="${escapeHtml(url)}" alt="${label}" title="${label}" style="width:1.1em;height:1.1em;vertical-align:-0.15em;margin-right:4px;" />`;
 }
 
 /**
@@ -466,6 +493,114 @@ function buildHelpSection(lang) {
 }
 
 // ---------------------------------------------------------------------------
+// Preset reference
+// ---------------------------------------------------------------------------
+
+// The example monster in the preset tables. Every result below is a whole number,
+// so the tables show exactly what the presets write to a token.
+const EXAMPLE_HP = 40;
+const EXAMPLE_AC = 15;
+
+/**
+ * Formats an AC modifier with its sign, using a true minus sign.
+ *
+ * @param {number} mod AC modifier.
+ * @returns {string} Signed modifier, e.g. '+2', '0' or '−1'.
+ */
+function signed(mod) {
+  if (mod > 0) return `+${mod}`;
+  if (mod < 0) return `−${Math.abs(mod)}`;
+  return '0';
+}
+
+/**
+ * Returns the party sizes that `!ced scale party <size>` maps to each party preset.
+ *
+ * @returns {Map<object, string>} Preset → size range, e.g. '6–8'.
+ */
+function partySizeRanges() {
+  const sizes = new Map();
+  for (let size = 1; size <= 30; size += 1) {
+    const preset = resolvePartyPresetBySize(size);
+    const range = sizes.get(preset) || [size, size];
+    range[1] = size;
+    sizes.set(preset, range);
+  }
+  return new Map(
+    [...sizes].map(([preset, [from, to]]) => [preset, from === to ? `${from}` : `${from}–${to}`])
+  );
+}
+
+/**
+ * Builds the Changes and Example cells for one preset. HP follows the same rounding as
+ * scaling (nearest whole number, at least 1).
+ *
+ * @param {object} preset Party or boss preset.
+ * @param {string} lang Locale code.
+ * @returns {string[]} The two cells, as trusted HTML.
+ */
+function presetCells(preset, lang) {
+  const hpLabel = escapeHtml(t('labels.hp', lang));
+  const acLabel = escapeHtml(t('labels.ac', lang));
+  const setHp = preset.hpMode === 'set';
+  const hpChange = setHp
+    ? escapeHtml(t('ui.presetHpSet', lang, { hp: preset.hp }))
+    : `${preset.hp}%`;
+  const newHp = setHp ? preset.hp : roundAtLeastOne((EXAMPLE_HP * preset.hp) / 100);
+  const lines = (rows) => rows.join('<br>');
+  return [
+    lines([`${hpLabel} ${hpChange}`, `${acLabel} ${signed(preset.ac)}`]),
+    lines([
+      `${hpLabel} ${EXAMPLE_HP} → ${newHp}`,
+      `${acLabel} ${EXAMPLE_AC} → ${EXAMPLE_AC + preset.ac}`,
+    ]),
+  ];
+}
+
+/**
+ * Builds the reference tables of every party and boss preset, with worked examples.
+ *
+ * @param {string} lang Locale code.
+ * @returns {string} HTML string.
+ */
+function buildPresetReferenceSection(lang) {
+  const sizes = partySizeRanges();
+  const subheading = (text) =>
+    `<div style="color:${COLOR_MUTED};font-size:0.8em;margin:4px 0 2px 0">${escapeHtml(text)}</div>`;
+  const partyTable = buildTable(
+    [
+      t('labels.preset', lang),
+      t('ui.presetPlayers', lang),
+      t('ui.presetChanges', lang),
+      t('ui.presetExample', lang),
+    ],
+    Object.values(PARTY_PRESETS).map((preset) => [
+      escapeHtml(preset.label),
+      sizes.get(preset) || '',
+      ...presetCells(preset, lang),
+    ])
+  );
+  const bossTable = buildTable(
+    [t('labels.preset', lang), t('ui.presetChanges', lang), t('ui.presetExample', lang)],
+    Object.values(BOSS_PRESETS).map((preset) => [
+      escapeHtml(preset.label),
+      ...presetCells(preset, lang),
+    ])
+  );
+
+  return [
+    section(t('ui.presetReference', lang)),
+    desc(t('ui.presetReferenceDesc', lang, { hp: EXAMPLE_HP, ac: EXAMPLE_AC })),
+    `<div style="${SECTION_BODY}">`,
+    subheading(t('ui.partyPresets', lang)),
+    partyTable,
+    subheading(t('ui.bossPresets', lang)),
+    bossTable,
+    '</div>',
+  ].join('');
+}
+
+// ---------------------------------------------------------------------------
 // Section registry — maps section keys to renderer functions
 // ---------------------------------------------------------------------------
 
@@ -482,6 +617,7 @@ const SECTION_RENDERERS = {
   reporting: buildReportingSection,
   config: buildConfigSection,
   help: buildHelpSection,
+  presetReference: buildPresetReferenceSection,
 };
 
 const DECK_VIEW_SECTIONS = {
@@ -498,8 +634,9 @@ const DECK_VIEW_SECTIONS = {
     'reporting',
     'config',
     'help',
+    'presetReference',
   ],
-  scaling: ['quickActions', 'partyScaling', 'customScaling', 'bossTools'],
+  scaling: ['quickActions', 'partyScaling', 'customScaling', 'bossTools', 'presetReference'],
   positioning: ['reinforcements', 'layerVisibility', 'positionSaving', 'encounterTemplates'],
   admin: ['resetRecovery', 'reporting', 'config', 'help'],
 };
@@ -518,25 +655,8 @@ const DECK_VIEW_SECTIONS = {
 function buildDeckHeader(activeView, lang) {
   const viewLabel = deckViewLabel(activeView, lang);
   return [
-    `<div style="background:${COLOR_HEADER_BG};color:${COLOR_HEADER_TEXT};padding:6px 10px;text-align:center;font-variant:small-caps;font-weight:bold;font-size:1.1em;letter-spacing:0.1em;border-bottom:2px solid ${COLOR_ACCENT}">`,
-    `${escapeHtml(SCRIPT_NAME)} v${escapeHtml(SCRIPT_VERSION)}`,
-    '</div>',
-    `<div style="padding:2px 6px 0 6px;font-size:0.75em;color:${COLOR_MUTED};text-align:right">`,
+    `<div style="font-size:0.75em;color:${COLOR_MUTED};text-align:right">`,
     `${escapeHtml(t('ui.deckViewLabel', lang))} ${escapeHtml(viewLabel)}`,
-    '</div>',
-  ].join('');
-}
-
-/**
- * Wraps journal content in a styled card container.
- *
- * @param {string} innerHtml Already-assembled journal HTML body.
- * @returns {string} Wrapped HTML string.
- */
-function wrapJournalContent(innerHtml) {
-  return [
-    `<div style="background-image:-webkit-linear-gradient(135deg,${COLOR_CARD_BG_TOP} 0%,${COLOR_CARD_BG_BOTTOM} 100%);color:${COLOR_TEXT};border:1px solid ${COLOR_BORDER};padding:6px;border-radius:4px">`,
-    innerHtml,
     '</div>',
   ].join('');
 }
@@ -562,7 +682,9 @@ export function buildCommandDeck(view = DEFAULT_DECK_VIEW) {
     })
     .join('');
 
-  return wrapJournalContent(
+  // The deck is one chat card: the same frame, title bar and buttons as CED's chat replies
+  return buildCard(
+    `${SCRIPT_NAME} v${SCRIPT_VERSION}`,
     [buildDeckHeader(activeView, lang), buildDeckTabs(activeView, lang), sectionHtml].join('')
   );
 }
@@ -587,14 +709,16 @@ export function installControlPanelHandout(view = DEFAULT_DECK_VIEW) {
   if (legacy) {
     legacy.set('name', JOURNAL_PANEL_NAME);
     legacy.set('notes', html);
+    ensureHandoutIcon(legacy);
     return;
   }
 
   const existing = findObjs({ type: 'handout', name: JOURNAL_PANEL_NAME })[0];
   if (existing) {
     existing.set('notes', html);
+    ensureHandoutIcon(existing);
   } else {
-    createObj('handout', { name: JOURNAL_PANEL_NAME, notes: html });
+    createObj('handout', { name: JOURNAL_PANEL_NAME, notes: html, avatar: HANDOUT_ICON });
   }
 }
 
@@ -604,11 +728,14 @@ export function installControlPanelHandout(view = DEFAULT_DECK_VIEW) {
  * @returns {void}
  */
 export function installStatusHandout() {
-  const placeholder = wrapJournalContent(
-    `<p style="color:${COLOR_MUTED};font-style:italic">Run <strong>!ced report refresh</strong> to populate this report.</p>`
+  const placeholder = buildCard(
+    t('report.summary', getConfig().language),
+    `<div style="color:${COLOR_MUTED};font-style:italic">Run <strong>!ced report refresh</strong> to populate this report.</div>`
   );
   const existing = findObjs({ type: 'handout', name: JOURNAL_STATUS_NAME })[0];
-  if (!existing) {
-    createObj('handout', { name: JOURNAL_STATUS_NAME, notes: placeholder });
+  if (existing) {
+    ensureHandoutIcon(existing);
+  } else {
+    createObj('handout', { name: JOURNAL_STATUS_NAME, notes: placeholder, avatar: HANDOUT_ICON });
   }
 }

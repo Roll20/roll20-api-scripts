@@ -1,9 +1,10 @@
 {
   "name": "Combat Encounter Director",
   "script": "CombatEncounterDirector.js",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "previousversions": [
-    "1.0.0"
+    "1.0.0",
+    "1.0.1"
   ],
   "description": "Gives Game Masters rapid control over combat encounters — scaling, boss tools, reinforcements, battlefield management, reporting, and encounter recovery.",
   "authors": "MidNiteShadow7",

@@ -5,7 +5,6 @@ const TRANSLATION = {
     scalingPresetReady: 'Προκαθορισμένη κλιμάκωση έτοιμο',
     hpUpdated: 'Η κλιμάκωση HP ενημερώθηκε',
     acUpdated: 'Ενημερώθηκε η κλιμάκωση AC',
-    damageUpdated: 'Ενημερώθηκε η κλιμάκωση ζημιών',
     bossPreset: 'Προκαθορισμένο αφεντικό: {preset}',
     partySize: 'Μέγεθος πάρτι: {size}',
     reinforcementsCreated: 'Δημιουργήθηκαν ενισχύσεις',
@@ -35,7 +34,7 @@ const TRANSLATION = {
     unknownCommandHint: 'Πληκτρολογήστε !ced help για μια λίστα εντολών.',
     noTokensSelected: 'Δεν επιλέχθηκαν διακριτικά. Επιλέξτε πρώτα διακριτικά στο χάρτη.',
     unknownScaleAction: 'Άγνωστη ενέργεια κλίμακας: "{action}".',
-    scaleActionHint: 'Έγκυρες ενέργειες: προεπιλογή, πάρτι, hp, ac, ζημιά, εφαρμογή',
+    scaleActionHint: 'Έγκυρες ενέργειες: προεπιλογή, πάρτι, hp, ac, εφαρμογή',
     unknownPartyPreset: 'Άγνωστο προκαθορισμένο μέρος: "{preset}".',
     partyPresetHint: 'Έγκυρες προεπιλογές: {presets}',
     missingBossPreset: 'Λείπει το προκαθορισμένο όνομα του αφεντικού.',
@@ -79,8 +78,8 @@ const TRANSLATION = {
       'Το ποσοστό HP πρέπει να είναι μεταξύ 1 και 1000 (έχει "{value}"). Παράδειγμα: 150',
     invalidAcModifier:
       'Ο τροποποιητής AC πρέπει να είναι μεταξύ -10 και +10 (έλαβε "{value}"). Παράδειγμα: +2',
-    invalidDamagePercent:
-      'Το ποσοστό ζημιάς πρέπει να είναι μεταξύ 1 και 1000 (έλαβε "{value}"). Παράδειγμα: 125',
+    damageScalingRemoved:
+      'Η κλιμάκωση ζημιών καταργήθηκε στην έκδοση 1.0.2 επειδή δεν άλλαξε ποτέ τίποτα στο διακριτικό. Οι προεπιλογές τώρα κλιμακώνουν μόνο HP και AC. Ρυθμίστε μόνοι σας τις ρίψεις ζημιάς εάν θέλετε ένα πλάσμα να χτυπήσει πιο δυνατά.',
     invalidDuplicateCount:
       'Ο αριθμός των διπλότυπων πρέπει να είναι μεταξύ 1 και 50 (λήφθηκε "{value}"). Παράδειγμα: 3',
     invalidEncounterName:
@@ -106,7 +105,6 @@ const TRANSLATION = {
     hp: 'ιπποδύναμη',
     ac: 'AC',
     acModifier: 'Τροποποιητής AC',
-    damage: 'Βλάβη',
     appliedTo: 'Εφαρμόστηκε σε',
     copiesPerToken: 'Αντίγραφα ανά διακριτικό',
     totalCreated: 'Σύνολο δημιουργήθηκε',
@@ -179,10 +177,12 @@ const TRANSLATION = {
     deckViewPositioning: 'Τοποθέτηση',
     deckViewAdmin: 'Διαχειρ',
     deckViewLabel: 'Θέα:',
+    languageCode: 'Κώδικας',
+    languageName: 'Γλώσσα',
+    languageNative: 'Εγγενές όνομα',
     partySizeLabel: 'Μέγεθος πάρτι:',
     hpPercentLabel: '% HP:',
     acModLabel: 'Τροποποιητής AC:',
-    damagePercentLabel: '% ζημιάς:',
     load: 'Φορτίο',
     delete: 'Διαγράφω',
     quickActions: 'Γρήγορες Ενέργειες',
@@ -215,6 +215,15 @@ const TRANSLATION = {
     setHpBar2: 'Ρυθμίστε τη γραμμή HP 2',
     setAcBar2: 'Ρυθμίστε τη γραμμή AC 2',
     disableAc: 'Απενεργοποιήστε το AC',
+    presetReference: 'Αναφορά προεπιλογών',
+    presetReferenceDesc:
+      'Τι αλλάζει κάθε προεπιλογή. Τα παραδείγματα αφορούν ένα τέρας με {hp} HP και AC {ac}. Το HP στρογγυλοποιείται στον πλησιέστερο ακέραιο αριθμό και ένα πληγωμένο τέρας διατηρεί το ίδιο μερίδιο του HP του.',
+    partyPresets: 'Προεπιλογές ομάδας',
+    bossPresets: 'Προεπιλογές boss',
+    presetPlayers: 'Παίκτες',
+    presetChanges: 'Αλλαγές',
+    presetExample: 'Παράδειγμα',
+    presetHpSet: 'ορίζεται σε {hp}',
   },
   report: {
     summary: 'Περίληψη',
@@ -230,7 +239,6 @@ const TRANSLATION = {
     layerCol: 'Στρώμα',
     hpCol: 'ιπποδύναμη',
     acCol: 'AC',
-    dmgCol: 'Dmg',
     presetCol: 'Προκαθορισμένη',
   },
 };

@@ -33,19 +33,19 @@ Legacy `!director` is accepted for backward compatibility when no conflicting Di
 
 ### Party Scaling
 
-Scale enemy HP, AC, and damage for different party sizes.
+Scale enemy HP and AC for different party sizes.
 
 **Presets:**
 
-| Preset           | Party Size | HP   | AC  | Damage |
-| ---------------- | ---------- | ---- | --- | ------ |
-| Solo             | 1          | 25%  | −2  | 75%    |
-| Duo              | 2          | 50%  | −1  | 85%    |
-| Small Party      | 3          | 75%  | 0   | 90%    |
-| Standard Party   | 4          | 100% | 0   | 100%   |
-| Large Party      | 6          | 140% | +1  | 120%   |
-| Convention Table | 10         | 200% | +2  | 150%   |
-| Massive Table    | 20         | 300% | +3  | 200%   |
+| Preset           | Party Size | HP   | AC  |
+| ---------------- | ---------- | ---- | --- |
+| Solo             | 1          | 25%  | −2  |
+| Duo              | 2          | 50%  | −1  |
+| Small Party      | 3          | 75%  | 0   |
+| Standard Party   | 4          | 100% | 0   |
+| Large Party      | 6          | 140% | +1  |
+| Convention Table | 10         | 200% | +2  |
+| Massive Table    | 20         | 300% | +3  |
 
 Apply a preset to selected tokens:
 
@@ -59,7 +59,6 @@ Set individual values:
 ```
 !ced scale hp 150
 !ced scale ac +2
-!ced scale damage 125
 !ced scale apply
 ```
 
@@ -74,12 +73,12 @@ Apply a boss-type preset to selected tokens:
 !ced boss legendary
 ```
 
-| Preset    | HP       | AC  | Damage |
-| --------- | -------- | --- | ------ |
-| Minion    | Set to 1 | −2  | 50%    |
-| Elite     | 150%     | +1  | 125%   |
-| Boss      | 300%     | +2  | 150%   |
-| Legendary | 500%     | +3  | 200%   |
+| Preset    | HP       | AC  |
+| --------- | -------- | --- |
+| Minion    | Set to 1 | −2  |
+| Elite     | 150%     | +1  |
+| Boss      | 300%     | +2  |
+| Legendary | 500%     | +3  |
 
 ### Reinforcements
 
@@ -150,6 +149,7 @@ Generate a status report in the **Combat Encounter Director - Status** journal:
 !ced config hp-bar bar1
 !ced config ac-bar bar2
 !ced config ac-bar none
+!ced config language fr
 ```
 
 ### Journal Management
@@ -164,12 +164,19 @@ Rebuild the control panel and status journals:
 
 ## Configuration
 
-| Setting | Default | Options                | Description               |
-| ------- | ------- | ---------------------- | ------------------------- |
-| HP Bar  | bar1    | bar1, bar2, bar3       | Which token bar tracks HP |
-| AC Bar  | bar2    | bar1, bar2, bar3, none | Which token bar tracks AC |
+| Setting  | Default | Options                | Description                           |
+| -------- | ------- | ---------------------- | ------------------------------------- |
+| HP Bar   | bar1    | bar1, bar2, bar3       | Which token bar tracks HP             |
+| AC Bar   | bar2    | bar1, bar2, bar3, none | Which token bar tracks AC             |
+| Language | en-US   | see below              | Language of chat replies and handouts |
 
-Configure via Roll20 One-Click settings or with `!ced config`.
+Configure via Roll20 One-Click settings, the Config section of the Command Deck, or with `!ced config`.
+
+### Languages
+
+Combat Encounter Director speaks 24 languages: Afrikaans, Catalan, Chinese (Traditional), Czech, Danish, Dutch, English, Finnish, French, German, Greek, Hebrew, Hungarian, Italian, Japanese, Korean, Polish, Portuguese (Portugal), Portuguese (Brazil), Russian, Spanish, Swedish, Turkish and Ukrainian.
+
+The Config section of the Command Deck lists them all in a table, with their flags, codes and native names. Its **Language** button opens a drop-down to choose one; or type `!ced config language <code>`, such as `!ced config language fr`. Chat replies, the Command Deck and the Status handout switch straight away.
 
 ---
 
@@ -179,7 +186,40 @@ HP scaling modifies both `bar_value` (current HP) and `bar_max` (max HP) proport
 
 AC scaling applies a flat modifier to the AC bar value.
 
-Damage scaling is tracked as metadata and shown in the status report. It does not modify character sheet attributes — it informs the GM how much to adjust damage.
+CED changes only what it can set on the token, so it doesn't scale damage. Damage comes from dice rolls and character sheets, not the token. If you want a creature to hit harder or softer, adjust its damage rolls yourself.
+
+---
+
+## Preset Reference
+
+What every scaling preset changes. The examples are worked for a monster with **40 HP** and **AC 15**. HP is rounded to the nearest whole number (never below 1), and a wounded monster keeps the same share of its HP: at 20/40 HP, Elite makes it 30/60. The same tables are at the end of the Command Deck handout, on its All and Scaling tabs.
+
+### Party Presets
+
+`!ced scale preset <name>` applies one by name. `!ced scale party <size>` picks the preset for that many players, as in the Players column (a size halfway between two presets takes the smaller one).
+
+| Preset           | Players | Changes        | Example                 |
+| ---------------- | ------- | -------------- | ----------------------- |
+| Solo             | 1       | HP 25%, AC −2  | 40 HP → 10, AC 15 → 13  |
+| Duo              | 2       | HP 50%, AC −1  | 40 HP → 20, AC 15 → 14  |
+| Small Party      | 3       | HP 75%, AC 0   | 40 HP → 30, AC 15 → 15  |
+| Standard Party   | 4–5     | HP 100%, AC 0  | No change               |
+| Large Party      | 6–8     | HP 140%, AC +1 | 40 HP → 56, AC 15 → 16  |
+| Convention Table | 9–15    | HP 200%, AC +2 | 40 HP → 80, AC 15 → 17  |
+| Massive Table    | 16–30   | HP 300%, AC +3 | 40 HP → 120, AC 15 → 18 |
+
+### Boss Presets
+
+`!ced boss <name>` applies one to the selected tokens.
+
+| Preset    | Changes            | Example                 |
+| --------- | ------------------ | ----------------------- |
+| Minion    | HP set to 1, AC −2 | 40 HP → 1, AC 15 → 13   |
+| Elite     | HP 150%, AC +1     | 40 HP → 60, AC 15 → 16  |
+| Boss      | HP 300%, AC +2     | 40 HP → 120, AC 15 → 17 |
+| Legendary | HP 500%, AC +3     | 40 HP → 200, AC 15 → 18 |
+
+Every preset works from the token's original values, so applying another one replaces the last instead of adding to it. `!ced reset selected` puts the original values back.
 
 ---
 

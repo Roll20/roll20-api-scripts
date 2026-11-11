@@ -1,5 +1,26 @@
 # Changelog
 
+## 1.0.2
+
+### Added
+
+- The Config section of the Command Deck now has a **Language** button, which opens a drop-down of all 24 languages, and a table of the languages available (flag and code, English name, native name), as in the other MidNite Shadow mods. Its description already said the language could be chosen there.
+- README: a Languages section, and the language setting in the configuration table.
+- A Preset Reference at the end of the README and of the Command Deck (All and Scaling tabs): tables of every party and boss preset, with what each changes and a worked example (a 40 HP, AC 15 monster). The deck builds its tables from the preset data, so they always match.
+
+### Removed
+
+- **Damage scaling.** The damage percentage never changed anything on the token or in rolls; it was only a number in the status report, and users took it to be calculated from the monster's damage. Presets and boss tiers now scale HP and AC only. `!ced scale damage`, the Damage % buttons on the Command Deck and the Dmg column of the Status handout are gone; `!ced scale damage` now explains that it was removed. Damage values saved by earlier versions are cleared from tokens and saved encounters when the Mod starts.
+
+### Changed
+
+- The Command Deck and Status handouts now look like CED's chat replies: the same card, title bar, buttons and label/value rows. The Status handout's tables no longer pick up Roll20's handout table borders and white background, and minions show their hit points as "= 1" instead of "-999%".
+
+### Fixed
+
+- Auto-number Selected (`!ced reinforce enumerate`) now understands names Roll20's own Advanced Transform > Enumerate Tokens has numbered, such as "Goblin 3 (1)". Before, it kept "(1)" as part of the name and gave "Goblin 3 (1) 1".
+- Changing the language with `!ced config language` now rewrites the Command Deck in that language straight away. Before, only chat replies changed until the deck was next rebuilt.
+
 ## 1.0.1
 
 ### Added

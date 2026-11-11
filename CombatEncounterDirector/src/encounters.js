@@ -146,7 +146,6 @@ export function saveEncounter(name, pageId) {
       [`${hpBar}_max`]: snapshotBar(token, hpBar, 'max'),
       hpModifier: record?.hpModifier ?? 100,
       acModifier: record?.acModifier ?? 0,
-      damageModifier: record?.damageModifier ?? 100,
       preset: record?.preset ?? null,
       original: record?.original ?? captureOriginalValues(token),
     };
@@ -227,7 +226,6 @@ export function loadEncounter(name) {
     const record = createTokenRecord(snapshot.tokenId, snapshot.original, tokenPageId);
     record.hpModifier = snapshot.hpModifier;
     record.acModifier = snapshot.acModifier;
-    record.damageModifier = snapshot.damageModifier;
     record.preset = snapshot.preset;
     record.lastOperation = `encounter:load:${name}`;
     record.lastModified = Date.now();

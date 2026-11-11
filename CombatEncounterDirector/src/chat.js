@@ -79,6 +79,23 @@ const SECTION_LABEL_STYLE = [
 
 const DIVIDER_STYLE = `border:none;border-top:1px solid ${COLOR_BORDER};margin:4px 0`;
 
+// Tables in handouts. Roll20's handout stylesheet gives tables borders and a white background,
+// so every table part sets its own border and background to keep the chat card's look.
+export const TABLE_RESET = 'border:none;background:transparent';
+export const TABLE_STYLE = `width:100%;border-collapse:collapse;${TABLE_RESET};margin:0;font-size:0.9em`;
+export const TH_STYLE = [
+  TABLE_RESET,
+  `border-bottom:1px solid ${COLOR_ACCENT}`,
+  `color:${COLOR_MUTED}`,
+  'padding:2px 5px',
+  'text-align:left',
+  'font-weight:normal',
+  'font-size:0.8em',
+  'text-transform:uppercase',
+  'letter-spacing:0.08em',
+].join(';');
+export const TD_BASE_STYLE = `${TABLE_RESET};border-bottom:1px solid ${COLOR_BORDER};padding:3px 5px`;
+
 /**
  * Sends a whisper to a specific player.
  *
@@ -189,6 +206,24 @@ export function buildSecondaryButton(label, command) {
  */
 export function buildSectionLabel(text) {
   return `<div style="${SECTION_LABEL_STYLE}">${escapeHtml(text)}</div>`;
+}
+
+/**
+ * Builds a table styled like the chat cards, safe inside a handout.
+ *
+ * @param {string[]} headings Column headings (plain text — will be escaped).
+ * @param {string[][]} rows Cells of each row (trusted HTML).
+ * @returns {string} HTML table string.
+ */
+export function buildTable(headings, rows) {
+  const head = headings.map((h) => `<th style="${TH_STYLE}">${escapeHtml(h)}</th>`).join('');
+  const body = rows
+    .map(
+      (cells) =>
+        `<tr style="${TABLE_RESET}">${cells.map((c) => `<td style="${TD_BASE_STYLE};color:${COLOR_TEXT}">${c}</td>`).join('')}</tr>`
+    )
+    .join('');
+  return `<table style="${TABLE_STYLE}"><thead><tr style="${TABLE_RESET}">${head}</tr></thead><tbody>${body}</tbody></table>`;
 }
 
 /**
