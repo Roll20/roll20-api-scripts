@@ -8,10 +8,9 @@ API_Meta.TokenMod={offset:Number.MAX_SAFE_INTEGER,lineCount:-1};
 const TokenMod = (() => { // eslint-disable-line no-unused-vars
 
     const scriptName = "TokenMod";
-    const version = '0.8.92';
+    const version = '0.8.93';
     API_Meta.TokenMod.version = version;
-    const lastUpdate = 1788358968;
-
+    const lastUpdate = 1794354942;
     const schemaVersion = 0.6;
     const STATUS_MARKER_SOURCES = ['default', 'sheet', 'custom'];
     const STATUS_MARKER_SOURCE_LABELS = { default: 'Default', sheet: 'Sheet', custom: 'Custom' };
@@ -97,6 +96,9 @@ const TokenMod = (() => { // eslint-disable-line no-unused-vars
             adv_fow_view_distance: {type: 'numberBlank'},
             aura1_radius: {type: 'numberBlank'},
             aura2_radius: {type: 'numberBlank'},
+
+            aura1_opacity: {type: 'percentage'},
+            aura2_opacity: {type: 'percentage'},
 
                 //UDL settings
             night_vision_distance: {type: 'numberBlank'},
@@ -2340,11 +2342,13 @@ const TokenMod = (() => { // eslint-disable-line no-unused-vars
         setPercentage: (/* context*/) => _h.join(
                     _h.subhead('Percentage'),
                     _h.inset(
-                        _h.paragraph(`Percentage values can be a floating point number between 0 and 1.0, such as ${_h.code('0.35')}, or an integer number between 1 and 100.`),
+                        _h.paragraph(`Percentage values can be a floating point number between 0 and 1.0, such as ${_h.code('0.35')}, or an integer number between 1 and 100.  You can include a ${_h.code('%')} after the number.  Numbers greater than 1 are divided by 100, so ${_h.code('50%')}, ${_h.code('50')}, and ${_h.code('0.5')} all set the value to ${_h.code('0.5')}.`),
                         _h.minorhead('Available Percentage Properties:'),
                         _h.inset(
                             _h.grid(
-                                _h.cell('dim_light_opacity')
+                                _h.cell('dim_light_opacity'),
+                                _h.cell('aura1_opacity'),
+                                _h.cell('aura2_opacity')
                             )
                         ),
                         _h.paragraph(`Setting the low light opacity to 30%:`),
@@ -2353,6 +2357,15 @@ const TokenMod = (() => { // eslint-disable-line no-unused-vars
                         ),
                         _h.inset(
                             _h.pre( '!token-mod --set dim_light_opacity|0.3' )
+                        ),
+                        _h.paragraph(`${_h.code('aura1_opacity')} and ${_h.code('aura2_opacity')} set how opaque each aura is.  The default is ${_h.code('0.35')}.  ${_h.code('0')} is fully transparent and ${_h.code('1')} is fully opaque.  Set a radius and a color in the same command so the aura is visible when you run it.`),
+                        _h.paragraph(`Setting aura 1 to a 10ft radius at 50% opacity:`),
+                        _h.inset(
+                            _h.pre( '!token-mod --set aura1_radius|10 aura1_color|#ff0000 aura1_opacity|50%' )
+                        ),
+                        _h.paragraph(`Setting aura 2 to a 20ft radius at 80% opacity:`),
+                        _h.inset(
+                            _h.pre( '!token-mod --set aura2_radius|20 aura2_color|#00aaee aura2_opacity|0.8' )
                         )
                     )
                 ),
@@ -3938,6 +3951,8 @@ const TokenMod = (() => { // eslint-disable-line no-unused-vars
                 case 'baseOpacity':
                 case 'fadeOpacity':
                 case 'dim_light_opacity':
+                case 'aura1_opacity':
+                case 'aura2_opacity':
                     mods = Object.assign( mods, f[0].getMods(token,mods));
                     break;
 
