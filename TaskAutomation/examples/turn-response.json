@@ -1,0 +1,90 @@
+{
+  "schemaVersion": 1,
+  "id": "turn-response",
+  "revision": 1,
+  "name": "Turn response",
+  "description": "When the current turn changes to a token, wait briefly for an optional ready signal, then ping it for the GM.",
+  "enabled": false,
+  "parameters": {},
+  "bindings": {
+    "token": {
+      "from": "event",
+      "objectType": "graphic",
+      "max": 1,
+      "min": 0
+    }
+  },
+  "access": {
+    "mode": "gmOnly",
+    "authority": "gmService"
+  },
+  "triggers": [
+    {
+      "id": "turn",
+      "type": "event",
+      "event": "turn.change",
+      "bind": {
+        "binding": "token"
+      }
+    }
+  ],
+  "policy": {
+    "concurrency": "replace",
+    "maxConcurrent": 1,
+    "onError": "skip"
+  },
+  "steps": [
+    {
+      "id": "has-token",
+      "type": "if",
+      "condition": {
+        "op": "gt",
+        "left": {
+          "ref": "target.token.count"
+        },
+        "right": 0
+      },
+      "then": [
+        {
+          "id": "ready",
+          "type": "awaitEvent",
+          "event": "signal",
+          "filter": {
+            "signal": "turn-ready"
+          },
+          "timeoutMs": 15000
+        },
+        {
+          "id": "ping",
+          "type": "ping",
+          "target": {
+            "binding": "token"
+          },
+          "to": {
+            "gm": true
+          }
+        },
+        {
+          "id": "notify",
+          "type": "chat.send",
+          "mode": "whisper",
+          "to": {
+            "gm": true
+          },
+          "text": "It is {{target.token.name}}'s turn."
+        }
+      ],
+      "else": [
+        {
+          "id": "notify-custom",
+          "type": "chat.send",
+          "mode": "whisper",
+          "to": {
+            "gm": true
+          },
+          "text": "Turn: {{event.name}}"
+        }
+      ]
+    }
+  ]
+}

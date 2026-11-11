@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "id": "montage",
+  "revision": 1,
+  "name": "Adventure montage",
+  "description": "Cycle selected multi-sided tokens ten times, eight seconds apart.",
+  "enabled": true,
+  "parameters": {},
+  "bindings": {
+    "tokens": {
+      "from": "selected",
+      "objectType": "graphic",
+      "max": 5
+    }
+  },
+  "access": {
+    "mode": "gmOnly",
+    "authority": "initiator"
+  },
+  "triggers": [
+    {
+      "id": "manual",
+      "type": "manual"
+    }
+  ],
+  "policy": {
+    "concurrency": "skipIfRunning",
+    "maxConcurrent": 1,
+    "onError": "fail",
+    "overdue": {
+      "mode": "skip",
+      "graceMs": 250
+    },
+    "restart": "reconcile"
+  },
+  "steps": [
+    {
+      "id": "frames",
+      "type": "loop",
+      "mode": "count",
+      "count": 10,
+      "steps": [
+        {
+          "id": "advance",
+          "type": "token.advanceSide",
+          "target": {
+            "binding": "tokens"
+          },
+          "delta": 1,
+          "wrap": true
+        },
+        {
+          "id": "hold",
+          "type": "wait",
+          "durationMs": 8000
+        }
+      ]
+    }
+  ]
+}
