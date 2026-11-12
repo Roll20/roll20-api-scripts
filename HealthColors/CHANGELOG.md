@@ -3,6 +3,15 @@
 All notable changes to this project will be documented in this file.  
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [2.5.0] – 2026-11-04
+
+### Added
+
+- **Who handles what, shared with DeathTracker.** HealthColors and DeathTracker 1.0 or later can both do three things: track death saves with the dying, stable and dead markers, colour tokens by health, and play hurt and heal effects. A new **Who handles what** section at the top of the `!aura` menu, and `!aura owner <deathsaves|colours|effects> <HealthColors|DeathTracker|off>`, choose which Mod does each, or neither. The choice is stored once (`state.ModOwners`) and DeathTracker's settings show and change the same values, so the two Mods always agree; changing it in either refreshes both Mods' tokens.
+- At first, with DeathTracker installed, DeathTracker handles death saves and HealthColors the colours and effects. Without DeathTracker, HealthColors handles all three. DeathTracker 0.1 is not affected.
+- When HealthColors does not handle death saves it adds no dead (Red X), dying or stable marker of its own and its Death Save Integration stays idle (no field watching, no polling; `!aura deathsaves sync` says who handles them). When it does not handle colours it adds no aura or tint and takes its own off; when it does not handle effects it plays no heal or hurt FX. The death sound and nameplates are always HealthColors'.
+- The GM menu, the help handout (command table and the DeathTracker integration, marked *detected* or *not installed*) and the startup log show who handles what. The public API gains `HealthColors.ownersChanged()`, which DeathTracker calls after a change.
+
 ## [2.4.0] – 2026-10-25
 
 ### Added
