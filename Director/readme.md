@@ -10,7 +10,7 @@
 
 The interface appears in a Roll20 handout and consists of five main sections:
 
-- **Header** — search, edit mode, help toggle, and scene controls (Set as Grid/Scene, Wipe the Scene, Stop Audio)
+- **Header** — search, edit mode, help toggle, and scene controls (Set as Grid/Scene, Slide Show, Wipe the Scene, Stop Audio)
 - **Acts & Scenes** — scene navigation and management
 - **Images** — a scene's list of images: click any one to make it the backdrop; the rest become highlights
 - **Items** — Actors, Characters, Variants, Handouts, Tracks, Macros, and Rollable Tables
@@ -153,6 +153,10 @@ Manual tweaks (move, recolor, resize) persist until the caption is refreshed by 
 
 Use Margins Off if you use the Director interface docked in the VTT, and turn them On if you use it popped out into its own window. Off is the default.
 
+### Slide Interval
+
+How many seconds Slide Show (see Header Buttons below) holds each image before crossfading to the next. Default is 10 seconds.
+
 ### Backup
 
 - **make**: creates a sequentially numbered "Director Backup ###" handout. Useful for restoring a corrupted database or transferring act/scene/image definitions between campaigns. Item buttons aren't transferred but can be restored within the same campaign the backup was made from.
@@ -193,6 +197,16 @@ Opens a prompt to search scenes and images by name (see Search under Acts & Scen
 - Star system is suppressed, since there's no single backdrop
 
 > _Only works if the current page name contains:_ `scene`, `stage`, `theater`, or `theatre`
+
+### Slide Show
+
+Sets the current scene live (same as **Scene**, above) and then cycles every image in the scene through the backdrop slot on a timed loop, crossfading between them exactly like clicking an image does. The button's icon switches from ▶ to ■ while it's running; click it again to stop.
+
+- The time between images is set by the **Slide Interval** setting (default 10 seconds, under Settings)
+- While cycling, only the caption updates with each image — star highlights and track start/stop are held until the loop stops, then applied to whichever image is showing, same as a normal click
+- Pauses on its own (without stopping) whenever no player or GM is actually viewing the stage page, and resumes once someone is
+- Stops on any of: clicking the button again, clicking an image to set it as backdrop, Set Scene, Set Grid, or Wipe the Scene
+- Does nothing if the scene has fewer than two images
 
 ### Wipe the Scene
 
