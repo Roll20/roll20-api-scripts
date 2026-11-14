@@ -1,8 +1,8 @@
 {
   "name": "Align",
   "script": "Align.js",
-  "version": "1.1.1",
-  "description": "Visually align, distribute, snap, stack, and scatter tokens on the VTT with a chat menu interface. Features include grid snapping, spacing control, z-index sorting, random scatter, undo, and edge protection. Now contains token page management",
+  "version": "1.1.2",
+  "description": "Align arranges selected tokens and graphics from a chat menu: align, distribute, set gaps, snap to the grid, stack, tile map images, scatter, form blocks, circles and arcs, rotate an arrangement, set facing, swap and shuffle. Most moves can be undone and redone.\n\nType `!align` to open the menu. Click **?** in the menu for the full help handout.\n\n**Main commands**\n- `--align|left|right|top|bottom|center|center-x|center-y`\n- `--distribute|MODE` and `--distributespacing|horizontal|vertical`\n- `--gap|AXIS|SQUARES`: fixed gap between tokens along one axis\n- `--snap|AXIS|SPACES`: lay tokens out on the grid from the page's top-left; `--snapinplace` puts each token on the grid where it is\n- `--zindex|top-left` (and other corners), `--tile`, `--scatter|page|area|snap|nosnap`\n- `--block|ROWS|SQUARES`, `--circle|RADIUS|TURN|SNAP`, `--arc|SPAN|TOWARD|RADIUS|TURN|SNAP`\n- `--rotate|90|-90|45|-45|180` (add `|turn` to turn the tokens too)\n- `--face|up|down|left|right`, `--leader` (copy a target token's facing)\n- `--swap`, `--shuffle`, `--undo`, `--redo`\n\n**Player swap macro:** `!align --swap|@{target|Swap with|token_id}` lets a player trade places with another token, for abilities that allow it.\n\n**Settings (GM, the gear button):** which way token art faces, selection memory time, player access (GM only by default), showing the legacy Token Page button, and quiet mode.\n\n**Token Page commands** (`!tokenpage`, or the Token Page Commands button) are kept for existing games and moved to a submenu. A dedicated Token Manager script is under development.\n\nBuilt and tested on Jumpgate.",
   "authors": "Keith Curtis",
   "roll20userid": "162065",
   "patreon": "https://www.patreon.com/c/KeithCurtis",
@@ -10,8 +10,13 @@
   "modifies": {
     "graphics": "read,write",
     "pages": "read,write",
-    "player": "read"
+    "player": "read",
+    "character": "read",
+    "handout": "read,write",
+    "text": "read,write",
+    "pathv2": "read,write",
+    "path": "read"
   },
   "conflicts": [],
-	"previousversions": ["1.0.0","1.0.1","1.1.0"]
+  "previousversions": ["1.0.0", "1.0.1", "1.1.0", "1.1.1"]
 }
