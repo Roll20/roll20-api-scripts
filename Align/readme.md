@@ -18,13 +18,13 @@ Align doesn't care which sheet you are using. It only knows tokens and graphics;
 - **Tile:** place map images edge to edge.
 - **Scatter:** place tokens at random over the page or the area they cover, without overlapping each other or other tokens.
 - **Formations:** grid blocks by number of rows, circles and arcs (optionally facing the center or outward, optionally snapped to the grid).
-- **Rotate:** turn a whole arrangement 90°, 45° or 180°, keeping or turning each token's facing. On a grid, blocks stay on the grid and don't drift with repeated turns.
+- **Rotate:** turn a whole arrangement 90°, 45° or 180°, keeping or turning each token's facing. On a grid, blocks don't drift with repeated turns. A setting chooses whether 45° turns keep the block's exact formation (default) or keep every token in a square.
 - **Face:** set every selected token to face up, down, left or right, or copy the facing of a leader token.
 - **Swap and Shuffle:** swap two tokens, or move every selected token into a spot another one held. Players can use a macro to swap places with a target token.
 - **Undo and Redo:** up to 10 steps per player.
 - **Selection memory:** the tabletop often drops the selection after tokens move. If you run another command within a few seconds, Align uses the same tokens again.
 - **Edge protection:** To Grid asks before wrapping tokens to a new row or enlarging the page.
-- **Settings:** a GM settings card for token art facing, selection memory time, player access, quiet mode and the legacy Token Page button.
+- **Settings:** a GM settings card for token art facing, selection memory time, player access, block rotation, quiet mode and the legacy Token Page button.
 
 ---
 
@@ -124,6 +124,8 @@ Place map images in rough rows first. The top-left image stays put and the rest 
 
 Positive angles are clockwise. Add `|turn` to turn each token by the same angle.
 
+On a grid, 90° and 180° turns keep the block on the grid. For 45° turns, the **Block rotation** setting chooses between **Keep formation** (default: the block turns as a rigid shape, so tokens sit between squares until the next 45° turn) and **Keep on grid** (every token stays in a square, but the shape changes). Turning back to an earlier orientation always restores the exact earlier layout.
+
 ### Face
 ```
 !align --face|up
@@ -154,6 +156,7 @@ The second form is a player macro: select your own token, run it, and click the 
 !align --set|selectionSeconds|10
 !align --set|access|all
 !align --set|quiet|true
+!align --set|blockRotation|grid
 ```
 
 ---

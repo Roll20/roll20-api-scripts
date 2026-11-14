@@ -8,7 +8,8 @@
 //       legacy submenu. Fixed page-size math on non-1 grids, Tile, snap confirm/cancel and undo coverage.
 //       Added Gap, Snap in Place, Grid Block, Circle, Arc, Rotate (90/45/180, with or without facing), Face/Leader,
 //       Swap (plus player swap macro), Shuffle and Redo. Scatter no longer overlaps tokens. Selection memory
-//       restores dropped selections. GM settings card. Help moved to a handout.
+//       restores dropped selections. GM settings card (including Keep formation / Keep on grid for 45° block
+//       turns). Help moved to a handout.
 
 const Align = (() => {
   'use strict';
@@ -32,13 +33,14 @@ const Align = (() => {
   };
 
   // Settings (state.Align.config) and their allowed values
-  const DEFAULT_SETTINGS = { facing: 'up', selectionSeconds: 5, access: 'gm', showTokenPage: true, quiet: false };
+  const DEFAULT_SETTINGS = { facing: 'up', selectionSeconds: 5, access: 'gm', showTokenPage: true, quiet: false, blockRotation: 'formation' };
   const SETTING_VALUES = {
     facing: ['up', 'down', 'left', 'right'],
     selectionSeconds: [0, 3, 5, 10],
     access: ['gm', 'all'],
     showTokenPage: [true, false],
-    quiet: [true, false]
+    quiet: [true, false],
+    blockRotation: ['formation', 'grid']
   };
   // Compass angle (clockwise from up) for a direction name
   const COMPASS = { up: 0, right: 90, down: 180, left: 270 };
@@ -837,7 +839,12 @@ const Align = (() => {
           const [qx, qy] = turn90(b.x - e.pivot.x, b.y - e.pivot.y, quarters);
           let x = e.pivot.x + qx, y = e.pivot.y + qy;
           if (!extra45) return { x, y };
-          // One more 45° step, using the token's top-left square for tokens larger than one square
+          // Keep formation: one more exact 45° turn about the pivot, so spacing is unchanged and tokens sit between squares
+          if (State.setting('blockRotation') !== 'grid') {
+            const c = Math.SQRT1_2, dx = x - e.pivot.x, dy = y - e.pivot.y;
+            return { x: e.pivot.x + (dx - dy) * c, y: e.pivot.y + (dx + dy) * c };
+          }
+          // Keep on grid: one more 45° step around the ring, using the token's top-left square for tokens larger than one square
           const small = TokenUtils.isSmall(w, h, grid) || (Math.abs(w - grid) < 0.5 && Math.abs(h - grid) < 0.5);
           const cellX = small ? x : x - w / 2 + grid / 2;
           const cellY = small ? y : y - h / 2 + grid / 2;
@@ -845,6 +852,15 @@ const Align = (() => {
           const nx = e.pivot.x + rx * grid, ny = e.pivot.y + ry * grid;
           return small ? { x: nx, y: ny } : { x: nx - grid / 2 + w / 2, y: ny - grid / 2 + h / 2 };
         });
+      },
+
+      // True when the tokens are exactly where the last turn of this block left them (they may be between squares)
+      continues: (tokens, rects) => {
+        const e = entries[keyOf(tokens)];
+        if (!e) return false;
+        const ids = tokens.map(t => t.id), sortedIds = ids.slice().sort();
+        const last = ids.map(id => e.last[sortedIds.indexOf(id)]);
+        return near(last, rects.map(r => ({ x: r.cx, y: r.cy })));
       },
 
       // Remember where the last turn put the tokens, so the next turn can continue from the same start
@@ -1060,7 +1076,7 @@ const Align = (() => {
         };
 
         let pos;
-        const gridMode = snapping && rects.every(r => onGrid(r.cx, r.cy, r));
+        const gridMode = snapping && (rects.every(r => onGrid(r.cx, r.cy, r)) || RotationMemory.continues(tokens, rects));
         if (gridMode) {
           pos = RotationMemory.turn(tokens, rects, grid, a);
         } else {
@@ -1440,9 +1456,10 @@ When player access is set to GM only, a player who types <code>!align</code> get
   <li><strong>Selection memory</strong> — <code>0</code> (off), <code>3</code>, <code>5</code> (default) or <code>10</code> seconds. See Selection Memory below.</li>
   <li><strong>Player access</strong> — <code>gm</code> (default) or <code>all</code>. Swap Two and the swap macro always work for players.</li>
   <li><strong>Token Page button</strong> — Show (default) or hide the legacy Token Page Commands button. The commands work either way.</li>
+  <li><strong>Block rotation</strong> — <code>formation</code> (default) or <code>grid</code>: whether 45° turns of a block on the grid keep its exact shape or keep every token in a square. See Rotate below.</li>
   <li><strong>Quiet mode</strong> — Off (default) or on. On hides all Align messages, including error messages such as "Select two or more tokens", for everyone. With it on, a command that can't run does nothing visible; the message still goes to the API console. Menus, the help link, Settings and the To Grid confirmation still appear.</li>
 </ul>
-<p>Settings can also be typed: <code>!align --set|facing|down</code>, <code>!align --set|selectionSeconds|10</code>, <code>!align --set|access|all</code>, <code>!align --set|showTokenPage|false</code>, <code>!align --set|quiet|true</code>.</p>
+<p>Settings can also be typed: <code>!align --set|facing|down</code>, <code>!align --set|selectionSeconds|10</code>, <code>!align --set|access|all</code>, <code>!align --set|showTokenPage|false</code>, <code>!align --set|quiet|true</code>, <code>!align --set|blockRotation|grid</code>.</p>
 
 <h2>Selection Memory</h2>
 
@@ -1627,16 +1644,21 @@ Turns the whole arrangement. <code>ANGLE</code> is <code>90</code> or <code>45</
 </ul>
 <h3>On the grid</h3>
 <p>
-On a page with grid snapping, when every selected token is on the grid, the block stays on the grid:
+On a page with grid snapping, when every selected token starts on the grid:
 </p>
 <ul>
   <li>The block turns around a fixed square: the square nearest its middle when you started turning it. A block whose width and height differ (for example 4 × 3) can end up slightly off-center after a 90° turn, but it does not drift.</li>
-  <li>A 45° turn works in grid terms, where a diagonal step counts as one square. Each token moves one-eighth of the way around the ring of squares at the same distance from the turning square. A straight row becomes a diagonal line of tokens touching corner to corner, and a diagonal line becomes a row. Two one-square tokens never land in the same square.</li>
-  <li>Two 45° turns equal one 90° turn, and turning back to an earlier orientation always restores exactly the earlier layout, however many turns it took. If you move the tokens any other way between turns, their new layout becomes the starting point.</li>
-  <li>Blocks that mix token sizes may give unexpected results on 45° turns. Tokens larger than one square are moved by their top-left square and may overlap a neighbor.</li>
+  <li>90° and 180° turns keep both the formation and the grid.</li>
+  <li>45° turns follow the <strong>Block rotation</strong> setting:
+    <ul>
+      <li><strong>Keep formation</strong> (default) — the block turns as a rigid shape. Every token keeps its exact spacing from the others, so after a 45° turn the tokens sit between squares. Another 45° turn the same way puts them all back on the grid.</li>
+      <li><strong>Keep on grid</strong> — every token stays in a square. The turn works in grid terms, where a diagonal step counts as one square: each token moves one-eighth of the way around the ring of squares at the same distance from the turning square. A straight row becomes a diagonal line of tokens touching corner to corner, but larger blocks change shape. Two one-square tokens never land in the same square. Blocks that mix token sizes may give unexpected results; tokens larger than one square are moved by their top-left square and may overlap a neighbor.</li>
+    </ul>
+  </li>
+  <li>Either way, every turn is worked out from the block's starting layout, so turning back to an earlier orientation always restores exactly the earlier layout, however many turns it took. If you move the tokens any other way between turns, their new layout becomes the starting point.</li>
 </ul>
 <p>
-On a page without grid snapping, or when a token is off the grid, the arrangement turns exactly around the middle
+On a page without grid snapping, or when a block starts off the grid, the arrangement turns exactly around the middle
 of the selection.
 </p>
 
@@ -1884,6 +1906,8 @@ current box style are also recognized. Other drawings on the map layer are left 
           opts: [['gm', 'GM only'], ['all', 'All players']] },
         { key: 'showTokenPage', name: 'Token Page button', desc: 'Show the legacy Token Page Commands button in the menu. Commands work either way.',
           opts: [[true, 'Show'], [false, 'Hide']] },
+        { key: 'blockRotation', name: 'Block rotation', desc: 'How 45° Rotate turns treat blocks on a grid. Keep formation turns the block as a rigid shape (tokens can sit between squares); Keep on grid keeps every token in a square but changes the shape. 90° and 180° turns keep both.',
+          opts: [['formation', 'Keep formation'], ['grid', 'Keep on grid']] },
         { key: 'quiet', name: 'Quiet mode', desc: 'Hide all Align messages, including errors. Errors still go to the API console.',
           opts: [[true, 'On'], [false, 'Off']] }
       ];
