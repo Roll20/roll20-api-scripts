@@ -3,7 +3,7 @@
 // with the group's objects; anything missing is copied; anything extra is a
 // leftover, handled by the pairLeftovers setting.
 
-import { buildButton, buildSecondaryButton, whisper } from './chat.js';
+import { buildButton, buildButtonGrid, buildRow, buildSecondaryButton, whisper } from './chat.js';
 import { COMMAND } from './constants.js';
 import { createCopy, fingerprint, readProps } from './copy.js';
 import {
@@ -202,7 +202,11 @@ export function handleLeftovers(group, pageId, leftovers, gm) {
       o.get('name') || o.get('text') || t(`types.${o.get('_type')}`, lang),
       30
     );
-    return `<div>${escapeHtml(label)} ${buildSecondaryButton(t('buttons.copy', lang), `${COMMAND} request ${one} copy`)}${buildSecondaryButton(t('buttons.keepHere', lang), `${COMMAND} request ${one} keep`)}</div>`;
+    return buildRow(
+      label,
+      `${buildSecondaryButton(t('buttons.copy', lang), `${COMMAND} request ${one} copy`)}${buildSecondaryButton(t('buttons.keepHere', lang), `${COMMAND} request ${one} keep`)}`,
+      true
+    );
   });
   if (leftovers.length > 10) {
     rows.push(
@@ -212,7 +216,10 @@ export function handleLeftovers(group, pageId, leftovers, gm) {
   whisper(gm || null, t('titles.leftovers', lang), [
     `<div>${escapeHtml(t('messages.leftovers', lang, { count: leftovers.length, page: pageName(pageId) }))}</div>`,
     ...rows,
-    `<div style="margin-top:4px">${buildButton(t('buttons.copyAll', lang), `${COMMAND} request ${all} copy`)}${buildSecondaryButton(t('buttons.keepAll', lang), `${COMMAND} request ${all} keep`)}</div>`,
+    buildButtonGrid([
+      buildButton(t('buttons.copyAll', lang), `${COMMAND} request ${all} copy`),
+      buildSecondaryButton(t('buttons.keepAll', lang), `${COMMAND} request ${all} keep`),
+    ]),
   ]);
   out.asked = leftovers.length;
   return out;

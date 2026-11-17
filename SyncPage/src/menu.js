@@ -3,7 +3,9 @@
 
 import {
   buildButton,
+  buildButtonGrid,
   buildDivider,
+  buildItemTitle,
   buildRow,
   buildSecondaryButton,
   buildSectionLabel,
@@ -103,7 +105,7 @@ export function showMenu(ctx) {
   const page = ctx.pageId;
   const group = groupOfPage(page);
   const parts = [];
-  parts.push(buildRow(t('menu.thisPage', lang), escapeHtml(truncate(pageName(page), 28))));
+  parts.push(buildSectionLabel(`${t('menu.thisPage', lang)}: ${truncate(pageName(page), 28)}`));
   if (group) {
     const role = group.source === page ? t('menu.source', lang) : t('menu.copy', lang);
     parts.push(
@@ -116,10 +118,26 @@ export function showMenu(ctx) {
       parts.push(pill(t('menu.paused', lang), COLOR_HIDDEN));
     }
     parts.push(
-      `<div>${buildButton(t('buttons.group', lang), cmd(`group show ${group.id}`))}${buildButton(t('buttons.players', lang), cmd(`players ${group.id}`))}${buildSecondaryButton(t('buttons.repair', lang), cmd(`repair ${group.id}`))}${buildSecondaryButton(t('buttons.dryRun', lang), cmd(`repair ${group.id} --dry-run`))}${buildSecondaryButton(group.paused ? t('buttons.resume', lang) : t('buttons.pause', lang), cmd(`${group.paused ? 'resume' : 'pause'} ${group.id}`))}</div>`
+      buildButtonGrid([
+        buildButton(t('buttons.group', lang), cmd(`group show ${group.id}`)),
+        buildButton(t('buttons.players', lang), cmd(`players ${group.id}`)),
+        buildSecondaryButton(t('buttons.repair', lang), cmd(`repair ${group.id}`)),
+        buildSecondaryButton(t('buttons.dryRun', lang), cmd(`repair ${group.id} --dry-run`)),
+        buildSecondaryButton(
+          group.paused ? t('buttons.resume', lang) : t('buttons.pause', lang),
+          cmd(`${group.paused ? 'resume' : 'pause'} ${group.id}`)
+        ),
+      ])
     );
+    parts.push(buildSectionLabel(t('deck.selectedTitle', lang)));
     parts.push(
-      `<div>${buildSecondaryButton(t('buttons.status', lang), cmd('status'))}${buildSecondaryButton(t('buttons.hideHere', lang), cmd('hide here'))}${buildSecondaryButton(t('buttons.showHere', lang), cmd('show here'))}${buildSecondaryButton(t('buttons.hideOthers', lang), cmd('hide others'))}${buildSecondaryButton(t('buttons.showOthers', lang), cmd('show others'))}</div>`
+      buildButtonGrid([
+        buildSecondaryButton(t('buttons.hideHere', lang), cmd('hide here')),
+        buildSecondaryButton(t('buttons.showHere', lang), cmd('show here')),
+        buildSecondaryButton(t('buttons.hideOthers', lang), cmd('hide others')),
+        buildSecondaryButton(t('buttons.showOthers', lang), cmd('show others')),
+        buildSecondaryButton(t('buttons.status', lang), cmd('status')),
+      ])
     );
     parts.push(note(t('menu.selectedHint', lang)));
   } else {
@@ -137,19 +155,31 @@ export function showMenu(ctx) {
         buildButton(t('buttons.addToGroup', lang), cmd(`group add ${groupQuery(lang)}`))
       );
     }
-    parts.push(`<div>${buttons.join('')}</div>`);
+    parts.push(buildButtonGrid(buttons, 1));
     parts.push(note(t('menu.duplicateHint', lang)));
   }
   const groups = listGroups();
   if (groups.length) {
     parts.push(buildSectionLabel(t('menu.groups', lang)));
     parts.push(
-      `<div>${groups.map((g) => buildSecondaryButton(`${truncate(g.name, 20)} (${g.pages.length})`, cmd(`group show ${g.id}`))).join('')}</div>`
+      buildButtonGrid(
+        groups.map((g) =>
+          buildSecondaryButton(
+            `${truncate(g.name, 20)} (${g.pages.length})`,
+            cmd(`group show ${g.id}`)
+          )
+        )
+      )
     );
   }
-  parts.push(buildDivider());
+  parts.push(buildSectionLabel(t('deck.toolsTitle', lang)));
   parts.push(
-    `<div>${buildSecondaryButton(t('buttons.settings', lang), cmd('settings'))}${buildSecondaryButton(t('buttons.recycle', lang), cmd('recycle'))}${buildSecondaryButton(t('buttons.undo', lang), cmd('undo'))}${buildSecondaryButton(t('buttons.help', lang), cmd('help'))}</div>`
+    buildButtonGrid([
+      buildSecondaryButton(t('buttons.settings', lang), cmd('settings')),
+      buildSecondaryButton(t('buttons.recycle', lang), cmd('recycle')),
+      buildSecondaryButton(t('buttons.undo', lang), cmd('undo')),
+      buildSecondaryButton(t('buttons.help', lang), cmd('help')),
+    ])
   );
   whisper(ctx.playerId, `${SCRIPT_NAME} ${SCRIPT_VERSION}`, parts);
 }
@@ -185,9 +215,14 @@ export function showGroup(ctx, group) {
     buttons.push(
       buildSecondaryButton(t('buttons.removePage', lang), cmd(`group remove --page ${p}`))
     );
+    // The page's name on its own line, its buttons under it
     parts.push(
-      buildRow(`${label} · ${t('group.playersCount', lang, { count: players })}`, buttons.join(''))
+      buildItemTitle(
+        label,
+        ` <span style="color:${COLOR_MUTED};font-weight:normal;font-size:0.9em">· ${escapeHtml(t('group.playersCount', lang, { count: players }))}</span>`
+      )
     );
+    parts.push(buildButtonGrid(buttons, 2));
   }
   parts.push(note(t('group.sourceHint', lang)));
   parts.push(buildSectionLabel(t('group.summary', lang)));
@@ -217,12 +252,32 @@ export function showGroup(ctx, group) {
       )
     );
   }
-  parts.push(buildDivider());
+  parts.push(buildSectionLabel(t('deck.toolsTitle', lang)));
   parts.push(
-    `<div>${buildButton(t('buttons.players', lang), cmd(`players ${group.id}`))}${buildButton(t('buttons.repair', lang), cmd(`repair ${group.id}`))}${buildSecondaryButton(t('buttons.dryRun', lang), cmd(`repair ${group.id} --dry-run`))}${buildSecondaryButton(group.paused ? t('buttons.resume', lang) : t('buttons.pause', lang), cmd(`${group.paused ? 'resume' : 'pause'} ${group.id}`))}</div>`
-  );
-  parts.push(
-    `<div>${buildSecondaryButton(t('buttons.groupSettings', lang), cmd(`settings group ${group.id}`))}${buildSecondaryButton(t('buttons.recycle', lang), cmd(`recycle ${group.id}`))}${buildSecondaryButton(t('buttons.rename', lang), cmd(`group rename ${group.id} ?{${queryText(t('queries.groupName', lang))}|${queryText(group.name)}}`))}${buildSecondaryButton(t('buttons.deleteGroup', lang), cmd(`group delete ${group.id} ?{${queryText(t('queries.deleteGroup', lang, { name: group.name }))}|${t('queries.no', lang)},no|${t('queries.yes', lang)},yes}`))}${buildSecondaryButton(t('buttons.menu', lang), cmd('menu'))}</div>`
+    buildButtonGrid([
+      buildButton(t('buttons.players', lang), cmd(`players ${group.id}`)),
+      buildButton(t('buttons.repair', lang), cmd(`repair ${group.id}`)),
+      buildSecondaryButton(t('buttons.dryRun', lang), cmd(`repair ${group.id} --dry-run`)),
+      buildSecondaryButton(
+        group.paused ? t('buttons.resume', lang) : t('buttons.pause', lang),
+        cmd(`${group.paused ? 'resume' : 'pause'} ${group.id}`)
+      ),
+      buildSecondaryButton(t('buttons.groupSettings', lang), cmd(`settings group ${group.id}`)),
+      buildSecondaryButton(t('buttons.recycle', lang), cmd(`recycle ${group.id}`)),
+      buildSecondaryButton(
+        t('buttons.rename', lang),
+        cmd(
+          `group rename ${group.id} ?{${queryText(t('queries.groupName', lang))}|${queryText(group.name)}}`
+        )
+      ),
+      buildSecondaryButton(
+        t('buttons.deleteGroup', lang),
+        cmd(
+          `group delete ${group.id} ?{${queryText(t('queries.deleteGroup', lang, { name: group.name }))}|${t('queries.no', lang)},no|${t('queries.yes', lang)},yes}`
+        )
+      ),
+      buildSecondaryButton(t('buttons.menu', lang), cmd('menu')),
+    ])
   );
   whisper(ctx.playerId, t('titles.group', lang, { name: group.name }), parts);
 }
@@ -261,6 +316,9 @@ export function showPlayers(ctx, group) {
   const lang = getLang();
   const parts = [];
   const players = listPlayers();
+  // One column per page of the group, up to three, so a player's page buttons line up
+  const columns = Math.min(3, Math.max(1, group.pages.length));
+  parts.push(buildSectionLabel(t('buttons.players', lang)));
   if (!players.length) {
     parts.push(note(t('players.none', lang)));
   }
@@ -272,19 +330,33 @@ export function showPlayers(ctx, group) {
       : t('players.elsewhere', lang);
     const buttons = group.pages.map((p) =>
       p === here
-        ? `<span style="color:${COLOR_ACCENT};margin:1px 3px">● ${escapeHtml(truncate(pageName(p), 14))}</span>`
+        ? `<div style="color:${COLOR_ACCENT};text-align:center;border:1px solid ${COLOR_ACCENT};border-radius:3px;padding:1px 4px;font-size:0.9em">● ${escapeHtml(truncate(pageName(p), 14))}</div>`
         : buildSecondaryButton(
             truncate(pageName(p), 14),
             cmd(`move ${player.id} ${p} --group ${group.id}`)
           )
     );
     parts.push(
-      `<div style="margin:3px 0"><strong>${escapeHtml(name)}</strong> <span style="color:${COLOR_MUTED}">(${escapeHtml(where)})</span><br>${buttons.join('')}</div>`
+      buildItemTitle(
+        name,
+        ` <span style="color:${COLOR_MUTED};font-weight:normal">(${escapeHtml(where)})</span>`
+      )
     );
+    parts.push(buildButtonGrid(buttons, columns));
   }
   parts.push(buildDivider());
   parts.push(
-    `<div>${buildButton(t('buttons.everyoneTo', lang, { page: truncate(pageName(group.source), 14) }), cmd(`move all ${group.source} --group ${group.id}`))}${buildSecondaryButton(t('buttons.saveLayout', lang), cmd(`layout save ${group.id}`))}${buildSecondaryButton(t('buttons.restoreLayout', lang), cmd(`layout restore ${group.id}`))}</div>`
+    buildButtonGrid(
+      [
+        buildButton(
+          t('buttons.everyoneTo', lang, { page: truncate(pageName(group.source), 14) }),
+          cmd(`move all ${group.source} --group ${group.id}`)
+        ),
+        buildSecondaryButton(t('buttons.saveLayout', lang), cmd(`layout save ${group.id}`)),
+        buildSecondaryButton(t('buttons.restoreLayout', lang), cmd(`layout restore ${group.id}`)),
+      ],
+      1
+    )
   );
   if (Object.keys(group.layout).length) {
     parts.push(note(t('players.layoutSaved', lang, { count: Object.keys(group.layout).length })));
@@ -292,8 +364,9 @@ export function showPlayers(ctx, group) {
   const linked = (ctx.objects || [])
     .map((o) => ({ obj: o, found: linkOf(o.id) }))
     .filter((x) => x.found && x.found.group.id === group.id);
+  parts.push(buildSectionLabel(t('deck.selectedTitle', lang)));
   if (linked.length) {
-    parts.push(buildSectionLabel(t('players.visibility', lang)));
+    parts.push(note(t('deck.selectedDesc', lang)));
     for (const { obj, found } of linked.slice(0, 12)) {
       const label = truncate(
         obj.get('name') || obj.get('text') || t(`types.${obj.get('_type')}`, lang),
@@ -302,15 +375,20 @@ export function showPlayers(ctx, group) {
       const cells = group.pages.map((p) => {
         const hidden = !!hiddenOn(group, found.linkId, p);
         const text = `${truncate(pageName(p), 12)}: ${hidden ? t('players.hidden', lang) : t('players.shown', lang)}`;
-        return `<a href="${escapeHtml(cmd(`${hidden ? 'show' : 'hide'} page=${p} --ids ${obj.id} --back players`))}" style="background:${hidden ? COLOR_HIDDEN : COLOR_SHOWN};color:#151027;padding:2px 6px;border-radius:3px;text-decoration:none;font-size:0.85em;display:inline-block;margin:1px 2px">${escapeHtml(text)}</a>`;
+        return `<a href="${escapeHtml(cmd(`${hidden ? 'show' : 'hide'} page=${p} --ids ${obj.id} --back players`))}" style="background:${hidden ? COLOR_HIDDEN : COLOR_SHOWN};color:#151027;padding:2px 6px;border-radius:3px;text-decoration:none;font-size:0.85em;display:block;margin:0;text-align:center">${escapeHtml(text)}</a>`;
       });
-      parts.push(`<div style="margin:3px 0">${escapeHtml(label)}<br>${cells.join('')}</div>`);
+      parts.push(buildItemTitle(label));
+      parts.push(buildButtonGrid(cells, columns));
     }
   } else {
     parts.push(note(t('players.selectHint', lang)));
   }
+  parts.push(buildDivider());
   parts.push(
-    `<div>${buildSecondaryButton(t('buttons.group', lang), cmd(`group show ${group.id}`))}${buildSecondaryButton(t('buttons.menu', lang), cmd('menu'))}</div>`
+    buildButtonGrid([
+      buildSecondaryButton(t('buttons.group', lang), cmd(`group show ${group.id}`)),
+      buildSecondaryButton(t('buttons.menu', lang), cmd('menu')),
+    ])
   );
   whisper(ctx.playerId, t('titles.players', lang, { name: group.name }), parts);
 }
@@ -383,30 +461,28 @@ export function showSettings(ctx, group) {
       ).join('|');
       control = buildButton(value, cmd(`set ${def.key} ?{${queryText(label)}|${opts}}`));
     } else {
-      control = def.options
-        .map((o) => {
-          const on = value.includes(o);
-          const text = `${on ? '✓ ' : ''}${t(`options.${def.key}.${o}`, lang)}`;
-          return on
-            ? buildButton(text, cmd(`set ${scope}${def.key} -${o}`))
-            : buildSecondaryButton(text, cmd(`set ${scope}${def.key} +${o}`));
-        })
-        .join('');
+      control = def.options.map((o) => {
+        const on = value.includes(o);
+        const text = `${on ? '✓ ' : ''}${t(`options.${def.key}.${o}`, lang)}`;
+        return on
+          ? buildButton(text, cmd(`set ${scope}${def.key} -${o}`))
+          : buildSecondaryButton(text, cmd(`set ${scope}${def.key} +${o}`));
+      });
     }
     const overridden = group && def.key in group.overrides;
     const clear = overridden
       ? buildSecondaryButton(t('buttons.useGlobal', lang), cmd(`set ${scope}${def.key} default`))
       : '';
     const tag = group
-      ? ` <span style="color:${COLOR_MUTED};font-size:0.8em">${escapeHtml(overridden ? t('settings.override', lang) : t('settings.global', lang))}</span>`
+      ? ` <span style="color:${COLOR_MUTED};font-size:0.8em;font-weight:normal">${escapeHtml(overridden ? t('settings.override', lang) : t('settings.global', lang))}</span>`
       : '';
-    if (def.type === 'multi') {
-      parts.push(
-        `<div style="margin:4px 0"><span style="color:${COLOR_MUTED};font-size:0.9em">${escapeHtml(label)}</span>${tag}<br>${control}${clear}</div>`
-      );
-    } else {
-      parts.push(buildRow(label, `${control}${clear}${tag}`));
-    }
+    // Each setting is a name, its buttons in columns, then what it does
+    parts.push(buildItemTitle(label, tag));
+    parts.push(
+      def.type === 'multi'
+        ? buildButtonGrid([...control, clear], 2)
+        : buildButtonGrid([control, clear], 2)
+    );
     parts.push(note(t(`settingsHelp.${def.key}`, lang)));
   }
   parts.push(buildDivider());
@@ -414,7 +490,14 @@ export function showSettings(ctx, group) {
     `settings reset ${scope}?{${queryText(t('queries.resetSettings', lang))}|${t('queries.no', lang)},no|${t('queries.yes', lang)},yes}`
   );
   parts.push(
-    `<div>${buildSecondaryButton(t('buttons.reset', lang), reset)}${group ? buildSecondaryButton(t('buttons.group', lang), cmd(`group show ${group.id}`)) : ''}${buildSecondaryButton(t('buttons.menu', lang), cmd('menu'))}</div>`
+    buildButtonGrid(
+      [
+        buildSecondaryButton(t('buttons.reset', lang), reset),
+        group ? buildSecondaryButton(t('buttons.group', lang), cmd(`group show ${group.id}`)) : '',
+        buildSecondaryButton(t('buttons.menu', lang), cmd('menu')),
+      ],
+      3
+    )
   );
   whisper(
     ctx.playerId,
@@ -443,7 +526,8 @@ export function showStatus(ctx) {
       const why = group?.pageOnly.includes(obj.id)
         ? t('status.pageOnly', lang)
         : t('status.notLinked', lang);
-      parts.push(`<div><strong>${escapeHtml(label)}</strong>: ${escapeHtml(why)}</div>`);
+      parts.push(buildSectionLabel(label));
+      parts.push(note(why));
       continue;
     }
     const { group, linkId, link } = found;
@@ -456,11 +540,10 @@ export function showStatus(ctx) {
           ? t('players.hidden', lang)
           : t('players.shown', lang);
       const colour = !has ? COLOR_MUTED : h ? COLOR_HIDDEN : COLOR_SHOWN;
-      return `${escapeHtml(truncate(pageName(p), 14))}: ${pill(state2, colour)}`;
+      return buildRow(truncate(pageName(p), 24), pill(state2, colour));
     });
-    parts.push(
-      `<div><strong>${escapeHtml(label)}</strong> · ${escapeHtml(group.name)}<br>${pages.join(' · ')}</div>`
-    );
+    parts.push(buildSectionLabel(`${label} · ${group.name}`));
+    parts.push(...pages);
   }
   if (!parts.length) {
     parts.push(note(t('errors.nothingSelected', lang)));
@@ -492,14 +575,23 @@ export function showRecycle(ctx, group) {
         buildSecondaryButton(
           t('buttons.restore', lang),
           cmd(`recycle ${group.id} restore ${n + 1}`)
-        )
+        ),
+        true
       )
     );
   });
   if (group.recycle.length) {
     parts.push(buildDivider());
     parts.push(
-      `<div>${buildButton(t('buttons.undo', lang), cmd(`undo ${group.id}`))}${buildSecondaryButton(t('buttons.emptyRecycle', lang), cmd(`recycle ${group.id} empty ?{${queryText(t('queries.emptyRecycle', lang))}|${t('queries.no', lang)},no|${t('queries.yes', lang)},yes}`))}</div>`
+      buildButtonGrid([
+        buildButton(t('buttons.undo', lang), cmd(`undo ${group.id}`)),
+        buildSecondaryButton(
+          t('buttons.emptyRecycle', lang),
+          cmd(
+            `recycle ${group.id} empty ?{${queryText(t('queries.emptyRecycle', lang))}|${t('queries.no', lang)},no|${t('queries.yes', lang)},yes}`
+          )
+        ),
+      ])
     );
   }
   whisper(ctx.playerId, t('titles.recycle', lang, { name: group.name }), parts);
@@ -527,8 +619,9 @@ export function showRepair(ctx, group, counts, dryRun) {
   ].map((k) => buildRow(t(`repair.${k}`, lang), String(counts[k])));
   const parts = [note(dryRun ? t('repair.dryRunNote', lang) : t('repair.doneNote', lang)), ...rows];
   if (dryRun) {
+    parts.push(buildDivider());
     parts.push(
-      `<div>${buildButton(t('buttons.repairNow', lang), cmd(`repair ${group.id} yes`))}</div>`
+      buildButtonGrid([buildButton(t('buttons.repairNow', lang), cmd(`repair ${group.id} yes`))], 1)
     );
   }
   whisper(
@@ -550,7 +643,7 @@ export function showHelp(ctx) {
   const lang = getLang();
   const rows = COMMAND_LIST.map(
     ([c, key]) =>
-      `<div><code>${escapeHtml(cmd(c))}</code><br><span style="color:${COLOR_MUTED};font-size:0.85em">${escapeHtml(t(`help.${key}`, lang))}</span></div>`
+      `<div style="margin:4px 0"><code>${escapeHtml(cmd(c))}</code><br><span style="color:${COLOR_MUTED};font-size:0.85em">${escapeHtml(t(`help.${key}`, lang))}</span></div>`
   );
   rows.push(note(t('help.footer', lang, { help: HANDOUT_HELP_NAME, deck: HANDOUT_DECK_NAME })));
   whisper(ctx.playerId, t('titles.help', lang), rows);

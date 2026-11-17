@@ -1,7 +1,7 @@
 // Mirroring: add, change and destroy events on a group's pages are copied to
 // the group's other pages. Page settings are mirrored too.
 
-import { buildButton, buildSecondaryButton, whisper } from './chat.js';
+import { buildButton, buildButtonGrid, buildSecondaryButton, whisper } from './chat.js';
 import {
   ADD_DEBOUNCE_MS,
   BATCH_PAUSE_MS,
@@ -380,7 +380,14 @@ function askAboutDelete(group, linkId, obj, entry) {
   const name = obj.get('name') || obj.get('text') || t(`types.${obj.get('_type')}`, lang);
   whisper(null, t('titles.deleted', lang), [
     `<div>${escapeHtml(t('messages.deletedAsk', lang, { name, page: pageName(obj.get('_pageid')) }))}</div>`,
-    `<div style="margin-top:4px">${buildButton(t('buttons.deleteEverywhere', lang), `${COMMAND} request ${all}`)}${buildSecondaryButton(t('buttons.keepOthers', lang), `${COMMAND} request ${all} keep`)}${buildSecondaryButton(t('buttons.undo', lang), `${COMMAND} request ${undo}`)}</div>`,
+    buildButtonGrid(
+      [
+        buildButton(t('buttons.deleteEverywhere', lang), `${COMMAND} request ${all}`),
+        buildSecondaryButton(t('buttons.keepOthers', lang), `${COMMAND} request ${all} keep`),
+        buildSecondaryButton(t('buttons.undo', lang), `${COMMAND} request ${undo}`),
+      ],
+      1
+    ),
   ]);
 }
 

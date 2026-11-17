@@ -48,15 +48,20 @@ const CHAT_HEADER_STYLE = [
 
 const CHAT_CONTENT_STYLE = 'padding:5px 8px;line-height:1.5';
 
+// How a button sits in a line of text, and how it fills a cell of a button grid.
+const BUTTON_INLINE_LAYOUT = 'display:inline-block;margin:1px 2px';
+const BUTTON_GRID_LAYOUT = 'display:block;margin:0;text-align:center';
+
 const BUTTON_STYLE = [
   `background:${COLOR_BUTTON_BG}`,
   `color:${COLOR_BUTTON_TEXT}`,
+  // Same width of border as the secondary button, so both are the same height.
+  `border:1px solid ${COLOR_BUTTON_BG}`,
   'padding:2px 7px',
   'border-radius:3px',
   'text-decoration:none',
   'font-size:0.9em',
-  'display:inline-block',
-  'margin:1px 2px',
+  BUTTON_INLINE_LAYOUT,
 ].join(';');
 
 const BUTTON_SECONDARY_STYLE = [
@@ -67,18 +72,23 @@ const BUTTON_SECONDARY_STYLE = [
   'border-radius:3px',
   'text-decoration:none',
   'font-size:0.9em',
-  'display:inline-block',
-  'margin:1px 2px',
+  BUTTON_INLINE_LAYOUT,
 ].join(';');
 
+// Matches the section headings of the Command Deck handout.
 const SECTION_LABEL_STYLE = [
-  `color:${COLOR_MUTED}`,
-  'font-size:0.8em',
-  'text-transform:uppercase',
-  'letter-spacing:0.08em',
-  'margin-top:4px',
-  'margin-bottom:2px',
+  `background:${COLOR_HEADER_BG}`,
+  `color:${COLOR_ACCENT}`,
+  `border-left:3px solid ${COLOR_ACCENT}`,
+  'padding:2px 8px',
+  'font-variant:small-caps',
+  'font-weight:bold',
+  'letter-spacing:0.05em',
+  'margin:8px 0 3px 0',
 ].join(';');
+
+// A name inside a section, such as a player or a setting.
+const ITEM_TITLE_STYLE = 'font-weight:bold;margin:6px 0 1px 0';
 
 const DIVIDER_STYLE = `border:none;border-top:1px solid ${COLOR_BORDER};margin:4px 0`;
 
@@ -208,6 +218,48 @@ export function buildSecondaryButton(label, command, prefixHtml = '') {
 }
 
 /**
+ * Lays buttons out in equal columns, each button filling its cell, so a set
+ * of buttons lines up instead of wrapping wherever the labels happen to end.
+ * A button left over on the last row takes the whole row.
+ *
+ * @param {string[]} buttons Button HTML from buildButton or buildSecondaryButton; empty items are skipped.
+ * @param {number} [columns=2] Buttons per row.
+ * @returns {string} HTML table, or an empty string when there are no buttons.
+ */
+export function buildButtonGrid(buttons, columns = 2) {
+  const list = buttons.filter(Boolean);
+  if (list.length === 0) {
+    return '';
+  }
+  const width = Math.floor(100 / columns);
+  const rows = [];
+  for (let i = 0; i < list.length; i += columns) {
+    const row = list.slice(i, i + columns);
+    const span = row.length === 1 && columns > 1 ? ` colspan="${columns}"` : '';
+    rows.push(
+      `<tr>${row
+        .map(
+          (button) =>
+            `<td${span} style="width:${span ? 100 : width}%;padding:2px">${button.replace(BUTTON_INLINE_LAYOUT, BUTTON_GRID_LAYOUT)}</td>`
+        )
+        .join('')}</tr>`
+    );
+  }
+  return `<table style="width:100%;border-collapse:collapse;table-layout:fixed;margin:2px 0">${rows.join('')}</table>`;
+}
+
+/**
+ * Builds the name of one item in a section, such as a player or a setting.
+ *
+ * @param {string} text Name (escaped).
+ * @param {string} [afterHtml=''] Trusted HTML after the name, such as a muted tag.
+ * @returns {string} HTML string.
+ */
+export function buildItemTitle(text, afterHtml = '') {
+  return `<div style="${ITEM_TITLE_STYLE}">${escapeHtml(text)}${afterHtml}</div>`;
+}
+
+/**
  * Builds a Twemoji asset URL for a locale flag.
  *
  * @param {string} flag Unicode regional-indicator flag.
@@ -262,13 +314,16 @@ export function buildDivider() {
  *
  * @param {string} label Label text (escaped).
  * @param {string} valueHtml Value HTML.
+ * @param {boolean} [keepTogether=false] Keeps the value on one line and lets the label take what is left, for a row of buttons.
  * @returns {string} HTML string.
  */
-export function buildRow(label, valueHtml) {
+export function buildRow(label, valueHtml, keepTogether = false) {
+  const labelWidth = keepTogether ? '' : 'width:50%;';
+  const valueWidth = keepTogether ? 'white-space:nowrap;' : 'width:50%;';
   return [
     '<table style="width:100%;border-collapse:collapse;margin:1px 0"><tr>',
-    `<td style="color:${COLOR_MUTED};width:50%;font-size:0.9em">${escapeHtml(label)}</td>`,
-    `<td style="text-align:right;width:50%">${valueHtml}</td>`,
+    `<td style="color:${COLOR_MUTED};${labelWidth}font-size:0.9em;vertical-align:middle">${escapeHtml(label)}</td>`,
+    `<td style="text-align:right;${valueWidth}vertical-align:middle">${valueHtml}</td>`,
     '</tr></table>',
   ].join('');
 }
