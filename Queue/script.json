@@ -1,0 +1,21 @@
+{
+  "name": "Queue",
+  "script": "Queue.js",
+  "version": "1.0.0",
+  "description": "# Queue\n\nQueue keeps an ordered list of players who want the GM's attention, with the reason for each request. It replaces Roll20's raise-hand toast, which disappears after a few seconds and doesn't say what the player wants. Requests are handled first in, first out; urgent requests go to the top unless the GM turns that off.\n\n## Getting started\n\n1. Install the script. It creates a 🛎 macro (visible to all), a GM-only **Queue** handout and a **Help: Queue** handout.\n2. The GM is asked once whether to run the queue from **Chat** or from the **Queue handout**.\n3. Each player checks **In Bar** for the 🛎 macro in the Collection tab (the API can't do this for them).\n\nRoll20's `/raisehand` and `/rh` are not connected to the queue. Players use the 🛎 macro or `!q`.\n\n## Players\n\n- `!queue` or `!q` whispers a menu of request types. Click one to join the queue and get your place in line.\n- One request per player. A new one replaces the old and keeps your place.\n- **Make urgent** / **Make normal**, **Other...** for typed requests, and **Help someone...** / **Talk with...**, which ask which character is involved and tell that character's player.\n- Requests are listed under your character and token.\n- **Withdraw** removes your request. **Add note** or `!q note <text>` adds a session note.\n\n## GM\n\n- Run the queue from chat or from the GM-only Queue handout. Both show the same control panel. Players always use chat.\n- Per request: token image pings everyone, name pings only the GM and that player, **Seen** tells the player their request was seen, **Announce** posts a public spotlight card, **X** removes it quietly.\n- **Clear all** empties the queue and posts a public **QUEUE CLEARED** card.\n- **Log** shows recently resolved requests. **Notes** opens the session notes handout.\n\n## Settings\n\nInterface, who can see the queue, how much appears in chat for the GM and players, whether urgent jumps the line, a Jukebox sound for new requests, and an editable list of request categories.\n\n## Session notes\n\n`!q note <text>` adds a timestamped line to a GM-only **Session Notes** handout. A time zone can be set in Settings. Other scripts can read the notes with `Queue.getNotes()`.\n\n## Turn tracker (optional)\n\nThe queue can be mirrored in the turn tracker (visible to all players). Deleting a turn dismisses a request, dragging reorders the queue and **Next Turn** announces. During combat, requests can be inserted after the asking character's turn or hidden.\n\n## Practice mode\n\n`!q --test` lets a GM try the queue alone with stand-in requests made from selected tokens.\n\n## Commands\n\n- `!q` - request menu (player) or queue (GM)\n- `!q --view` - show the queue\n- `!q --withdraw` - withdraw your request\n- `!q --settings` - settings\n- `!q note <text>` - add a session note\n- `!q --iface chat|handout` - choose the GM interface\n- `!q --test` - practice mode (GM)\n- `!q --whoami` - troubleshooting\n- `!q --help` - link to the help handout\n\nFull documentation is in the **Help: Queue** handout.",
+  "authors": "Keith Curtis",
+  "roll20userid": "162065",
+  "dependencies": [],
+  "patreon": "https://www.patreon.com/c/KeithCurtis",
+  "modifies": {
+    "handout": "read,write",
+    "macro": "read,write",
+    "campaign.turnorder": "read,write",
+    "graphic": "read",
+    "character": "read",
+    "player": "read",
+    "jukeboxtrack": "read,write"
+  },
+  "conflicts": [],
+  "previousversions": []
+}
