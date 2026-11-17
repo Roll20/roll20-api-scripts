@@ -5,7 +5,7 @@
  * Name: SyncPage
  * Script: SyncPage.js
  * Version: 1.0.0
- * Built: 2026-11-10T00:57:50.117Z
+ * Built: 2026-11-17T22:45:41.878Z
  */
 const SyncPageMod = (() => {
   'use strict';
@@ -13,7 +13,7 @@ const SyncPageMod = (() => {
   // Build-time placeholders replaced by rollup.config.js inject-build-metadata plugin.
   const SCRIPT_NAME = 'SyncPage';
   const SCRIPT_VERSION = '1.0.0';
-  const SCRIPT_LAST_UPDATED = '2026-11-10T00:57:50.117Z';
+  const SCRIPT_LAST_UPDATED = '2026-11-17T22:45:41.878Z';
 
   const DEFAULT_LOCALE$1 = 'en-US';
 
@@ -478,15 +478,20 @@ const SyncPageMod = (() => {
 
   const CHAT_CONTENT_STYLE = 'padding:5px 8px;line-height:1.5';
 
+  // How a button sits in a line of text, and how it fills a cell of a button grid.
+  const BUTTON_INLINE_LAYOUT = 'display:inline-block;margin:1px 2px';
+  const BUTTON_GRID_LAYOUT = 'display:block;margin:0;text-align:center';
+
   const BUTTON_STYLE = [
     `background:${COLOR_BUTTON_BG}`,
     `color:${COLOR_BUTTON_TEXT}`,
+    // Same width of border as the secondary button, so both are the same height.
+    `border:1px solid ${COLOR_BUTTON_BG}`,
     'padding:2px 7px',
     'border-radius:3px',
     'text-decoration:none',
     'font-size:0.9em',
-    'display:inline-block',
-    'margin:1px 2px',
+    BUTTON_INLINE_LAYOUT,
   ].join(';');
 
   const BUTTON_SECONDARY_STYLE = [
@@ -497,18 +502,23 @@ const SyncPageMod = (() => {
     'border-radius:3px',
     'text-decoration:none',
     'font-size:0.9em',
-    'display:inline-block',
-    'margin:1px 2px',
+    BUTTON_INLINE_LAYOUT,
   ].join(';');
 
+  // Matches the section headings of the Command Deck handout.
   const SECTION_LABEL_STYLE = [
-    `color:${COLOR_MUTED}`,
-    'font-size:0.8em',
-    'text-transform:uppercase',
-    'letter-spacing:0.08em',
-    'margin-top:4px',
-    'margin-bottom:2px',
+    `background:${COLOR_HEADER_BG}`,
+    `color:${COLOR_ACCENT}`,
+    `border-left:3px solid ${COLOR_ACCENT}`,
+    'padding:2px 8px',
+    'font-variant:small-caps',
+    'font-weight:bold',
+    'letter-spacing:0.05em',
+    'margin:8px 0 3px 0',
   ].join(';');
+
+  // A name inside a section, such as a player or a setting.
+  const ITEM_TITLE_STYLE = 'font-weight:bold;margin:6px 0 1px 0';
 
   const DIVIDER_STYLE = `border:none;border-top:1px solid ${COLOR_BORDER};margin:4px 0`;
 
@@ -607,6 +617,48 @@ const SyncPageMod = (() => {
   }
 
   /**
+   * Lays buttons out in equal columns, each button filling its cell, so a set
+   * of buttons lines up instead of wrapping wherever the labels happen to end.
+   * A button left over on the last row takes the whole row.
+   *
+   * @param {string[]} buttons Button HTML from buildButton or buildSecondaryButton; empty items are skipped.
+   * @param {number} [columns=2] Buttons per row.
+   * @returns {string} HTML table, or an empty string when there are no buttons.
+   */
+  function buildButtonGrid(buttons, columns = 2) {
+    const list = buttons.filter(Boolean);
+    if (list.length === 0) {
+      return '';
+    }
+    const width = Math.floor(100 / columns);
+    const rows = [];
+    for (let i = 0; i < list.length; i += columns) {
+      const row = list.slice(i, i + columns);
+      const span = row.length === 1 && columns > 1 ? ` colspan="${columns}"` : '';
+      rows.push(
+        `<tr>${row
+          .map(
+            (button) =>
+              `<td${span} style="width:${span ? 100 : width}%;padding:2px">${button.replace(BUTTON_INLINE_LAYOUT, BUTTON_GRID_LAYOUT)}</td>`
+          )
+          .join('')}</tr>`
+      );
+    }
+    return `<table style="width:100%;border-collapse:collapse;table-layout:fixed;margin:2px 0">${rows.join('')}</table>`;
+  }
+
+  /**
+   * Builds the name of one item in a section, such as a player or a setting.
+   *
+   * @param {string} text Name (escaped).
+   * @param {string} [afterHtml=''] Trusted HTML after the name, such as a muted tag.
+   * @returns {string} HTML string.
+   */
+  function buildItemTitle(text, afterHtml = '') {
+    return `<div style="${ITEM_TITLE_STYLE}">${escapeHtml(text)}${afterHtml}</div>`;
+  }
+
+  /**
    * Builds a Twemoji asset URL for a locale flag.
    *
    * @param {string} flag Unicode regional-indicator flag.
@@ -661,13 +713,16 @@ const SyncPageMod = (() => {
    *
    * @param {string} label Label text (escaped).
    * @param {string} valueHtml Value HTML.
+   * @param {boolean} [keepTogether=false] Keeps the value on one line and lets the label take what is left, for a row of buttons.
    * @returns {string} HTML string.
    */
-  function buildRow(label, valueHtml) {
+  function buildRow(label, valueHtml, keepTogether = false) {
+    const labelWidth = keepTogether ? '' : 'width:50%;';
+    const valueWidth = keepTogether ? 'white-space:nowrap;' : 'width:50%;';
     return [
       '<table style="width:100%;border-collapse:collapse;margin:1px 0"><tr>',
-      `<td style="color:${COLOR_MUTED};width:50%;font-size:0.9em">${escapeHtml(label)}</td>`,
-      `<td style="text-align:right;width:50%">${valueHtml}</td>`,
+      `<td style="color:${COLOR_MUTED};${labelWidth}font-size:0.9em;vertical-align:middle">${escapeHtml(label)}</td>`,
+      `<td style="text-align:right;${valueWidth}vertical-align:middle">${valueHtml}</td>`,
       '</tr></table>',
     ].join('');
   }
@@ -13693,7 +13748,7 @@ const SyncPageMod = (() => {
     const page = ctx.pageId;
     const group = groupOfPage(page);
     const parts = [];
-    parts.push(buildRow(t('menu.thisPage', lang), escapeHtml(truncate(pageName(page), 28))));
+    parts.push(buildSectionLabel(`${t('menu.thisPage', lang)}: ${truncate(pageName(page), 28)}`));
     if (group) {
       const role = group.source === page ? t('menu.source', lang) : t('menu.copy', lang);
       parts.push(
@@ -13706,10 +13761,26 @@ const SyncPageMod = (() => {
         parts.push(pill(t('menu.paused', lang), COLOR_HIDDEN));
       }
       parts.push(
-        `<div>${buildButton(t('buttons.group', lang), cmd(`group show ${group.id}`))}${buildButton(t('buttons.players', lang), cmd(`players ${group.id}`))}${buildSecondaryButton(t('buttons.repair', lang), cmd(`repair ${group.id}`))}${buildSecondaryButton(t('buttons.dryRun', lang), cmd(`repair ${group.id} --dry-run`))}${buildSecondaryButton(group.paused ? t('buttons.resume', lang) : t('buttons.pause', lang), cmd(`${group.paused ? 'resume' : 'pause'} ${group.id}`))}</div>`
+        buildButtonGrid([
+          buildButton(t('buttons.group', lang), cmd(`group show ${group.id}`)),
+          buildButton(t('buttons.players', lang), cmd(`players ${group.id}`)),
+          buildSecondaryButton(t('buttons.repair', lang), cmd(`repair ${group.id}`)),
+          buildSecondaryButton(t('buttons.dryRun', lang), cmd(`repair ${group.id} --dry-run`)),
+          buildSecondaryButton(
+            group.paused ? t('buttons.resume', lang) : t('buttons.pause', lang),
+            cmd(`${group.paused ? 'resume' : 'pause'} ${group.id}`)
+          ),
+        ])
       );
+      parts.push(buildSectionLabel(t('deck.selectedTitle', lang)));
       parts.push(
-        `<div>${buildSecondaryButton(t('buttons.status', lang), cmd('status'))}${buildSecondaryButton(t('buttons.hideHere', lang), cmd('hide here'))}${buildSecondaryButton(t('buttons.showHere', lang), cmd('show here'))}${buildSecondaryButton(t('buttons.hideOthers', lang), cmd('hide others'))}${buildSecondaryButton(t('buttons.showOthers', lang), cmd('show others'))}</div>`
+        buildButtonGrid([
+          buildSecondaryButton(t('buttons.hideHere', lang), cmd('hide here')),
+          buildSecondaryButton(t('buttons.showHere', lang), cmd('show here')),
+          buildSecondaryButton(t('buttons.hideOthers', lang), cmd('hide others')),
+          buildSecondaryButton(t('buttons.showOthers', lang), cmd('show others')),
+          buildSecondaryButton(t('buttons.status', lang), cmd('status')),
+        ])
       );
       parts.push(note(t('menu.selectedHint', lang)));
     } else {
@@ -13727,19 +13798,31 @@ const SyncPageMod = (() => {
           buildButton(t('buttons.addToGroup', lang), cmd(`group add ${groupQuery(lang)}`))
         );
       }
-      parts.push(`<div>${buttons.join('')}</div>`);
+      parts.push(buildButtonGrid(buttons, 1));
       parts.push(note(t('menu.duplicateHint', lang)));
     }
     const groups = listGroups();
     if (groups.length) {
       parts.push(buildSectionLabel(t('menu.groups', lang)));
       parts.push(
-        `<div>${groups.map((g) => buildSecondaryButton(`${truncate(g.name, 20)} (${g.pages.length})`, cmd(`group show ${g.id}`))).join('')}</div>`
+        buildButtonGrid(
+          groups.map((g) =>
+            buildSecondaryButton(
+              `${truncate(g.name, 20)} (${g.pages.length})`,
+              cmd(`group show ${g.id}`)
+            )
+          )
+        )
       );
     }
-    parts.push(buildDivider());
+    parts.push(buildSectionLabel(t('deck.toolsTitle', lang)));
     parts.push(
-      `<div>${buildSecondaryButton(t('buttons.settings', lang), cmd('settings'))}${buildSecondaryButton(t('buttons.recycle', lang), cmd('recycle'))}${buildSecondaryButton(t('buttons.undo', lang), cmd('undo'))}${buildSecondaryButton(t('buttons.help', lang), cmd('help'))}</div>`
+      buildButtonGrid([
+        buildSecondaryButton(t('buttons.settings', lang), cmd('settings')),
+        buildSecondaryButton(t('buttons.recycle', lang), cmd('recycle')),
+        buildSecondaryButton(t('buttons.undo', lang), cmd('undo')),
+        buildSecondaryButton(t('buttons.help', lang), cmd('help')),
+      ])
     );
     whisper(ctx.playerId, `${SCRIPT_NAME} ${SCRIPT_VERSION}`, parts);
   }
@@ -13775,12 +13858,14 @@ const SyncPageMod = (() => {
       buttons.push(
         buildSecondaryButton(t('buttons.removePage', lang), cmd(`group remove --page ${p}`))
       );
+      // The page's name on its own line, its buttons under it
       parts.push(
-        buildRow(
-          `${label} · ${t('group.playersCount', lang, { count: players })}`,
-          buttons.join('')
+        buildItemTitle(
+          label,
+          ` <span style="color:${COLOR_MUTED};font-weight:normal;font-size:0.9em">· ${escapeHtml(t('group.playersCount', lang, { count: players }))}</span>`
         )
       );
+      parts.push(buildButtonGrid(buttons, 2));
     }
     parts.push(note(t('group.sourceHint', lang)));
     parts.push(buildSectionLabel(t('group.summary', lang)));
@@ -13810,12 +13895,32 @@ const SyncPageMod = (() => {
         )
       );
     }
-    parts.push(buildDivider());
+    parts.push(buildSectionLabel(t('deck.toolsTitle', lang)));
     parts.push(
-      `<div>${buildButton(t('buttons.players', lang), cmd(`players ${group.id}`))}${buildButton(t('buttons.repair', lang), cmd(`repair ${group.id}`))}${buildSecondaryButton(t('buttons.dryRun', lang), cmd(`repair ${group.id} --dry-run`))}${buildSecondaryButton(group.paused ? t('buttons.resume', lang) : t('buttons.pause', lang), cmd(`${group.paused ? 'resume' : 'pause'} ${group.id}`))}</div>`
-    );
-    parts.push(
-      `<div>${buildSecondaryButton(t('buttons.groupSettings', lang), cmd(`settings group ${group.id}`))}${buildSecondaryButton(t('buttons.recycle', lang), cmd(`recycle ${group.id}`))}${buildSecondaryButton(t('buttons.rename', lang), cmd(`group rename ${group.id} ?{${queryText(t('queries.groupName', lang))}|${queryText(group.name)}}`))}${buildSecondaryButton(t('buttons.deleteGroup', lang), cmd(`group delete ${group.id} ?{${queryText(t('queries.deleteGroup', lang, { name: group.name }))}|${t('queries.no', lang)},no|${t('queries.yes', lang)},yes}`))}${buildSecondaryButton(t('buttons.menu', lang), cmd('menu'))}</div>`
+      buildButtonGrid([
+        buildButton(t('buttons.players', lang), cmd(`players ${group.id}`)),
+        buildButton(t('buttons.repair', lang), cmd(`repair ${group.id}`)),
+        buildSecondaryButton(t('buttons.dryRun', lang), cmd(`repair ${group.id} --dry-run`)),
+        buildSecondaryButton(
+          group.paused ? t('buttons.resume', lang) : t('buttons.pause', lang),
+          cmd(`${group.paused ? 'resume' : 'pause'} ${group.id}`)
+        ),
+        buildSecondaryButton(t('buttons.groupSettings', lang), cmd(`settings group ${group.id}`)),
+        buildSecondaryButton(t('buttons.recycle', lang), cmd(`recycle ${group.id}`)),
+        buildSecondaryButton(
+          t('buttons.rename', lang),
+          cmd(
+            `group rename ${group.id} ?{${queryText(t('queries.groupName', lang))}|${queryText(group.name)}}`
+          )
+        ),
+        buildSecondaryButton(
+          t('buttons.deleteGroup', lang),
+          cmd(
+            `group delete ${group.id} ?{${queryText(t('queries.deleteGroup', lang, { name: group.name }))}|${t('queries.no', lang)},no|${t('queries.yes', lang)},yes}`
+          )
+        ),
+        buildSecondaryButton(t('buttons.menu', lang), cmd('menu')),
+      ])
     );
     whisper(ctx.playerId, t('titles.group', lang, { name: group.name }), parts);
   }
@@ -13854,6 +13959,9 @@ const SyncPageMod = (() => {
     const lang = getLang();
     const parts = [];
     const players = listPlayers();
+    // One column per page of the group, up to three, so a player's page buttons line up
+    const columns = Math.min(3, Math.max(1, group.pages.length));
+    parts.push(buildSectionLabel(t('buttons.players', lang)));
     if (!players.length) {
       parts.push(note(t('players.none', lang)));
     }
@@ -13865,19 +13973,33 @@ const SyncPageMod = (() => {
         : t('players.elsewhere', lang);
       const buttons = group.pages.map((p) =>
         p === here
-          ? `<span style="color:${COLOR_ACCENT};margin:1px 3px">● ${escapeHtml(truncate(pageName(p), 14))}</span>`
+          ? `<div style="color:${COLOR_ACCENT};text-align:center;border:1px solid ${COLOR_ACCENT};border-radius:3px;padding:1px 4px;font-size:0.9em">● ${escapeHtml(truncate(pageName(p), 14))}</div>`
           : buildSecondaryButton(
               truncate(pageName(p), 14),
               cmd(`move ${player.id} ${p} --group ${group.id}`)
             )
       );
       parts.push(
-        `<div style="margin:3px 0"><strong>${escapeHtml(name)}</strong> <span style="color:${COLOR_MUTED}">(${escapeHtml(where)})</span><br>${buttons.join('')}</div>`
+        buildItemTitle(
+          name,
+          ` <span style="color:${COLOR_MUTED};font-weight:normal">(${escapeHtml(where)})</span>`
+        )
       );
+      parts.push(buildButtonGrid(buttons, columns));
     }
     parts.push(buildDivider());
     parts.push(
-      `<div>${buildButton(t('buttons.everyoneTo', lang, { page: truncate(pageName(group.source), 14) }), cmd(`move all ${group.source} --group ${group.id}`))}${buildSecondaryButton(t('buttons.saveLayout', lang), cmd(`layout save ${group.id}`))}${buildSecondaryButton(t('buttons.restoreLayout', lang), cmd(`layout restore ${group.id}`))}</div>`
+      buildButtonGrid(
+        [
+          buildButton(
+            t('buttons.everyoneTo', lang, { page: truncate(pageName(group.source), 14) }),
+            cmd(`move all ${group.source} --group ${group.id}`)
+          ),
+          buildSecondaryButton(t('buttons.saveLayout', lang), cmd(`layout save ${group.id}`)),
+          buildSecondaryButton(t('buttons.restoreLayout', lang), cmd(`layout restore ${group.id}`)),
+        ],
+        1
+      )
     );
     if (Object.keys(group.layout).length) {
       parts.push(note(t('players.layoutSaved', lang, { count: Object.keys(group.layout).length })));
@@ -13885,8 +14007,9 @@ const SyncPageMod = (() => {
     const linked = (ctx.objects || [])
       .map((o) => ({ obj: o, found: linkOf(o.id) }))
       .filter((x) => x.found && x.found.group.id === group.id);
+    parts.push(buildSectionLabel(t('deck.selectedTitle', lang)));
     if (linked.length) {
-      parts.push(buildSectionLabel(t('players.visibility', lang)));
+      parts.push(note(t('deck.selectedDesc', lang)));
       for (const { obj, found } of linked.slice(0, 12)) {
         const label = truncate(
           obj.get('name') || obj.get('text') || t(`types.${obj.get('_type')}`, lang),
@@ -13895,15 +14018,20 @@ const SyncPageMod = (() => {
         const cells = group.pages.map((p) => {
           const hidden = !!hiddenOn(group, found.linkId, p);
           const text = `${truncate(pageName(p), 12)}: ${hidden ? t('players.hidden', lang) : t('players.shown', lang)}`;
-          return `<a href="${escapeHtml(cmd(`${hidden ? 'show' : 'hide'} page=${p} --ids ${obj.id} --back players`))}" style="background:${hidden ? COLOR_HIDDEN : COLOR_SHOWN};color:#151027;padding:2px 6px;border-radius:3px;text-decoration:none;font-size:0.85em;display:inline-block;margin:1px 2px">${escapeHtml(text)}</a>`;
+          return `<a href="${escapeHtml(cmd(`${hidden ? 'show' : 'hide'} page=${p} --ids ${obj.id} --back players`))}" style="background:${hidden ? COLOR_HIDDEN : COLOR_SHOWN};color:#151027;padding:2px 6px;border-radius:3px;text-decoration:none;font-size:0.85em;display:block;margin:0;text-align:center">${escapeHtml(text)}</a>`;
         });
-        parts.push(`<div style="margin:3px 0">${escapeHtml(label)}<br>${cells.join('')}</div>`);
+        parts.push(buildItemTitle(label));
+        parts.push(buildButtonGrid(cells, columns));
       }
     } else {
       parts.push(note(t('players.selectHint', lang)));
     }
+    parts.push(buildDivider());
     parts.push(
-      `<div>${buildSecondaryButton(t('buttons.group', lang), cmd(`group show ${group.id}`))}${buildSecondaryButton(t('buttons.menu', lang), cmd('menu'))}</div>`
+      buildButtonGrid([
+        buildSecondaryButton(t('buttons.group', lang), cmd(`group show ${group.id}`)),
+        buildSecondaryButton(t('buttons.menu', lang), cmd('menu')),
+      ])
     );
     whisper(ctx.playerId, t('titles.players', lang, { name: group.name }), parts);
   }
@@ -13976,30 +14104,28 @@ const SyncPageMod = (() => {
         ).join('|');
         control = buildButton(value, cmd(`set ${def.key} ?{${queryText(label)}|${opts}}`));
       } else {
-        control = def.options
-          .map((o) => {
-            const on = value.includes(o);
-            const text = `${on ? '✓ ' : ''}${t(`options.${def.key}.${o}`, lang)}`;
-            return on
-              ? buildButton(text, cmd(`set ${scope}${def.key} -${o}`))
-              : buildSecondaryButton(text, cmd(`set ${scope}${def.key} +${o}`));
-          })
-          .join('');
+        control = def.options.map((o) => {
+          const on = value.includes(o);
+          const text = `${on ? '✓ ' : ''}${t(`options.${def.key}.${o}`, lang)}`;
+          return on
+            ? buildButton(text, cmd(`set ${scope}${def.key} -${o}`))
+            : buildSecondaryButton(text, cmd(`set ${scope}${def.key} +${o}`));
+        });
       }
       const overridden = group && def.key in group.overrides;
       const clear = overridden
         ? buildSecondaryButton(t('buttons.useGlobal', lang), cmd(`set ${scope}${def.key} default`))
         : '';
       const tag = group
-        ? ` <span style="color:${COLOR_MUTED};font-size:0.8em">${escapeHtml(overridden ? t('settings.override', lang) : t('settings.global', lang))}</span>`
+        ? ` <span style="color:${COLOR_MUTED};font-size:0.8em;font-weight:normal">${escapeHtml(overridden ? t('settings.override', lang) : t('settings.global', lang))}</span>`
         : '';
-      if (def.type === 'multi') {
-        parts.push(
-          `<div style="margin:4px 0"><span style="color:${COLOR_MUTED};font-size:0.9em">${escapeHtml(label)}</span>${tag}<br>${control}${clear}</div>`
-        );
-      } else {
-        parts.push(buildRow(label, `${control}${clear}${tag}`));
-      }
+      // Each setting is a name, its buttons in columns, then what it does
+      parts.push(buildItemTitle(label, tag));
+      parts.push(
+        def.type === 'multi'
+          ? buildButtonGrid([...control, clear], 2)
+          : buildButtonGrid([control, clear], 2)
+      );
       parts.push(note(t(`settingsHelp.${def.key}`, lang)));
     }
     parts.push(buildDivider());
@@ -14007,7 +14133,16 @@ const SyncPageMod = (() => {
       `settings reset ${scope}?{${queryText(t('queries.resetSettings', lang))}|${t('queries.no', lang)},no|${t('queries.yes', lang)},yes}`
     );
     parts.push(
-      `<div>${buildSecondaryButton(t('buttons.reset', lang), reset)}${group ? buildSecondaryButton(t('buttons.group', lang), cmd(`group show ${group.id}`)) : ''}${buildSecondaryButton(t('buttons.menu', lang), cmd('menu'))}</div>`
+      buildButtonGrid(
+        [
+          buildSecondaryButton(t('buttons.reset', lang), reset),
+          group
+            ? buildSecondaryButton(t('buttons.group', lang), cmd(`group show ${group.id}`))
+            : '',
+          buildSecondaryButton(t('buttons.menu', lang), cmd('menu')),
+        ],
+        3
+      )
     );
     whisper(
       ctx.playerId,
@@ -14036,7 +14171,8 @@ const SyncPageMod = (() => {
         const why = group?.pageOnly.includes(obj.id)
           ? t('status.pageOnly', lang)
           : t('status.notLinked', lang);
-        parts.push(`<div><strong>${escapeHtml(label)}</strong>: ${escapeHtml(why)}</div>`);
+        parts.push(buildSectionLabel(label));
+        parts.push(note(why));
         continue;
       }
       const { group, linkId, link } = found;
@@ -14049,11 +14185,10 @@ const SyncPageMod = (() => {
             ? t('players.hidden', lang)
             : t('players.shown', lang);
         const colour = !has ? COLOR_MUTED : h ? COLOR_HIDDEN : COLOR_SHOWN;
-        return `${escapeHtml(truncate(pageName(p), 14))}: ${pill(state2, colour)}`;
+        return buildRow(truncate(pageName(p), 24), pill(state2, colour));
       });
-      parts.push(
-        `<div><strong>${escapeHtml(label)}</strong> · ${escapeHtml(group.name)}<br>${pages.join(' · ')}</div>`
-      );
+      parts.push(buildSectionLabel(`${label} · ${group.name}`));
+      parts.push(...pages);
     }
     if (!parts.length) {
       parts.push(note(t('errors.nothingSelected', lang)));
@@ -14085,14 +14220,23 @@ const SyncPageMod = (() => {
           buildSecondaryButton(
             t('buttons.restore', lang),
             cmd(`recycle ${group.id} restore ${n + 1}`)
-          )
+          ),
+          true
         )
       );
     });
     if (group.recycle.length) {
       parts.push(buildDivider());
       parts.push(
-        `<div>${buildButton(t('buttons.undo', lang), cmd(`undo ${group.id}`))}${buildSecondaryButton(t('buttons.emptyRecycle', lang), cmd(`recycle ${group.id} empty ?{${queryText(t('queries.emptyRecycle', lang))}|${t('queries.no', lang)},no|${t('queries.yes', lang)},yes}`))}</div>`
+        buildButtonGrid([
+          buildButton(t('buttons.undo', lang), cmd(`undo ${group.id}`)),
+          buildSecondaryButton(
+            t('buttons.emptyRecycle', lang),
+            cmd(
+              `recycle ${group.id} empty ?{${queryText(t('queries.emptyRecycle', lang))}|${t('queries.no', lang)},no|${t('queries.yes', lang)},yes}`
+            )
+          ),
+        ])
       );
     }
     whisper(ctx.playerId, t('titles.recycle', lang, { name: group.name }), parts);
@@ -14123,8 +14267,12 @@ const SyncPageMod = (() => {
       ...rows,
     ];
     if (dryRun) {
+      parts.push(buildDivider());
       parts.push(
-        `<div>${buildButton(t('buttons.repairNow', lang), cmd(`repair ${group.id} yes`))}</div>`
+        buildButtonGrid(
+          [buildButton(t('buttons.repairNow', lang), cmd(`repair ${group.id} yes`))],
+          1
+        )
       );
     }
     whisper(
@@ -14146,7 +14294,7 @@ const SyncPageMod = (() => {
     const lang = getLang();
     const rows = COMMAND_LIST.map(
       ([c, key]) =>
-        `<div><code>${escapeHtml(cmd(c))}</code><br><span style="color:${COLOR_MUTED};font-size:0.85em">${escapeHtml(t(`help.${key}`, lang))}</span></div>`
+        `<div style="margin:4px 0"><code>${escapeHtml(cmd(c))}</code><br><span style="color:${COLOR_MUTED};font-size:0.85em">${escapeHtml(t(`help.${key}`, lang))}</span></div>`
     );
     rows.push(note(t('help.footer', lang, { help: HANDOUT_HELP_NAME, deck: HANDOUT_DECK_NAME })));
     whisper(ctx.playerId, t('titles.help', lang), rows);
@@ -14850,7 +14998,14 @@ const SyncPageMod = (() => {
     const name = obj.get('name') || obj.get('text') || t(`types.${obj.get('_type')}`, lang);
     whisper(null, t('titles.deleted', lang), [
       `<div>${escapeHtml(t('messages.deletedAsk', lang, { name, page: pageName(obj.get('_pageid')) }))}</div>`,
-      `<div style="margin-top:4px">${buildButton(t('buttons.deleteEverywhere', lang), `${COMMAND} request ${all}`)}${buildSecondaryButton(t('buttons.keepOthers', lang), `${COMMAND} request ${all} keep`)}${buildSecondaryButton(t('buttons.undo', lang), `${COMMAND} request ${undo}`)}</div>`,
+      buildButtonGrid(
+        [
+          buildButton(t('buttons.deleteEverywhere', lang), `${COMMAND} request ${all}`),
+          buildSecondaryButton(t('buttons.keepOthers', lang), `${COMMAND} request ${all} keep`),
+          buildSecondaryButton(t('buttons.undo', lang), `${COMMAND} request ${undo}`),
+        ],
+        1
+      ),
     ]);
   }
 
@@ -15207,7 +15362,11 @@ const SyncPageMod = (() => {
         o.get('name') || o.get('text') || t(`types.${o.get('_type')}`, lang),
         30
       );
-      return `<div>${escapeHtml(label)} ${buildSecondaryButton(t('buttons.copy', lang), `${COMMAND} request ${one} copy`)}${buildSecondaryButton(t('buttons.keepHere', lang), `${COMMAND} request ${one} keep`)}</div>`;
+      return buildRow(
+        label,
+        `${buildSecondaryButton(t('buttons.copy', lang), `${COMMAND} request ${one} copy`)}${buildSecondaryButton(t('buttons.keepHere', lang), `${COMMAND} request ${one} keep`)}`,
+        true
+      );
     });
     if (leftovers.length > 10) {
       rows.push(
@@ -15217,7 +15376,10 @@ const SyncPageMod = (() => {
     whisper(gm || null, t('titles.leftovers', lang), [
       `<div>${escapeHtml(t('messages.leftovers', lang, { count: leftovers.length, page: pageName(pageId) }))}</div>`,
       ...rows,
-      `<div style="margin-top:4px">${buildButton(t('buttons.copyAll', lang), `${COMMAND} request ${all} copy`)}${buildSecondaryButton(t('buttons.keepAll', lang), `${COMMAND} request ${all} keep`)}</div>`,
+      buildButtonGrid([
+        buildButton(t('buttons.copyAll', lang), `${COMMAND} request ${all} copy`),
+        buildSecondaryButton(t('buttons.keepAll', lang), `${COMMAND} request ${all} keep`),
+      ]),
     ]);
     out.asked = leftovers.length;
     return out;
