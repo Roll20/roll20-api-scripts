@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.0.0 (2026-11-04)
+## 1.0.0 (2026-11-18)
 
 A full rewrite by MidNiteShadow7 of Robin Kuiper's SyncPage 0.1.9, which had not changed since 2018. The 0.1 set-up is carried over and `!sync` still works.
 
