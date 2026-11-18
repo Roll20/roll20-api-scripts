@@ -8,6 +8,8 @@ const TRANSLATION = {
     settings: 'InspirationTracker Settings',
     help: 'InspirationTracker Commands',
     party: 'Party Inspiration',
+    poolParty: 'Party {term}',
+    pools: 'Points Pools',
     yours: 'Your Characters',
     status: 'InspirationTracker Status',
   },
@@ -40,7 +42,50 @@ const TRANSLATION = {
     journal: 'Help and Command Deck handouts rebuilt.',
     readyHint: 'Type {command} for the menu, or open the Command Deck handout.',
   },
+  pool: {
+    gained: '{name} gains {amount} {term} ({before} → {after}).',
+    spent: '{name} spends {amount} {term} ({before} → {after}).',
+    boosted: '{name} spends {amount} {term} for +{bonus} to the roll ({before} → {after}).',
+    spentBy: '{player} spent {amount} {term} for {name}.',
+    restored: '{name} has {amount} {term} back ({before} → {after}).',
+    removed: '{amount} {term} taken away from {name} ({before} → {after}).',
+    none: '{name} has no {term}.',
+    short: '{name} has {have} {term}, and that needs {need}.',
+    full: '{name} already has the most {term} allowed ({max}).',
+  },
+  pools: {
+    introFlag:
+      'Tracking is set to the sheet inspiration box. Set it to Points pool to make "{name}" the pool that Give and Spend work on. Other pools are used with --pool.',
+    introPool:
+      'Give, Spend and Boost work on "{name}". Other pools are used from their Party button, or with --pool.',
+    defaultLabel: '{name} (default)',
+    name: 'Name',
+    source: 'Kept in',
+    cost: 'Points per +1',
+    max: 'Maximum',
+    marker: 'Marker',
+    attribute: 'Attribute when the sheet has no box with this name: {attribute}',
+    partyTotal: 'Party total: {total} {term}.',
+  },
+  prompts: {
+    points: 'Points',
+    bonus: 'Bonus to the roll',
+    max: 'Most points allowed (0 for no limit)',
+  },
   errors: {
+    unknownPool: 'There is no pool called "{value}".',
+    unknownPoolHint: 'Pools: {pools}.',
+    badAmount: '"{value}" is not a number of points.',
+    badAmountHint: 'Use a whole number from 1 to 9999.',
+    boostNoPool: 'Boost spends points from a pool.',
+    poolInvalid: 'A pool cannot be called "{value}".',
+    poolExists: 'There is already a pool called "{value}".',
+    poolFull: 'There is no room for another pool.',
+    poolNameHint: 'Use a name of up to 40 letters, digits and spaces that no other pool has.',
+    poolDefault: 'The default pool, "{name}", cannot be deleted. It can be renamed.',
+    poolMarkerHint:
+      'Pick a marker from your marker sets that is not the one in the Marker setting.',
+    poolSetHint: 'Type !inspiration pools to see every pool and its settings.',
     denied: 'You cannot do that for {name}.',
     gmOnly: 'Only the GM can use that command.',
     gmOnlyHint: 'Players can use spend, party and help.',
@@ -90,10 +135,24 @@ const TRANSLATION = {
     refresh: 'Refresh',
     undo: 'Undo',
     decline: 'Let it go',
+    boost: 'Boost',
+    pools: 'Pools',
+    addPool: 'Add Pool',
+    deletePool: 'Delete Pool',
   },
   values: {
     on: 'On',
     off: 'Off',
+    none: 'None',
+    noLimit: 'No limit',
+    tracking: {
+      flag: 'Sheet inspiration box',
+      pool: 'Points pool',
+    },
+    source: {
+      resource: 'Sheet resource box',
+      attribute: 'Attribute',
+    },
     wording: {
       auto: 'From the sheet',
       2014: 'Inspiration (2014)',
@@ -109,6 +168,10 @@ const TRANSLATION = {
     language: {
       label: 'Language',
       desc: 'Language for menus, messages and handouts.',
+    },
+    tracking: {
+      label: 'Tracking',
+      desc: 'What Give and Spend work on: the inspiration box on the D&D sheets, which a character has or does not have, or a pool of points that builds up and is spent a few at a time.',
     },
     marker: {
       label: 'Marker',
@@ -150,6 +213,8 @@ const TRANSLATION = {
     none: 'Characters with no inspiration box',
     rules2024: 'Using 2024 rules',
     party: 'Party members',
+    tracking: 'Tracking',
+    pools: 'Pools',
     marker: 'Marker',
     fx: 'Special effect',
     legacyCommand: 'Old command',
@@ -163,6 +228,15 @@ const TRANSLATION = {
     party: 'Shows who in the party has inspiration, with buttons to give, remove or spend it.',
     partyEdit: 'Adds the selected characters to the party, or takes them out.',
     ids: 'Works on the token or character IDs given instead of the selected tokens.',
+    points:
+      'With a points pool: gives, takes away or spends that many points. Without a number, 1. remove all takes every point.',
+    boost:
+      "With a points pool: spends points to add that bonus to a roll, at the pool's cost for each +1.",
+    poolFlag: 'Works on the named pool instead of the default one.',
+    pools: 'Shows the points pools and their settings.',
+    poolEdit: 'Adds a pool, or deletes one. The points on the sheets are left as they are.',
+    poolSet:
+      'Changes a pool: its name, where it is kept (resource or attribute), the points each +1 costs, the most points allowed (0 for no limit), or its token marker.',
     undo: 'Gives back inspiration that was spent. The ID comes from the GM message about the spend.',
     macro: 'Adds the "Inspiration" token action, which players click to spend inspiration.',
     sync: 'Reads every sheet again and puts the markers right.',
@@ -175,12 +249,13 @@ const TRANSLATION = {
   helpPlayer: {
     menu: 'Shows your characters and whether they have inspiration.',
     spend: 'Spends inspiration for the selected character.',
+    boost: 'Spends points from a pool to add that bonus to a roll.',
     party: 'Shows the party, if the GM allows it.',
     help: 'Shows this list.',
   },
   handout: {
     versionLabel: 'Version',
-    subtitle: 'Inspiration and Heroic Inspiration for the D&D 5e 2014 and 2024 sheets',
+    subtitle: 'Inspiration, Heroic Inspiration and points pools for any game',
     overview: {
       heading: 'Overview',
       body: 'InspirationTracker keeps D&D inspiration on the character sheet, the token and the chat in step. Give it from the menu, the sheet or the token marker, and every token for that character shows the marker. Players can spend it with one click, and the GM is told, with an Undo button. It works with the D&D 2024 sheet, where it is called Heroic Inspiration, and with the 2014 OGL sheet.',
@@ -232,6 +307,18 @@ const TRANSLATION = {
         'The party is every character a player controls. Select tokens and click Add to Party or Remove from Party to change it.',
         "The GM's overview has Give, Remove and Spend buttons for each member.",
         'Turn Players See Party on to let players see the overview too. They get Spend buttons only for their own characters.',
+      ],
+    },
+    pools: {
+      heading: 'Points Pools',
+      points: [
+        'A points pool is a number that builds up and is spent a few at a time: a pool of inspiration points, hero points, luck, bennies and the like. It works with any character sheet.',
+        'Set Tracking to Points pool, and Give, Remove and Spend work on the default pool, asking how many points. The marker shows while a character has any points.',
+        "Boost spends points to raise a roll: type the bonus wanted, and the pool's Points per +1 decides the cost. At 2 points per +1, a bonus of 4 costs 8 points. The Mod announces the spend; add the bonus to the roll yourself.",
+        'A spend is refused when the character does not have enough points. The GM is told who spent what, with an Undo button.',
+        'Kept in "Sheet resource box" uses the resource box on the sheet that has the pool\'s name, such as an Other Resource box named Inspiration on the 2014 D&D sheet. When the sheet has no box with that name, or with "Attribute", the points are kept in a plain attribute, such as inspiration_pool. The D&D 2024 sheet always uses the attribute.',
+        'Changing the number on the sheet by hand is fine: the marker follows.',
+        "Click Pools to rename the default pool, set its cost and maximum, or add more pools. Other pools are used from their Party button, or by adding --pool and the pool's name to a command.",
       ],
     },
     markers: {
@@ -294,6 +381,8 @@ const TRANSLATION = {
     subtitle: 'Command Deck',
     selectedDesc: 'Select one or more tokens, then click.',
     partyDesc: 'See who has inspiration, and choose who is in the party.',
+    poolsTitle: 'Points pool',
+    poolsDesc: 'With Tracking set to Points pool: select tokens, click, and type the number.',
     toolsDesc: 'Menu, settings, the player macro and help.',
     footer: 'Full instructions are in the "{help}" handout.',
   },

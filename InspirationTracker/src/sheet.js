@@ -10,6 +10,7 @@ import {
   BEACON_ITEM,
   BEACON_STORE_ATTRIBUTE,
   LEGACY_ATTRIBUTE,
+  POOL_ATTRIBUTE_SUFFIX,
   RULES_2014,
   RULES_2024,
   SCRIPT_NAME,
@@ -141,6 +142,100 @@ export async function writeInspiration(charId, inspired) {
     createObj('attribute', { characterid: charId, name: LEGACY_ATTRIBUTE, current: value });
   }
   return { ok: true, kind: 'legacy' };
+}
+
+// ---------------------------------------------------------------------------
+// Points pools
+//
+// A pool is kept in the sheet's resource box that carries the pool's name
+// (the 2014 OGL sheet's Class Resource, Other Resource and added resource
+// boxes: an attribute such as `other_resource`, named by `other_resource_name`),
+// or in a plain attribute, `<pool id>_pool`. The D&D 2024 sheet keeps its
+// resources inside its `store`, which a Mod cannot change safely, so its
+// characters always use the plain attribute.
+// ---------------------------------------------------------------------------
+
+/**
+ * Returns the name of a pool's plain attribute.
+ *
+ * @param {object} pool Pool.
+ * @returns {string} Attribute name, such as `inspiration_pool`.
+ */
+export function poolAttributeName(pool) {
+  return `${pool.id.replaceAll('-', '_')}${POOL_ATTRIBUTE_SUFFIX}`;
+}
+
+/**
+ * Returns true when an attribute name could hold a pool: a resource box, its
+ * name, or a pool's plain attribute.
+ *
+ * @param {string} name Attribute name.
+ * @returns {boolean} True when worth checking.
+ */
+export function isPoolAttributeName(name) {
+  const text = toText(name).toLowerCase();
+  return text.includes('resource') || text.endsWith(POOL_ATTRIBUTE_SUFFIX);
+}
+
+/**
+ * Finds where a character keeps a pool.
+ *
+ * @param {string} charId Character ID.
+ * @param {object} pool Pool.
+ * @returns {{where: 'resource'|'attribute', name: string, attr: object|undefined}} Where it is kept, the attribute's name, and the attribute when it exists.
+ */
+export function locatePool(charId, pool) {
+  const attrs = findObjs({ _type: 'attribute', _characterid: charId });
+  const named = (name) =>
+    attrs.find((attr) => toText(attr.get('name')).toLowerCase() === name.toLowerCase());
+  if (pool.source === 'resource') {
+    const wanted = pool.name.toLowerCase();
+    const label = attrs.find((attr) => {
+      const name = toText(attr.get('name')).toLowerCase();
+      return (
+        name.includes('resource') &&
+        name.endsWith('_name') &&
+        toText(attr.get('current')).trim().toLowerCase() === wanted
+      );
+    });
+    if (label) {
+      const name = toText(label.get('name')).slice(0, -'_name'.length);
+      return { where: 'resource', name, attr: named(name) };
+    }
+  }
+  const name = poolAttributeName(pool);
+  return { where: 'attribute', name, attr: named(name) };
+}
+
+/**
+ * Reads a character's points in a pool.
+ *
+ * @param {string} charId Character ID.
+ * @param {object} pool Pool.
+ * @returns {{where: string, exists: boolean, value: number}} Where it is kept, whether anything is stored yet, and the points.
+ */
+export function readPool(charId, pool) {
+  const { where, attr } = locatePool(charId, pool);
+  const n = Math.floor(Number(attr?.get('current')));
+  return { where, exists: Boolean(attr), value: Number.isFinite(n) && n > 0 ? n : 0 };
+}
+
+/**
+ * Writes a character's points in a pool, creating the attribute when needed.
+ *
+ * @param {string} charId Character ID.
+ * @param {object} pool Pool.
+ * @param {number} value Points.
+ * @returns {{where: string}} Where it was written.
+ */
+export function writePool(charId, pool, value) {
+  const { where, name, attr } = locatePool(charId, pool);
+  if (attr) {
+    attr.set('current', value);
+  } else {
+    createObj('attribute', { characterid: charId, name, current: value });
+  }
+  return { where };
 }
 
 /**

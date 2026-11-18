@@ -1,14 +1,19 @@
 import {
   ANNOUNCE_OPTIONS,
   DEFAULT_CONFIG,
+  DEFAULT_POOL,
   FX_COLOURS,
   FX_TYPES,
   LEGACY_STATE_KEY,
+  MAX_POINTS,
+  MAX_POOLS,
   MAX_UNDO,
   OFFER_LIFETIME_MS,
+  POOL_SOURCES,
   SCHEMA_VERSION,
   SCRIPT_VERSION,
   STATE_KEY,
+  TRACKING_OPTIONS,
   USEROPTION_KEYS,
   WORDING_OPTIONS,
 } from './constants.js';
@@ -64,6 +69,8 @@ export function validateConfigValue(key, raw) {
       const text = toText(raw);
       return /^[^,@\s][^,@]{0,99}$/.test(text) ? ok(text) : bad;
     }
+    case 'tracking':
+      return option(TRACKING_OPTIONS);
     case 'wording':
       return option(WORDING_OPTIONS);
     case 'announce':
@@ -135,6 +142,8 @@ function freshState() {
     config: { ...DEFAULT_CONFIG },
     legacyCommand: '',
     known: {},
+    pools: [{ ...DEFAULT_POOL }],
+    points: {},
     party: { include: [], exclude: [] },
     undo: [],
     offers: {},
@@ -201,6 +210,7 @@ export function initialiseState() {
     s.party.exclude = [];
   }
   s.config = mergeConfig(s.config);
+  s.pools = repairPools(s.pools);
   s.schemaVersion = SCHEMA_VERSION;
   s.version = SCRIPT_VERSION;
   pruneOffers();
@@ -298,12 +308,203 @@ export function setKnown(charId, inspired) {
 export function forgetCharacter(charId) {
   const s = getState();
   delete s.known[charId];
+  for (const values of Object.values(s.points)) {
+    if (isRecord(values)) {
+      delete values[charId];
+    }
+  }
   s.party.include = s.party.include.filter((id) => id !== charId);
   s.party.exclude = s.party.exclude.filter((id) => id !== charId);
   for (const [id, offer] of Object.entries(s.offers)) {
     if (offer.charId === charId) {
       delete s.offers[id];
     }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Points pools
+// ---------------------------------------------------------------------------
+
+/**
+ * Turns a pool name into its ID: lower-case letters, digits and hyphens.
+ *
+ * @param {string} name Pool name.
+ * @returns {string} ID, or an empty string when the name has no letters or digits.
+ */
+export function poolId(name) {
+  return toText(name)
+    .toLowerCase()
+    .normalize('NFKD')
+    .replaceAll(/[^a-z0-9]+/g, '-')
+    .replaceAll(/^-+|-+$/g, '')
+    .slice(0, 30);
+}
+
+/**
+ * Validates one field of a pool.
+ *
+ * @param {string} field name | source | cost | max | marker.
+ * @param {*} raw Raw value.
+ * @returns {{valid: boolean, value?: *}} Result; `value` is the normalised value when valid.
+ */
+export function validatePoolField(field, raw) {
+  const ok = (value) => ({ valid: true, value });
+  const bad = { valid: false };
+  const text = toText(raw);
+  const whole = /^\d{1,4}$/.test(text) ? Number(text) : NaN;
+  switch (field) {
+    case 'name':
+      return /^[^<>{}|@[\]]{1,40}$/.test(text) && poolId(text) ? ok(text) : bad;
+    case 'source': {
+      const found = POOL_SOURCES.find((o) => o === text.toLowerCase());
+      return found ? ok(found) : bad;
+    }
+    case 'cost':
+      return whole >= 1 && whole <= 100 ? ok(whole) : bad;
+    case 'max':
+      return whole >= 0 && whole <= MAX_POINTS ? ok(whole) : bad;
+    case 'marker':
+      return text === '' || /^[^,@\s][^,@]{0,99}$/.test(text) ? ok(text) : bad;
+    default:
+      return bad;
+  }
+}
+
+/**
+ * Repairs the stored pools: valid fields, unique IDs, and the default pool
+ * first.
+ *
+ * @param {*} pools Stored pools.
+ * @returns {object[]} Pools.
+ */
+export function repairPools(pools) {
+  const repaired = [];
+  for (const raw of Array.isArray(pools) ? pools : []) {
+    if (!isRecord(raw) || repaired.length >= MAX_POOLS) {
+      continue;
+    }
+    const name = validatePoolField('name', raw.name);
+    const id = poolId(raw.id) || (name.valid ? poolId(name.value) : '');
+    if (!name.valid || !id || repaired.some((p) => p.id === id)) {
+      continue;
+    }
+    const pool = { ...DEFAULT_POOL, id, name: name.value };
+    for (const field of ['source', 'cost', 'max', 'marker']) {
+      const result = validatePoolField(field, raw[field]);
+      if (result.valid) {
+        pool[field] = result.value;
+      }
+    }
+    repaired.push(pool);
+  }
+  if (repaired.length === 0) {
+    repaired.push({ ...DEFAULT_POOL });
+  }
+  return repaired;
+}
+
+/**
+ * Returns every pool, the default pool first.
+ *
+ * @returns {object[]} Pools.
+ */
+export function getPools() {
+  return getState().pools;
+}
+
+/**
+ * Returns the default pool: the one used by commands that name no pool while
+ * Tracking is set to a points pool.
+ *
+ * @returns {object} Pool.
+ */
+export function defaultPool() {
+  return getPools()[0];
+}
+
+/**
+ * Finds a pool by its ID or its name, whatever the case.
+ *
+ * @param {string} text Pool ID or name.
+ * @returns {object|undefined} Pool.
+ */
+export function findPool(text) {
+  const wanted = toText(text).toLowerCase();
+  const id = poolId(text);
+  return getPools().find((p) => p.id === wanted || p.name.toLowerCase() === wanted || p.id === id);
+}
+
+/**
+ * Adds a pool.
+ *
+ * @param {string} name Pool name.
+ * @returns {{status: string, pool?: object}} added | invalid | exists | full.
+ */
+export function addPool(name) {
+  const result = validatePoolField('name', name);
+  if (!result.valid) {
+    return { status: 'invalid' };
+  }
+  if (findPool(result.value)) {
+    return { status: 'exists' };
+  }
+  const pools = getPools();
+  if (pools.length >= MAX_POOLS) {
+    return { status: 'full' };
+  }
+  const pool = { ...DEFAULT_POOL, id: poolId(result.value), name: result.value };
+  pools.push(pool);
+  return { status: 'added', pool };
+}
+
+/**
+ * Deletes a pool. The default pool stays. The points on the sheets are left
+ * as they are.
+ *
+ * @param {object} pool Pool.
+ * @returns {boolean} True when deleted.
+ */
+export function deletePool(pool) {
+  const s = getState();
+  const index = s.pools.indexOf(pool);
+  if (index <= 0) {
+    return false;
+  }
+  s.pools.splice(index, 1);
+  delete s.points[pool.id];
+  return true;
+}
+
+/**
+ * Returns the points last seen for a character in a pool.
+ *
+ * @param {string} id Pool ID.
+ * @param {string} charId Character ID.
+ * @returns {number} Points, 0 when not seen yet.
+ */
+export function getPoints(id, charId) {
+  const value = getState().points[id]?.[charId];
+  return typeof value === 'number' ? value : 0;
+}
+
+/**
+ * Records the points seen for a character in a pool.
+ *
+ * @param {string} id Pool ID.
+ * @param {string} charId Character ID.
+ * @param {number} value Points.
+ * @returns {void}
+ */
+export function setPoints(id, charId, value) {
+  const points = getState().points;
+  if (!isRecord(points[id])) {
+    points[id] = {};
+  }
+  if (value > 0) {
+    points[id][charId] = value;
+  } else {
+    delete points[id][charId];
   }
 }
 
@@ -344,12 +545,13 @@ export function getPartyChoices() {
  * @param {string} charId Character ID.
  * @param {string} playerId Who spent it.
  * @param {number} now Current time.
+ * @param {{poolId: string, amount: number}} [points] The pool and points spent, for a pool spend.
  * @returns {string} Undo ID.
  */
-export function pushUndo(charId, playerId, now) {
+export function pushUndo(charId, playerId, now, points) {
   const s = getState();
   const id = shortId();
-  s.undo.push({ id, charId, playerId, at: now });
+  s.undo.push({ id, charId, playerId, at: now, ...(points || {}) });
   while (s.undo.length > MAX_UNDO) {
     s.undo.shift();
   }

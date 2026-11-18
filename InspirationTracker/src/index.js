@@ -1,11 +1,16 @@
 import {
+  activePool,
   give,
   handleMarkerChange,
+  handlePoolAttribute,
   handleSheetValue,
   observeTokenChange,
+  poolGive,
+  poolSpend,
   remove,
   spend,
   syncAll,
+  syncPool,
   syncTokens,
 } from './actions.js';
 import { whisper } from './chat.js';
@@ -22,12 +27,20 @@ import {
 } from './constants.js';
 import { t } from './i18n.js';
 import { installHandouts } from './journals.js';
-import { readInspiration, inspirationFromStore, readStore } from './sheet.js';
+import {
+  inspirationFromStore,
+  isPoolAttributeName,
+  readInspiration,
+  readPool,
+  readStore,
+} from './sheet.js';
 import {
   applyGlobalConfig,
+  findPool,
   forgetCharacter,
   getConfig,
   getKnown,
+  getPools,
   initialiseState,
   takeNoticeOnce,
 } from './state.js';
@@ -86,6 +99,8 @@ function handleAttribute(attr) {
     if (value !== undefined) {
       handleSheetValue(charId, value);
     }
+  } else if (isPoolAttributeName(name)) {
+    handlePoolAttribute(attr);
   }
 }
 
@@ -123,6 +138,12 @@ async function handleGraphic(token, prev) {
 async function markNewToken(token) {
   const charId = token.get('represents');
   if (!isToken(token) || !charId) {
+    return;
+  }
+  for (const pool of getPools()) {
+    syncPool(charId, pool);
+  }
+  if (activePool()) {
     return;
   }
   let inspired = getKnown(charId);
@@ -205,6 +226,47 @@ function publishApi() {
      * @returns {Promise<string>} Result status.
      */
     remove: (id) => run(id, (c) => remove(c)),
+    /**
+     * Returns a character's points in a pool.
+     *
+     * @param {string} id Character or token ID.
+     * @param {string} [pool] Pool name or ID; the default pool when left out.
+     * @returns {number} Points, 0 when the character or pool is unknown.
+     */
+    points(id, pool) {
+      const c = character(id);
+      const p = pool ? findPool(pool) : getPools()[0];
+      return c && p ? readPool(c.id, p).value : 0;
+    },
+    /**
+     * Adds points to a character's pool.
+     *
+     * @param {string} id Character or token ID.
+     * @param {number} amount Points to add.
+     * @param {string} [pool] Pool name or ID; the default pool when left out.
+     * @returns {Promise<string>} Result status.
+     */
+    async givePoints(id, amount, pool) {
+      const c = character(id);
+      const p = pool ? findPool(pool) : getPools()[0];
+      const n = Math.floor(Number(amount));
+      return c && p && n > 0 ? (await poolGive(c, p, n)).status : 'unknown';
+    },
+    /**
+     * Spends points from a character's pool, announcing it as a player's
+     * spend would be.
+     *
+     * @param {string} id Character or token ID.
+     * @param {number} amount Points to spend.
+     * @param {string} [pool] Pool name or ID; the default pool when left out.
+     * @returns {Promise<string>} Result status.
+     */
+    async spendPoints(id, amount, pool) {
+      const c = character(id);
+      const p = pool ? findPool(pool) : getPools()[0];
+      const n = Math.floor(Number(amount));
+      return c && p && n > 0 ? (await poolSpend(c, p, n, API_PLAYER_ID)).status : 'unknown';
+    },
   });
 }
 

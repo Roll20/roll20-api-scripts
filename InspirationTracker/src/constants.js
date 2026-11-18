@@ -52,6 +52,7 @@ export const RULES_2014 = '2014';
 export const RULES_2024 = '2024';
 
 // Option lists for settings.
+export const TRACKING_OPTIONS = ['flag', 'pool'];
 export const WORDING_OPTIONS = ['auto', RULES_2014, RULES_2024];
 export const ANNOUNCE_OPTIONS = ['public', 'gm', 'off'];
 
@@ -66,6 +67,7 @@ export const SHEET_MARKER_PREFIX = 'sheet-';
 // and special effect.
 export const DEFAULT_CONFIG = {
   language: DEFAULT_LOCALE,
+  tracking: 'flag',
   marker: 'black-flag',
   wording: 'auto',
   announce: 'public',
@@ -82,6 +84,7 @@ export const USEROPTION_KEYS = ['language', 'wording', 'playerOverview'];
 // Settings shown in the settings menu, in order.
 export const SETTING_KEYS = [
   'language',
+  'tracking',
   'marker',
   'wording',
   'announce',
@@ -91,6 +94,24 @@ export const SETTING_KEYS = [
   'playerOverview',
   'passOn',
 ];
+
+// Points pools: counters a GM can award and players can spend, such as a pool
+// of inspiration points, hero points or luck. A pool is kept in the sheet's
+// resource box with the pool's name, or in a plain attribute.
+export const POOL_SOURCES = ['resource', 'attribute'];
+export const POOL_FIELDS = ['name', 'source', 'cost', 'max', 'marker'];
+export const DEFAULT_POOL = {
+  id: 'inspiration',
+  name: 'Inspiration',
+  source: 'resource',
+  cost: 1,
+  max: 0,
+  marker: '',
+};
+export const MAX_POOLS = 8;
+export const MAX_POINTS = 9999;
+// A pool's plain attribute is its ID with this ending: "inspiration_pool".
+export const POOL_ATTRIBUTE_SUFFIX = '_pool';
 
 // Roll20's built-in special effect names ("type-colour").
 export const FX_TYPES = [
@@ -135,6 +156,12 @@ export const HELP_COMMANDS = [
   ['party', 'party'],
   ['party add / party remove', 'partyEdit'],
   ['give | remove | toggle | spend --ids <id;id;…>', 'ids'],
+  ['give | remove | spend <points>', 'points'],
+  ['boost <bonus>', 'boost'],
+  ['give | remove | spend | boost | party --pool <name>', 'poolFlag'],
+  ['pools', 'pools'],
+  ['pool add <name> / pool delete <name>', 'poolEdit'],
+  ['pool set <name> <name|source|cost|max|marker> <value>', 'poolSet'],
   ['undo <id>', 'undo'],
   ['macro', 'macro'],
   ['sync', 'sync'],

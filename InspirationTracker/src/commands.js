@@ -1,8 +1,20 @@
 // Chat command parsing and dispatch.
 
-import { give, passOn, remove, spend, syncAll, syncTokens, termFor, undoSpend } from './actions.js';
+import {
+  activePool,
+  give,
+  passOn,
+  poolGive,
+  poolRemove,
+  poolSpend,
+  remove,
+  spend,
+  syncAll,
+  termFor,
+  undoSpend,
+} from './actions.js';
 import { whisper, whisperError, whisperWarning } from './chat.js';
-import { API_PLAYER_ID, COMMAND, MACRO_NAME, SCRIPT_NAME } from './constants.js';
+import { API_PLAYER_ID, COMMAND, MACRO_NAME, MAX_POINTS, SCRIPT_NAME } from './constants.js';
 import { t } from './i18n.js';
 import { installHandouts } from './journals.js';
 import { resolveMarker } from './markers.js';
@@ -11,27 +23,46 @@ import {
   showMainMenu,
   showParty,
   showPlayerCard,
+  showPools,
   showSettings,
   showStatus,
 } from './menu.js';
 import { resolveCharacters } from './party.js';
 import { readInspiration } from './sheet.js';
-import { getConfig, getState, resetConfig, setConfigValue, setPartyMember } from './state.js';
+import {
+  addPool,
+  defaultPool,
+  deletePool,
+  findPool,
+  getConfig,
+  getPools,
+  getState,
+  resetConfig,
+  setConfigValue,
+  setPartyMember,
+  validatePoolField,
+} from './state.js';
 import { escapeHtml, isGmOrMod, tokenize, toText } from './utils.js';
 
 /**
  * Splits a chat message into the command word, its arguments and flags.
  *
  * @param {string} content Message text after the command prefix.
- * @returns {{sub: string, args: string[], ids: string[], party: boolean}} Parsed command.
+ * @returns {{sub: string, args: string[], ids: string[], party: boolean, pool: string}} Parsed command.
  */
 export function parseCommand(content) {
   const words = tokenize(content);
   const args = [];
   const ids = [];
   let party = false;
+  let pool = '';
   for (let i = 0; i < words.length; i += 1) {
     const word = words[i];
+    if (word.toLowerCase() === '--pool') {
+      pool = words[i + 1] || '';
+      i += 1;
+      continue;
+    }
     if (word.toLowerCase() === '--ids') {
       const list = words[i + 1] || '';
       i += 1;
@@ -48,7 +79,7 @@ export function parseCommand(content) {
     }
   }
   const sub = (args.shift() || '').toLowerCase();
-  return { sub, args, ids, party };
+  return { sub, args, ids, party, pool };
 }
 
 /**
@@ -94,9 +125,224 @@ function report(playerId, character, result) {
     case 'failed':
       whisperError(target, t('errors.writeFailed', lang, vars), result.error);
       break;
+    case 'poolNone':
+      whisperWarning(target, t('pool.none', lang, { ...vars, ...result }));
+      break;
+    case 'poolRemoved':
+      whisper(target, SCRIPT_NAME, escapeHtml(t('pool.removed', lang, { ...vars, ...result })));
+      break;
+    case 'short':
+      whisperWarning(target, t('pool.short', lang, { ...vars, ...result }));
+      break;
+    case 'full':
+      whisperWarning(target, t('pool.full', lang, { ...vars, ...result }));
+      break;
     default:
       break;
   }
+}
+
+/**
+ * Tells a player that no pool has the name they gave.
+ *
+ * @param {string|null} who Who asked.
+ * @param {string} value The name given.
+ * @returns {void}
+ */
+function unknownPool(who, value) {
+  const lang = getConfig().language;
+  whisperError(
+    who,
+    t('errors.unknownPool', lang, { value }),
+    t('errors.unknownPoolHint', lang, {
+      pools: getPools()
+        .map((p) => p.name)
+        .join(', '),
+    })
+  );
+}
+
+/**
+ * Finds the pool a command works on: the one named with --pool, or the
+ * default pool while Tracking is set to a points pool. An unknown name is
+ * reported to the player.
+ *
+ * @param {object} msg Chat message.
+ * @param {object} cmd Parsed command.
+ * @returns {{pool: object|null, ok: boolean}} The pool (null for the sheet's inspiration box), and false when the name was unknown.
+ */
+function targetPool(msg, cmd) {
+  if (!cmd.pool) {
+    return { pool: activePool(), ok: true };
+  }
+  const pool = findPool(cmd.pool);
+  if (!pool) {
+    unknownPool(msg.playerid === API_PLAYER_ID ? null : msg.playerid, cmd.pool);
+  }
+  return { pool: pool || null, ok: Boolean(pool) };
+}
+
+/**
+ * Reads the number of points (or the bonus) a command gives.
+ *
+ * @param {object} msg Chat message.
+ * @param {string|undefined} raw The argument.
+ * @param {{fallback?: number, all?: boolean}} [options] Value when nothing was typed, and whether "all" is accepted.
+ * @returns {number|'all'|null} The amount, or null when it was not a whole number (the player is told).
+ */
+function amountArg(msg, raw, options = {}) {
+  const text = toText(raw).toLowerCase();
+  if (text === '' && options.fallback !== undefined) {
+    return options.fallback;
+  }
+  if (text === 'all' && options.all) {
+    return 'all';
+  }
+  const n = /^\+?\d{1,5}$/.test(text) ? Number(text) : 0;
+  if (n < 1 || n > MAX_POINTS) {
+    const lang = getConfig().language;
+    whisperError(
+      msg.playerid === API_PLAYER_ID ? null : msg.playerid,
+      t('errors.badAmount', lang, { value: toText(raw) }),
+      t('errors.badAmountHint', lang)
+    );
+    return null;
+  }
+  return n;
+}
+
+/**
+ * Handles give, remove, spend and boost for a points pool.
+ *
+ * @param {object} msg Chat message.
+ * @param {object} cmd Parsed command.
+ * @param {object} pool Pool.
+ * @returns {Promise<void>}
+ */
+async function handlePoolAction(msg, cmd, pool) {
+  const sub = cmd.sub === '' || cmd.sub === 'toggle' ? 'give' : cmd.sub;
+  const amount = amountArg(msg, cmd.args[0], {
+    fallback: sub === 'boost' ? undefined : 1,
+    all: sub === 'remove',
+  });
+  if (amount === null) {
+    return;
+  }
+  const actions = {
+    give: (character) => poolGive(character, pool, amount),
+    remove: (character) => poolRemove(character, pool, amount),
+    spend: (character, playerId) => poolSpend(character, pool, amount, playerId),
+    boost: (character, playerId) =>
+      poolSpend(character, pool, amount * pool.cost, playerId, amount),
+  };
+  await forCharacters(msg, { ...cmd, pool: pool.id }, actions[sub]);
+}
+
+/**
+ * Returns the marker a pool shows on tokens, if any.
+ *
+ * @param {object} pool Pool.
+ * @returns {string} Marker tag, or an empty string.
+ */
+function poolMarkerOf(pool) {
+  if (pool === defaultPool()) {
+    return activePool() ? getConfig().marker : '';
+  }
+  return pool.marker;
+}
+
+/**
+ * Handles "pool add", "pool delete" and "pool set", then shows the pools.
+ *
+ * @param {string|null} who Who asked.
+ * @param {string[]} args Arguments after "pool".
+ * @returns {Promise<void>}
+ */
+async function handlePoolEdit(who, args) {
+  const lang = getConfig().language;
+  const [action = '', ...rest] = args;
+  switch (action.toLowerCase()) {
+    case 'add': {
+      const name = rest.join(' ');
+      const result = addPool(name);
+      if (result.status !== 'added') {
+        const key = { invalid: 'poolInvalid', exists: 'poolExists', full: 'poolFull' }[
+          result.status
+        ];
+        whisperError(
+          who,
+          t(`errors.${key}`, lang, { value: name }),
+          t('errors.poolNameHint', lang)
+        );
+        return;
+      }
+      break;
+    }
+    case 'delete': {
+      const pool = findPool(rest.join(' '));
+      if (!pool) {
+        unknownPool(who, rest.join(' '));
+        return;
+      }
+      const marker = poolMarkerOf(pool);
+      if (!deletePool(pool)) {
+        whisperError(who, t('errors.poolDefault', lang, { name: pool.name }));
+        return;
+      }
+      stripMarker(marker);
+      break;
+    }
+    case 'set': {
+      const [id = '', rawField = '', ...words] = rest;
+      const pool = findPool(id);
+      if (!pool) {
+        unknownPool(who, id);
+        return;
+      }
+      const field = rawField.toLowerCase();
+      let value = words.join(' ');
+      if (field === 'marker') {
+        if (!value || ['none', 'off'].includes(value.toLowerCase())) {
+          value = '';
+        } else {
+          const marker = resolveMarker(value);
+          if (!marker || marker.tag === getConfig().marker) {
+            whisperError(
+              who,
+              t('errors.unknownMarker', lang, { value }),
+              t('errors.poolMarkerHint', lang)
+            );
+            return;
+          }
+          value = marker.tag;
+        }
+      }
+      const result = validatePoolField(field, value);
+      const other = field === 'name' && result.valid ? findPool(value) : undefined;
+      if (
+        !result.valid ||
+        (other && other !== pool) ||
+        (field === 'marker' && pool === defaultPool())
+      ) {
+        whisperError(
+          who,
+          t('errors.badSetting', lang, { key: rawField, value }),
+          t('errors.poolSetHint', lang)
+        );
+        return;
+      }
+      const oldMarker = poolMarkerOf(pool);
+      pool[field] = result.value;
+      if (field === 'marker') {
+        stripMarker(oldMarker);
+      }
+      await syncAll();
+      break;
+    }
+    default:
+      break;
+  }
+  showPools(who);
 }
 
 /**
@@ -127,7 +373,11 @@ async function forCharacters(msg, cmd, action) {
     report(msg.playerid, character, await action(character, msg.playerid));
   }
   if (cmd.party) {
-    await showParty(msg.playerid, isGmOrMod(msg.playerid, API_PLAYER_ID));
+    await showParty(
+      msg.playerid,
+      isGmOrMod(msg.playerid, API_PLAYER_ID),
+      cmd.pool ? findPool(cmd.pool) : null
+    );
   }
 }
 
@@ -149,9 +399,9 @@ async function toggle(character, playerId) {
  *
  * @param {string} playerId Who asked.
  * @param {string[]} args Setting key and value.
- * @returns {void}
+ * @returns {Promise<void>}
  */
-function handleSet(playerId, args) {
+async function handleSet(playerId, args) {
   const lang = getConfig().language;
   if (args.length === 0) {
     showSettings(playerId);
@@ -182,8 +432,11 @@ function handleSet(playerId, args) {
     );
     return;
   }
-  if (key === 'marker' && oldMarker !== result.value) {
-    moveMarker(oldMarker);
+  if (key === 'tracking' || (key === 'marker' && oldMarker !== result.value)) {
+    // The marker follows what is tracked: taken off everywhere, then put back
+    // on the characters who have inspiration (or points) now.
+    stripMarker(oldMarker);
+    await syncAll();
   }
   if (key === 'language') {
     installHandouts();
@@ -192,14 +445,15 @@ function handleSet(playerId, args) {
 }
 
 /**
- * Takes the old marker off every token and shows the new one where the
- * character has inspiration.
+ * Takes a marker off every token.
  *
- * @param {string} oldMarker Previous marker tag.
+ * @param {string} oldMarker Marker tag.
  * @returns {void}
  */
-function moveMarker(oldMarker) {
-  const marker = getConfig().marker;
+function stripMarker(oldMarker) {
+  if (!oldMarker) {
+    return;
+  }
   for (const token of findObjs({ _type: 'graphic', _subtype: 'token' })) {
     const tags = toText(token.get('statusmarkers')).split(',');
     if (tags.some((tag) => tag.split('@')[0] === oldMarker)) {
@@ -207,11 +461,6 @@ function moveMarker(oldMarker) {
         'statusmarkers',
         tags.filter((tag) => tag && tag.split('@')[0] !== oldMarker).join(',')
       );
-    }
-  }
-  for (const [charId, inspired] of Object.entries(getState().known)) {
-    if (inspired && marker) {
-      syncTokens(charId, true);
     }
   }
 }
@@ -265,15 +514,31 @@ async function handlePlayer(msg, cmd) {
       await showPlayerCard(msg.playerid);
       return;
     case 'spend':
+    case 'boost': {
       if (!getConfig().playerSpend) {
         whisperError(msg.playerid, t('errors.spendOff', lang));
         return;
       }
-      await forCharacters(msg, cmd, spend);
+      const target = targetPool(msg, cmd);
+      if (!target.ok) {
+        return;
+      }
+      if (target.pool) {
+        await handlePoolAction(msg, cmd, target.pool);
+      } else if (cmd.sub === 'boost') {
+        whisperError(msg.playerid, t('errors.boostNoPool', lang));
+      } else {
+        await forCharacters(msg, cmd, spend);
+      }
       return;
-    case 'party':
-      await showParty(msg.playerid, false);
+    }
+    case 'party': {
+      const target = targetPool(msg, cmd);
+      if (target.ok) {
+        await showParty(msg.playerid, false, cmd.pool ? target.pool : null);
+      }
       return;
+    }
     case 'pass':
       await handlePass(msg, cmd);
       return;
@@ -332,13 +597,28 @@ async function handlePass(msg, cmd) {
 async function handleGm(msg, cmd) {
   const lang = getConfig().language;
   const who = msg.playerid === API_PLAYER_ID ? null : msg.playerid;
+  if (['', 'give', 'remove', 'toggle', 'spend', 'boost'].includes(cmd.sub)) {
+    const chosen = (msg.selected || []).length > 0 || cmd.ids.length > 0;
+    if (cmd.sub === '' && !chosen) {
+      showMainMenu(who);
+      return;
+    }
+    const target = targetPool(msg, cmd);
+    if (!target.ok) {
+      return;
+    }
+    if (target.pool) {
+      await handlePoolAction(msg, cmd, target.pool);
+      return;
+    }
+    if (cmd.sub === 'boost') {
+      whisperError(who, t('errors.boostNoPool', lang));
+      return;
+    }
+  }
   switch (cmd.sub) {
     case '':
-      if ((msg.selected || []).length > 0 || cmd.ids.length > 0) {
-        await forCharacters(msg, cmd, toggle);
-      } else {
-        showMainMenu(who);
-      }
+      await forCharacters(msg, cmd, toggle);
       return;
     case 'menu':
       showMainMenu(who);
@@ -371,9 +651,18 @@ async function handleGm(msg, cmd) {
           setPartyMember(character.id, action === 'add');
         }
       }
-      await showParty(who, true);
+      const target = targetPool(msg, cmd);
+      if (target.ok) {
+        await showParty(who, true, cmd.pool ? target.pool : null);
+      }
       return;
     }
+    case 'pools':
+      showPools(who);
+      return;
+    case 'pool':
+      await handlePoolEdit(who, cmd.args);
+      return;
     case 'pass':
       await handlePass(msg, cmd);
       return;
@@ -399,12 +688,19 @@ async function handleGm(msg, cmd) {
     case 'set':
     case 'settings':
     case 'config':
-      handleSet(who, cmd.sub === 'set' ? cmd.args : []);
+      await handleSet(who, cmd.sub === 'set' ? cmd.args : []);
       return;
-    case 'reset':
+    case 'reset': {
+      const marker = getConfig().marker;
+      const tracked = getConfig().tracking;
       resetConfig();
+      if (marker !== getConfig().marker || tracked !== getConfig().tracking) {
+        stripMarker(marker);
+        await syncAll();
+      }
       showSettings(who);
       return;
+    }
     case 'status':
       showStatus(who, getState().legacyCommand);
       return;

@@ -5,18 +5,21 @@ import { broadcast, buildButton, buildSecondaryButton, whisper, whisperEach } fr
 import { API_PLAYER_ID, COMMAND, ICON_URL, RULES_2024, SCRIPT_NAME } from './constants.js';
 import { t } from './i18n.js';
 import { canControl, ownerIds, partyMembers, tokensFor } from './party.js';
-import { readInspiration, rulesFor, writeInspiration } from './sheet.js';
+import { readInspiration, readPool, rulesFor, writeInspiration, writePool } from './sheet.js';
 import {
   createOffer,
+  defaultPool,
   getConfig,
   getKnown,
+  getPools,
   pushUndo,
   restoreOffer,
   setKnown,
+  setPoints,
   takeOffer,
   takeUndo,
 } from './state.js';
-import { escapeHtml, getGmPlayerIds, isGmOrMod, setMarker, toText } from './utils.js';
+import { escapeHtml, getGmPlayerIds, isGmOrMod, queryText, setMarker, toText } from './utils.js';
 
 const observers = [];
 const busy = new Set();
@@ -43,6 +46,10 @@ export function observeTokenChange(fn) {
  * @returns {string} Translated term.
  */
 export function termFor(charId, lang) {
+  const pool = activePool();
+  if (pool) {
+    return pool.name;
+  }
   return t(rulesFor(charId) === RULES_2024 ? 'terms.heroic' : 'terms.classic', lang);
 }
 
@@ -64,7 +71,62 @@ function nameOf(character) {
  * @returns {void}
  */
 export function syncTokens(charId, inspired) {
-  const marker = getConfig().marker;
+  applyMarker(charId, getConfig().marker, inspired);
+}
+
+/**
+ * Returns the pool that commands naming no pool work on: the default pool
+ * while Tracking is set to a points pool, otherwise none (the sheet's
+ * inspiration box is used).
+ *
+ * @returns {object|null} Pool.
+ */
+export function activePool() {
+  return getConfig().tracking === 'pool' ? defaultPool() : null;
+}
+
+/**
+ * Returns the marker shown while a character has points in a pool. The
+ * default pool uses the Marker setting while it is the one being tracked;
+ * other pools use their own marker, if they have one.
+ *
+ * @param {object} pool Pool.
+ * @returns {string} Marker tag, or an empty string for none.
+ */
+export function poolMarker(pool) {
+  if (pool === defaultPool()) {
+    return getConfig().tracking === 'pool' ? getConfig().marker : '';
+  }
+  return pool.marker === getConfig().marker ? '' : pool.marker;
+}
+
+/**
+ * Reads a character's points in a pool, records them and puts its markers
+ * right.
+ *
+ * @param {string} charId Character ID.
+ * @param {object} pool Pool.
+ * @returns {{where: string, exists: boolean, value: number}} What was read.
+ */
+export function syncPool(charId, pool) {
+  const read = readPool(charId, pool);
+  setPoints(pool.id, charId, read.value);
+  applyMarker(charId, poolMarker(pool), read.value > 0);
+  return read;
+}
+
+/**
+ * Shows or hides a marker on every token for a character.
+ *
+ * @param {string} charId Character ID.
+ * @param {string} marker Marker tag; nothing happens when empty.
+ * @param {boolean} inspired Whether to show it.
+ * @returns {void}
+ */
+export function applyMarker(charId, marker, inspired) {
+  if (!marker) {
+    return;
+  }
   for (const token of tokensFor(charId)) {
     const prev = { ...token.attributes, statusmarkers: token.get('statusmarkers') };
     if (setMarker(token, marker, inspired)) {
@@ -310,6 +372,10 @@ export async function undoSpend(undoId) {
   if (!character) {
     return { status: 'unknown' };
   }
+  if (entry.poolId) {
+    const pool = getPools().find((p) => p.id === entry.poolId);
+    return pool ? undoPoolSpend(character, pool, entry.amount) : { status: 'unknown' };
+  }
   const result = await exclusive(character.id, async () => {
     const { inspired } = await readInspiration(character.id);
     if (inspired) {
@@ -333,6 +399,210 @@ export async function undoSpend(undoId) {
     );
   }
   return { ...result, name: nameOf(character) };
+}
+
+// ---------------------------------------------------------------------------
+// Points pools
+// ---------------------------------------------------------------------------
+
+/**
+ * Builds the Spend and Boost buttons shown under a pool announcement.
+ *
+ * @param {object} character Roll20 character.
+ * @param {object} pool Pool.
+ * @returns {string} Button HTML, empty when players cannot spend.
+ */
+function poolButtons(character, pool) {
+  if (!getConfig().playerSpend) {
+    return '';
+  }
+  const lang = getConfig().language;
+  const target = `--ids ${character.id} --pool ${pool.id}`;
+  return [
+    buildButton(
+      t('buttons.spend', lang),
+      `${COMMAND} spend ?{${queryText(t('prompts.points', lang))}|1} ${target}`
+    ),
+    buildSecondaryButton(
+      t('buttons.boost', lang),
+      `${COMMAND} boost ?{${queryText(t('prompts.bonus', lang))}|1} ${target}`
+    ),
+  ].join(' ');
+}
+
+/**
+ * Changes a character's points in a pool and puts its markers right.
+ *
+ * @param {object} character Roll20 character.
+ * @param {object} pool Pool.
+ * @param {number} after New points.
+ * @returns {void}
+ */
+function storePool(character, pool, after) {
+  setPoints(pool.id, character.id, after);
+  writePool(character.id, pool, after);
+  applyMarker(character.id, poolMarker(pool), after > 0);
+}
+
+/**
+ * Adds points to a character's pool, up to the pool's maximum.
+ *
+ * @param {object} character Roll20 character.
+ * @param {object} pool Pool.
+ * @param {number} amount Points to add.
+ * @returns {Promise<object>} `{status}`: given | full | busy, with before, after and amount.
+ */
+export function poolGive(character, pool, amount) {
+  return exclusive(character.id, async () => {
+    const before = readPool(character.id, pool).value;
+    const after = pool.max > 0 ? Math.min(pool.max, before + amount) : before + amount;
+    if (after <= before) {
+      syncPool(character.id, pool);
+      return { status: 'full', term: pool.name, max: pool.max };
+    }
+    storePool(character, pool, after);
+    playFx(character.id);
+    const lang = getConfig().language;
+    const vars = {
+      name: nameOf(character),
+      term: pool.name,
+      amount: after - before,
+      before,
+      after,
+    };
+    announce(
+      character,
+      pool.name,
+      announcementBody(
+        escapeHtml(t('pool.gained', lang, vars)),
+        after > 0 ? poolButtons(character, pool) : ''
+      )
+    );
+    return { status: 'given', ...vars };
+  });
+}
+
+/**
+ * Takes points away without it counting as a spend.
+ *
+ * @param {object} character Roll20 character.
+ * @param {object} pool Pool.
+ * @param {number|'all'} amount Points to take, or `all`.
+ * @returns {Promise<object>} `{status}`: poolRemoved | poolNone | busy.
+ */
+export function poolRemove(character, pool, amount) {
+  return exclusive(character.id, async () => {
+    const before = readPool(character.id, pool).value;
+    if (before === 0) {
+      syncPool(character.id, pool);
+      return { status: 'poolNone', term: pool.name };
+    }
+    const taken = amount === 'all' ? before : Math.min(before, amount);
+    const after = before - taken;
+    storePool(character, pool, after);
+    return { status: 'poolRemoved', term: pool.name, amount: taken, before, after };
+  });
+}
+
+/**
+ * Spends points from a character's pool. With a bonus, the points bought a
+ * bonus to a roll, at the pool's cost per +1.
+ *
+ * @param {object} character Roll20 character.
+ * @param {object} pool Pool.
+ * @param {number} amount Points to spend.
+ * @param {string} actorId Who is spending them.
+ * @param {number} [bonus] The bonus the points buy.
+ * @returns {Promise<object>} `{status}`: spent | short | poolNone | denied | busy.
+ */
+export function poolSpend(character, pool, amount, actorId, bonus = 0) {
+  const gm = isGmOrMod(actorId, API_PLAYER_ID);
+  if (!gm && (!getConfig().playerSpend || !canControl(actorId, character))) {
+    return Promise.resolve({ status: 'denied' });
+  }
+  return exclusive(character.id, async () => {
+    const before = readPool(character.id, pool).value;
+    if (before === 0) {
+      syncPool(character.id, pool);
+      return { status: 'poolNone', term: pool.name };
+    }
+    if (amount > before) {
+      return { status: 'short', term: pool.name, have: before, need: amount };
+    }
+    const after = before - amount;
+    storePool(character, pool, after);
+    const lang = getConfig().language;
+    const name = nameOf(character);
+    const vars = { name, term: pool.name, amount, bonus, before, after };
+    announce(
+      character,
+      pool.name,
+      announcementBody(
+        escapeHtml(t(bonus > 0 ? 'pool.boosted' : 'pool.spent', lang, vars)),
+        after > 0 ? poolButtons(character, pool) : ''
+      )
+    );
+    const playerId = actorId === API_PLAYER_ID ? '' : actorId;
+    const undoId = pushUndo(character.id, playerId, Date.now(), { poolId: pool.id, amount });
+    const who = playerId && getObj('player', playerId)?.get('displayname');
+    const line = t('pool.spentBy', lang, { ...vars, player: who || SCRIPT_NAME });
+    whisper(
+      null,
+      SCRIPT_NAME,
+      `<div>${escapeHtml(line)}</div><div style="margin-top:4px">${buildSecondaryButton(t('buttons.undo', lang), `${COMMAND} undo ${undoId}`)}</div>`
+    );
+    return { status: 'spent', ...vars };
+  });
+}
+
+/**
+ * Gives back points that were spent.
+ *
+ * @param {object} character Roll20 character.
+ * @param {object} pool Pool.
+ * @param {number} amount Points to give back.
+ * @returns {Promise<object>} `{status}`: restored | busy, with the character's name.
+ */
+async function undoPoolSpend(character, pool, amount) {
+  const result = await exclusive(character.id, async () => {
+    const before = readPool(character.id, pool).value;
+    const after = before + amount;
+    storePool(character, pool, after);
+    return { status: 'restored', before, after };
+  });
+  if (result.status === 'restored') {
+    const lang = getConfig().language;
+    const text = t('pool.restored', lang, {
+      name: nameOf(character),
+      term: pool.name,
+      amount,
+      before: result.before,
+      after: result.after,
+    });
+    whisperEach(
+      [...getGmPlayerIds(), ...ownerIds(character)],
+      pool.name,
+      announcementBody(escapeHtml(text))
+    );
+  }
+  return { ...result, name: nameOf(character) };
+}
+
+/**
+ * Reacts to a pool's points being changed on the sheet by hand: the value is
+ * recorded and the markers follow.
+ *
+ * @param {object} attr Roll20 attribute that changed.
+ * @returns {void}
+ */
+export function handlePoolAttribute(attr) {
+  const charId = attr.get('_characterid') || attr.get('characterid');
+  if (!charId || busy.has(charId)) {
+    return;
+  }
+  for (const pool of getPools()) {
+    syncPool(charId, pool);
+  }
 }
 
 /**
@@ -438,6 +708,11 @@ export function handleSheetValue(charId, inspired) {
   if (busy.has(charId) || getKnown(charId) === inspired) {
     return;
   }
+  // While a points pool is tracked, the sheet's inspiration box is only recorded.
+  if (activePool()) {
+    setKnown(charId, inspired);
+    return;
+  }
   const first = getKnown(charId) === undefined;
   setKnown(charId, inspired);
   syncTokens(charId, inspired);
@@ -467,6 +742,12 @@ export async function handleMarkerChange(token, shown) {
   if (!character) {
     return;
   }
+  // A pool's marker only shows whether there are points: it is put back.
+  const pool = activePool();
+  if (pool) {
+    syncPool(character.id, pool);
+    return;
+  }
   if (shown) {
     const result = await give(character, API_PLAYER_ID);
     if (result.status === 'offered' || result.status === 'already') {
@@ -488,8 +769,22 @@ export async function handleMarkerChange(token, shown) {
 export async function syncAll() {
   let checked = 0;
   let inspired = 0;
+  const tracked = activePool();
   for (const character of findObjs({ _type: 'character' })) {
+    for (const pool of getPools()) {
+      const read = syncPool(character.id, pool);
+      if (pool === tracked && read.exists) {
+        checked += 1;
+        inspired += read.value > 0 ? 1 : 0;
+      }
+    }
     const value = await readInspiration(character.id);
+    if (tracked) {
+      if (value.kind !== 'none') {
+        setKnown(character.id, value.inspired);
+      }
+      continue;
+    }
     if (value.kind === 'none') {
       continue;
     }

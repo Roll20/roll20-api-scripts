@@ -25,7 +25,7 @@ import {
 } from './constants.js';
 import { getDirectionStyle, getLocale, LOCALE_DEFINITIONS, t, tRaw } from './i18n.js';
 import { getConfig } from './state.js';
-import { escapeHtml } from './utils.js';
+import { escapeHtml, queryText } from './utils.js';
 
 const STYLE = {
   outer: `background:${COLOR_CARD_BG_BOTTOM};color:${COLOR_TEXT};padding:14px 18px;border:1px solid ${COLOR_BORDER};border-radius:6px;font-family:Arial,sans-serif;line-height:1.5;`,
@@ -166,6 +166,7 @@ export function buildHelpHtml(locale) {
     ${section('players', list(raw('players.points')))}
     ${section('passOn', list(raw('passOn.points')))}
     ${section('party', list(raw('party.points')))}
+    ${section('pools', list(raw('pools.points')))}
     ${section('markers', list(raw('markers.points')))}
     ${section('commands', `<p style="${STYLE.p}">${h('commands.intro')}</p><p style="${STYLE.p}">${h('commands.mods')}</p>${table([t('handout.commands.colCommand', lang), t('handout.commands.colDesc', lang)], commands)}`)}
     ${section('settings', `<p style="${STYLE.p}">${h('settings.intro')}</p>${table([t('handout.settings.colKey', lang), t('handout.settings.colName', lang), t('handout.settings.colDesc', lang)], settings)}`)}
@@ -202,6 +203,7 @@ export function buildDeckHtml(locale) {
       <p style="${STYLE.subtitle}">${escapeHtml(tr('deck.subtitle'))} • v${SCRIPT_VERSION}</p>
     </div>
     ${group('menu.selected', 'deck.selectedDesc', [btn('give', 'give'), btn('remove', 'remove', true), btn('toggle', 'toggle', true), btn('spend', 'spend', true)])}
+    ${group('deck.poolsTitle', 'deck.poolsDesc', [btn('give', `give ?{${queryText(tr('prompts.points'))}|1}`), btn('remove', `remove ?{${queryText(tr('prompts.points'))}|1}`, true), btn('spend', `spend ?{${queryText(tr('prompts.points'))}|1}`, true), btn('boost', `boost ?{${queryText(tr('prompts.bonus'))}|1}`, true), btn('pools', 'pools', true)])}
     ${group('menu.party', 'deck.partyDesc', [btn('party', 'party'), btn('partyAdd', 'party add', true), btn('partyRemove', 'party remove', true)])}
     ${group('menu.tools', 'deck.toolsDesc', [btn('menu', ''), btn('settings', 'set', true), btn('macro', 'macro', true), btn('sync', 'sync', true), btn('status', 'status', true), btn('help', 'help', true)])}
     <div style="${STYLE.footer}">${escapeHtml(tr('deck.footer', { help: HANDOUT_HELP_NAME }))}</div>
