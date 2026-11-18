@@ -5,7 +5,7 @@
  * Name: InspirationTracker
  * Script: InspirationTracker.js
  * Version: 1.0.0
- * Built: 2026-11-18T05:07:30.548Z
+ * Built: 2026-11-18T06:23:24.460Z
  */
 const InspirationTrackerMod = (() => {
   'use strict';
@@ -13,7 +13,7 @@ const InspirationTrackerMod = (() => {
   // Build-time placeholders replaced by rollup.config.js inject-build-metadata plugin.
   const SCRIPT_NAME = 'InspirationTracker';
   const SCRIPT_VERSION = '1.0.0';
-  const SCRIPT_LAST_UPDATED = '2026-11-18T05:07:30.548Z';
+  const SCRIPT_LAST_UPDATED = '2026-11-18T06:23:24.460Z';
 
   const DEFAULT_LOCALE$1 = 'en-US';
 
@@ -11443,10 +11443,12 @@ const InspirationTrackerMod = (() => {
    */
   function writePool(charId, pool, value) {
     const { where, name, attr } = locatePool(charId, pool);
+    // A sheet's own boxes hold text ("52"), so they are written the way the sheet writes them.
+    const current = where === 'resource' ? String(value) : value;
     if (attr) {
-      attr.set('current', value);
+      attr.set('current', current);
     } else {
-      createObj('attribute', { characterid: charId, name, current: value });
+      createObj('attribute', { characterid: charId, name, current });
     }
     return { where };
   }
