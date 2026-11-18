@@ -29,7 +29,9 @@ A full rewrite by MidNiteShadow7 of Robin Kuiper's SyncPage 0.1.9, which had not
 - **Repair** with a preview, **Pause/Resume**, **Undo** and a **Recycle bin** per group.
 - Settings, each with every option, globally and per group: delete mode, hide mode, leftovers, new objects, token properties and page settings kept per page, layers not synced, page settings on/off, repair on start, player card, recycle bin size, language.
 - TokenMod changes are mirrored; a public API (`getGroup`, `getLinked`, `notify`, `isHidden`, `onSync`, `repair`) for other Mods.
-- **SyncPage - Help** and **SyncPage - Command Deck** handouts, in 24 languages. One-Click options for every setting.
+- A **chat menu** (`!syncpage`) and cards for a group, its players, the settings, Status, the recycle bin and repair reports, laid out like the handouts: section headings and buttons in even columns. **Ask** cards whisper a choice when a delete would spread (Delete everywhere, Keep the others, Undo) and when a joining page has objects that match nothing (Copy, Keep here, Copy all, Keep all here).
+- With **Who may open the player card** set to Players too, a player who types `!syncpage` is told which page they are on.
+- **SyncPage - Help** and **SyncPage - Command Deck** handouts, in 24 languages, with the SyncPage icon in the Journal (also added to handouts made before). One-Click options for every setting.
 
 ### Changed
 

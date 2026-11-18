@@ -13,7 +13,7 @@ If all you need is a straight copy of a page, use Roll20's own **Duplicate Page*
 ## Installation
 
 1. Install **SyncPage** from the Roll20 One-Click library, or upload `SyncPage.js` to the game's Mod Scripts.
-2. Save. SyncPage creates two GM-only handouts in the Journal:
+2. Save. SyncPage creates two GM-only handouts in the Journal, each with the SyncPage icon:
    - **SyncPage - Help**: full instructions.
    - **SyncPage - Command Deck**: buttons for every command.
 
@@ -26,10 +26,12 @@ If all you need is a straight copy of a page, use Roll20's own **Duplicate Page*
 
 A blank page works too: SyncPage copies everything onto it, apart from pictures the API cannot use.
 
+Objects on a joining page that match nothing follow **Objects that match nothing**. With **Ask** (the default), SyncPage whispers a card listing them, with **Copy** (to the other pages) or **Keep here** for each object, or **Copy all** and **Keep all here**.
+
 ## What Is Mirrored
 
 - Tokens (including Jumpgate lights, which are tokens), text, Legacy and Jumpgate drawings, walls of every kind, doors and windows.
-- New objects, changes and deletes, in both directions.
+- New objects, changes and deletes, in both directions. With **When an object is deleted** set to **Ask**, a delete on one page whispers a card instead: **Delete everywhere**, **Keep the others** or **Undo**.
 - Page settings such as lighting, grid and size. A page's name is never copied, and archiving one copy does not archive the rest.
 - Changes TokenMod makes. Other Mods can call `SyncPage.notify(obj)`; **Repair** catches the rest.
 
@@ -46,7 +48,11 @@ Select tokens and use **Hide here**, **Hide on other pages**, **Show here** or *
 
 ## Players
 
-The **Players** card lists every player and the page they are on, with a button per page to move them. **Everyone to** gathers them on the source page and remembers where they were; **Restore layout** puts them back.
+The **Players** card lists every player and the page they are on, with a button per page to move them. **Everyone to** gathers them on the source page and remembers where they were; **Save layout** remembers the split as it is, and **Restore layout** puts everyone back.
+
+Select tokens before opening the card to get a grid of their copies, one button per page: click a page to hide or show the token there.
+
+With **Who may open the player card** set to **Players too**, a player who types `!syncpage` is told which page they are on. Everything else stays GM only.
 
 ## Repair, Pause and Undo
 
@@ -75,29 +81,48 @@ Every setting can be changed on the settings card (`!syncpage settings`). Settin
 
 ## Commands
 
-All commands are GM only. `!sync` and `!sync-page` work too.
+All commands are GM only (see Players for the one exception). `!sync` and `!sync-page` work too.
 
-| Command                                                 | What it does                                             |
-| ------------------------------------------------------- | -------------------------------------------------------- |
-| `!syncpage`                                             | Open the menu.                                           |
-| `!syncpage group create [name]`                         | Make a sync group from this page.                        |
-| `!syncpage group add <group>`                           | Add this page to a group.                                |
-| `!syncpage group remove`                                | Take this page out of its group. Objects stay, unlinked. |
-| `!syncpage group show\|rename\|source\|delete <group>`  | Show, rename, change the source of, or delete a group.   |
-| `!syncpage players [group]`                             | Players card.                                            |
-| `!syncpage move <player> <page>` / `move all <page>`    | Move one player, or everyone.                            |
-| `!syncpage layout save\|restore [group]`                | Remember or restore the split.                           |
-| `!syncpage hide\|show [here\|others\|all\|page=<page>]` | Hide or show the selected objects' copies.               |
-| `!syncpage status`                                      | Links of the selected objects and where they are hidden. |
-| `!syncpage unlink`                                      | Keep the selected objects on this page only.             |
-| `!syncpage repair [group\|all] [--dry-run]`             | Repair, or preview a repair.                             |
-| `!syncpage pause\|resume [group]`                       | Pause or resume mirroring.                               |
-| `!syncpage undo [group]` / `recycle [group]`            | Undo the last removal; list and restore removals.        |
-| `!syncpage settings [group <group>]`                    | Settings card.                                           |
-| `!syncpage set [group <group>] <setting> <value>`       | Change a setting. Lists take `+name` and `-name`.        |
-| `!syncpage handouts`                                    | Rebuild the handouts.                                    |
+| Command                                                 | What it does                                                                               |
+| ------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| `!syncpage`                                             | Open the menu.                                                                             |
+| `!syncpage group create [name]`                         | Make a sync group from this page.                                                          |
+| `!syncpage group add <group>`                           | Add this page to a group.                                                                  |
+| `!syncpage group remove`                                | Take this page out of its group. Objects stay, unlinked.                                   |
+| `!syncpage group show\|rename\|source\|delete <group>`  | Show, rename, change the source of, or delete a group.                                     |
+| `!syncpage players [group]`                             | Players card.                                                                              |
+| `!syncpage move <player> <page>` / `move all <page>`    | Move one player, or everyone.                                                              |
+| `!syncpage layout save\|restore [group]`                | Remember or restore the split.                                                             |
+| `!syncpage hide\|show [here\|others\|all\|page=<page>]` | Hide or show the selected objects' copies.                                                 |
+| `!syncpage status`                                      | Links of the selected objects and where they are hidden.                                   |
+| `!syncpage unlink`                                      | Keep the selected objects on this page only.                                               |
+| `!syncpage repair [group\|all] [--dry-run]`             | Repair, or preview a repair.                                                               |
+| `!syncpage pause\|resume [group]`                       | Pause or resume mirroring.                                                                 |
+| `!syncpage undo [group]` / `recycle [group]`            | Undo the last removal; list and restore removals.                                          |
+| `!syncpage settings [group <group>]`                    | Settings card.                                                                             |
+| `!syncpage settings reset [group <group>] yes`          | Restore the default settings. Without `yes` nothing changes; the card's button asks first. |
+| `!syncpage set [group <group>] <setting> <value>`       | Change a setting. Lists take `+name` and `-name`.                                          |
+| `!syncpage handouts`                                    | Rebuild the handouts.                                                                      |
+| `!syncpage help`                                        | Short help in chat.                                                                        |
 
 `--ids id1,id2` acts on those objects instead of the selected ones; `--page <page>` acts on that page instead of the one you are viewing.
+
+## What SyncPage Remembers
+
+- A recycle bin per group: every delete that spreads and every clean-up can be put back with **Undo**.
+- Where each player was, so a split can be restored.
+- The last group you used, and the last repair and its results.
+- Buttons that need data carry a short code: they work once and expire after 10 minutes.
+
+## Languages
+
+SyncPage speaks 24 languages. Set **Language** on the settings card, or type `!syncpage set language fr` (any code from the Help handout's Languages table). The menus, messages and both handouts follow it.
+
+## Troubleshooting
+
+- **A token was copied with the wrong picture**: the Mod API cannot copy marketplace art. Make the copy with Duplicate Page and add it to the group.
+- **Copies are out of step after another Mod changed things**: run **Repair**, or ask that Mod's author to call `SyncPage.notify`.
+- **You want to rearrange one copy on purpose**: **Pause** the group, make the changes, then **Resume** and choose not to repair.
 
 ## For Other Mods
 

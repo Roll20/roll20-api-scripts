@@ -349,6 +349,8 @@ export default {
         'Page settings such as lighting, grid and size, unless switched off or kept per page.',
         'Layers can be left out per group, and token properties such as vision can be kept per page.',
         'Changes other Mods make through TokenMod are mirrored too. Other Mods can call SyncPage.notify; repair catches the rest.',
+        'With "When an object is deleted" set to Ask, SyncPage whispers a card when something is deleted on one page: Delete everywhere, Keep the others or Undo.',
+        'Objects on a page joining the group that match nothing follow "Objects that match nothing". With Ask, a card offers Copy or Keep here for each object, or Copy all and Keep all here.',
       ],
     },
     visibility: {
@@ -364,6 +366,8 @@ export default {
       points: [
         'The Players card lists each player and the page they are on, with a button per page to move them (split party).',
         '"Everyone to" gathers the players on one page and remembers where they were; "Restore layout" puts them back.',
+        'Select tokens before opening the card to get a grid of their copies: click a page to hide or show the token there.',
+        'With "Who may open the player card" set to Players too, a player who types !syncpage is told which page they are on.',
       ],
     },
     repair: {

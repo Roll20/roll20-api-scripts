@@ -44,9 +44,9 @@ Translations: edit `en-US.js`, then `npm run sync-locales -- --dry-run` to see w
 | `migrate.js`    | Carrying over a 0.1 set-up: `_synced` pages, old links, GM Notes flags, custom command.                     |
 | `commands.js`   | `!syncpage` parsing and routing.                                                                            |
 | `menu.js`       | Chat cards: menu, group, players, settings, status, recycle bin, repair report, help; the command list.     |
-| `journals.js`   | Help and Command Deck handouts.                                                                             |
+| `journals.js`   | Help and Command Deck handouts and their icon.                                                              |
 | `state.js`      | Persistent state, the settings table's checking and group overrides, One-Click options, the coerce pass.    |
-| `chat.js`       | Chat cards, buttons, whispers and errors.                                                                   |
+| `chat.js`       | Chat cards, section headings, button grids, whispers and errors.                                            |
 | `i18n.js`       | Translation lookup (`t`, `tRaw`), locale normalisation and text direction.                                  |
 | `constants.js`  | Build placeholders, commands, object types, property sets, the `SETTINGS` table, timings and colours.       |
 | `utils.js`      | Small helpers: escaping, parsing, IDs, value comparison.                                                    |
