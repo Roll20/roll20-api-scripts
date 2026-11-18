@@ -4,7 +4,11 @@
 import { activePool, termFor } from './actions.js';
 import {
   buildButton,
+  buildButtonGrid,
+  buildCommandHelp,
   buildDivider,
+  buildItemTitle,
+  buildNote,
   buildRow,
   buildSecondaryButton,
   buildSectionLabel,
@@ -20,7 +24,6 @@ import {
   POOL_SOURCES,
   SCRIPT_NAME,
   SCRIPT_VERSION,
-  SETTING_KEYS,
   TRACKING_OPTIONS,
   WORDING_OPTIONS,
 } from './constants.js';
@@ -30,6 +33,14 @@ import { canControl, controllerIds, partyMembers } from './party.js';
 import { poolAttributeName, readInspiration, readPool, rulesFor, sheetKind } from './sheet.js';
 import { defaultPool, getConfig, getPools } from './state.js';
 import { escapeHtml, queryText, toText } from './utils.js';
+
+// The settings card's sections: a Help handout heading, and the settings under it.
+const SETTING_GROUPS = [
+  ['languages', ['language']],
+  ['sheets', ['tracking', 'wording']],
+  ['markers', ['marker', 'fx', 'fxType']],
+  ['players', ['announce', 'playerSpend', 'playerOverview', 'passOn']],
+];
 
 const YES = '✔';
 const NO = '—';
@@ -90,19 +101,24 @@ export function showMainMenu(playerId) {
     : [b('give', 'give'), b('remove', 'remove'), b('toggle', 'toggle'), b('spend', 'spend')];
   whisper(playerId, `${SCRIPT_NAME} v${SCRIPT_VERSION}`, [
     buildSectionLabel(t('menu.selected', lang)),
-    ...selected,
+    buildButtonGrid(selected, 2),
     buildSectionLabel(t('menu.party', lang)),
-    b('party', 'party'),
-    s('partyAdd', 'party add'),
-    s('partyRemove', 'party remove'),
+    buildButtonGrid([b('party', 'party')], 1),
+    buildButtonGrid([s('partyAdd', 'party add'), s('partyRemove', 'party remove')], 2),
     buildSectionLabel(t('menu.tools', lang)),
-    s('settings', 'set'),
-    s('pools', 'pools'),
-    s('macro', 'macro'),
-    s('sync', 'sync'),
-    s('status', 'status'),
-    s('help', 'help'),
-    `<div style="font-size:0.85em;margin-top:4px">${escapeHtml(t('menu.hint', lang, { help: HANDOUT_HELP_NAME }))}</div>`,
+    buildButtonGrid(
+      [
+        s('settings', 'set'),
+        s('pools', 'pools'),
+        s('macro', 'macro'),
+        s('sync', 'sync'),
+        s('status', 'status'),
+        s('help', 'help'),
+      ],
+      2
+    ),
+    buildDivider(),
+    buildNote(t('menu.hint', lang, { help: HANDOUT_HELP_NAME })),
   ]);
 }
 
@@ -168,15 +184,24 @@ function settingButton(key, lang) {
  */
 export function showSettings(playerId) {
   const lang = getConfig().language;
-  const rows = SETTING_KEYS.map((key) =>
-    buildRow(t(`settings.${key}.label`, lang), settingButton(key, lang))
-  );
+  // Grouped under the headings the Help handout uses for the same subjects
+  const rows = SETTING_GROUPS.flatMap(([heading, keys]) => [
+    buildSectionLabel(t(`handout.${heading}.heading`, lang)),
+    ...keys.map((key) =>
+      buildRow(t(`settings.${key}.label`, lang), settingButton(key, lang), true)
+    ),
+  ]);
   whisper(playerId, t('titles.settings', lang), [
     ...rows,
     buildDivider(),
-    buildSecondaryButton(t('buttons.menu', lang), COMMAND),
-    buildSecondaryButton(t('buttons.pools', lang), `${COMMAND} pools`),
-    buildSecondaryButton(t('buttons.reset', lang), `${COMMAND} reset`),
+    buildButtonGrid(
+      [
+        buildSecondaryButton(t('buttons.menu', lang), COMMAND),
+        buildSecondaryButton(t('buttons.pools', lang), `${COMMAND} pools`),
+        buildSecondaryButton(t('buttons.reset', lang), `${COMMAND} reset`),
+      ],
+      2
+    ),
   ]);
 }
 
@@ -189,14 +214,17 @@ export function showSettings(playerId) {
 export function showPools(playerId) {
   const lang = getConfig().language;
   const body = [
-    `<div style="font-size:0.9em">${escapeHtml(t(activePool() ? 'pools.introPool' : 'pools.introFlag', lang, { name: defaultPool().name }))}</div>`,
+    buildNote(
+      t(activePool() ? 'pools.introPool' : 'pools.introFlag', lang, { name: defaultPool().name })
+    ),
   ];
   for (const pool of getPools()) {
     const isDefault = pool === defaultPool();
     const set = (field, label, value) =>
       buildRow(
         t(`pools.${field}`, lang),
-        buildButton(label, `${COMMAND} pool set ${pool.id} ${field} ${value}`)
+        buildButton(label, `${COMMAND} pool set ${pool.id} ${field} ${value}`),
+        true
       );
     body.push(
       buildSectionLabel(isDefault ? t('pools.defaultLabel', lang, { name: pool.name }) : pool.name),
@@ -227,23 +255,38 @@ export function showPools(playerId) {
               .filter((m) => m.tag !== getConfig().marker)
               .map((m) => ({ label: m.name, value: m.tag })),
           ])
-        ),
-        buildSecondaryButton(t('buttons.party', lang), `${COMMAND} party --pool ${pool.id}`),
-        buildSecondaryButton(t('buttons.deletePool', lang), `${COMMAND} pool delete ${pool.id}`)
+        )
       );
     }
-    body.push(
-      `<div style="font-size:0.8em;opacity:0.8">${escapeHtml(t('pools.attribute', lang, { attribute: poolAttributeName(pool) }))}</div>`
-    );
+    body.push(buildNote(t('pools.attribute', lang, { attribute: poolAttributeName(pool) })));
+    if (!isDefault) {
+      body.push(
+        buildButtonGrid(
+          [
+            buildSecondaryButton(t('buttons.party', lang), `${COMMAND} party --pool ${pool.id}`),
+            buildSecondaryButton(
+              t('buttons.deletePool', lang),
+              `${COMMAND} pool delete ${pool.id}`
+            ),
+          ],
+          2
+        )
+      );
+    }
   }
   body.push(
     buildDivider(),
-    buildButton(
-      t('buttons.addPool', lang),
-      `${COMMAND} pool add ?{${queryText(t('pools.name', lang))}}`
-    ),
-    buildSecondaryButton(t('buttons.settings', lang), `${COMMAND} set`),
-    buildSecondaryButton(t('buttons.menu', lang), COMMAND)
+    buildButtonGrid(
+      [
+        buildButton(
+          t('buttons.addPool', lang),
+          `${COMMAND} pool add ?{${queryText(t('pools.name', lang))}}`
+        ),
+        buildSecondaryButton(t('buttons.settings', lang), `${COMMAND} set`),
+        buildSecondaryButton(t('buttons.menu', lang), COMMAND),
+      ],
+      3
+    )
   );
   whisper(playerId, t('titles.pools', lang), body);
 }
@@ -264,15 +307,16 @@ async function readRows(characters) {
 }
 
 /**
- * Builds one overview line.
+ * Builds one character's block in an overview: the name with its tick or
+ * points at the right-hand edge, where the points are kept, and the buttons
+ * in a row of their own underneath.
  *
- * @param {object} row Row from readRows.
+ * @param {object} row Row from readRows or poolRow.
  * @param {string} lang Locale code.
- * @param {string} buttons Button HTML.
+ * @param {string[]} buttons Button HTML; empty items are skipped.
  * @returns {string} HTML.
  */
 function overviewLine(row, lang, buttons) {
-  const name = escapeHtml(toText(row.character.get('name')));
   let mark = row.inspired
     ? `<span style="color:#f2c94c;font-weight:bold">${YES}</span>`
     : `<span style="opacity:0.6">${NO}</span>`;
@@ -284,14 +328,13 @@ function overviewLine(row, lang, buttons) {
   }
   const sheet =
     row.kind === 'none'
-      ? ` <span style="font-size:0.8em;opacity:0.7">(${escapeHtml(t('menu.noSheet', lang))})</span>`
+      ? ` <span style="font-size:0.8em;font-weight:normal;opacity:0.7">(${escapeHtml(t('menu.noSheet', lang))})</span>`
       : '';
+  const list = buttons.filter(Boolean);
   return [
-    '<table style="width:100%;border-collapse:collapse;margin:1px 0"><tr>',
-    `<td style="min-width:1.4em;text-align:center;white-space:nowrap">${mark}</td>`,
-    `<td>${name}${sheet}</td>`,
-    `<td style="text-align:right;white-space:nowrap">${buttons}</td>`,
-    '</tr></table>',
+    buildItemTitle(toText(row.character.get('name')), mark, sheet),
+    row.kept ? buildNote(row.kept) : '',
+    buildButtonGrid(list, Math.min(Math.max(list.length, 2), 3)),
   ].join('');
 }
 
@@ -319,14 +362,19 @@ export async function showParty(playerId, gm, pool = null) {
   const rows = await readRows(visible);
   const lines = rows.map((row) => {
     const id = row.character.id;
-    let buttons = '';
+    let buttons = [];
     if (gm) {
       buttons = row.inspired
-        ? buildSecondaryButton(t('buttons.remove', lang), `${COMMAND} remove --ids ${id} --party`) +
-          buildSecondaryButton(t('buttons.spend', lang), `${COMMAND} spend --ids ${id} --party`)
-        : buildButton(t('buttons.give', lang), `${COMMAND} give --ids ${id} --party`);
+        ? [
+            buildSecondaryButton(
+              t('buttons.remove', lang),
+              `${COMMAND} remove --ids ${id} --party`
+            ),
+            buildSecondaryButton(t('buttons.spend', lang), `${COMMAND} spend --ids ${id} --party`),
+          ]
+        : [buildButton(t('buttons.give', lang), `${COMMAND} give --ids ${id} --party`)];
     } else if (row.inspired && config.playerSpend && canControl(playerId, row.character)) {
-      buttons = buildButton(t('buttons.spend', lang), `${COMMAND} spend --ids ${id} --party`);
+      buttons = [buildButton(t('buttons.spend', lang), `${COMMAND} spend --ids ${id} --party`)];
     }
     return overviewLine(row, lang, buttons);
   });
@@ -338,12 +386,15 @@ export async function showParty(playerId, gm, pool = null) {
       : `<div>${escapeHtml(t(gm ? 'menu.partyEmptyGm' : 'menu.partyEmpty', lang))}</div>`,
     buildDivider(),
     `<div style="font-size:0.9em">${escapeHtml(t('menu.partyCount', lang, { count, total: rows.length, term }))}</div>`,
-    buildSecondaryButton(t('buttons.refresh', lang), `${COMMAND} party`),
+    buildButtonGrid(
+      [
+        buildSecondaryButton(t('buttons.refresh', lang), `${COMMAND} party`),
+        gm ? buildSecondaryButton(t('buttons.menu', lang), COMMAND) : '',
+        ...otherPoolButtons(null, lang),
+      ],
+      2
+    ),
   ];
-  body.push(...otherPoolButtons(null, lang));
-  if (gm) {
-    body.push(buildSecondaryButton(t('buttons.menu', lang), COMMAND));
-  }
   whisper(playerId, t('titles.party', lang), body);
 }
 
@@ -356,7 +407,7 @@ export async function showParty(playerId, gm, pool = null) {
  * @param {object} character Roll20 character.
  * @param {number} points The character's points.
  * @param {boolean} party Whether to show the party again afterwards.
- * @returns {string} Button HTML.
+ * @returns {string[]} Button HTML; empty items stand for buttons that do not apply.
  */
 function poolLineButtons(playerId, gm, pool, character, points, party) {
   const config = getConfig();
@@ -369,15 +420,46 @@ function poolLineButtons(playerId, gm, pool, character, points, party) {
       button(buildButton, 'give', 'give', 'points'),
       points > 0 ? button(buildSecondaryButton, 'remove', 'remove', 'points') : '',
       points > 0 ? button(buildSecondaryButton, 'spend', 'spend', 'points') : '',
-    ].join('');
+    ];
   }
   if (points > 0 && config.playerSpend && canControl(playerId, character)) {
-    return (
-      button(buildButton, 'spend', 'spend', 'points') +
-      button(buildSecondaryButton, 'boost', 'boost', 'bonus')
-    );
+    return [
+      button(buildButton, 'spend', 'spend', 'points'),
+      button(buildSecondaryButton, 'boost', 'boost', 'bonus'),
+    ];
   }
-  return '';
+  return [];
+}
+
+/**
+ * Reads a character's points in a pool for an overview line, with the words
+ * that say where they are kept: the sheet box's name, or the attribute.
+ *
+ * @param {object} character Roll20 character.
+ * @param {object} pool Pool.
+ * @param {string} lang Locale code.
+ * @returns {{character: object, points: number, kept: string, where: string}} Row.
+ */
+function poolRow(character, pool, lang) {
+  const { where, name, value } = readPool(character.id, pool);
+  const kept =
+    where === 'resource'
+      ? t('pools.keptBox', lang, { name: pool.name })
+      : t('pools.keptAttribute', lang, { attribute: name });
+  return { character, points: value, kept, where };
+}
+
+/**
+ * Builds the note that explains an attribute, for a card that lists one.
+ *
+ * @param {{where: string}[]} rows Rows from poolRow.
+ * @param {string} lang Locale code.
+ * @returns {string[]} HTML, or nothing when every row is a sheet box.
+ */
+function keptNote(rows, lang) {
+  return rows.some((row) => row.where === 'attribute')
+    ? [buildNote(t('pools.keptNote', lang))]
+    : [];
 }
 
 /**
@@ -415,16 +497,11 @@ function otherPoolButtons(current, lang) {
  */
 function showPoolParty(playerId, gm, pool, characters) {
   const lang = getConfig().language;
-  let total = 0;
-  const lines = characters.map((character) => {
-    const points = readPool(character.id, pool).value;
-    total += points;
-    return overviewLine(
-      { character, points },
-      lang,
-      poolLineButtons(playerId, gm, pool, character, points, true)
-    );
-  });
+  const rows = characters.map((character) => poolRow(character, pool, lang));
+  const total = rows.reduce((sum, row) => sum + row.points, 0);
+  const lines = rows.map((row) =>
+    overviewLine(row, lang, poolLineButtons(playerId, gm, pool, row.character, row.points, true))
+  );
   const flag = pool === activePool() ? '' : ` --pool ${pool.id}`;
   const body = [
     lines.length > 0
@@ -432,12 +509,16 @@ function showPoolParty(playerId, gm, pool, characters) {
       : `<div>${escapeHtml(t(gm ? 'menu.partyEmptyGm' : 'menu.partyEmpty', lang))}</div>`,
     buildDivider(),
     `<div style="font-size:0.9em">${escapeHtml(t('pools.partyTotal', lang, { total, term: pool.name }))}</div>`,
-    buildSecondaryButton(t('buttons.refresh', lang), `${COMMAND} party${flag}`),
-    ...otherPoolButtons(pool, lang),
+    ...keptNote(rows, lang),
+    buildButtonGrid(
+      [
+        buildSecondaryButton(t('buttons.refresh', lang), `${COMMAND} party${flag}`),
+        gm ? buildSecondaryButton(t('buttons.menu', lang), COMMAND) : '',
+        ...otherPoolButtons(pool, lang),
+      ],
+      2
+    ),
   ];
-  if (gm) {
-    body.push(buildSecondaryButton(t('buttons.menu', lang), COMMAND));
-  }
   whisper(playerId, t('titles.poolParty', lang, { term: pool.name }), body);
 }
 
@@ -466,8 +547,8 @@ export async function showPlayerCard(playerId) {
       row,
       lang,
       row.inspired && config.playerSpend
-        ? buildButton(t('buttons.spend', lang), `${COMMAND} spend --ids ${row.character.id}`)
-        : ''
+        ? [buildButton(t('buttons.spend', lang), `${COMMAND} spend --ids ${row.character.id}`)]
+        : []
     )
   );
   // The tracked pool, then the GM's other pools, for the characters that are theirs: in the
@@ -478,22 +559,28 @@ export async function showPlayerCard(playerId) {
     (c) => party.some((m) => m.id === c.id) || controllerIds(c).includes(playerId)
   );
   const pools = getPools().filter((pool) => pool === tracked || pool !== defaultPool());
+  const poolRows = [];
   for (const pool of pools) {
     const listed = controlled
-      .map((character) => ({ character, points: readPool(character.id, pool).value }))
+      .map((character) => poolRow(character, pool, lang))
       .filter((row) => row.points > 0 || theirs.includes(row.character));
+    poolRows.push(...listed);
     if (listed.length > 0 && (pools.length > 1 || !tracked)) {
       lines.push(buildSectionLabel(pool.name));
     }
-    for (const { character, points } of listed) {
+    for (const row of listed) {
       lines.push(
         overviewLine(
-          { character, points },
+          row,
           lang,
-          poolLineButtons(playerId, false, pool, character, points, false)
+          poolLineButtons(playerId, false, pool, row.character, row.points, false)
         )
       );
     }
+  }
+  const note = keptNote(poolRows, lang);
+  if (note.length > 0) {
+    lines.push(buildDivider(), ...note);
   }
   whisper(
     playerId,
@@ -522,7 +609,7 @@ export function showStatus(playerId, legacyCommand) {
       rules2024 += 1;
     }
   }
-  const row = (key, value) => buildRow(t(`status.${key}`, lang), escapeHtml(String(value)));
+  const row = (key, value) => buildRow(t(`status.${key}`, lang), escapeHtml(String(value)), true);
   whisper(playerId, t('titles.status', lang), [
     row('version', SCRIPT_VERSION),
     row('beacon', counts.beacon),
@@ -555,14 +642,11 @@ export function showHelp(playerId, gm) {
   const commands = gm
     ? HELP_COMMANDS
     : HELP_COMMANDS.filter(([, key]) => ['menu', 'spend', 'boost', 'party', 'help'].includes(key));
-  const lines = commands.map(
-    ([text, key]) =>
-      `<div style="margin:2px 0"><code>${escapeHtml(`${COMMAND} ${text}`.trim())}</code><br><span style="font-size:0.9em">${escapeHtml(t(gm ? `help.${key}` : `helpPlayer.${key}`, lang))}</span></div>`
+  const lines = commands.map(([text, key]) =>
+    buildCommandHelp(`${COMMAND} ${text}`.trim(), t(gm ? `help.${key}` : `helpPlayer.${key}`, lang))
   );
   if (gm) {
-    lines.push(
-      `<div style="font-size:0.85em;margin-top:4px">${escapeHtml(t('menu.hint', lang, { help: HANDOUT_HELP_NAME }))}</div>`
-    );
+    lines.push(buildDivider(), buildNote(t('menu.hint', lang, { help: HANDOUT_HELP_NAME })));
   }
   whisper(playerId, t('titles.help', lang), lines);
 }

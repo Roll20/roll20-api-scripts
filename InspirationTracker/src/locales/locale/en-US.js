@@ -66,6 +66,9 @@ const TRANSLATION = {
     marker: 'Marker',
     attribute: 'Attribute when the sheet has no box with this name: {attribute}',
     partyTotal: 'Party total: {total} {term}.',
+    keptBox: 'Sheet box: {name}',
+    keptAttribute: 'Attribute: {attribute}',
+    keptNote: 'An attribute is not shown on the character sheet.',
   },
   prompts: {
     points: 'Points',
@@ -317,8 +320,10 @@ const TRANSLATION = {
         "Boost spends points to raise a roll: type the bonus wanted, and the pool's Points per +1 decides the cost. At 2 points per +1, a bonus of 4 costs 8 points. The Mod announces the spend; add the bonus to the roll yourself.",
         'A spend is refused when the character does not have enough points. The GM is told who spent what, with an Undo button.',
         'Kept in "Sheet resource box" uses the resource box on the sheet that has the pool\'s name, such as an Other Resource box named Inspiration on the 2014 D&D sheet. When the sheet has no box with that name, or with "Attribute", the points are kept in a plain attribute, such as inspiration_pool. The D&D 2024 sheet always uses the attribute.',
+        "The Party card and a player's own card say where each character's points are kept: the name of the sheet box, or the attribute. An attribute is not shown on the character sheet.",
         'Changing the number on the sheet by hand is fine: the marker follows.',
         "Click Pools to rename the default pool, set its cost and maximum, or add more pools. Other pools are used from their Party button, or by adding --pool and the pool's name to a command.",
+        "Bardic Inspiration works as a pool of its own: click Add Pool and name it Bardic Inspiration, set its Maximum to 1 and choose its Marker. The GM gives 1 from that pool's Party card when the bard hands out a die, and the holder clicks Spend when they use it. The Mod marks who holds a die; the player rolls it.",
       ],
     },
     markers: {

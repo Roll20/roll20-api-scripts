@@ -212,12 +212,12 @@ export function locatePool(charId, pool) {
  *
  * @param {string} charId Character ID.
  * @param {object} pool Pool.
- * @returns {{where: string, exists: boolean, value: number}} Where it is kept, whether anything is stored yet, and the points.
+ * @returns {{where: string, name: string, exists: boolean, value: number}} Where it is kept, the attribute's name, whether anything is stored yet, and the points.
  */
 export function readPool(charId, pool) {
-  const { where, attr } = locatePool(charId, pool);
+  const { where, name, attr } = locatePool(charId, pool);
   const n = Math.floor(Number(attr?.get('current')));
-  return { where, exists: Boolean(attr), value: Number.isFinite(n) && n > 0 ? n : 0 };
+  return { where, name, exists: Boolean(attr), value: Number.isFinite(n) && n > 0 ? n : 0 };
 }
 
 /**

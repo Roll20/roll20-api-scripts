@@ -1,7 +1,14 @@
 // Giving, removing, spending and passing on inspiration, and keeping token
 // markers and chat in step with the sheets.
 
-import { broadcast, buildButton, buildSecondaryButton, whisper, whisperEach } from './chat.js';
+import {
+  broadcast,
+  buildButton,
+  buildButtonGrid,
+  buildSecondaryButton,
+  whisper,
+  whisperEach,
+} from './chat.js';
 import { API_PLAYER_ID, COMMAND, ICON_URL, RULES_2024, SCRIPT_NAME } from './constants.js';
 import { t } from './i18n.js';
 import { canControl, ownerIds, partyMembers, tokensFor } from './party.js';
@@ -169,11 +176,11 @@ function playFx(charId) {
  */
 function announcementBody(text, buttons = '') {
   return [
-    '<div style="overflow:hidden">',
+    '<div style="overflow:hidden;min-height:38px">',
     `<img src="${ICON_URL}" alt="" style="float:right;width:36px;height:36px;margin-left:6px">`,
     `<div>${text}</div>`,
-    buttons ? `<div style="margin-top:4px">${buttons}</div>` : '',
     '</div>',
+    buttons ? `<div style="margin-top:4px">${buttons}</div>` : '',
   ].join('');
 }
 
@@ -244,7 +251,10 @@ function announceGain(character) {
   const term = termFor(character.id, lang);
   const text = escapeHtml(t('messages.gained', lang, { name: nameOf(character), term }));
   const button = getConfig().playerSpend
-    ? buildButton(t('buttons.spend', lang), `${COMMAND} spend --ids ${character.id}`)
+    ? buildButtonGrid(
+        [buildButton(t('buttons.spend', lang), `${COMMAND} spend --ids ${character.id}`)],
+        1
+      )
     : '';
   announce(character, term, announcementBody(text, button));
 }
@@ -273,7 +283,7 @@ function announceSpend(character, playerId) {
   whisper(
     null,
     SCRIPT_NAME,
-    `<div>${escapeHtml(line)}</div><div style="margin-top:4px">${buildSecondaryButton(t('buttons.undo', lang), `${COMMAND} undo ${undoId}`)}</div>`
+    `<div>${escapeHtml(line)}</div>${buildButtonGrid([buildSecondaryButton(t('buttons.undo', lang), `${COMMAND} undo ${undoId}`)], 1)}`
   );
 }
 
@@ -418,7 +428,7 @@ function poolButtons(character, pool) {
   }
   const lang = getConfig().language;
   const target = `--ids ${character.id} --pool ${pool.id}`;
-  return [
+  return buildButtonGrid([
     buildButton(
       t('buttons.spend', lang),
       `${COMMAND} spend ?{${queryText(t('prompts.points', lang))}|1} ${target}`
@@ -427,7 +437,7 @@ function poolButtons(character, pool) {
       t('buttons.boost', lang),
       `${COMMAND} boost ?{${queryText(t('prompts.bonus', lang))}|1} ${target}`
     ),
-  ].join(' ');
+  ]);
 }
 
 /**
@@ -549,7 +559,7 @@ export function poolSpend(character, pool, amount, actorId, bonus = 0) {
     whisper(
       null,
       SCRIPT_NAME,
-      `<div>${escapeHtml(line)}</div><div style="margin-top:4px">${buildSecondaryButton(t('buttons.undo', lang), `${COMMAND} undo ${undoId}`)}</div>`
+      `<div>${escapeHtml(line)}</div>${buildButtonGrid([buildSecondaryButton(t('buttons.undo', lang), `${COMMAND} undo ${undoId}`)], 1)}`
     );
     return { status: 'spent', ...vars };
   });
@@ -627,7 +637,7 @@ function offerPassOn(character, actorId) {
     candidates.length === 0
       ? `<div style="margin-top:3px;font-size:0.9em">${escapeHtml(t('messages.passNobody', lang))}</div>`
       : '',
-    `<div style="margin-top:4px">${buttons.join(' ')}</div>`,
+    buildButtonGrid(buttons, 2),
   ].join('');
   const owners = ownerIds(character);
   const recipients = owners.length > 0 ? owners : getGmPlayerIds();
