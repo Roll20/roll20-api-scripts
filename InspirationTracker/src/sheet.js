@@ -230,10 +230,12 @@ export function readPool(charId, pool) {
  */
 export function writePool(charId, pool, value) {
   const { where, name, attr } = locatePool(charId, pool);
+  // A sheet's own boxes hold text ("52"), so they are written the way the sheet writes them.
+  const current = where === 'resource' ? String(value) : value;
   if (attr) {
-    attr.set('current', value);
+    attr.set('current', current);
   } else {
-    createObj('attribute', { characterid: charId, name, current: value });
+    createObj('attribute', { characterid: charId, name, current });
   }
   return { where };
 }

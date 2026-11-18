@@ -20,7 +20,7 @@ async function game({ tracking = true } = {}) {
         sera: a.beacon('Seraphina', { controlledby: 'p2' }),
         goblin: a.beacon('Goblin'),
       };
-      c.box = a.resourceBox(c.nox, BOX, 'Inspiration', 52);
+      c.box = a.resourceBox(c.nox, BOX, 'Inspiration', '52');
       c.nTok = a.token(c.nox);
       c.nTok2 = a.token(c.nox, { _pageid: 'page2' });
       c.sTok = a.token(c.sera);
@@ -60,12 +60,12 @@ test('switching Tracking to Points pool marks the characters who have points', a
 test('give adds points to the sheet resource box and announces the totals', async () => {
   const { api, box, nTok } = await game();
   await api.command('!inspiration give 3', [nTok]);
-  assert.equal(box.get('current'), 55);
+  assert.equal(box.get('current'), '55');
   assert.match(api.allChat(), /Nox gains 3 Inspiration \(52 → 55\)\./);
   assert.match(api.allChat(), /!inspiration spend \?\{Points\|1\} --ids \S+ --pool inspiration/);
   assert.equal(api.fx.length, 2);
   await api.command('!inspiration give', [nTok]);
-  assert.equal(box.get('current'), 56, 'no number means one point');
+  assert.equal(box.get('current'), '56', 'no number means one point');
 });
 
 test('boost spends the cost for each +1: 2 points per +1, +4 costs 8', async () => {
@@ -73,13 +73,13 @@ test('boost spends the cost for each +1: 2 points per +1, +4 costs 8', async () 
   await api.command('!inspiration pool set inspiration cost 2');
   const before = api.chat.length;
   await api.command(`!inspiration boost 4 --ids ${nox.id}`, [], 'p1');
-  assert.equal(box.get('current'), 44);
+  assert.equal(box.get('current'), '44');
   const text = api.chatSince(before);
   assert.match(text, /Nox spends 8 Inspiration for \+4 to the roll \(52 → 44\)\./);
   assert.match(text, /\/w gm .*Player One spent 8 Inspiration for Nox/s);
   const undo = text.match(/!inspiration undo (\w+)/);
   await api.command(`!inspiration undo ${undo[1]}`);
-  assert.equal(box.get('current'), 52);
+  assert.equal(box.get('current'), '52');
   assert.match(api.allChat(), /Nox has 8 Inspiration back \(44 → 52\)\./);
   assert.equal(nTok.get('statusmarkers'), 'black-flag');
 });
@@ -87,7 +87,7 @@ test('boost spends the cost for each +1: 2 points per +1, +4 costs 8', async () 
 test('spending more than the pool holds is refused', async () => {
   const { api, box, nTok } = await game();
   await api.command('!inspiration spend 60', [nTok]);
-  assert.equal(box.get('current'), 52);
+  assert.equal(box.get('current'), '52');
   assert.match(api.lastChat(), /Nox has 52 Inspiration, and that needs 60\./);
   await api.command('!inspiration spend lots', [nTok]);
   assert.match(api.lastChat(), /"lots" is not a number of points/);
@@ -96,12 +96,12 @@ test('spending more than the pool holds is refused', async () => {
 test('spending the last points takes the marker off; remove all is quiet', async () => {
   const { api, box, nTok } = await game();
   await api.command('!inspiration spend 52', [nTok]);
-  assert.equal(box.get('current'), 0);
+  assert.equal(box.get('current'), '0');
   assert.equal(nTok.get('statusmarkers'), '');
   await api.command('!inspiration give 5', [nTok]);
   const before = api.chat.length;
   await api.command('!inspiration remove all', [nTok]);
-  assert.equal(box.get('current'), 0);
+  assert.equal(box.get('current'), '0');
   const text = api.chatSince(before);
   assert.match(text, /^\/w "The GM" .*5 Inspiration taken away from Nox \(5 → 0\)/s);
   assert.doesNotMatch(text, /undo/);
@@ -110,13 +110,13 @@ test('spending the last points takes the marker off; remove all is quiet', async
 test("a player cannot spend another player's points, nor when spending is off", async () => {
   const { api, nox, box } = await game();
   await api.command(`!inspiration spend 2 --ids ${nox.id}`, [], 'p2');
-  assert.equal(box.get('current'), 52);
+  assert.equal(box.get('current'), '52');
   assert.match(api.lastChat(), /You cannot do that for Nox/);
   await api.command('!inspiration set playerSpend off');
   await api.command(`!inspiration spend 2 --ids ${nox.id}`, [], 'p1');
-  assert.equal(box.get('current'), 52);
+  assert.equal(box.get('current'), '52');
   await api.command(`!inspiration give 2 --ids ${nox.id}`, [], 'p1');
-  assert.equal(box.get('current'), 52, 'players cannot give');
+  assert.equal(box.get('current'), '52', 'players cannot give');
 });
 
 test('a sheet with no box of that name, and the 2024 sheet, use a plain attribute', async () => {
@@ -133,7 +133,7 @@ test('"Kept in: Attribute" ignores the resource box', async () => {
   await api.command('!inspiration pool set inspiration source attribute');
   assert.equal(nTok.get('statusmarkers'), '', 'no points in the attribute yet');
   await api.command('!inspiration give 2', [nTok]);
-  assert.equal(box.get('current'), 52);
+  assert.equal(box.get('current'), '52');
   assert.equal(api.attribute(nox, 'inspiration_pool').get('current'), 2);
 });
 
@@ -149,9 +149,9 @@ test('a maximum caps the pool', async () => {
 
 test('changing the number on the sheet moves the marker', async () => {
   const { api, box, nTok } = await game();
-  await api.editAttribute(box, 0);
+  await api.editAttribute(box, '0');
   assert.equal(nTok.get('statusmarkers'), '');
-  await api.editAttribute(box, 7);
+  await api.editAttribute(box, '7');
   assert.equal(nTok.get('statusmarkers'), 'black-flag');
 });
 
@@ -159,7 +159,7 @@ test('a marker taken off by hand is put back while there are points', async () =
   const { api, box, nTok } = await game();
   await api.editMarkers(nTok, '');
   assert.equal(nTok.get('statusmarkers'), 'black-flag');
-  assert.equal(box.get('current'), 52);
+  assert.equal(box.get('current'), '52');
 });
 
 test('the party card shows points, with Give, Remove and Spend for the GM', async () => {
@@ -266,7 +266,7 @@ test('other Mods can read, give and spend points', async () => {
   assert.equal(mod.points(nox.id), 52);
   assert.equal(await mod.givePoints(nox.id, 3), 'given');
   assert.equal(await mod.spendPoints(nox.id, 5), 'spent');
-  assert.equal(box.get('current'), 50);
+  assert.equal(box.get('current'), '50');
   assert.equal(await mod.spendPoints(nox.id, 500), 'short');
   assert.equal(mod.points(nox.id, 'nonsense'), 0);
 });
