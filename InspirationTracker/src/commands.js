@@ -246,7 +246,7 @@ async function handlePoolAction(msg, cmd, pool) {
  */
 function poolMarkerOf(pool) {
   if (pool === defaultPool()) {
-    return activePool() ? getConfig().marker : '';
+    return activePool() ? pool.marker : '';
   }
   return pool.marker;
 }
@@ -306,7 +306,13 @@ async function handlePoolEdit(who, args) {
           value = '';
         } else {
           const marker = resolveMarker(value);
-          if (!marker || marker.tag === getConfig().marker) {
+          // A marker means one thing: not another pool's, and for a pool that is used beside
+          // the sheet's inspiration box, not the Marker setting's either.
+          const taken =
+            marker &&
+            (getPools().some((p) => p !== pool && p.marker === marker.tag) ||
+              (pool !== defaultPool() && marker.tag === getConfig().marker));
+          if (!marker || taken) {
             whisperError(
               who,
               t('errors.unknownMarker', lang, { value }),
@@ -319,11 +325,7 @@ async function handlePoolEdit(who, args) {
       }
       const result = validatePoolField(field, value);
       const other = field === 'name' && result.valid ? findPool(value) : undefined;
-      if (
-        !result.valid ||
-        (other && other !== pool) ||
-        (field === 'marker' && pool === defaultPool())
-      ) {
+      if (!result.valid || (other && other !== pool)) {
         whisperError(
           who,
           t('errors.badSetting', lang, { key: rawField, value }),
@@ -410,7 +412,10 @@ async function handleSet(playerId, args) {
   const [rawKey, ...rest] = args;
   const key = Object.keys(getConfig()).find((k) => k.toLowerCase() === rawKey.toLowerCase());
   let value = rest.join(' ');
-  if (key === 'marker') {
+  if (key === 'marker' && ['none', 'off'].includes(value.trim().toLowerCase())) {
+    // No marker at all: the old one is taken off every token below.
+    value = '';
+  } else if (key === 'marker') {
     const marker = resolveMarker(value);
     if (!marker) {
       whisperError(
@@ -436,6 +441,9 @@ async function handleSet(playerId, args) {
     // The marker follows what is tracked: taken off everywhere, then put back
     // on the characters who have inspiration (or points) now.
     stripMarker(oldMarker);
+    if (key === 'tracking') {
+      stripMarker(defaultPool().marker);
+    }
     await syncAll();
   }
   if (key === 'language') {
@@ -696,6 +704,7 @@ async function handleGm(msg, cmd) {
       resetConfig();
       if (marker !== getConfig().marker || tracked !== getConfig().tracking) {
         stripMarker(marker);
+        stripMarker(defaultPool().marker);
         await syncAll();
       }
       showSettings(who);

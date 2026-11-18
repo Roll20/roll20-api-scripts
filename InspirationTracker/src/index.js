@@ -12,6 +12,7 @@ import {
   syncAll,
   syncPool,
   syncTokens,
+  trackedMarker,
 } from './actions.js';
 import { whisper } from './chat.js';
 import { handleInput } from './commands.js';
@@ -120,7 +121,7 @@ async function handleGraphic(token, prev) {
     await markNewToken(token);
     return;
   }
-  const marker = getConfig().marker;
+  const marker = trackedMarker();
   const now = hasMarker(token.get('statusmarkers'), marker);
   const before = hasMarker(prev?.statusmarkers, marker);
   if (now !== before) {

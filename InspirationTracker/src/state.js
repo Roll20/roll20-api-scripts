@@ -66,8 +66,9 @@ export function validateConfigValue(key, raw) {
       return lang ? ok(lang) : bad;
     }
     case 'marker': {
+      // An empty marker means the GM chose None: no marker is put on tokens.
       const text = toText(raw);
-      return /^[^,@\s][^,@]{0,99}$/.test(text) ? ok(text) : bad;
+      return text === '' || /^[^,@\s][^,@]{0,99}$/.test(text) ? ok(text) : bad;
     }
     case 'tracking':
       return option(TRACKING_OPTIONS);

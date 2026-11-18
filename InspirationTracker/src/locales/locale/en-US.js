@@ -87,7 +87,7 @@ const TRANSLATION = {
     poolNameHint: 'Use a name of up to 40 letters, digits and spaces that no other pool has.',
     poolDefault: 'The default pool, "{name}", cannot be deleted. It can be renamed.',
     poolMarkerHint:
-      'Pick a marker from your marker sets that is not the one in the Marker setting.',
+      'Pick a marker from your marker sets that the Marker setting and the other pools do not use.',
     poolSetHint: 'Type !inspiration pools to see every pool and its settings.',
     denied: 'You cannot do that for {name}.',
     gmOnly: 'Only the GM can use that command.',
@@ -178,7 +178,7 @@ const TRANSLATION = {
     },
     marker: {
       label: 'Marker',
-      desc: 'Token marker shown while a character has inspiration. Custom marker sets are listed too.',
+      desc: 'Token marker shown while a character has inspiration. Custom marker sets are listed too. Choose None to show no marker.',
     },
     wording: {
       label: 'Wording',
@@ -316,7 +316,7 @@ const TRANSLATION = {
       heading: 'Points Pools',
       points: [
         'A points pool is a number that builds up and is spent a few at a time: a pool of inspiration points, hero points, luck, bennies and the like. It works with any character sheet.',
-        'Set Tracking to Points pool, and Give, Remove and Spend work on the default pool, asking how many points. The marker shows while a character has any points.',
+        'Set Tracking to Points pool, and Give, Remove and Spend work on the default pool, asking how many points.',
         "Boost spends points to raise a roll: type the bonus wanted, and the pool's Points per +1 decides the cost. At 2 points per +1, a bonus of 4 costs 8 points. The Mod announces the spend; add the bonus to the roll yourself.",
         'A spend is refused when the character does not have enough points. The GM is told who spent what, with an Undo button.',
         'Kept in "Sheet resource box" uses the resource box on the sheet that has the pool\'s name, such as an Other Resource box named Inspiration on the 2014 D&D sheet. When the sheet has no box with that name, or with "Attribute", the points are kept in a plain attribute, such as inspiration_pool. The D&D 2024 sheet always uses the attribute.',
@@ -333,6 +333,7 @@ const TRANSLATION = {
         'Adding the marker to a token by hand, or with TokenMod, gives the character inspiration. Taking it off spends it.',
         'Changing the marker moves it on every token straight away.',
         "The D&D 2024 sheet's own condition markers are not offered, because the sheet sets them itself.",
+        "The Marker setting is for the sheet's inspiration box. Each points pool has a Marker of its own, on the Pools card, and starts with None. Choose None for either to put no marker on tokens: the Party card still shows who has inspiration, or how many points.",
       ],
     },
     commands: {

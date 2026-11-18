@@ -149,10 +149,10 @@ function settingButton(key, lang) {
         TRACKING_OPTIONS.map((o) => ({ label: t(`values.tracking.${o}`, lang), value: o }))
       );
     case 'marker':
-      return set(
-        markerName(value),
-        listMarkers().map((m) => ({ label: m.name, value: m.tag }))
-      );
+      return set(value ? markerName(value) : t('values.none', lang), [
+        { label: t('values.none', lang), value: 'none' },
+        ...listMarkers().map((m) => ({ label: m.name, value: m.tag })),
+      ]);
     case 'wording':
       return set(
         t(`values.wording.${value}`, lang),
@@ -244,20 +244,24 @@ export function showPools(playerId) {
         `?{${queryText(t('prompts.max', lang))}|${pool.max}}`
       )
     );
-    if (!isDefault) {
-      body.push(
-        set(
-          'marker',
-          pool.marker ? markerName(pool.marker) : t('values.none', lang),
-          query(t('pools.marker', lang), [
-            { label: t('values.none', lang), value: 'none' },
-            ...listMarkers()
-              .filter((m) => m.tag !== getConfig().marker)
-              .map((m) => ({ label: m.name, value: m.tag })),
-          ])
-        )
-      );
-    }
+    // Markers another pool uses are left out, and for a pool used beside the sheet's
+    // inspiration box, so is the Marker setting's.
+    const taken = getPools()
+      .filter((p) => p !== pool)
+      .map((p) => p.marker)
+      .concat(isDefault ? [] : [getConfig().marker]);
+    body.push(
+      set(
+        'marker',
+        pool.marker ? markerName(pool.marker) : t('values.none', lang),
+        query(t('pools.marker', lang), [
+          { label: t('values.none', lang), value: 'none' },
+          ...listMarkers()
+            .filter((m) => !taken.includes(m.tag))
+            .map((m) => ({ label: m.name, value: m.tag })),
+        ])
+      )
+    );
     body.push(buildNote(t('pools.attribute', lang, { attribute: poolAttributeName(pool) })));
     if (!isDefault) {
       body.push(
@@ -624,7 +628,7 @@ export function showStatus(playerId, legacyCommand) {
         .map((p) => p.name)
         .join(', ')
     ),
-    row('marker', markerName(config.marker)),
+    row('marker', config.marker ? markerName(config.marker) : t('values.none', lang)),
     row('fx', config.fx ? config.fxType : onOff(false, lang)),
     legacyCommand ? row('legacyCommand', `!${legacyCommand}`) : '',
   ]);

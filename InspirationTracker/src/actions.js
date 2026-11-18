@@ -71,13 +71,18 @@ function nameOf(character) {
 }
 
 /**
- * Shows or hides the inspiration marker on every token for a character.
+ * Shows or hides the inspiration marker on every token for a character. The
+ * Marker setting belongs to the sheet's inspiration box, so nothing is done
+ * while a points pool is tracked instead: the pool has a marker of its own.
  *
  * @param {string} charId Character ID.
  * @param {boolean} inspired Whether to show it.
  * @returns {void}
  */
 export function syncTokens(charId, inspired) {
+  if (activePool()) {
+    return;
+  }
   applyMarker(charId, getConfig().marker, inspired);
 }
 
@@ -93,18 +98,30 @@ export function activePool() {
 }
 
 /**
- * Returns the marker shown while a character has points in a pool. The
- * default pool uses the Marker setting while it is the one being tracked;
- * other pools use their own marker, if they have one.
+ * Returns the marker shown while a character has points in a pool: the
+ * pool's own marker, if it has one. The default pool only shows its marker
+ * while it is the one being tracked. Another pool never shows the Marker
+ * setting's marker, which belongs to the sheet's inspiration box.
  *
  * @param {object} pool Pool.
  * @returns {string} Marker tag, or an empty string for none.
  */
 export function poolMarker(pool) {
   if (pool === defaultPool()) {
-    return getConfig().tracking === 'pool' ? getConfig().marker : '';
+    return getConfig().tracking === 'pool' ? pool.marker : '';
   }
   return pool.marker === getConfig().marker ? '' : pool.marker;
+}
+
+/**
+ * Returns the marker of whatever is tracked: the Marker setting for the
+ * sheet's inspiration box, or the default pool's own marker.
+ *
+ * @returns {string} Marker tag, or an empty string for none.
+ */
+export function trackedMarker() {
+  const pool = activePool();
+  return pool ? poolMarker(pool) : getConfig().marker;
 }
 
 /**
