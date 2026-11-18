@@ -8,6 +8,8 @@ const TRANSLATION = {
     settings: 'InspirationTracker-instellings',
     help: 'InspirationTracker-opdragte',
     party: 'Groep se inspirasie',
+    poolParty: 'Groep se {term}',
+    pools: 'Puntepoele',
     yours: 'Jou karakters',
     status: 'InspirationTracker-status',
   },
@@ -40,7 +42,51 @@ const TRANSLATION = {
     journal: 'Hulp- en Command Deck-uitdeelstukke is herbou.',
     readyHint: 'Tik {command} vir die kieslys, of maak die Command Deck-uitdeelstuk oop.',
   },
+  pool: {
+    gained: '{name} kry {amount} {term} ({before} → {after}).',
+    spent: '{name} gebruik {amount} {term} ({before} → {after}).',
+    boosted: '{name} gebruik {amount} {term} vir +{bonus} op die worp ({before} → {after}).',
+    spentBy: '{player} het {amount} {term} vir {name} gebruik.',
+    restored: '{name} het {amount} {term} terug ({before} → {after}).',
+    removed: '{amount} {term} van {name} weggeneem ({before} → {after}).',
+    none: '{name} het geen {term} nie.',
+    short: '{name} het {have} {term}, en dit vereis {need}.',
+    full: '{name} het reeds die meeste {term} wat toegelaat word ({max}).',
+  },
+  pools: {
+    introFlag:
+      'Opsporing is op die blad se inspirasieblokkie gestel. Stel dit op Puntepoel om "{name}" die poel te maak waarop Gee en Gebruik werk. Ander poele word met --pool gebruik.',
+    introPool:
+      'Gee, Gebruik en Versterk werk op "{name}". Ander poele word vanaf hul Groep-knoppie gebruik, of met --pool.',
+    defaultLabel: '{name} (verstek)',
+    name: 'Naam',
+    source: 'Gehou in',
+    cost: 'Punte per +1',
+    max: 'Maksimum',
+    marker: 'Merker',
+    attribute: 'Eienskap wanneer die blad geen blokkie met hierdie naam het nie: {attribute}',
+    partyTotal: 'Groeptotaal: {total} {term}.',
+  },
+  prompts: {
+    points: 'Punte',
+    bonus: 'Bonus op die worp',
+    max: 'Meeste punte toegelaat (0 vir geen limiet)',
+  },
   errors: {
+    unknownPool: 'Daar is geen poel genaamd "{value}" nie.',
+    unknownPoolHint: 'Poele: {pools}.',
+    badAmount: '"{value}" is nie ’n aantal punte nie.',
+    badAmountHint: 'Gebruik ’n heelgetal van 1 tot 9999.',
+    boostNoPool: 'Versterk gebruik punte uit ’n poel.',
+    poolInvalid: '’n Poel kan nie "{value}" genoem word nie.',
+    poolExists: 'Daar is reeds ’n poel genaamd "{value}".',
+    poolFull: 'Daar is nie plek vir nog ’n poel nie.',
+    poolNameHint:
+      'Gebruik ’n naam van tot 40 letters, syfers en spasies wat geen ander poel het nie.',
+    poolDefault: 'Die verstekpoel, "{name}", kan nie geskrap word nie. Dit kan hernoem word.',
+    poolMarkerHint:
+      'Kies ’n merker uit jou merkerstelle wat nie die een in die Merker-instelling is nie.',
+    poolSetHint: 'Tik !inspiration pools om elke poel en sy instellings te sien.',
     denied: 'Jy kan dit nie vir {name} doen nie.',
     gmOnly: 'Slegs die GM kan daardie opdrag gebruik.',
     gmOnlyHint: 'Spelers kan spend, party en help gebruik.',
@@ -91,14 +137,28 @@ const TRANSLATION = {
     refresh: 'Verfris',
     undo: 'Ontdoen',
     decline: 'Laat gaan',
+    boost: 'Versterk',
+    pools: 'Poele',
+    addPool: 'Voeg poel by',
+    deletePool: 'Skrap poel',
   },
   values: {
     on: 'Aan',
     off: 'Af',
+    none: 'Geen',
+    noLimit: 'Geen limiet',
+    tracking: {
+      flag: 'Blad se inspirasieblokkie',
+      pool: 'Puntepoel',
+    },
+    source: {
+      resource: 'Blad se hulpbronblokkie',
+      attribute: 'Eienskap',
+    },
     wording: {
-      auto: 'Van die blad',
       2014: 'Inspirasie (2014)',
       2024: 'Heldhaftige Inspirasie (2024)',
+      auto: 'Van die blad',
     },
     announce: {
       public: 'Almal',
@@ -110,6 +170,10 @@ const TRANSLATION = {
     language: {
       label: 'Taal',
       desc: 'Taal vir kieslyste, boodskappe en uitdeelstukke.',
+    },
+    tracking: {
+      label: 'Opsporing',
+      desc: 'Waarop Gee en Gebruik werk: die inspirasieblokkie op die D&D-blaaie, wat ’n karakter het of nie het nie, of ’n poel punte wat opbou en ’n paar op ’n slag gebruik word.',
     },
     marker: {
       label: 'Merker',
@@ -151,6 +215,8 @@ const TRANSLATION = {
     none: 'Karakters sonder inspirasieblokkie',
     rules2024: 'Gebruik 2024-reëls',
     party: 'Groeplede',
+    tracking: 'Opsporing',
+    pools: 'Poele',
     marker: 'Merker',
     fx: 'Spesiale effek',
     legacyCommand: 'Ou opdrag',
@@ -165,6 +231,15 @@ const TRANSLATION = {
       'Wys wie in die groep inspirasie het, met knoppies om dit te gee, te verwyder of te gebruik.',
     partyEdit: 'Voeg die gekose karakters by die groep, of haal hulle uit.',
     ids: 'Werk op die gegewe teken- of karakter-ID’s in plaas van die gekose tekens.',
+    points:
+      'Met ’n puntepoel: gee, neem weg of gebruik soveel punte. Sonder ’n getal, 1. remove all neem elke punt weg.',
+    boost:
+      'Met ’n puntepoel: gebruik punte om daardie bonus by ’n worp te voeg, teen die poel se koste vir elke +1.',
+    poolFlag: 'Werk op die genoemde poel in plaas van die verstekpoel.',
+    pools: 'Wys die puntepoele en hul instellings.',
+    poolEdit: 'Voeg ’n poel by, of skrap een. Die punte op die blaaie bly soos hulle is.',
+    poolSet:
+      'Verander ’n poel: sy naam, waar dit gehou word (resource of attribute), die punte wat elke +1 kos, die meeste punte toegelaat (0 vir geen limiet), of sy tekenmerker.',
     undo: 'Gee inspirasie terug wat gebruik is. Die ID kom uit die GM-boodskap oor die gebruik.',
     macro: 'Voeg die "Inspiration"-tekenaksie by, wat spelers klik om inspirasie te gebruik.',
     sync: 'Lees elke blad weer en stel die merkers reg.',
@@ -177,12 +252,13 @@ const TRANSLATION = {
   helpPlayer: {
     menu: 'Wys jou karakters en of hulle inspirasie het.',
     spend: 'Gebruik inspirasie vir die gekose karakter.',
+    boost: 'Gebruik punte uit ’n poel om daardie bonus by ’n worp te voeg.',
     party: 'Wys die groep, as die GM dit toelaat.',
     help: 'Wys hierdie lys.',
   },
   handout: {
     versionLabel: 'Weergawe',
-    subtitle: 'Inspirasie en Heldhaftige Inspirasie vir die D&D 5e 2014- en 2024-blaaie',
+    subtitle: 'Inspirasie, Heldhaftige Inspirasie en puntepoele vir enige spel',
     overview: {
       heading: 'Oorsig',
       body: 'InspirationTracker hou D&D-inspirasie op die karakterblad, die teken en die klets gelyk. Gee dit vanaf die kieslys, die blad of die tekenmerker, en elke teken vir daardie karakter wys die merker. Spelers kan dit met een klik gebruik, en die GM word ingelig, met ’n Ontdoen-knoppie. Dit werk met die D&D 2024-blad, waar dit Heldhaftige Inspirasie genoem word, en met die 2014 OGL-blad.',
@@ -235,6 +311,18 @@ const TRANSLATION = {
         'Die groep is elke karakter wat ’n speler beheer. Kies tekens en klik Voeg by groep of Verwyder uit groep om dit te verander.',
         'Die GM se oorsig het Gee-, Verwyder- en Gebruik-knoppies vir elke lid.',
         'Skakel Spelers sien groep aan om spelers ook die oorsig te laat sien. Hulle kry Gebruik-knoppies slegs vir hul eie karakters.',
+      ],
+    },
+    pools: {
+      heading: 'Puntepoele',
+      points: [
+        '’n Puntepoel is ’n getal wat opbou en ’n paar op ’n slag gebruik word: ’n poel inspirasiepunte, heldepunte, geluk, bennies en dies meer. Dit werk met enige karakterblad.',
+        'Stel Opsporing op Puntepoel, en Gee, Verwyder en Gebruik werk op die verstekpoel en vra hoeveel punte. Die merker wys terwyl ’n karakter enige punte het.',
+        'Versterk gebruik punte om ’n worp te verhoog: tik die bonus wat jy wil hê, en die poel se Punte per +1 bepaal die koste. Teen 2 punte per +1 kos ’n bonus van 4 dus 8 punte. Die Mod kondig die gebruik aan; voeg self die bonus by die worp.',
+        '’n Gebruik word geweier wanneer die karakter nie genoeg punte het nie. Die GM word ingelig wie wat gebruik het, met ’n Ontdoen-knoppie.',
+        'Gehou in "Blad se hulpbronblokkie" gebruik die hulpbronblokkie op die blad wat die poel se naam het, soos ’n Other Resource-blokkie genaamd Inspiration op die 2014 D&D-blad. Wanneer die blad geen blokkie met daardie naam het nie, of met "Eienskap", word die punte in ’n gewone eienskap gehou, soos inspiration_pool. Die D&D 2024-blad gebruik altyd die eienskap.',
+        'Om die getal met die hand op die blad te verander is in orde: die merker volg.',
+        'Klik Poele om die verstekpoel te hernoem, sy koste en maksimum te stel, of nog poele by te voeg. Ander poele word vanaf hul Groep-knoppie gebruik, of deur --pool en die poel se naam by ’n opdrag te voeg.',
       ],
     },
     markers: {
@@ -297,6 +385,8 @@ const TRANSLATION = {
     subtitle: 'Command Deck',
     selectedDesc: 'Kies een of meer tekens, en klik dan.',
     partyDesc: 'Sien wie inspirasie het, en kies wie in die groep is.',
+    poolsTitle: 'Puntepoel',
+    poolsDesc: 'Met Opsporing op Puntepoel gestel: kies tekens, klik, en tik die getal.',
     toolsDesc: 'Kieslys, instellings, die spelermakro en hulp.',
     footer: 'Volledige instruksies is in die "{help}"-uitdeelstuk.',
   },

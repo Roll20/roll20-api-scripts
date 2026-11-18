@@ -8,6 +8,8 @@ const TRANSLATION = {
     settings: 'Impostazioni di InspirationTracker',
     help: 'Comandi di InspirationTracker',
     party: 'Ispirazione del gruppo',
+    poolParty: '{term} del gruppo',
+    pools: 'Riserve di punti',
     yours: 'I tuoi personaggi',
     status: 'Stato di InspirationTracker',
   },
@@ -40,7 +42,52 @@ const TRANSLATION = {
     journal: 'Dispense di aiuto e Command Deck ricreate.',
     readyHint: 'Scrivi {command} per il menu, oppure apri la dispensa Command Deck.',
   },
+  pool: {
+    gained: '{name} ottiene {amount} {term} ({before} → {after}).',
+    spent: '{name} spende {amount} {term} ({before} → {after}).',
+    boosted: '{name} spende {amount} {term} per +{bonus} al tiro ({before} → {after}).',
+    spentBy: '{player} ha speso {amount} {term} per {name}.',
+    restored: '{name} riottiene {amount} {term} ({before} → {after}).',
+    removed: '{amount} {term} in meno per {name} ({before} → {after}).',
+    none: '{name} non ha punti ({term}).',
+    short: '{name} ha {have} {term}, e ne servono {need}.',
+    full: '{name} ha già il massimo consentito ({term}: {max}).',
+  },
+  pools: {
+    introFlag:
+      "Il tracciamento è impostato sulla casella dell'ispirazione della scheda. Impostalo su Riserva di punti per fare di «{name}» la riserva su cui agiscono Dai e Spendi. Le altre riserve si usano con --pool.",
+    introPool:
+      'Dai, Spendi e Potenzia agiscono su «{name}». Le altre riserve si usano dal loro pulsante Gruppo, oppure con --pool.',
+    defaultLabel: '{name} (predefinita)',
+    name: 'Nome',
+    source: 'Conservata in',
+    cost: 'Punti per +1',
+    max: 'Massimo',
+    marker: 'Segnalino',
+    attribute: 'Attributo quando la scheda non ha una casella con questo nome: {attribute}',
+    partyTotal: 'Totale del gruppo: {total} {term}.',
+  },
+  prompts: {
+    points: 'Punti',
+    bonus: 'Bonus al tiro',
+    max: 'Massimo di punti consentito (0 per nessun limite)',
+  },
   errors: {
+    unknownPool: 'Non esiste una riserva chiamata «{value}».',
+    unknownPoolHint: 'Riserve: {pools}.',
+    badAmount: '«{value}» non è un numero di punti.',
+    badAmountHint: 'Usa un numero intero da 1 a 9999.',
+    boostNoPool: 'Potenzia spende punti da una riserva.',
+    poolInvalid: 'Una riserva non può chiamarsi «{value}».',
+    poolExists: 'Esiste già una riserva chiamata «{value}».',
+    poolFull: "Non c'è spazio per un'altra riserva.",
+    poolNameHint:
+      "Usa un nome di al massimo 40 lettere, cifre e spazi che nessun'altra riserva abbia.",
+    poolDefault:
+      'La riserva predefinita, «{name}», non può essere eliminata. Può essere rinominata.',
+    poolMarkerHint:
+      "Scegli dai tuoi set di segnalini un segnalino diverso da quello dell'impostazione Segnalino.",
+    poolSetHint: 'Scrivi !inspiration pools per vedere ogni riserva e le sue impostazioni.',
     denied: 'Non puoi farlo per {name}.',
     gmOnly: 'Solo il GM può usare quel comando.',
     gmOnlyHint: 'I giocatori possono usare spend, party e help.',
@@ -91,14 +138,28 @@ const TRANSLATION = {
     refresh: 'Aggiorna',
     undo: 'Annulla',
     decline: 'Lascia perdere',
+    boost: 'Potenzia',
+    pools: 'Riserve',
+    addPool: 'Aggiungi riserva',
+    deletePool: 'Elimina riserva',
   },
   values: {
     on: 'Attivo',
     off: 'Disattivo',
+    none: 'Nessuno',
+    noLimit: 'Nessun limite',
+    tracking: {
+      flag: "Casella dell'ispirazione della scheda",
+      pool: 'Riserva di punti',
+    },
+    source: {
+      resource: 'Casella risorsa della scheda',
+      attribute: 'Attributo',
+    },
     wording: {
-      auto: 'Dalla scheda',
       2014: 'Ispirazione (2014)',
       2024: 'Ispirazione eroica (2024)',
+      auto: 'Dalla scheda',
     },
     announce: {
       public: 'Tutti',
@@ -110,6 +171,10 @@ const TRANSLATION = {
     language: {
       label: 'Lingua',
       desc: 'Lingua di menu, messaggi e dispense.',
+    },
+    tracking: {
+      label: 'Tracciamento',
+      desc: "Su cosa agiscono Dai e Spendi: la casella dell'ispirazione delle schede D&D, che un personaggio ha o non ha, oppure una riserva di punti che si accumula e si spende un po' alla volta.",
     },
     marker: {
       label: 'Segnalino',
@@ -151,6 +216,8 @@ const TRANSLATION = {
     none: "Personaggi senza casella dell'ispirazione",
     rules2024: 'Regole 2024 in uso',
     party: 'Membri del gruppo',
+    tracking: 'Tracciamento',
+    pools: 'Riserve',
     marker: 'Segnalino',
     fx: 'Effetto speciale',
     legacyCommand: 'Vecchio comando',
@@ -165,6 +232,16 @@ const TRANSLATION = {
     party: "Mostra chi nel gruppo ha l'ispirazione, con pulsanti per darla, toglierla o spenderla.",
     partyEdit: 'Aggiunge i personaggi selezionati al gruppo, oppure li toglie.',
     ids: 'Agisce sugli ID di token o personaggi indicati invece che sui token selezionati.',
+    points:
+      'Con una riserva di punti: dà, toglie o spende quel numero di punti. Senza numero, 1. remove all toglie tutti i punti.',
+    boost:
+      'Con una riserva di punti: spende punti per aggiungere quel bonus a un tiro, al costo della riserva per ogni +1.',
+    poolFlag: 'Agisce sulla riserva indicata invece che su quella predefinita.',
+    pools: 'Mostra le riserve di punti e le loro impostazioni.',
+    poolEdit:
+      'Aggiunge una riserva, oppure ne elimina una. I punti sulle schede restano come sono.',
+    poolSet:
+      'Modifica una riserva: il nome, dove è conservata (resource o attribute), i punti che costa ogni +1, il massimo di punti consentito (0 per nessun limite) o il suo segnalino.',
     undo: "Restituisce l'ispirazione spesa. L'ID si trova nel messaggio al GM sulla spesa.",
     macro:
       "Aggiunge l'azione del token «Inspiration», che i giocatori cliccano per spendere l'ispirazione.",
@@ -178,12 +255,13 @@ const TRANSLATION = {
   helpPlayer: {
     menu: "Mostra i tuoi personaggi e se hanno l'ispirazione.",
     spend: "Spende l'ispirazione per il personaggio selezionato.",
+    boost: 'Spende punti da una riserva per aggiungere quel bonus a un tiro.',
     party: 'Mostra il gruppo, se il GM lo consente.',
     help: 'Mostra questo elenco.',
   },
   handout: {
     versionLabel: 'Versione',
-    subtitle: 'Ispirazione e Ispirazione eroica per le schede D&D 5e 2014 e 2024',
+    subtitle: 'Ispirazione, Ispirazione eroica e riserve di punti per qualsiasi gioco',
     overview: {
       heading: 'Panoramica',
       body: "InspirationTracker mantiene allineata l'ispirazione di D&D tra scheda del personaggio, token e chat. Dalla dal menu, dalla scheda o dal segnalino del token, e ogni token di quel personaggio mostra il segnalino. I giocatori possono spenderla con un clic, e il GM viene avvisato, con un pulsante Annulla. Funziona con la scheda D&D 2024, dove si chiama Ispirazione eroica, e con la scheda OGL 2014.",
@@ -235,6 +313,18 @@ const TRANSLATION = {
         'Il gruppo comprende ogni personaggio controllato da un giocatore. Seleziona dei token e fai clic su Aggiungi al gruppo o Togli dal gruppo per modificarlo.',
         'La panoramica del GM ha i pulsanti Dai, Togli e Spendi per ogni membro.',
         'Attiva I giocatori vedono il gruppo per far vedere la panoramica anche ai giocatori. Hanno pulsanti Spendi solo per i propri personaggi.',
+      ],
+    },
+    pools: {
+      heading: 'Riserve di punti',
+      points: [
+        "Una riserva di punti è un numero che si accumula e si spende un po' alla volta: una riserva di punti ispirazione, punti eroe, fortuna, bennies e simili. Funziona con qualsiasi scheda del personaggio.",
+        'Imposta Tracciamento su Riserva di punti, e Dai, Togli e Spendi agiscono sulla riserva predefinita, chiedendo quanti punti. Il segnalino resta visibile finché un personaggio ha almeno un punto.',
+        'Potenzia spende punti per alzare un tiro: scrivi il bonus desiderato, e i Punti per +1 della riserva stabiliscono il costo. A 2 punti per +1, un bonus di 4 costa 8 punti. La Mod annuncia la spesa; aggiungi tu il bonus al tiro.',
+        'Una spesa viene rifiutata quando il personaggio non ha abbastanza punti. Il GM viene avvisato di chi ha speso cosa, con un pulsante Annulla.',
+        "Conservata in «Casella risorsa della scheda» usa la casella risorsa della scheda che ha il nome della riserva, come una casella Other Resource chiamata Ispirazione sulla scheda D&D 2014. Quando la scheda non ha una casella con quel nome, oppure con «Attributo», i punti sono conservati in un semplice attributo, come inspiration_pool. La scheda D&D 2024 usa sempre l'attributo.",
+        'Cambiare a mano il numero sulla scheda va benissimo: il segnalino lo segue.',
+        'Fai clic su Riserve per rinominare la riserva predefinita, impostarne costo e massimo, o aggiungere altre riserve. Le altre riserve si usano dal loro pulsante Gruppo, oppure aggiungendo --pool e il nome della riserva a un comando.',
       ],
     },
     markers: {
@@ -298,6 +388,9 @@ const TRANSLATION = {
     subtitle: 'Command Deck',
     selectedDesc: 'Seleziona uno o più token, poi fai clic.',
     partyDesc: "Vedi chi ha l'ispirazione e scegli chi fa parte del gruppo.",
+    poolsTitle: 'Riserva di punti',
+    poolsDesc:
+      'Con Tracciamento impostato su Riserva di punti: seleziona i token, fai clic e scrivi il numero.',
     toolsDesc: 'Menu, impostazioni, la macro giocatori e aiuto.',
     footer: 'Le istruzioni complete sono nella dispensa «{help}».',
   },

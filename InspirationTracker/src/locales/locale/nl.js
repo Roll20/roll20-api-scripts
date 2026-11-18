@@ -8,6 +8,8 @@ const TRANSLATION = {
     settings: 'InspirationTracker-instellingen',
     help: 'InspirationTracker-commando’s',
     party: 'Inspiratie van de groep',
+    poolParty: '{term} van de groep',
+    pools: 'Puntenpools',
     yours: 'Jouw personages',
     status: 'InspirationTracker-status',
   },
@@ -40,7 +42,52 @@ const TRANSLATION = {
     journal: 'De handouts Help en Command Deck zijn opnieuw opgebouwd.',
     readyHint: 'Typ {command} voor het menu, of open de handout Command Deck.',
   },
+  pool: {
+    gained: '{name} krijgt {amount} {term} ({before} → {after}).',
+    spent: '{name} gebruikt {amount} {term} ({before} → {after}).',
+    boosted: '{name} gebruikt {amount} {term} voor +{bonus} op de worp ({before} → {after}).',
+    spentBy: '{player} heeft {amount} {term} gebruikt voor {name}.',
+    restored: '{name} heeft {amount} {term} terug ({before} → {after}).',
+    removed: '{amount} {term} afgenomen van {name} ({before} → {after}).',
+    none: '{name} heeft geen {term}.',
+    short: '{name} heeft {have} {term}, en hiervoor is {need} nodig.',
+    full: '{name} heeft al het maximum aan {term} ({max}).',
+  },
+  pools: {
+    introFlag:
+      'Bijhouden staat op het inspiratievakje van het blad. Zet het op Puntenpool om van "{name}" de pool te maken waarop Geven en Gebruiken werken. Andere pools gebruik je met --pool.',
+    introPool:
+      'Geven, Gebruiken en Boost werken op "{name}". Andere pools gebruik je met hun knop Groep, of met --pool.',
+    defaultLabel: '{name} (standaard)',
+    name: 'Naam',
+    source: 'Bewaard in',
+    cost: 'Punten per +1',
+    max: 'Maximum',
+    marker: 'Marker',
+    attribute: 'Attribuut als het blad geen vakje met deze naam heeft: {attribute}',
+    partyTotal: 'Totaal van de groep: {total} {term}.',
+  },
+  prompts: {
+    points: 'Punten',
+    bonus: 'Bonus op de worp',
+    max: 'Maximumaantal punten (0 voor geen limiet)',
+  },
   errors: {
+    unknownPool: 'Er is geen pool met de naam "{value}".',
+    unknownPoolHint: 'Pools: {pools}.',
+    badAmount: '"{value}" is geen aantal punten.',
+    badAmountHint: 'Gebruik een geheel getal van 1 tot en met 9999.',
+    boostNoPool: 'Boost gebruikt punten uit een pool.',
+    poolInvalid: 'Een pool kan niet "{value}" heten.',
+    poolExists: 'Er is al een pool met de naam "{value}".',
+    poolFull: 'Er is geen ruimte voor nog een pool.',
+    poolNameHint:
+      'Gebruik een naam van hoogstens 40 letters, cijfers en spaties die geen andere pool heeft.',
+    poolDefault:
+      'De standaardpool, "{name}", kan niet worden verwijderd. Je kunt hem wel hernoemen.',
+    poolMarkerHint:
+      'Kies een marker uit je markersets die niet de marker van de instelling Marker is.',
+    poolSetHint: 'Typ !inspiration pools om elke pool en zijn instellingen te zien.',
     denied: 'Dat kun je niet doen voor {name}.',
     gmOnly: 'Alleen de GM kan dat commando gebruiken.',
     gmOnlyHint: 'Spelers kunnen spend, party en help gebruiken.',
@@ -91,14 +138,28 @@ const TRANSLATION = {
     refresh: 'Vernieuwen',
     undo: 'Ongedaan maken',
     decline: 'Laten gaan',
+    boost: 'Boost',
+    pools: 'Pools',
+    addPool: 'Pool toevoegen',
+    deletePool: 'Pool verwijderen',
   },
   values: {
     on: 'Aan',
     off: 'Uit',
+    none: 'Geen',
+    noLimit: 'Geen limiet',
+    tracking: {
+      flag: 'Inspiratievakje op het blad',
+      pool: 'Puntenpool',
+    },
+    source: {
+      resource: 'Resourcevakje op het blad',
+      attribute: 'Attribuut',
+    },
     wording: {
-      auto: 'Volgens het blad',
       2014: 'Inspiratie (2014)',
       2024: 'Heroïsche inspiratie (2024)',
+      auto: 'Volgens het blad',
     },
     announce: {
       public: 'Iedereen',
@@ -110,6 +171,10 @@ const TRANSLATION = {
     language: {
       label: 'Taal',
       desc: 'Taal voor menu’s, berichten en handouts.',
+    },
+    tracking: {
+      label: 'Bijhouden',
+      desc: 'Waarop Geven en Gebruiken werken: het inspiratievakje op de D&D-bladen, dat een personage wel of niet heeft, of een pool met punten die oploopt en met een paar punten tegelijk wordt gebruikt.',
     },
     marker: {
       label: 'Marker',
@@ -151,6 +216,8 @@ const TRANSLATION = {
     none: 'Personages zonder inspiratievakje',
     rules2024: 'Met 2024-regels',
     party: 'Groepsleden',
+    tracking: 'Bijhouden',
+    pools: 'Pools',
     marker: 'Marker',
     fx: 'Speciaal effect',
     legacyCommand: 'Oud commando',
@@ -167,6 +234,16 @@ const TRANSLATION = {
       'Toont wie in de groep inspiratie heeft, met knoppen om het te geven, af te nemen of te gebruiken.',
     partyEdit: 'Voegt de geselecteerde personages aan de groep toe, of haalt ze eruit.',
     ids: 'Werkt op de opgegeven token- of personage-ID’s in plaats van de geselecteerde tokens.',
+    points:
+      'Met een puntenpool: geeft, neemt af of gebruikt dat aantal punten. Zonder getal: 1. remove all neemt alle punten af.',
+    boost:
+      'Met een puntenpool: gebruikt punten om die bonus bij een worp op te tellen, tegen de kosten van de pool voor elke +1.',
+    poolFlag: 'Werkt op de genoemde pool in plaats van de standaardpool.',
+    pools: 'Toont de puntenpools en hun instellingen.',
+    poolEdit:
+      'Voegt een pool toe, of verwijdert er een. De punten op de bladen blijven zoals ze zijn.',
+    poolSet:
+      'Wijzigt een pool: de naam, waar hij wordt bewaard (resource of attribute), de punten die elke +1 kost, het maximumaantal punten (0 voor geen limiet), of de tokenmarker.',
     undo: 'Geeft gebruikte inspiratie terug. De ID staat in het GM-bericht over het gebruik.',
     macro:
       'Voegt de tokenactie "Inspiration" toe, waarop spelers klikken om inspiratie te gebruiken.',
@@ -180,12 +257,13 @@ const TRANSLATION = {
   helpPlayer: {
     menu: 'Toont je personages en of ze inspiratie hebben.',
     spend: 'Gebruikt inspiratie voor het geselecteerde personage.',
+    boost: 'Gebruikt punten uit een pool om die bonus bij een worp op te tellen.',
     party: 'Toont de groep, als de GM dat toestaat.',
     help: 'Toont deze lijst.',
   },
   handout: {
     versionLabel: 'Versie',
-    subtitle: 'Inspiratie en Heroïsche inspiratie voor de D&D 5e-bladen van 2014 en 2024',
+    subtitle: 'Inspiratie, Heroïsche inspiratie en puntenpools voor elk spel',
     overview: {
       heading: 'Overzicht',
       body: 'InspirationTracker houdt D&D-inspiratie op het personageblad, de token en in de chat gelijk. Geef het via het menu, het blad of de tokenmarker, en elke token van dat personage toont de marker. Spelers kunnen het met één klik gebruiken, en de GM krijgt bericht, met een knop Ongedaan maken. Het werkt met het D&D 2024-blad, waar het Heroïsche inspiratie heet, en met het 2014 OGL-blad.',
@@ -238,6 +316,18 @@ const TRANSLATION = {
         'De groep bestaat uit elk personage dat een speler bestuurt. Selecteer tokens en klik op Aan groep toevoegen of Uit groep halen om hem te wijzigen.',
         'Het overzicht van de GM heeft knoppen Geven, Afnemen en Gebruiken voor elk lid.',
         'Zet Spelers zien groep aan om spelers het overzicht ook te laten zien. Ze krijgen alleen knoppen Gebruiken voor hun eigen personages.',
+      ],
+    },
+    pools: {
+      heading: 'Puntenpools',
+      points: [
+        'Een puntenpool is een getal dat oploopt en met een paar punten tegelijk wordt gebruikt: een pool met inspiratiepunten, heldenpunten, geluk, bennies en dergelijke. Het werkt met elk personageblad.',
+        'Zet Bijhouden op Puntenpool, en Geven, Afnemen en Gebruiken werken op de standaardpool en vragen om hoeveel punten het gaat. De marker is zichtbaar zolang een personage punten heeft.',
+        'Boost gebruikt punten om een worp te verhogen: typ de gewenste bonus, en Punten per +1 van de pool bepaalt de kosten. Bij 2 punten per +1 kost een bonus van 4 dus 8 punten. De Mod kondigt het gebruik aan; tel de bonus zelf bij de worp op.',
+        'Gebruik wordt geweigerd als het personage niet genoeg punten heeft. De GM krijgt te horen wie wat heeft gebruikt, met een knop Ongedaan maken.',
+        'Bewaard in "Resourcevakje op het blad" gebruikt het resourcevakje op het blad dat de naam van de pool heeft, zoals een vakje Other Resource met de naam Inspiration op het 2014 D&D-blad. Heeft het blad geen vakje met die naam, of staat er "Attribuut", dan worden de punten bewaard in een gewoon attribuut, zoals inspiration_pool. Het D&D 2024-blad gebruikt altijd het attribuut.',
+        'Het getal op het blad met de hand wijzigen kan gewoon: de marker volgt.',
+        'Klik op Pools om de standaardpool te hernoemen, de kosten en het maximum in te stellen, of meer pools toe te voegen. Andere pools gebruik je met hun knop Groep, of door --pool en de naam van de pool aan een commando toe te voegen.',
       ],
     },
     markers: {
@@ -300,6 +390,8 @@ const TRANSLATION = {
     subtitle: 'Command Deck',
     selectedDesc: 'Selecteer een of meer tokens en klik dan.',
     partyDesc: 'Zie wie inspiratie heeft, en kies wie in de groep zit.',
+    poolsTitle: 'Puntenpool',
+    poolsDesc: 'Met Bijhouden op Puntenpool: selecteer tokens, klik en typ het aantal.',
     toolsDesc: 'Menu, instellingen, de spelersmacro en help.',
     footer: 'De volledige instructies staan in de handout "{help}".',
   },

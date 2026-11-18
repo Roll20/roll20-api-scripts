@@ -8,6 +8,8 @@ const TRANSLATION = {
     settings: 'InspirationTracker Ayarları',
     help: 'InspirationTracker Komutları',
     party: 'Grup İlhamı',
+    poolParty: 'Grup: {term}',
+    pools: 'Puan Havuzları',
     yours: 'Karakterlerin',
     status: 'InspirationTracker Durumu',
   },
@@ -40,7 +42,50 @@ const TRANSLATION = {
     journal: 'Yardım ve Komut Paneli belgeleri yeniden oluşturuldu.',
     readyHint: 'Menü için {command} yaz veya Komut Paneli belgesini aç.',
   },
+  pool: {
+    gained: '{name}, {amount} {term} kazandı ({before} → {after}).',
+    spent: '{name}, {amount} {term} harcadı ({before} → {after}).',
+    boosted: '{name}, zara +{bonus} için {amount} {term} harcadı ({before} → {after}).',
+    spentBy: '{player}, {name} için {amount} {term} harcadı.',
+    restored: '{name}, {amount} {term} geri kazandı ({before} → {after}).',
+    removed: '{name} için {amount} {term} geri alındı ({before} → {after}).',
+    none: '{name}: {term} yok.',
+    short: '{name}: {term} {have}, gereken {need}.',
+    full: '{name}: {term} zaten izin verilen en yüksek değerde ({max}).',
+  },
+  pools: {
+    introFlag:
+      'Takip, sayfadaki ilham kutusuna ayarlı. Ver ve Harca düğmelerinin "{name}" havuzunda çalışması için Puan havuzu olarak ayarla. Diğer havuzlar --pool ile kullanılır.',
+    introPool:
+      'Ver, Harca ve Güçlendir "{name}" havuzunda çalışır. Diğer havuzlar kendi Grup düğmelerinden veya --pool ile kullanılır.',
+    defaultLabel: '{name} (varsayılan)',
+    name: 'Ad',
+    source: 'Tutulduğu yer',
+    cost: '+1 başına puan',
+    max: 'En fazla',
+    marker: 'İşaretçi',
+    attribute: 'Sayfada bu adda bir kutu yoksa kullanılan özellik: {attribute}',
+    partyTotal: 'Grup toplamı: {total} {term}.',
+  },
+  prompts: {
+    points: 'Puan',
+    bonus: 'Zar bonusu',
+    max: 'İzin verilen en fazla puan (sınırsız için 0)',
+  },
   errors: {
+    unknownPool: '"{value}" adında bir havuz yok.',
+    unknownPoolHint: 'Havuzlar: {pools}.',
+    badAmount: '"{value}" geçerli bir puan sayısı değil.',
+    badAmountHint: '1 ile 9999 arasında bir tam sayı kullan.',
+    boostNoPool: 'Güçlendir, bir havuzdan puan harcar.',
+    poolInvalid: 'Bir havuza "{value}" adı verilemez.',
+    poolExists: '"{value}" adında bir havuz zaten var.',
+    poolFull: 'Yeni bir havuz için yer yok.',
+    poolNameHint:
+      'Başka hiçbir havuzda olmayan, en fazla 40 harf, rakam ve boşluktan oluşan bir ad kullan.',
+    poolDefault: 'Varsayılan havuz "{name}" silinemez. Yeniden adlandırılabilir.',
+    poolMarkerHint: 'İşaretçi setlerinden, İşaretçi ayarındakinden farklı bir işaretçi seç.',
+    poolSetHint: 'Tüm havuzları ve ayarlarını görmek için !inspiration pools yaz.',
     denied: '{name} için bunu yapamazsın.',
     gmOnly: 'Bu komutu yalnızca GM kullanabilir.',
     gmOnlyHint: 'Oyuncular spend, party ve help kullanabilir.',
@@ -91,14 +136,28 @@ const TRANSLATION = {
     refresh: 'Yenile',
     undo: 'Geri Al',
     decline: 'Bırak',
+    boost: 'Güçlendir',
+    pools: 'Havuzlar',
+    addPool: 'Havuz Ekle',
+    deletePool: 'Havuzu Sil',
   },
   values: {
     on: 'Açık',
     off: 'Kapalı',
+    none: 'Yok',
+    noLimit: 'Sınırsız',
+    tracking: {
+      flag: 'Sayfadaki ilham kutusu',
+      pool: 'Puan havuzu',
+    },
+    source: {
+      resource: 'Sayfadaki kaynak kutusu',
+      attribute: 'Özellik',
+    },
     wording: {
-      auto: 'Sayfadan',
       2014: 'İlham (2014)',
       2024: 'Kahramanlık İlhamı (2024)',
+      auto: 'Sayfadan',
     },
     announce: {
       public: 'Herkes',
@@ -110,6 +169,10 @@ const TRANSLATION = {
     language: {
       label: 'Dil',
       desc: 'Menüler, mesajlar ve belgeler için dil.',
+    },
+    tracking: {
+      label: 'Takip',
+      desc: 'Ver ve Harca düğmelerinin neyin üzerinde çalıştığı: D&D sayfalarındaki, bir karakterde ya olan ya da olmayan ilham kutusu veya birikip azar azar harcanan bir puan havuzu.',
     },
     marker: {
       label: 'İşaretçi',
@@ -151,6 +214,8 @@ const TRANSLATION = {
     none: 'İlham kutusu olmayan karakterler',
     rules2024: '2024 kuralları kullanılıyor',
     party: 'Grup üyeleri',
+    tracking: 'Takip',
+    pools: 'Havuzlar',
     marker: 'İşaretçi',
     fx: 'Özel efekt',
     legacyCommand: 'Eski komut',
@@ -165,6 +230,15 @@ const TRANSLATION = {
       'Gruptaki kimde ilham olduğunu, vermek, kaldırmak veya harcamak için düğmelerle gösterir.',
     partyEdit: 'Seçili karakterleri gruba ekler veya gruptan çıkarır.',
     ids: 'Seçili jetonlar yerine verilen jeton veya karakter kimlikleri üzerinde çalışır.',
+    points:
+      'Puan havuzuyla: o kadar puan verir, geri alır veya harcar. Sayı verilmezse 1. remove all tüm puanları alır.',
+    boost:
+      'Puan havuzuyla: bir zara o bonusu eklemek için, havuzun her +1 için belirlediği bedelle puan harcar.',
+    poolFlag: 'Varsayılan havuz yerine adı verilen havuz üzerinde çalışır.',
+    pools: 'Puan havuzlarını ve ayarlarını gösterir.',
+    poolEdit: 'Bir havuz ekler veya siler. Sayfalardaki puanlar olduğu gibi kalır.',
+    poolSet:
+      'Bir havuzu değiştirir: adını, nerede tutulduğunu (resource veya attribute), her +1 için gereken puanı, izin verilen en fazla puanı (sınırsız için 0) veya jeton işaretçisini.',
     undo: 'Harcanan ilhamı geri verir. Kimlik, harcama hakkındaki GM mesajından gelir.',
     macro: 'Oyuncuların ilham harcamak için tıkladığı "Inspiration" jeton eylemini ekler.',
     sync: 'Tüm sayfaları yeniden okur ve işaretçileri düzeltir.',
@@ -177,12 +251,13 @@ const TRANSLATION = {
   helpPlayer: {
     menu: 'Karakterlerini ve ilhamları olup olmadığını gösterir.',
     spend: 'Seçili karakter için ilham harcar.',
+    boost: 'Bir zara o bonusu eklemek için bir havuzdan puan harcar.',
     party: 'GM izin veriyorsa grubu gösterir.',
     help: 'Bu listeyi gösterir.',
   },
   handout: {
     versionLabel: 'Sürüm',
-    subtitle: 'D&D 5e 2014 ve 2024 sayfaları için İlham ve Kahramanlık İlhamı',
+    subtitle: 'Her oyun için İlham, Kahramanlık İlhamı ve puan havuzları',
     overview: {
       heading: 'Genel Bakış',
       body: 'InspirationTracker, D&D ilhamını karakter sayfası, jeton ve sohbet arasında uyumlu tutar. Menüden, sayfadan veya jeton işaretçisinden ver; o karakterin tüm jetonları işaretçiyi gösterir. Oyuncular tek tıkla harcayabilir ve GM bir Geri Al düğmesiyle bilgilendirilir. Kahramanlık İlhamı adıyla geçtiği D&D 2024 sayfasıyla ve 2014 OGL sayfasıyla çalışır.',
@@ -234,6 +309,18 @@ const TRANSLATION = {
         'Grup, bir oyuncunun kontrol ettiği tüm karakterlerdir. Değiştirmek için jetonları seç ve Gruba Ekle veya Gruptan Çıkar düğmesine tıkla.',
         "GM'in genel görünümünde her üye için Ver, Kaldır ve Harca düğmeleri vardır.",
         'Oyuncuların da genel görünümü görmesi için Oyuncular Grubu Görür ayarını aç. Harca düğmelerini yalnızca kendi karakterleri için görürler.',
+      ],
+    },
+    pools: {
+      heading: 'Puan Havuzları',
+      points: [
+        'Puan havuzu, birikip azar azar harcanan bir sayıdır: ilham puanları, kahraman puanları, şans, bennies ve benzeri. Her karakter sayfasıyla çalışır.',
+        'Takip ayarını Puan havuzu yap; Ver, Kaldır ve Harca varsayılan havuz üzerinde çalışır ve kaç puan olduğunu sorar. Karakterin puanı olduğu sürece işaretçi görünür.',
+        'Güçlendir, bir zarı yükseltmek için puan harcar: istediğin bonusu yaz, bedeli havuzun +1 başına puan ayarı belirler. +1 başına 2 puanda, 4 bonus 8 puana mal olur. Mod harcamayı duyurur; bonusu zara kendin ekle.',
+        "Karakterin yeterli puanı yoksa harcama reddedilir. GM'e kimin ne harcadığı bir Geri Al düğmesiyle bildirilir.",
+        'Tutulduğu yer ayarındaki "Sayfadaki kaynak kutusu", sayfada havuzun adını taşıyan kaynak kutusunu kullanır; örneğin 2014 D&D sayfasında Inspiration adlı bir Other Resource kutusu. Sayfada bu adda bir kutu yoksa veya "Özellik" seçiliyse puanlar inspiration_pool gibi düz bir özellikte tutulur. D&D 2024 sayfası her zaman özelliği kullanır.',
+        'Sayfadaki sayıyı elle değiştirmek sorun olmaz: işaretçi buna uyar.',
+        'Varsayılan havuzu yeniden adlandırmak, bedelini ve üst sınırını ayarlamak veya başka havuzlar eklemek için Havuzlar düğmesine tıkla. Diğer havuzlar kendi Grup düğmelerinden veya bir komuta --pool ve havuzun adı eklenerek kullanılır.',
       ],
     },
     markers: {
@@ -296,6 +383,8 @@ const TRANSLATION = {
     subtitle: 'Komut Paneli',
     selectedDesc: 'Bir veya daha fazla jeton seç, sonra tıkla.',
     partyDesc: 'Kimde ilham olduğunu gör ve grupta kimlerin olacağını seç.',
+    poolsTitle: 'Puan havuzu',
+    poolsDesc: 'Takip, Puan havuzu olarak ayarlıyken: jetonları seç, tıkla ve sayıyı yaz.',
     toolsDesc: 'Menü, ayarlar, oyuncu makrosu ve yardım.',
     footer: 'Tüm talimatlar "{help}" belgesinde.',
   },

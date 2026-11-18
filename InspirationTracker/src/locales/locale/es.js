@@ -8,6 +8,8 @@ const TRANSLATION = {
     settings: 'Ajustes de InspirationTracker',
     help: 'Comandos de InspirationTracker',
     party: 'Inspiración del grupo',
+    poolParty: '{term} del grupo',
+    pools: 'Reservas de puntos',
     yours: 'Tus personajes',
     status: 'Estado de InspirationTracker',
   },
@@ -40,7 +42,52 @@ const TRANSLATION = {
     journal: 'Se han reconstruido los folletos de Ayuda y Panel de comandos.',
     readyHint: 'Escribe {command} para ver el menú, o abre el folleto del Panel de comandos.',
   },
+  pool: {
+    gained: '{name} gana {amount} {term} ({before} → {after}).',
+    spent: '{name} gasta {amount} {term} ({before} → {after}).',
+    boosted: '{name} gasta {amount} {term} para +{bonus} a la tirada ({before} → {after}).',
+    spentBy: '{player} ha gastado {amount} {term} por {name}.',
+    restored: '{name} recupera {amount} {term} ({before} → {after}).',
+    removed: 'Se han quitado {amount} {term} a {name} ({before} → {after}).',
+    none: '{name} no tiene {term}.',
+    short: '{name} tiene {have} {term} y hacen falta {need}.',
+    full: '{name} ya tiene el máximo de {term} permitido ({max}).',
+  },
+  pools: {
+    introFlag:
+      'El seguimiento está en la casilla de inspiración de la hoja. Ponlo en Reserva de puntos para que Dar y Gastar actúen sobre la reserva "{name}". Las demás reservas se usan con --pool.',
+    introPool:
+      'Dar, Gastar y Potenciar actúan sobre "{name}". Las demás reservas se usan desde su botón Grupo, o con --pool.',
+    defaultLabel: '{name} (por defecto)',
+    name: 'Nombre',
+    source: 'Guardado en',
+    cost: 'Puntos por +1',
+    max: 'Máximo',
+    marker: 'Marcador',
+    attribute: 'Atributo cuando la hoja no tiene una casilla con este nombre: {attribute}',
+    partyTotal: 'Total del grupo: {total} {term}.',
+  },
+  prompts: {
+    points: 'Puntos',
+    bonus: 'Bonificador a la tirada',
+    max: 'Máximo de puntos permitido (0 para sin límite)',
+  },
   errors: {
+    unknownPool: 'No hay ninguna reserva llamada "{value}".',
+    unknownPoolHint: 'Reservas: {pools}.',
+    badAmount: '"{value}" no es una cantidad de puntos.',
+    badAmountHint: 'Usa un número entero del 1 al 9999.',
+    boostNoPool: 'Potenciar gasta puntos de una reserva.',
+    poolInvalid: 'Una reserva no puede llamarse "{value}".',
+    poolExists: 'Ya hay una reserva llamada "{value}".',
+    poolFull: 'No hay sitio para otra reserva.',
+    poolNameHint:
+      'Usa un nombre de hasta 40 letras, cifras y espacios que no tenga ninguna otra reserva.',
+    poolDefault:
+      'La reserva por defecto, "{name}", no se puede eliminar. Se puede cambiar de nombre.',
+    poolMarkerHint:
+      'Elige un marcador de tus conjuntos de marcadores que no sea el del ajuste Marcador.',
+    poolSetHint: 'Escribe !inspiration pools para ver todas las reservas y sus ajustes.',
     denied: 'No puedes hacer eso con {name}.',
     gmOnly: 'Solo el GM puede usar ese comando.',
     gmOnlyHint: 'Los jugadores pueden usar spend, party y help.',
@@ -91,14 +138,28 @@ const TRANSLATION = {
     refresh: 'Actualizar',
     undo: 'Deshacer',
     decline: 'Dejar pasar',
+    boost: 'Potenciar',
+    pools: 'Reservas',
+    addPool: 'Añadir reserva',
+    deletePool: 'Eliminar reserva',
   },
   values: {
     on: 'Activado',
     off: 'Desactivado',
+    none: 'Ninguno',
+    noLimit: 'Sin límite',
+    tracking: {
+      flag: 'Casilla de inspiración de la hoja',
+      pool: 'Reserva de puntos',
+    },
+    source: {
+      resource: 'Casilla de recurso de la hoja',
+      attribute: 'Atributo',
+    },
     wording: {
-      auto: 'Según la hoja',
       2014: 'Inspiración (2014)',
       2024: 'Inspiración heroica (2024)',
+      auto: 'Según la hoja',
     },
     announce: {
       public: 'Todos',
@@ -110,6 +171,10 @@ const TRANSLATION = {
     language: {
       label: 'Idioma',
       desc: 'Idioma de los menús, mensajes y folletos.',
+    },
+    tracking: {
+      label: 'Seguimiento',
+      desc: 'Sobre qué actúan Dar y Gastar: la casilla de inspiración de las hojas de D&D, que un personaje tiene o no tiene, o una reserva de puntos que se acumula y se gasta poco a poco.',
     },
     marker: {
       label: 'Marcador',
@@ -151,6 +216,8 @@ const TRANSLATION = {
     none: 'Personajes sin casilla de inspiración',
     rules2024: 'Con reglas de 2024',
     party: 'Miembros del grupo',
+    tracking: 'Seguimiento',
+    pools: 'Reservas',
     marker: 'Marcador',
     fx: 'Efecto especial',
     legacyCommand: 'Comando antiguo',
@@ -166,6 +233,15 @@ const TRANSLATION = {
       'Muestra quién del grupo tiene inspiración, con botones para darla, quitarla o gastarla.',
     partyEdit: 'Añade los personajes seleccionados al grupo, o los saca de él.',
     ids: 'Actúa sobre los ID de fichas o personajes indicados en lugar de las fichas seleccionadas.',
+    points:
+      'Con una reserva de puntos: da, quita o gasta esa cantidad de puntos. Sin número, 1. remove all quita todos los puntos.',
+    boost:
+      'Con una reserva de puntos: gasta puntos para sumar ese bonificador a una tirada, al coste de la reserva por cada +1.',
+    poolFlag: 'Actúa sobre la reserva indicada en lugar de la reserva por defecto.',
+    pools: 'Muestra las reservas de puntos y sus ajustes.',
+    poolEdit: 'Añade una reserva, o elimina una. Los puntos de las hojas se dejan como están.',
+    poolSet:
+      'Cambia una reserva: su nombre, dónde se guarda (resource o attribute), los puntos que cuesta cada +1, el máximo de puntos permitido (0 para sin límite) o su marcador de ficha.',
     undo: 'Devuelve la inspiración que se gastó. El ID viene del mensaje al GM sobre el gasto.',
     macro:
       'Añade la acción de ficha "Inspiration", que los jugadores pulsan para gastar inspiración.',
@@ -179,12 +255,13 @@ const TRANSLATION = {
   helpPlayer: {
     menu: 'Muestra tus personajes y si tienen inspiración.',
     spend: 'Gasta la inspiración del personaje seleccionado.',
+    boost: 'Gasta puntos de una reserva para sumar ese bonificador a una tirada.',
     party: 'Muestra el grupo, si el GM lo permite.',
     help: 'Muestra esta lista.',
   },
   handout: {
     versionLabel: 'Versión',
-    subtitle: 'Inspiración e Inspiración heroica para las hojas de D&D 5e de 2014 y 2024',
+    subtitle: 'Inspiración, Inspiración heroica y reservas de puntos para cualquier juego',
     overview: {
       heading: 'Descripción general',
       body: 'InspirationTracker mantiene sincronizada la inspiración de D&D en la hoja de personaje, la ficha y el chat. Dala desde el menú, la hoja o el marcador de la ficha, y todas las fichas de ese personaje muestran el marcador. Los jugadores pueden gastarla con un clic, y se avisa al GM, con un botón Deshacer. Funciona con la hoja de D&D 2024, donde se llama Inspiración heroica, y con la hoja OGL de 2014.',
@@ -236,6 +313,18 @@ const TRANSLATION = {
         'El grupo son todos los personajes que controla algún jugador. Selecciona fichas y pulsa Añadir al grupo o Quitar del grupo para cambiarlo.',
         'La vista general del GM tiene botones Dar, Quitar y Gastar para cada miembro.',
         'Activa Los jugadores ven el grupo para que los jugadores también vean la vista general. Solo tienen botones Gastar para sus propios personajes.',
+      ],
+    },
+    pools: {
+      heading: 'Reservas de puntos',
+      points: [
+        'Una reserva de puntos es un número que se acumula y se gasta poco a poco: una reserva de puntos de inspiración, puntos de héroe, suerte, bennies y similares. Funciona con cualquier hoja de personaje.',
+        'Pon Seguimiento en Reserva de puntos, y Dar, Quitar y Gastar actúan sobre la reserva por defecto y preguntan cuántos puntos. El marcador se muestra mientras un personaje tiene algún punto.',
+        'Potenciar gasta puntos para subir una tirada: escribe el bonificador deseado, y los Puntos por +1 de la reserva deciden el coste. A 2 puntos por +1, un bonificador de 4 cuesta 8 puntos. El Mod anuncia el gasto; suma tú el bonificador a la tirada.',
+        'Un gasto se rechaza cuando el personaje no tiene puntos suficientes. Se avisa al GM de quién ha gastado qué, con un botón Deshacer.',
+        'Con Guardado en "Casilla de recurso de la hoja" se usa la casilla de recurso de la hoja que lleva el nombre de la reserva, como una casilla Other Resource llamada Inspiración en la hoja de D&D de 2014. Cuando la hoja no tiene una casilla con ese nombre, o con "Atributo", los puntos se guardan en un atributo normal, como inspiration_pool. La hoja de D&D 2024 siempre usa el atributo.',
+        'Cambiar el número en la hoja a mano no da problemas: el marcador lo sigue.',
+        'Pulsa Reservas para cambiar el nombre de la reserva por defecto, fijar su coste y su máximo, o añadir más reservas. Las demás reservas se usan desde su botón Grupo, o añadiendo --pool y el nombre de la reserva a un comando.',
       ],
     },
     markers: {
@@ -298,6 +387,9 @@ const TRANSLATION = {
     subtitle: 'Panel de comandos',
     selectedDesc: 'Selecciona una o más fichas y luego pulsa.',
     partyDesc: 'Mira quién tiene inspiración y elige quién está en el grupo.',
+    poolsTitle: 'Reserva de puntos',
+    poolsDesc:
+      'Con Seguimiento en Reserva de puntos: selecciona fichas, pulsa y escribe el número.',
     toolsDesc: 'Menú, ajustes, la macro de jugador y la ayuda.',
     footer: 'Las instrucciones completas están en el folleto "{help}".',
   },

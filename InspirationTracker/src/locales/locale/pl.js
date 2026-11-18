@@ -8,6 +8,8 @@ const TRANSLATION = {
     settings: 'Ustawienia InspirationTracker',
     help: 'Polecenia InspirationTracker',
     party: 'Inspiracja drużyny',
+    poolParty: '{term} drużyny',
+    pools: 'Pule punktów',
     yours: 'Twoje postacie',
     status: 'Stan InspirationTracker',
   },
@@ -40,7 +42,50 @@ const TRANSLATION = {
     journal: 'Odtworzono notatki Pomocy i Panelu poleceń.',
     readyHint: 'Wpisz {command}, aby otworzyć menu, albo otwórz notatkę Panelu poleceń.',
   },
+  pool: {
+    gained: '{name} zyskuje: {term} × {amount} ({before} → {after}).',
+    spent: '{name} wykorzystuje: {term} × {amount} ({before} → {after}).',
+    boosted:
+      '{name} wykorzystuje: {term} × {amount}, aby dodać +{bonus} do rzutu ({before} → {after}).',
+    spentBy: '{player} wykorzystuje za postać {name}: {term} × {amount}.',
+    restored: '{name} odzyskuje: {term} × {amount} ({before} → {after}).',
+    removed: 'Odebrano postaci {name}: {term} × {amount} ({before} → {after}).',
+    none: '{name} nie ma: {term}.',
+    short: '{name} ma: {term} × {have}, a potrzeba {need}.',
+    full: '{name} ma już dozwolone maksimum ({max}): {term}.',
+  },
+  pools: {
+    introFlag:
+      'Śledzenie jest ustawione na pole inspiracji na karcie. Ustaw je na Pula punktów, aby Daj i Wykorzystaj działały na puli „{name}”. Innych pul używa się z --pool.',
+    introPool:
+      'Daj, Wykorzystaj i Wzmocnij działają na puli „{name}”. Innych pul używa się przyciskiem Drużyna danej puli albo z --pool.',
+    defaultLabel: '{name} (domyślna)',
+    name: 'Nazwa',
+    source: 'Miejsce zapisu',
+    cost: 'Punkty za +1',
+    max: 'Maksimum',
+    marker: 'Znacznik',
+    attribute: 'Atrybut, gdy karta nie ma pola o tej nazwie: {attribute}',
+    partyTotal: 'Suma drużyny: {term} × {total}.',
+  },
+  prompts: {
+    points: 'Punkty',
+    bonus: 'Premia do rzutu',
+    max: 'Maksymalna liczba punktów (0 – bez limitu)',
+  },
   errors: {
+    unknownPool: 'Nie ma puli o nazwie „{value}”.',
+    unknownPoolHint: 'Pule: {pools}.',
+    badAmount: '„{value}” nie jest liczbą punktów.',
+    badAmountHint: 'Użyj liczby całkowitej od 1 do 9999.',
+    boostNoPool: 'Wzmocnij wydaje punkty z puli.',
+    poolInvalid: 'Pula nie może mieć nazwy „{value}”.',
+    poolExists: 'Pula o nazwie „{value}” już istnieje.',
+    poolFull: 'Nie ma miejsca na kolejną pulę.',
+    poolNameHint: 'Użyj nazwy do 40 liter, cyfr i spacji, której nie ma żadna inna pula.',
+    poolDefault: 'Domyślnej puli „{name}” nie można usunąć. Można zmienić jej nazwę.',
+    poolMarkerHint: 'Wybierz z zestawów znaczników znacznik inny niż ten z ustawienia Znacznik.',
+    poolSetHint: 'Wpisz !inspiration pools, aby zobaczyć wszystkie pule i ich ustawienia.',
     denied: 'Nie możesz tego zrobić dla postaci {name}.',
     gmOnly: 'Tylko GM może użyć tego polecenia.',
     gmOnlyHint: 'Gracze mogą używać spend, party i help.',
@@ -91,14 +136,28 @@ const TRANSLATION = {
     refresh: 'Odśwież',
     undo: 'Cofnij',
     decline: 'Zrezygnuj',
+    boost: 'Wzmocnij',
+    pools: 'Pule',
+    addPool: 'Dodaj pulę',
+    deletePool: 'Usuń pulę',
   },
   values: {
     on: 'Wł.',
     off: 'Wył.',
+    none: 'Brak',
+    noLimit: 'Bez limitu',
+    tracking: {
+      flag: 'Pole inspiracji na karcie',
+      pool: 'Pula punktów',
+    },
+    source: {
+      resource: 'Pole zasobu na karcie',
+      attribute: 'Atrybut',
+    },
     wording: {
-      auto: 'Z karty',
       2014: 'Inspiracja (2014)',
       2024: 'Bohaterska Inspiracja (2024)',
+      auto: 'Z karty',
     },
     announce: {
       public: 'Wszyscy',
@@ -110,6 +169,10 @@ const TRANSLATION = {
     language: {
       label: 'Język',
       desc: 'Język menu, komunikatów i notatek.',
+    },
+    tracking: {
+      label: 'Śledzenie',
+      desc: 'Na czym działają Daj i Wykorzystaj: na polu inspiracji na kartach D&D, którą postać ma albo jej nie ma, czy na puli punktów, które się gromadzi i wydaje po kilka naraz.',
     },
     marker: {
       label: 'Znacznik',
@@ -151,6 +214,8 @@ const TRANSLATION = {
     none: 'Postacie bez pola inspiracji',
     rules2024: 'Używają zasad 2024',
     party: 'Członkowie drużyny',
+    tracking: 'Śledzenie',
+    pools: 'Pule',
     marker: 'Znacznik',
     fx: 'Efekt specjalny',
     legacyCommand: 'Stare polecenie',
@@ -166,6 +231,15 @@ const TRANSLATION = {
       'Pokazuje, kto w drużynie ma inspirację, z przyciskami do dawania, odbierania i wykorzystania.',
     partyEdit: 'Dodaje zaznaczone postacie do drużyny lub je z niej usuwa.',
     ids: 'Działa na podanych identyfikatorach żetonów lub postaci zamiast na zaznaczonych żetonach.',
+    points:
+      'Przy puli punktów: daje, odbiera lub wykorzystuje podaną liczbę punktów. Bez liczby: 1. remove all odbiera wszystkie punkty.',
+    boost:
+      'Przy puli punktów: wydaje punkty, aby dodać podaną premię do rzutu, według kosztu puli za każde +1.',
+    poolFlag: 'Działa na wskazanej puli zamiast na domyślnej.',
+    pools: 'Pokazuje pule punktów i ich ustawienia.',
+    poolEdit: 'Dodaje pulę lub ją usuwa. Punkty na kartach pozostają bez zmian.',
+    poolSet:
+      'Zmienia pulę: jej nazwę, miejsce zapisu (resource lub attribute), liczbę punktów za każde +1, maksymalną liczbę punktów (0 – bez limitu) albo jej znacznik żetonu.',
     undo: 'Przywraca wykorzystaną inspirację. Identyfikator jest w wiadomości do GM o wykorzystaniu.',
     macro: 'Dodaje akcję żetonu „Inspiration”, którą gracze klikają, aby wykorzystać inspirację.',
     sync: 'Odczytuje ponownie wszystkie karty i poprawia znaczniki.',
@@ -178,12 +252,13 @@ const TRANSLATION = {
   helpPlayer: {
     menu: 'Pokazuje twoje postacie i to, czy mają inspirację.',
     spend: 'Wykorzystuje inspirację zaznaczonej postaci.',
+    boost: 'Wydaje punkty z puli, aby dodać podaną premię do rzutu.',
     party: 'Pokazuje drużynę, jeśli GM na to pozwala.',
     help: 'Pokazuje tę listę.',
   },
   handout: {
     versionLabel: 'Wersja',
-    subtitle: 'Inspiracja i Bohaterska Inspiracja dla kart D&D 5e 2014 i 2024',
+    subtitle: 'Inspiracja, Bohaterska Inspiracja i pule punktów do każdej gry',
     overview: {
       heading: 'Przegląd',
       body: 'InspirationTracker utrzymuje zgodność inspiracji D&D na karcie postaci, żetonie i czacie. Daj ją z menu, karty lub znacznika żetonu, a każdy żeton tej postaci pokaże znacznik. Gracze mogą ją wykorzystać jednym kliknięciem, a GM dostaje powiadomienie z przyciskiem Cofnij. Działa z kartą D&D 2024, gdzie nazywa się Bohaterską Inspiracją, oraz z kartą 2014 OGL.',
@@ -236,6 +311,18 @@ const TRANSLATION = {
         'Drużyna to wszystkie postacie, którymi sterują gracze. Zaznacz żetony i kliknij Dodaj do drużyny lub Usuń z drużyny, aby ją zmienić.',
         'Przegląd GM ma przyciski Daj, Odbierz i Wykorzystaj dla każdego członka.',
         'Włącz Gracze widzą drużynę, aby gracze też widzieli przegląd. Przyciski Wykorzystaj dostają tylko przy własnych postaciach.',
+      ],
+    },
+    pools: {
+      heading: 'Pule punktów',
+      points: [
+        'Pula punktów to liczba, która rośnie i jest wydawana po kilka punktów naraz: pula punktów inspiracji, punktów bohatera, szczęścia, bennies i tym podobnych. Działa z każdą kartą postaci.',
+        'Ustaw Śledzenie na Pula punktów, a Daj, Odbierz i Wykorzystaj będą działać na domyślnej puli i pytać o liczbę punktów. Znacznik jest widoczny, dopóki postać ma jakiekolwiek punkty.',
+        'Wzmocnij wydaje punkty, aby podnieść wynik rzutu: wpisz żądaną premię, a o koszcie decyduje ustawienie puli Punkty za +1. Przy 2 punktach za +1 premia 4 kosztuje 8 punktów. Mod ogłasza wydanie punktów; premię dodaj do rzutu samodzielnie.',
+        'Wydanie punktów jest odrzucane, gdy postać ma ich za mało. GM dostaje informację, kto co wydał, z przyciskiem Cofnij.',
+        'Miejsce zapisu „Pole zasobu na karcie” używa pola zasobu na karcie, które ma nazwę puli, na przykład pola Other Resource nazwanego Inspiration na karcie D&D 2014. Gdy karta nie ma pola o tej nazwie albo wybrano „Atrybut”, punkty są zapisywane w zwykłym atrybucie, takim jak inspiration_pool. Karta D&D 2024 zawsze używa atrybutu.',
+        'Liczbę na karcie można zmieniać ręcznie: znacznik podąża za nią.',
+        'Kliknij Pule, aby zmienić nazwę domyślnej puli, ustawić jej koszt i maksimum albo dodać kolejne pule. Innych pul używa się przyciskiem Drużyna danej puli albo przez dodanie do polecenia --pool i nazwy puli.',
       ],
     },
     markers: {
@@ -298,6 +385,9 @@ const TRANSLATION = {
     subtitle: 'Panel poleceń',
     selectedDesc: 'Zaznacz jeden lub więcej żetonów, a potem kliknij.',
     partyDesc: 'Zobacz, kto ma inspirację, i wybierz, kto jest w drużynie.',
+    poolsTitle: 'Pula punktów',
+    poolsDesc:
+      'Gdy Śledzenie jest ustawione na Pula punktów: zaznacz żetony, kliknij i wpisz liczbę.',
     toolsDesc: 'Menu, ustawienia, makro gracza i pomoc.',
     footer: 'Pełne instrukcje są w notatce „{help}”.',
   },

@@ -8,6 +8,8 @@ const TRANSLATION = {
     settings: 'InspirationTracker-Einstellungen',
     help: 'InspirationTracker-Befehle',
     party: 'Inspiration der Gruppe',
+    poolParty: '{term} der Gruppe',
+    pools: 'Punktepools',
     yours: 'Deine Charaktere',
     status: 'InspirationTracker-Status',
   },
@@ -40,7 +42,51 @@ const TRANSLATION = {
     journal: 'Hilfe- und Command-Deck-Handouts neu erstellt.',
     readyHint: 'Gib {command} für das Menü ein oder öffne das Command-Deck-Handout.',
   },
+  pool: {
+    gained: '{name} erhält {amount} {term} ({before} → {after}).',
+    spent: '{name} gibt {amount} {term} aus ({before} → {after}).',
+    boosted: '{name} gibt {amount} {term} für +{bonus} auf den Wurf aus ({before} → {after}).',
+    spentBy: '{player} hat {amount} {term} für {name} ausgegeben.',
+    restored: '{name} hat {amount} {term} zurück ({before} → {after}).',
+    removed: '{name} wurden {amount} {term} entzogen ({before} → {after}).',
+    none: '{name} hat keine {term}.',
+    short: '{name} hat {have} {term}, nötig sind {need}.',
+    full: '{name} hat bereits das erlaubte Maximum an {term} ({max}).',
+  },
+  pools: {
+    introFlag:
+      'Die Erfassung steht auf dem Inspirationsfeld des Bogens. Stelle sie auf Punktepool, damit Geben und Ausgeben auf den Pool „{name}“ wirken. Andere Pools nutzt du mit --pool.',
+    introPool:
+      'Geben, Ausgeben und Verstärken wirken auf „{name}“. Andere Pools nutzt du über ihren Gruppe-Button oder mit --pool.',
+    defaultLabel: '{name} (Standard)',
+    name: 'Name',
+    source: 'Gespeichert in',
+    cost: 'Punkte pro +1',
+    max: 'Maximum',
+    marker: 'Marker',
+    attribute: 'Attribut, wenn der Bogen kein Feld mit diesem Namen hat: {attribute}',
+    partyTotal: 'Gruppe gesamt: {total} {term}.',
+  },
+  prompts: {
+    points: 'Punkte',
+    bonus: 'Bonus auf den Wurf',
+    max: 'Höchstzahl an Punkten (0 für kein Limit)',
+  },
   errors: {
+    unknownPool: 'Es gibt keinen Pool namens „{value}“.',
+    unknownPoolHint: 'Pools: {pools}.',
+    badAmount: '„{value}“ ist keine Punktzahl.',
+    badAmountHint: 'Verwende eine ganze Zahl von 1 bis 9999.',
+    boostNoPool: 'Verstärken gibt Punkte aus einem Pool aus.',
+    poolInvalid: 'Ein Pool kann nicht „{value}“ heißen.',
+    poolExists: 'Es gibt bereits einen Pool namens „{value}“.',
+    poolFull: 'Für einen weiteren Pool ist kein Platz.',
+    poolNameHint:
+      'Verwende einen Namen aus bis zu 40 Buchstaben, Ziffern und Leerzeichen, den kein anderer Pool hat.',
+    poolDefault: 'Der Standardpool „{name}“ kann nicht gelöscht werden. Er lässt sich umbenennen.',
+    poolMarkerHint:
+      'Wähle einen Marker aus deinen Marker-Sets, der nicht der aus der Einstellung Marker ist.',
+    poolSetHint: 'Gib !inspiration pools ein, um alle Pools und ihre Einstellungen zu sehen.',
     denied: 'Das kannst du für {name} nicht tun.',
     gmOnly: 'Nur die SL kann diesen Befehl verwenden.',
     gmOnlyHint: 'Spieler können spend, party und help verwenden.',
@@ -91,14 +137,28 @@ const TRANSLATION = {
     refresh: 'Aktualisieren',
     undo: 'Rückgängig',
     decline: 'Verzichten',
+    boost: 'Verstärken',
+    pools: 'Pools',
+    addPool: 'Pool hinzufügen',
+    deletePool: 'Pool löschen',
   },
   values: {
     on: 'An',
     off: 'Aus',
+    none: 'Keiner',
+    noLimit: 'Kein Limit',
+    tracking: {
+      flag: 'Inspirationsfeld des Bogens',
+      pool: 'Punktepool',
+    },
+    source: {
+      resource: 'Ressourcenfeld des Bogens',
+      attribute: 'Attribut',
+    },
     wording: {
-      auto: 'Vom Bogen',
       2014: 'Inspiration (2014)',
       2024: 'Heldenhafte Inspiration (2024)',
+      auto: 'Vom Bogen',
     },
     announce: {
       public: 'Alle',
@@ -110,6 +170,10 @@ const TRANSLATION = {
     language: {
       label: 'Sprache',
       desc: 'Sprache für Menüs, Nachrichten und Handouts.',
+    },
+    tracking: {
+      label: 'Erfassung',
+      desc: 'Worauf Geben und Ausgeben wirken: auf das Inspirationsfeld der D&D-Bögen, das ein Charakter hat oder nicht hat, oder auf einen Pool aus Punkten, der sich aufbaut und nach und nach ausgegeben wird.',
     },
     marker: {
       label: 'Marker',
@@ -151,6 +215,8 @@ const TRANSLATION = {
     none: 'Charaktere ohne Inspirationsfeld',
     rules2024: 'Regeln von 2024 aktiv',
     party: 'Gruppenmitglieder',
+    tracking: 'Erfassung',
+    pools: 'Pools',
     marker: 'Marker',
     fx: 'Spezialeffekt',
     legacyCommand: 'Alter Befehl',
@@ -166,6 +232,16 @@ const TRANSLATION = {
       'Zeigt, wer in der Gruppe Inspiration hat, mit Buttons zum Geben, Entfernen oder Ausgeben.',
     partyEdit: 'Fügt die ausgewählten Charaktere der Gruppe hinzu oder nimmt sie heraus.',
     ids: 'Wirkt auf die angegebenen Token- oder Charakter-IDs statt auf die ausgewählten Token.',
+    points:
+      'Mit einem Punktepool: gibt so viele Punkte, entzieht sie oder gibt sie aus. Ohne Zahl: 1. remove all entzieht alle Punkte.',
+    boost:
+      'Mit einem Punktepool: gibt Punkte aus, um diesen Bonus auf einen Wurf zu addieren, zu den Kosten des Pools für jedes +1.',
+    poolFlag: 'Wirkt auf den genannten Pool statt auf den Standardpool.',
+    pools: 'Zeigt die Punktepools und ihre Einstellungen.',
+    poolEdit:
+      'Fügt einen Pool hinzu oder löscht einen. Die Punkte auf den Bögen bleiben, wie sie sind.',
+    poolSet:
+      'Ändert einen Pool: seinen Namen, wo er gespeichert wird (resource oder attribute), die Punkte, die jedes +1 kostet, die Höchstzahl an Punkten (0 für kein Limit) oder seinen Token-Marker.',
     undo: 'Gibt ausgegebene Inspiration zurück. Die ID steht in der SL-Nachricht zur Ausgabe.',
     macro: 'Fügt die Token-Aktion „Inspiration“ hinzu, mit der Spieler Inspiration ausgeben.',
     sync: 'Liest alle Bögen neu ein und korrigiert die Marker.',
@@ -178,12 +254,13 @@ const TRANSLATION = {
   helpPlayer: {
     menu: 'Zeigt deine Charaktere und ob sie Inspiration haben.',
     spend: 'Gibt die Inspiration des ausgewählten Charakters aus.',
+    boost: 'Gibt Punkte aus einem Pool aus, um diesen Bonus auf einen Wurf zu addieren.',
     party: 'Zeigt die Gruppe, wenn die SL es erlaubt.',
     help: 'Zeigt diese Liste.',
   },
   handout: {
     versionLabel: 'Version',
-    subtitle: 'Inspiration und Heldenhafte Inspiration für die D&D-5e-Bögen 2014 und 2024',
+    subtitle: 'Inspiration, Heldenhafte Inspiration und Punktepools für jedes Spiel',
     overview: {
       heading: 'Überblick',
       body: 'InspirationTracker hält D&D-Inspiration auf Charakterbogen, Token und im Chat synchron. Gib sie über das Menü, den Bogen oder den Token-Marker, und jeder Token dieses Charakters zeigt den Marker. Spieler können sie mit einem Klick ausgeben, und die SL wird informiert, mit einem Rückgängig-Button. Es funktioniert mit dem D&D-2024-Bogen, wo sie Heldenhafte Inspiration heißt, und mit dem 2014-OGL-Bogen.',
@@ -236,6 +313,18 @@ const TRANSLATION = {
         'Zur Gruppe gehört jeder Charakter, den ein Spieler steuert. Wähle Token aus und klicke auf Zur Gruppe hinzufügen oder Aus Gruppe entfernen, um sie zu ändern.',
         'Die Übersicht der SL hat für jedes Mitglied die Buttons Geben, Entfernen und Ausgeben.',
         'Schalte Spieler sehen Gruppe ein, damit auch Spieler die Übersicht sehen. Ausgeben-Buttons erhalten sie nur für ihre eigenen Charaktere.',
+      ],
+    },
+    pools: {
+      heading: 'Punktepools',
+      points: [
+        'Ein Punktepool ist eine Zahl, die sich aufbaut und nach und nach ausgegeben wird: ein Pool aus Inspirationspunkten, Heldenpunkten, Glück, Bennies und Ähnlichem. Er funktioniert mit jedem Charakterbogen.',
+        'Stelle Erfassung auf Punktepool, und Geben, Entfernen und Ausgeben wirken auf den Standardpool und fragen nach der Punktzahl. Der Marker wird angezeigt, solange ein Charakter Punkte hat.',
+        'Verstärken gibt Punkte aus, um einen Wurf zu erhöhen: Gib den gewünschten Bonus ein, und Punkte pro +1 des Pools bestimmt die Kosten. Bei 2 Punkten pro +1 kostet ein Bonus von 4 also 8 Punkte. Die Mod kündigt die Ausgabe an; den Bonus addierst du selbst zum Wurf.',
+        'Eine Ausgabe wird abgelehnt, wenn der Charakter nicht genug Punkte hat. Die SL erfährt, wer was ausgegeben hat, mit einem Rückgängig-Button.',
+        'Gespeichert in „Ressourcenfeld des Bogens“ nutzt das Ressourcenfeld auf dem Bogen, das den Namen des Pools trägt, etwa ein Feld Other Resource namens Inspiration auf dem D&D-Bogen von 2014. Hat der Bogen kein Feld mit diesem Namen, oder bei „Attribut“, werden die Punkte in einem einfachen Attribut gespeichert, etwa inspiration_pool. Der D&D-2024-Bogen nutzt immer das Attribut.',
+        'Die Zahl von Hand auf dem Bogen zu ändern ist in Ordnung: Der Marker folgt.',
+        'Klicke auf Pools, um den Standardpool umzubenennen, seine Kosten und sein Maximum festzulegen oder weitere Pools hinzuzufügen. Andere Pools nutzt du über ihren Gruppe-Button oder indem du --pool und den Namen des Pools an einen Befehl anhängst.',
       ],
     },
     markers: {
@@ -299,6 +388,9 @@ const TRANSLATION = {
     subtitle: 'Command Deck',
     selectedDesc: 'Wähle einen oder mehrere Token aus und klicke dann.',
     partyDesc: 'Sieh, wer Inspiration hat, und lege fest, wer zur Gruppe gehört.',
+    poolsTitle: 'Punktepool',
+    poolsDesc:
+      'Wenn Erfassung auf Punktepool steht: Token auswählen, klicken und die Zahl eingeben.',
     toolsDesc: 'Menü, Einstellungen, das Spielermakro und Hilfe.',
     footer: 'Die vollständige Anleitung steht im Handout „{help}“.',
   },

@@ -8,6 +8,8 @@ const TRANSLATION = {
     settings: 'InspirationTrackerin asetukset',
     help: 'InspirationTrackerin komennot',
     party: 'Seurueen inspiraatio',
+    poolParty: 'Seurue: {term}',
+    pools: 'Pistevarannot',
     yours: 'Omat hahmosi',
     status: 'InspirationTrackerin tila',
   },
@@ -40,7 +42,50 @@ const TRANSLATION = {
     journal: 'Ohje- ja Command Deck -monisteet luotiin uudelleen.',
     readyHint: 'Kirjoita {command} avataksesi valikon, tai avaa Command Deck -moniste.',
   },
+  pool: {
+    gained: '{name} sai: {amount} {term} ({before} → {after}).',
+    spent: '{name} käyttää: {amount} {term} ({before} → {after}).',
+    boosted: '{name} käyttää: {amount} {term}, heittoon +{bonus} ({before} → {after}).',
+    spentBy: '{player} käytti hahmolle {name}: {amount} {term}.',
+    restored: '{name} sai takaisin: {amount} {term} ({before} → {after}).',
+    removed: '{name} menetti: {amount} {term} ({before} → {after}).',
+    none: 'Hahmolla {name} ei ole pisteitä: {term}.',
+    short: 'Hahmolla {name} on {have}, mutta tarvitaan {need}: {term}.',
+    full: 'Hahmolla {name} on jo suurin sallittu määrä ({max}): {term}.',
+  },
+  pools: {
+    introFlag:
+      'Seuranta on asetettu lomakkeen inspiraatioruutuun. Aseta se arvoon Pistevaranto, niin Anna ja Käytä kohdistuvat varantoon "{name}". Muita varantoja käytetään valitsimella --pool.',
+    introPool:
+      'Anna, Käytä ja Tehosta kohdistuvat varantoon "{name}". Muita varantoja käytetään niiden Seurue-painikkeesta tai valitsimella --pool.',
+    defaultLabel: '{name} (oletus)',
+    name: 'Nimi',
+    source: 'Säilytyspaikka',
+    cost: 'Pisteitä per +1',
+    max: 'Enimmäismäärä',
+    marker: 'Tunnus',
+    attribute: 'Attribuutti, kun lomakkeella ei ole tämän nimistä ruutua: {attribute}',
+    partyTotal: 'Seurueella yhteensä: {total} {term}.',
+  },
+  prompts: {
+    points: 'Pisteet',
+    bonus: 'Bonus heittoon',
+    max: 'Suurin sallittu pistemäärä (0 = ei rajaa)',
+  },
   errors: {
+    unknownPool: 'Varantoa nimeltä "{value}" ei ole.',
+    unknownPoolHint: 'Varannot: {pools}.',
+    badAmount: '"{value}" ei ole pistemäärä.',
+    badAmountHint: 'Käytä kokonaislukua väliltä 1–9999.',
+    boostNoPool: 'Tehosta käyttää pisteitä varannosta.',
+    poolInvalid: 'Varannon nimi ei voi olla "{value}".',
+    poolExists: 'Varanto nimeltä "{value}" on jo olemassa.',
+    poolFull: 'Uudelle varannolle ei ole tilaa.',
+    poolNameHint:
+      'Käytä enintään 40 merkin nimeä, jossa on kirjaimia, numeroita ja välilyöntejä ja jota ei ole millään muulla varannolla.',
+    poolDefault: 'Oletusvarantoa "{name}" ei voi poistaa. Sen voi nimetä uudelleen.',
+    poolMarkerHint: 'Valitse tunnussarjoistasi tunnus, joka ei ole sama kuin Tunnus-asetuksessa.',
+    poolSetHint: 'Kirjoita !inspiration pools nähdäksesi kaikki varannot ja niiden asetukset.',
     denied: 'Et voi tehdä sitä hahmolle {name}.',
     gmOnly: 'Vain GM voi käyttää tätä komentoa.',
     gmOnlyHint: 'Pelaajat voivat käyttää komentoja spend, party ja help.',
@@ -90,14 +135,28 @@ const TRANSLATION = {
     refresh: 'Päivitä',
     undo: 'Kumoa',
     decline: 'Luovu',
+    boost: 'Tehosta',
+    pools: 'Varannot',
+    addPool: 'Lisää varanto',
+    deletePool: 'Poista varanto',
   },
   values: {
     on: 'Päällä',
     off: 'Pois',
+    none: 'Ei mitään',
+    noLimit: 'Ei rajaa',
+    tracking: {
+      flag: 'Lomakkeen inspiraatioruutu',
+      pool: 'Pistevaranto',
+    },
+    source: {
+      resource: 'Lomakkeen resurssiruutu',
+      attribute: 'Attribuutti',
+    },
     wording: {
-      auto: 'Lomakkeen mukaan',
       2014: 'Inspiraatio (2014)',
       2024: 'Sankarillinen inspiraatio (2024)',
+      auto: 'Lomakkeen mukaan',
     },
     announce: {
       public: 'Kaikki',
@@ -109,6 +168,10 @@ const TRANSLATION = {
     language: {
       label: 'Kieli',
       desc: 'Valikkojen, viestien ja monisteiden kieli.',
+    },
+    tracking: {
+      label: 'Seuranta',
+      desc: 'Mihin Anna ja Käytä kohdistuvat: D&D-lomakkeiden inspiraatioruutuun, joka hahmolla joko on tai ei ole, vai pistevarantoon, joka karttuu ja jota käytetään muutama piste kerrallaan.',
     },
     marker: {
       label: 'Tunnus',
@@ -150,6 +213,8 @@ const TRANSLATION = {
     none: 'Hahmot ilman inspiraatioruutua',
     rules2024: 'Käyttää 2024-sääntöjä',
     party: 'Seurueen jäsenet',
+    tracking: 'Seuranta',
+    pools: 'Varannot',
     marker: 'Tunnus',
     fx: 'Erikoistehoste',
     legacyCommand: 'Vanha komento',
@@ -165,6 +230,15 @@ const TRANSLATION = {
       'Näyttää, kenellä seurueessa on inspiraatio, ja painikkeet sen antamiseen, poistamiseen tai käyttämiseen.',
     partyEdit: 'Lisää valitut hahmot seurueeseen tai poistaa ne siitä.',
     ids: 'Toimii annetuilla pelimerkkien tai hahmojen ID:illä valittujen pelimerkkien sijaan.',
+    points:
+      'Pistevarannon kanssa: antaa, poistaa tai käyttää sen verran pisteitä. Ilman lukua 1. remove all poistaa kaikki pisteet.',
+    boost:
+      'Pistevarannon kanssa: käyttää pisteitä ja lisää heittoon annetun bonuksen; jokainen +1 maksaa varannon hinnan verran.',
+    poolFlag: 'Kohdistuu nimettyyn varantoon oletusvarannon sijaan.',
+    pools: 'Näyttää pistevarannot ja niiden asetukset.',
+    poolEdit: 'Lisää varannon tai poistaa sellaisen. Lomakkeiden pisteet jätetään ennalleen.',
+    poolSet:
+      'Muuttaa varantoa: sen nimeä, säilytyspaikkaa (resource tai attribute), yhden +1:n pistehintaa, suurinta sallittua pistemäärää (0 = ei rajaa) tai sen pelimerkin tunnusta.',
     undo: 'Palauttaa käytetyn inspiraation. ID löytyy GM:n saamasta käyttöviestistä.',
     macro:
       'Lisää pelimerkkitoiminnon "Inspiration", jota pelaajat napsauttavat käyttääkseen inspiraation.',
@@ -178,12 +252,13 @@ const TRANSLATION = {
   helpPlayer: {
     menu: 'Näyttää hahmosi ja sen, onko niillä inspiraatio.',
     spend: 'Käyttää valitun hahmon inspiraation.',
+    boost: 'Käyttää pisteitä varannosta ja lisää heittoon annetun bonuksen.',
     party: 'Näyttää seurueen, jos GM sallii sen.',
     help: 'Näyttää tämän luettelon.',
   },
   handout: {
     versionLabel: 'Versio',
-    subtitle: 'Inspiraatio ja Sankarillinen inspiraatio D&D 5e:n 2014- ja 2024-lomakkeille',
+    subtitle: 'Inspiraatio, Sankarillinen inspiraatio ja pistevarannot mihin tahansa peliin',
     overview: {
       heading: 'Yleiskatsaus',
       body: 'InspirationTracker pitää D&D:n inspiraation ajan tasalla hahmolomakkeella, pelimerkissä ja chatissa. Anna se valikosta, lomakkeelta tai pelimerkin tunnuksella, niin jokainen hahmon pelimerkki näyttää tunnuksen. Pelaajat voivat käyttää sen yhdellä napsautuksella, ja GM saa tiedon ja Kumoa-painikkeen. Se toimii D&D 2024 -lomakkeen kanssa, jossa sitä kutsutaan Sankarilliseksi inspiraatioksi, sekä 2014 OGL -lomakkeen kanssa.',
@@ -236,6 +311,18 @@ const TRANSLATION = {
         'Seurueeseen kuuluu jokainen hahmo, jota pelaaja hallitsee. Valitse pelimerkkejä ja napsauta Lisää seurueeseen tai Poista seurueesta muuttaaksesi sitä.',
         'GM:n yleiskatsauksessa on Anna-, Poista- ja Käytä-painikkeet jokaiselle jäsenelle.',
         'Kytke Pelaajat näkevät seurueen päälle, jotta myös pelaajat näkevät yleiskatsauksen. He saavat Käytä-painikkeet vain omille hahmoilleen.',
+      ],
+    },
+    pools: {
+      heading: 'Pistevarannot',
+      points: [
+        'Pistevaranto on luku, joka karttuu ja jota käytetään muutama piste kerrallaan: inspiraatiopisteitä, sankaripisteitä, onnea, bennies-pisteitä ja muuta vastaavaa. Se toimii minkä tahansa hahmolomakkeen kanssa.',
+        'Aseta Seuranta arvoon Pistevaranto, niin Anna, Poista ja Käytä kohdistuvat oletusvarantoon ja kysyvät pistemäärän. Tunnus näkyy niin kauan kuin hahmolla on pisteitä.',
+        'Tehosta käyttää pisteitä heiton korottamiseen: kirjoita haluamasi bonus, ja varannon Pisteitä per +1 -asetus ratkaisee hinnan. Kun +1 maksaa 2 pistettä, bonus 4 maksaa 8 pistettä. Mod ilmoittaa käytöstä; lisää bonus heittoon itse.',
+        'Käyttö hylätään, jos hahmolla ei ole tarpeeksi pisteitä. GM saa tiedon siitä, kuka käytti ja mitä, sekä Kumoa-painikkeen.',
+        'Säilytyspaikka "Lomakkeen resurssiruutu" käyttää lomakkeen resurssiruutua, jolla on varannon nimi, esimerkiksi Inspiraatio-nimistä Other Resource -ruutua vuoden 2014 D&D-lomakkeella. Jos lomakkeella ei ole sen nimistä ruutua tai valittuna on "Attribuutti", pisteet säilytetään tavallisessa attribuutissa, esimerkiksi inspiration_pool. D&D 2024 -lomake käyttää aina attribuuttia.',
+        'Luvun voi hyvin muuttaa lomakkeella käsin: tunnus seuraa perässä.',
+        'Napsauta Varannot nimetäksesi oletusvarannon uudelleen, asettaaksesi sen hinnan ja enimmäismäärän tai lisätäksesi varantoja. Muita varantoja käytetään niiden Seurue-painikkeesta tai lisäämällä komentoon --pool ja varannon nimi.',
       ],
     },
     markers: {
@@ -298,6 +385,8 @@ const TRANSLATION = {
     subtitle: 'Command Deck',
     selectedDesc: 'Valitse yksi tai useampi pelimerkki ja napsauta sitten.',
     partyDesc: 'Katso, kenellä on inspiraatio, ja valitse, ketkä kuuluvat seurueeseen.',
+    poolsTitle: 'Pistevaranto',
+    poolsDesc: 'Kun Seuranta on Pistevaranto: valitse pelimerkit, napsauta ja kirjoita luku.',
     toolsDesc: 'Valikko, asetukset, pelaajan makro ja ohje.',
     footer: 'Täydet ohjeet ovat monisteessa "{help}".',
   },

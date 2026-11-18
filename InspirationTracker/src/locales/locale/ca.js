@@ -8,6 +8,8 @@ const TRANSLATION = {
     settings: 'Configuració d’InspirationTracker',
     help: 'Ordres d’InspirationTracker',
     party: 'Inspiració del grup',
+    poolParty: '{term} del grup',
+    pools: 'Reserves de punts',
     yours: 'Els teus personatges',
     status: 'Estat d’InspirationTracker',
   },
@@ -40,7 +42,51 @@ const TRANSLATION = {
     journal: 'S’han refet els documents d’Ajuda i de Command Deck.',
     readyHint: 'Escriu {command} per al menú, o obre el document Command Deck.',
   },
+  pool: {
+    gained: '{name} guanya {amount} {term} ({before} → {after}).',
+    spent: '{name} gasta {amount} {term} ({before} → {after}).',
+    boosted: '{name} gasta {amount} {term} per a +{bonus} a la tirada ({before} → {after}).',
+    spentBy: '{player} ha gastat {amount} {term} per a {name}.',
+    restored: '{name} recupera {amount} {term} ({before} → {after}).',
+    removed: 'S’han tret {amount} {term} a {name} ({before} → {after}).',
+    none: '{name} no té {term}.',
+    short: '{name} té {have} {term}, i en calen {need}.',
+    full: '{name} ja ha arribat al màxim permès ({max}) per a {term}.',
+  },
+  pools: {
+    introFlag:
+      'El seguiment està posat a la casella d’inspiració de la fitxa. Posa’l a Reserva de punts perquè "{name}" sigui la reserva sobre la qual actuen Dona i Gasta. Les altres reserves es fan servir amb --pool.',
+    introPool:
+      'Dona, Gasta i Potencia actuen sobre "{name}". Les altres reserves es fan servir des del seu botó Grup, o amb --pool.',
+    defaultLabel: '{name} (per defecte)',
+    name: 'Nom',
+    source: 'Es guarda a',
+    cost: 'Punts per +1',
+    max: 'Màxim',
+    marker: 'Marcador',
+    attribute: 'Atribut quan la fitxa no té cap casella amb aquest nom: {attribute}',
+    partyTotal: 'Total del grup: {total} {term}.',
+  },
+  prompts: {
+    points: 'Punts',
+    bonus: 'Bonificació a la tirada',
+    max: 'Màxim de punts permès (0 per a sense límit)',
+  },
   errors: {
+    unknownPool: 'No hi ha cap reserva anomenada "{value}".',
+    unknownPoolHint: 'Reserves: {pools}.',
+    badAmount: '"{value}" no és un nombre de punts.',
+    badAmountHint: 'Fes servir un nombre enter de l’1 al 9999.',
+    boostNoPool: 'Potencia gasta punts d’una reserva.',
+    poolInvalid: 'Una reserva no es pot anomenar "{value}".',
+    poolExists: 'Ja hi ha una reserva anomenada "{value}".',
+    poolFull: 'No hi ha lloc per a cap altra reserva.',
+    poolNameHint:
+      'Fes servir un nom de fins a 40 lletres, xifres i espais que no tingui cap altra reserva.',
+    poolDefault: 'La reserva per defecte, "{name}", no es pot suprimir. Se li pot canviar el nom.',
+    poolMarkerHint:
+      'Tria un marcador dels teus jocs de marcadors que no sigui el de l’opció Marcador.',
+    poolSetHint: 'Escriu !inspiration pools per veure totes les reserves i les seves opcions.',
     denied: 'No pots fer això per a {name}.',
     gmOnly: 'Només el GM pot fer servir aquesta ordre.',
     gmOnlyHint: 'Els jugadors poden fer servir spend, party i help.',
@@ -91,14 +137,28 @@ const TRANSLATION = {
     refresh: 'Actualitza',
     undo: 'Desfés',
     decline: 'Deixa-la anar',
+    boost: 'Potencia',
+    pools: 'Reserves',
+    addPool: 'Afegeix reserva',
+    deletePool: 'Suprimeix reserva',
   },
   values: {
     on: 'Activat',
     off: 'Desactivat',
+    none: 'Cap',
+    noLimit: 'Sense límit',
+    tracking: {
+      flag: 'Casella d’inspiració de la fitxa',
+      pool: 'Reserva de punts',
+    },
+    source: {
+      resource: 'Casella de recurs de la fitxa',
+      attribute: 'Atribut',
+    },
     wording: {
-      auto: 'Segons la fitxa',
       2014: 'Inspiració (2014)',
       2024: 'Inspiració heroica (2024)',
+      auto: 'Segons la fitxa',
     },
     announce: {
       public: 'Tothom',
@@ -110,6 +170,10 @@ const TRANSLATION = {
     language: {
       label: 'Idioma',
       desc: 'Idioma dels menús, missatges i documents.',
+    },
+    tracking: {
+      label: 'Seguiment',
+      desc: 'Sobre què actuen Dona i Gasta: la casella d’inspiració de les fitxes de D&D, que un personatge té o no té, o una reserva de punts que s’acumula i es gasta de mica en mica.',
     },
     marker: {
       label: 'Marcador',
@@ -151,6 +215,8 @@ const TRANSLATION = {
     none: 'Personatges sense casella d’inspiració',
     rules2024: 'Amb regles de 2024',
     party: 'Membres del grup',
+    tracking: 'Seguiment',
+    pools: 'Reserves',
     marker: 'Marcador',
     fx: 'Efecte especial',
     legacyCommand: 'Ordre antiga',
@@ -165,6 +231,16 @@ const TRANSLATION = {
     party: 'Mostra qui del grup té inspiració, amb botons per donar-la, treure-la o gastar-la.',
     partyEdit: 'Afegeix els personatges seleccionats al grup, o els en treu.',
     ids: 'Actua sobre els identificadors de testimoni o de personatge indicats en lloc dels testimonis seleccionats.',
+    points:
+      'Amb una reserva de punts: dona, treu o gasta aquest nombre de punts. Sense nombre, 1. remove all treu tots els punts.',
+    boost:
+      'Amb una reserva de punts: gasta punts per afegir aquesta bonificació a una tirada, al cost de la reserva per cada +1.',
+    poolFlag: 'Actua sobre la reserva indicada en lloc de la reserva per defecte.',
+    pools: 'Mostra les reserves de punts i les seves opcions.',
+    poolEdit:
+      'Afegeix una reserva, o en suprimeix una. Els punts de les fitxes es deixen tal com estan.',
+    poolSet:
+      'Canvia una reserva: el nom, on es guarda (resource o attribute), els punts que costa cada +1, el màxim de punts permès (0 per a sense límit), o el seu marcador de testimoni.',
     undo: 'Retorna la inspiració gastada. L’ID ve del missatge al GM sobre la despesa.',
     macro:
       'Afegeix l’acció de testimoni "Inspiration", que els jugadors fan clic per gastar inspiració.',
@@ -178,12 +254,13 @@ const TRANSLATION = {
   helpPlayer: {
     menu: 'Mostra els teus personatges i si tenen inspiració.',
     spend: 'Gasta inspiració per al personatge seleccionat.',
+    boost: 'Gasta punts d’una reserva per afegir aquesta bonificació a una tirada.',
     party: 'Mostra el grup, si el GM ho permet.',
     help: 'Mostra aquesta llista.',
   },
   handout: {
     versionLabel: 'Versió',
-    subtitle: 'Inspiració i Inspiració heroica per a les fitxes de D&D 5e de 2014 i 2024',
+    subtitle: 'Inspiració, Inspiració heroica i reserves de punts per a qualsevol joc',
     overview: {
       heading: 'Visió general',
       body: 'InspirationTracker manté sincronitzada la inspiració de D&D entre la fitxa de personatge, el testimoni i el xat. Dona-la des del menú, la fitxa o el marcador del testimoni, i tots els testimonis d’aquell personatge mostren el marcador. Els jugadors la poden gastar amb un clic, i s’avisa el GM, amb un botó Desfés. Funciona amb la fitxa de D&D 2024, on s’anomena Inspiració heroica, i amb la fitxa OGL de 2014.',
@@ -236,6 +313,18 @@ const TRANSLATION = {
         'El grup és cada personatge que controla un jugador. Selecciona testimonis i fes clic a Afegeix al grup o Treu del grup per canviar-lo.',
         'La visió general del GM té botons Dona, Treu i Gasta per a cada membre.',
         'Activa Els jugadors veuen el grup perquè els jugadors també vegin la visió general. Només tenen botons Gasta per als seus propis personatges.',
+      ],
+    },
+    pools: {
+      heading: 'Reserves de punts',
+      points: [
+        'Una reserva de punts és un nombre que s’acumula i es gasta de mica en mica: una reserva de punts d’inspiració, punts d’heroi, sort, bennies i similars. Funciona amb qualsevol fitxa de personatge.',
+        'Posa Seguiment a Reserva de punts, i Dona, Treu i Gasta actuen sobre la reserva per defecte i demanen quants punts. El marcador es mostra mentre un personatge té algun punt.',
+        'Potencia gasta punts per apujar una tirada: escriu la bonificació que vols, i l’opció Punts per +1 de la reserva en decideix el cost. A 2 punts per +1, una bonificació de 4 costa 8 punts. El Mod anuncia la despesa; afegeix tu mateix la bonificació a la tirada.',
+        'Una despesa es rebutja quan el personatge no té prou punts. S’avisa el GM de qui ha gastat què, amb un botó Desfés.',
+        'Es guarda a "Casella de recurs de la fitxa" fa servir la casella de recurs de la fitxa que té el nom de la reserva, com ara una casella Other Resource anomenada Inspiration a la fitxa de D&D de 2014. Quan la fitxa no té cap casella amb aquest nom, o amb "Atribut", els punts es guarden en un atribut senzill, com ara inspiration_pool. La fitxa de D&D 2024 sempre fa servir l’atribut.',
+        'Canviar el nombre a la fitxa a mà no és cap problema: el marcador el segueix.',
+        'Fes clic a Reserves per canviar el nom de la reserva per defecte, posar-ne el cost i el màxim, o afegir més reserves. Les altres reserves es fan servir des del seu botó Grup, o afegint --pool i el nom de la reserva a una ordre.',
       ],
     },
     markers: {
@@ -298,6 +387,9 @@ const TRANSLATION = {
     subtitle: 'Command Deck',
     selectedDesc: 'Selecciona un o més testimonis i després fes clic.',
     partyDesc: 'Mira qui té inspiració, i tria qui és al grup.',
+    poolsTitle: 'Reserva de punts',
+    poolsDesc:
+      'Amb Seguiment a Reserva de punts: selecciona testimonis, fes clic i escriu el nombre.',
     toolsDesc: 'Menú, configuració, la macro de jugador i ajuda.',
     footer: 'Les instruccions completes són al document "{help}".',
   },

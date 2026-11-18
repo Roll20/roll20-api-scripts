@@ -8,6 +8,8 @@ const TRANSLATION = {
     settings: 'Inställningar för InspirationTracker',
     help: 'Kommandon för InspirationTracker',
     party: 'Gruppens inspiration',
+    poolParty: 'Gruppens {term}',
+    pools: 'Poängpotter',
     yours: 'Dina rollpersoner',
     status: 'Status för InspirationTracker',
   },
@@ -40,7 +42,51 @@ const TRANSLATION = {
     journal: 'Utdelningarna Hjälp och Kommandopanel har byggts om.',
     readyHint: 'Skriv {command} för menyn, eller öppna utdelningen Kommandopanel.',
   },
+  pool: {
+    gained: '{name} får {amount} {term} ({before} → {after}).',
+    spent: '{name} använder {amount} {term} ({before} → {after}).',
+    boosted: '{name} använder {amount} {term} för +{bonus} på slaget ({before} → {after}).',
+    spentBy: '{player} använde {amount} {term} åt {name}.',
+    restored: '{name} har fått tillbaka {amount} {term} ({before} → {after}).',
+    removed: '{amount} {term} togs bort från {name} ({before} → {after}).',
+    none: '{name} saknar {term}.',
+    short: '{name} har {have} {term}, och det krävs {need}.',
+    full: '{name} har redan så mycket {term} som tillåts ({max}).',
+  },
+  pools: {
+    introFlag:
+      'Spårning är satt till formulärets inspirationsruta. Sätt den till Poängpott för att göra "{name}" till den pott som Ge och Använd verkar på. Andra potter används med --pool.',
+    introPool:
+      'Ge, Använd och Förstärk verkar på "{name}". Andra potter används från sin Grupp-knapp, eller med --pool.',
+    defaultLabel: '{name} (standard)',
+    name: 'Namn',
+    source: 'Sparas i',
+    cost: 'Poäng per +1',
+    max: 'Maximum',
+    marker: 'Markör',
+    attribute: 'Attribut när formuläret saknar en ruta med det namnet: {attribute}',
+    partyTotal: 'Gruppen har totalt: {total} {term}.',
+  },
+  prompts: {
+    points: 'Poäng',
+    bonus: 'Bonus på slaget',
+    max: 'Högsta tillåtna poäng (0 för ingen gräns)',
+  },
   errors: {
+    unknownPool: 'Det finns ingen pott som heter "{value}".',
+    unknownPoolHint: 'Potter: {pools}.',
+    badAmount: '"{value}" är inte ett antal poäng.',
+    badAmountHint: 'Använd ett heltal från 1 till 9999.',
+    boostNoPool: 'Förstärk använder poäng från en pott.',
+    poolInvalid: 'En pott kan inte heta "{value}".',
+    poolExists: 'Det finns redan en pott som heter "{value}".',
+    poolFull: 'Det finns inte plats för fler potter.',
+    poolNameHint:
+      'Använd ett namn på högst 40 bokstäver, siffror och mellanslag som ingen annan pott har.',
+    poolDefault: 'Standardpotten, "{name}", kan inte tas bort. Den kan byta namn.',
+    poolMarkerHint:
+      'Välj en markör ur dina markörsamlingar som inte är den i inställningen Markör.',
+    poolSetHint: 'Skriv !inspiration pools för att se alla potter och deras inställningar.',
     denied: 'Du kan inte göra det för {name}.',
     gmOnly: 'Bara GM kan använda det kommandot.',
     gmOnlyHint: 'Spelare kan använda spend, party och help.',
@@ -91,14 +137,28 @@ const TRANSLATION = {
     refresh: 'Uppdatera',
     undo: 'Ångra',
     decline: 'Släpp den',
+    boost: 'Förstärk',
+    pools: 'Potter',
+    addPool: 'Lägg till pott',
+    deletePool: 'Ta bort pott',
   },
   values: {
     on: 'På',
     off: 'Av',
+    none: 'Ingen',
+    noLimit: 'Ingen gräns',
+    tracking: {
+      flag: 'Formulärets inspirationsruta',
+      pool: 'Poängpott',
+    },
+    source: {
+      resource: 'Formulärets resursruta',
+      attribute: 'Attribut',
+    },
     wording: {
-      auto: 'Från formuläret',
       2014: 'Inspiration (2014)',
       2024: 'Heroisk inspiration (2024)',
+      auto: 'Från formuläret',
     },
     announce: {
       public: 'Alla',
@@ -110,6 +170,10 @@ const TRANSLATION = {
     language: {
       label: 'Språk',
       desc: 'Språk för menyer, meddelanden och utdelningar.',
+    },
+    tracking: {
+      label: 'Spårning',
+      desc: 'Vad Ge och Använd verkar på: inspirationsrutan på D&D-formulären, som en rollperson antingen har eller inte har, eller en pott med poäng som byggs upp och används några åt gången.',
     },
     marker: {
       label: 'Markör',
@@ -151,6 +215,8 @@ const TRANSLATION = {
     none: 'Rollpersoner utan inspirationsruta',
     rules2024: 'Använder 2024 års regler',
     party: 'Gruppmedlemmar',
+    tracking: 'Spårning',
+    pools: 'Potter',
     marker: 'Markör',
     fx: 'Specialeffekt',
     legacyCommand: 'Gammalt kommando',
@@ -166,6 +232,15 @@ const TRANSLATION = {
       'Visar vem i gruppen som har inspiration, med knappar för att ge, ta bort eller använda den.',
     partyEdit: 'Lägger till de markerade rollpersonerna i gruppen, eller tar bort dem ur den.',
     ids: 'Arbetar på de angivna token- eller rollperson-ID:na i stället för de markerade tokens.',
+    points:
+      'Med en poängpott: ger, tar bort eller använder så många poäng. Utan tal, 1. remove all tar alla poäng.',
+    boost:
+      'Med en poängpott: använder poäng för att lägga den bonusen på ett slag, till pottens kostnad för varje +1.',
+    poolFlag: 'Verkar på den namngivna potten i stället för standardpotten.',
+    pools: 'Visar poängpotterna och deras inställningar.',
+    poolEdit: 'Lägger till en pott, eller tar bort en. Poängen på formulären lämnas som de är.',
+    poolSet:
+      'Ändrar en pott: dess namn, var den sparas (resource eller attribute), poängen varje +1 kostar, högsta tillåtna poäng (0 för ingen gräns) eller dess tokenmarkör.',
     undo: 'Ger tillbaka inspiration som använts. ID:t kommer från meddelandet till GM om användningen.',
     macro:
       'Lägger till token-åtgärden "Inspiration", som spelarna klickar på för att använda inspiration.',
@@ -179,12 +254,13 @@ const TRANSLATION = {
   helpPlayer: {
     menu: 'Visar dina rollpersoner och om de har inspiration.',
     spend: 'Använder inspiration för den markerade rollpersonen.',
+    boost: 'Använder poäng från en pott för att lägga den bonusen på ett slag.',
     party: 'Visar gruppen, om GM tillåter det.',
     help: 'Visar den här listan.',
   },
   handout: {
     versionLabel: 'Version',
-    subtitle: 'Inspiration och Heroisk inspiration för D&D 5e-formulären 2014 och 2024',
+    subtitle: 'Inspiration, Heroisk inspiration och poängpotter för alla spel',
     overview: {
       heading: 'Översikt',
       body: 'InspirationTracker håller D&D-inspiration i takt på rollformuläret, token och i chatten. Ge den från menyn, formuläret eller tokenmarkören, så visar alla tokens för den rollpersonen markören. Spelare kan använda den med ett klick, och GM meddelas, med en Ångra-knapp. Det fungerar med D&D 2024-formuläret, där det kallas Heroisk inspiration, och med 2014 OGL-formuläret.',
@@ -236,6 +312,18 @@ const TRANSLATION = {
         'Gruppen är alla rollpersoner som en spelare styr. Markera tokens och klicka på Lägg till i grupp eller Ta bort ur grupp för att ändra den.',
         'GM:s översikt har knapparna Ge, Ta bort och Använd för varje medlem.',
         'Slå på Spelare ser gruppen för att låta spelarna också se översikten. De får bara Använd-knappar för sina egna rollpersoner.',
+      ],
+    },
+    pools: {
+      heading: 'Poängpotter',
+      points: [
+        'En poängpott är ett tal som byggs upp och används några åt gången: en pott med inspirationspoäng, hjältepoäng, tur, bennies och liknande. Den fungerar med alla rollformulär.',
+        'Sätt Spårning till Poängpott, så verkar Ge, Ta bort och Använd på standardpotten och frågar hur många poäng. Markören visas så länge rollpersonen har några poäng.',
+        'Förstärk använder poäng för att höja ett slag: skriv den bonus du vill ha, så avgör pottens Poäng per +1 kostnaden. Med 2 poäng per +1 kostar en bonus på 4 alltså 8 poäng. Mod meddelar användningen; lägg själv bonusen på slaget.',
+        'En användning nekas när rollpersonen inte har tillräckligt med poäng. GM får veta vem som använde vad, med en Ångra-knapp.',
+        'Sparas i "Formulärets resursruta" använder den resursruta på formuläret som har pottens namn, till exempel en Other Resource-ruta med namnet Inspiration på D&D 2014-formuläret. När formuläret inte har någon ruta med det namnet, eller med "Attribut", sparas poängen i ett vanligt attribut, till exempel inspiration_pool. D&D 2024-formuläret använder alltid attributet.',
+        'Det går bra att ändra talet på formuläret för hand: markören följer med.',
+        'Klicka på Potter för att byta namn på standardpotten, sätta dess kostnad och maximum, eller lägga till fler potter. Andra potter används från sin Grupp-knapp, eller genom att lägga till --pool och pottens namn i ett kommando.',
       ],
     },
     markers: {
@@ -299,6 +387,8 @@ const TRANSLATION = {
     subtitle: 'Kommandopanel',
     selectedDesc: 'Markera en eller flera tokens och klicka sedan.',
     partyDesc: 'Se vem som har inspiration, och välj vilka som är med i gruppen.',
+    poolsTitle: 'Poängpott',
+    poolsDesc: 'Med Spårning satt till Poängpott: markera tokens, klicka och skriv antalet.',
     toolsDesc: 'Meny, inställningar, spelarmakrot och hjälp.',
     footer: 'Fullständiga instruktioner finns i utdelningen "{help}".',
   },

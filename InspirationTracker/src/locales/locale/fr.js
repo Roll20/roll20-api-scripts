@@ -8,6 +8,8 @@ const TRANSLATION = {
     settings: "Paramètres d'InspirationTracker",
     help: "Commandes d'InspirationTracker",
     party: 'Inspiration du groupe',
+    poolParty: '{term} du groupe',
+    pools: 'Réserves de points',
     yours: 'Vos personnages',
     status: "État d'InspirationTracker",
   },
@@ -40,7 +42,52 @@ const TRANSLATION = {
     journal: "Documents d'aide et Command Deck reconstruits.",
     readyHint: 'Tapez {command} pour le menu, ou ouvrez le document Command Deck.',
   },
+  pool: {
+    gained: '{name} gagne {amount} {term} ({before} → {after}).',
+    spent: '{name} dépense {amount} {term} ({before} → {after}).',
+    boosted: '{name} dépense {amount} {term} pour +{bonus} au jet ({before} → {after}).',
+    spentBy: '{player} a dépensé {amount} {term} pour {name}.',
+    restored: '{name} récupère {amount} {term} ({before} → {after}).',
+    removed: '{amount} {term} en moins pour {name} ({before} → {after}).',
+    none: "{name} n'a aucun point ({term}).",
+    short: '{name} a {have} {term}, et il en faut {need}.',
+    full: '{name} a déjà le maximum autorisé ({term} : {max}).',
+  },
+  pools: {
+    introFlag:
+      "Le suivi est réglé sur la case d'inspiration de la fiche. Réglez-le sur Réserve de points pour que Donner et Dépenser agissent sur la réserve « {name} ». Les autres réserves s'utilisent avec --pool.",
+    introPool:
+      "Donner, Dépenser et Renforcer agissent sur « {name} ». Les autres réserves s'utilisent depuis leur bouton Groupe, ou avec --pool.",
+    defaultLabel: '{name} (par défaut)',
+    name: 'Nom',
+    source: 'Conservé dans',
+    cost: 'Points par +1',
+    max: 'Maximum',
+    marker: 'Marqueur',
+    attribute: "Attribut quand la fiche n'a pas de case portant ce nom : {attribute}",
+    partyTotal: 'Total du groupe : {total} {term}.',
+  },
+  prompts: {
+    points: 'Points',
+    bonus: 'Bonus au jet',
+    max: 'Maximum de points autorisé (0 pour aucune limite)',
+  },
   errors: {
+    unknownPool: "Il n'existe aucune réserve nommée « {value} ».",
+    unknownPoolHint: 'Réserves : {pools}.',
+    badAmount: "« {value} » n'est pas un nombre de points.",
+    badAmountHint: 'Utilisez un nombre entier de 1 à 9999.',
+    boostNoPool: "Renforcer dépense des points d'une réserve.",
+    poolInvalid: "Une réserve ne peut pas s'appeler « {value} ».",
+    poolExists: 'Il existe déjà une réserve nommée « {value} ».',
+    poolFull: "Il n'y a plus de place pour une autre réserve.",
+    poolNameHint:
+      "Utilisez un nom de 40 lettres, chiffres et espaces au plus, qu'aucune autre réserve ne porte.",
+    poolDefault:
+      'La réserve par défaut, « {name} », ne peut pas être supprimée. Elle peut être renommée.',
+    poolMarkerHint:
+      'Choisissez dans vos jeux de marqueurs un marqueur autre que celui du paramètre Marqueur.',
+    poolSetHint: 'Tapez !inspiration pools pour voir chaque réserve et ses paramètres.',
     denied: 'Vous ne pouvez pas faire cela pour {name}.',
     gmOnly: 'Seul le MJ peut utiliser cette commande.',
     gmOnlyHint: 'Les joueurs peuvent utiliser spend, party et help.',
@@ -91,14 +138,28 @@ const TRANSLATION = {
     refresh: 'Actualiser',
     undo: 'Annuler',
     decline: 'Y renoncer',
+    boost: 'Renforcer',
+    pools: 'Réserves',
+    addPool: 'Ajouter une réserve',
+    deletePool: 'Supprimer la réserve',
   },
   values: {
     on: 'Activé',
     off: 'Désactivé',
+    none: 'Aucun',
+    noLimit: 'Aucune limite',
+    tracking: {
+      flag: "Case d'inspiration de la fiche",
+      pool: 'Réserve de points',
+    },
+    source: {
+      resource: 'Case de ressource de la fiche',
+      attribute: 'Attribut',
+    },
     wording: {
-      auto: 'Selon la fiche',
       2014: 'Inspiration (2014)',
       2024: 'Inspiration héroïque (2024)',
+      auto: 'Selon la fiche',
     },
     announce: {
       public: 'Tout le monde',
@@ -110,6 +171,10 @@ const TRANSLATION = {
     language: {
       label: 'Langue',
       desc: 'Langue des menus, des messages et des documents.',
+    },
+    tracking: {
+      label: 'Suivi',
+      desc: "Ce sur quoi agissent Donner et Dépenser : la case d'inspiration des fiches D&D, qu'un personnage a ou n'a pas, ou une réserve de points qui s'accumule et se dépense quelques points à la fois.",
     },
     marker: {
       label: 'Marqueur',
@@ -151,6 +216,8 @@ const TRANSLATION = {
     none: "Personnages sans case d'inspiration",
     rules2024: 'Règles 2024 utilisées',
     party: 'Membres du groupe',
+    tracking: 'Suivi',
+    pools: 'Réserves',
     marker: 'Marqueur',
     fx: 'Effet spécial',
     legacyCommand: 'Ancienne commande',
@@ -166,6 +233,16 @@ const TRANSLATION = {
       "Affiche qui, dans le groupe, a l'inspiration, avec des boutons pour la donner, la retirer ou la dépenser.",
     partyEdit: 'Ajoute les personnages sélectionnés au groupe, ou les en retire.',
     ids: 'Agit sur les ID de jetons ou de personnages indiqués au lieu des jetons sélectionnés.',
+    points:
+      'Avec une réserve de points : donne, retire ou dépense ce nombre de points. Sans nombre, 1. remove all retire tous les points.',
+    boost:
+      'Avec une réserve de points : dépense des points pour ajouter ce bonus à un jet, au coût de la réserve pour chaque +1.',
+    poolFlag: 'Agit sur la réserve nommée au lieu de la réserve par défaut.',
+    pools: 'Affiche les réserves de points et leurs paramètres.',
+    poolEdit:
+      'Ajoute une réserve, ou en supprime une. Les points sur les fiches restent tels quels.',
+    poolSet:
+      "Modifie une réserve : son nom, l'endroit où elle est conservée (resource ou attribute), les points que coûte chaque +1, le maximum de points autorisé (0 pour aucune limite), ou son marqueur de jeton.",
     undo: "Rend une inspiration dépensée. L'ID figure dans le message envoyé au MJ lors de la dépense.",
     macro:
       "Ajoute l'action de jeton « Inspiration », sur laquelle les joueurs cliquent pour dépenser l'inspiration.",
@@ -179,12 +256,13 @@ const TRANSLATION = {
   helpPlayer: {
     menu: "Affiche vos personnages et indique s'ils ont l'inspiration.",
     spend: "Dépense l'inspiration du personnage sélectionné.",
+    boost: "Dépense des points d'une réserve pour ajouter ce bonus à un jet.",
     party: "Affiche le groupe, si le MJ l'autorise.",
     help: 'Affiche cette liste.',
   },
   handout: {
     versionLabel: 'Version',
-    subtitle: 'Inspiration et Inspiration héroïque pour les fiches D&D 5e 2014 et 2024',
+    subtitle: 'Inspiration, Inspiration héroïque et réserves de points pour tous les jeux',
     overview: {
       heading: 'Présentation',
       body: "InspirationTracker synchronise l'inspiration D&D entre la fiche de personnage, le jeton et le chat. Donnez-la depuis le menu, la fiche ou le marqueur de jeton, et tous les jetons de ce personnage affichent le marqueur. Les joueurs peuvent la dépenser en un clic, et le MJ est prévenu, avec un bouton Annuler. Il fonctionne avec la fiche D&D 2024, où elle s'appelle Inspiration héroïque, et avec la fiche OGL 2014.",
@@ -236,6 +314,18 @@ const TRANSLATION = {
         'Le groupe comprend tous les personnages contrôlés par un joueur. Sélectionnez des jetons et cliquez sur Ajouter au groupe ou Retirer du groupe pour le modifier.',
         "La vue d'ensemble du MJ propose des boutons Donner, Retirer et Dépenser pour chaque membre.",
         "Activez Groupe visible des joueurs pour que les joueurs voient aussi la vue d'ensemble. Ils n'ont des boutons Dépenser que pour leurs propres personnages.",
+      ],
+    },
+    pools: {
+      heading: 'Réserves de points',
+      points: [
+        "Une réserve de points est un nombre qui s'accumule et se dépense quelques points à la fois : une réserve de points d'inspiration, de points d'héroïsme, de chance, de bennies, etc. Elle fonctionne avec n'importe quelle fiche de personnage.",
+        "Réglez Suivi sur Réserve de points, et Donner, Retirer et Dépenser agissent sur la réserve par défaut en demandant combien de points. Le marqueur s'affiche tant qu'un personnage a au moins un point.",
+        'Renforcer dépense des points pour augmenter un jet : tapez le bonus voulu, et les Points par +1 de la réserve fixent le coût. À 2 points par +1, un bonus de 4 coûte 8 points. Le Mod annonce la dépense ; ajoutez vous-même le bonus au jet.',
+        "Une dépense est refusée quand le personnage n'a pas assez de points. Le MJ est informé de qui a dépensé quoi, avec un bouton Annuler.",
+        "Conservé dans « Case de ressource de la fiche » utilise la case de ressource de la fiche qui porte le nom de la réserve, par exemple une case Other Resource nommée Inspiration sur la fiche D&D 2014. Quand la fiche n'a pas de case portant ce nom, ou avec « Attribut », les points sont conservés dans un simple attribut, par exemple inspiration_pool. La fiche D&D 2024 utilise toujours l'attribut.",
+        'Modifier le nombre à la main sur la fiche ne pose aucun problème : le marqueur suit.',
+        "Cliquez sur Réserves pour renommer la réserve par défaut, régler son coût et son maximum, ou ajouter d'autres réserves. Les autres réserves s'utilisent depuis leur bouton Groupe, ou en ajoutant --pool et le nom de la réserve à une commande.",
       ],
     },
     markers: {
@@ -298,6 +388,9 @@ const TRANSLATION = {
     subtitle: 'Command Deck',
     selectedDesc: 'Sélectionnez un ou plusieurs jetons, puis cliquez.',
     partyDesc: "Voyez qui a l'inspiration, et choisissez qui fait partie du groupe.",
+    poolsTitle: 'Réserve de points',
+    poolsDesc:
+      'Avec Suivi réglé sur Réserve de points : sélectionnez des jetons, cliquez et tapez le nombre.',
     toolsDesc: 'Menu, paramètres, macro joueurs et aide.',
     footer: 'Les instructions complètes sont dans le document « {help} ».',
   },

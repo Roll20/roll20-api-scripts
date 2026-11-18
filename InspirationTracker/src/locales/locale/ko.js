@@ -8,6 +8,8 @@ const TRANSLATION = {
     settings: 'InspirationTracker 설정',
     help: 'InspirationTracker 명령어',
     party: '파티 영감',
+    poolParty: '파티 {term}',
+    pools: '포인트 풀',
     yours: '내 캐릭터',
     status: 'InspirationTracker 상태',
   },
@@ -40,7 +42,50 @@ const TRANSLATION = {
     journal: '도움말과 명령 데크 핸드아웃을 다시 만들었습니다.',
     readyHint: '메뉴를 보려면 {command}을(를) 입력하거나 명령 데크 핸드아웃을 여세요.',
   },
+  pool: {
+    gained: '{name}: {term} {amount} 획득 ({before} → {after}).',
+    spent: '{name}: {term} {amount} 사용 ({before} → {after}).',
+    boosted: '{name}: {term} {amount} 사용, 굴림에 +{bonus} ({before} → {after}).',
+    spentBy: '{player} 님이 {name}의 {term}을(를) {amount}만큼 사용했습니다.',
+    restored: '{name}: {term} {amount} 복구 ({before} → {after}).',
+    removed: '{name}: {term} {amount} 회수 ({before} → {after}).',
+    none: '{name}에게는 {term}이(가) 없습니다.',
+    short: '{name}: {term} {have} 보유, {need} 필요.',
+    full: '{name}은(는) 이미 {term}을(를) 최대치({max})까지 가지고 있습니다.',
+  },
+  pools: {
+    introFlag:
+      '추적 대상이 시트의 영감 칸으로 설정되어 있습니다. 포인트 풀로 바꾸면 주기와 사용이 "{name}" 풀에 적용됩니다. 다른 풀은 --pool로 사용합니다.',
+    introPool:
+      '주기, 사용, 부스트는 "{name}"에 적용됩니다. 다른 풀은 각 풀의 파티 버튼이나 --pool로 사용합니다.',
+    defaultLabel: '{name} (기본)',
+    name: '이름',
+    source: '저장 위치',
+    cost: '+1당 포인트',
+    max: '최대치',
+    marker: '마커',
+    attribute: '시트에 이 이름의 칸이 없을 때 쓰는 속성: {attribute}',
+    partyTotal: '파티 합계: {term} {total}.',
+  },
+  prompts: {
+    points: '포인트',
+    bonus: '굴림 보너스',
+    max: '포인트 최대치 (0은 제한 없음)',
+  },
   errors: {
+    unknownPool: '"{value}"(이)라는 풀이 없습니다.',
+    unknownPoolHint: '풀: {pools}.',
+    badAmount: '"{value}"은(는) 포인트 수가 아닙니다.',
+    badAmountHint: '1에서 9999 사이의 정수를 사용하세요.',
+    boostNoPool: '부스트는 풀의 포인트를 사용합니다.',
+    poolInvalid: '풀 이름을 "{value}"(으)로 지을 수 없습니다.',
+    poolExists: '"{value}"(이)라는 풀이 이미 있습니다.',
+    poolFull: '풀을 더 추가할 자리가 없습니다.',
+    poolNameHint:
+      '글자, 숫자, 공백으로 된 40자 이내의 이름 중 다른 풀이 쓰지 않는 이름을 사용하세요.',
+    poolDefault: '기본 풀 "{name}"은(는) 삭제할 수 없습니다. 이름은 바꿀 수 있습니다.',
+    poolMarkerHint: '마커 세트에서 마커 설정에 쓰인 것과 다른 마커를 고르세요.',
+    poolSetHint: '!inspiration pools를 입력하면 모든 풀과 그 설정을 볼 수 있습니다.',
     denied: '{name}에 대해서는 그 작업을 할 수 없습니다.',
     gmOnly: '그 명령어는 GM만 사용할 수 있습니다.',
     gmOnlyHint: '플레이어는 spend, party, help를 사용할 수 있습니다.',
@@ -90,14 +135,28 @@ const TRANSLATION = {
     refresh: '새로 고침',
     undo: '되돌리기',
     decline: '포기',
+    boost: '부스트',
+    pools: '풀',
+    addPool: '풀 추가',
+    deletePool: '풀 삭제',
   },
   values: {
     on: '켜짐',
     off: '꺼짐',
+    none: '없음',
+    noLimit: '제한 없음',
+    tracking: {
+      flag: '시트의 영감 칸',
+      pool: '포인트 풀',
+    },
+    source: {
+      resource: '시트의 자원 칸',
+      attribute: '속성',
+    },
     wording: {
-      auto: '시트 따름',
       2014: '영감 (2014)',
       2024: '영웅적 영감 (2024)',
+      auto: '시트 따름',
     },
     announce: {
       public: '모두',
@@ -109,6 +168,10 @@ const TRANSLATION = {
     language: {
       label: '언어',
       desc: '메뉴, 메시지, 핸드아웃의 언어입니다.',
+    },
+    tracking: {
+      label: '추적 대상',
+      desc: '주기와 사용이 적용되는 대상입니다. 캐릭터가 가지고 있거나 없거나 둘 중 하나인 D&D 시트의 영감 칸, 또는 쌓였다가 조금씩 사용하는 포인트 풀 중에서 고릅니다.',
     },
     marker: {
       label: '마커',
@@ -150,6 +213,8 @@ const TRANSLATION = {
     none: '영감 칸이 없는 캐릭터',
     rules2024: '2024 규칙 사용',
     party: '파티원',
+    tracking: '추적 대상',
+    pools: '풀',
     marker: '마커',
     fx: '특수 효과',
     legacyCommand: '예전 명령어',
@@ -163,6 +228,15 @@ const TRANSLATION = {
     party: '파티에서 누가 영감을 가졌는지 주기, 회수, 사용 버튼과 함께 보여 줍니다.',
     partyEdit: '선택한 캐릭터를 파티에 추가하거나 파티에서 제외합니다.',
     ids: '선택한 토큰 대신 지정한 토큰 또는 캐릭터 ID에 적용합니다.',
+    points:
+      '포인트 풀 사용 시: 그 수만큼 포인트를 주거나 회수하거나 사용합니다. 숫자가 없으면 1입니다. remove all은 모든 포인트를 회수합니다.',
+    boost:
+      '포인트 풀 사용 시: 포인트를 사용해 그 보너스를 굴림에 더합니다. +1마다 풀에 정해진 비용이 듭니다.',
+    poolFlag: '기본 풀 대신 지정한 이름의 풀에 적용합니다.',
+    pools: '포인트 풀과 그 설정을 보여 줍니다.',
+    poolEdit: '풀을 추가하거나 삭제합니다. 시트의 포인트는 그대로 둡니다.',
+    poolSet:
+      '풀을 변경합니다: 이름, 저장 위치(resource 또는 attribute), +1당 포인트, 포인트 최대치(0은 제한 없음), 토큰 마커.',
     undo: '사용한 영감을 되돌려 줍니다. ID는 사용에 관한 GM 메시지에 있습니다.',
     macro: '"Inspiration" 토큰 액션을 추가합니다. 플레이어는 이것을 클릭해 영감을 사용합니다.',
     sync: '모든 시트를 다시 읽고 마커를 바로잡습니다.',
@@ -175,12 +249,13 @@ const TRANSLATION = {
   helpPlayer: {
     menu: '내 캐릭터와 각 캐릭터의 영감 보유 여부를 보여 줍니다.',
     spend: '선택한 캐릭터의 영감을 사용합니다.',
+    boost: '풀의 포인트를 사용해 그 보너스를 굴림에 더합니다.',
     party: 'GM이 허용하면 파티를 보여 줍니다.',
     help: '이 목록을 보여 줍니다.',
   },
   handout: {
     versionLabel: '버전',
-    subtitle: 'D&D 5e 2014 및 2024 시트용 영감과 영웅적 영감',
+    subtitle: '모든 게임을 위한 영감, 영웅적 영감, 포인트 풀',
     overview: {
       heading: '개요',
       body: 'InspirationTracker는 D&D 영감을 캐릭터 시트, 토큰, 채팅에서 항상 일치시킵니다. 메뉴, 시트, 토큰 마커 중 어디서 주어도 그 캐릭터의 모든 토큰에 마커가 표시됩니다. 플레이어는 클릭 한 번으로 사용할 수 있고, GM에게는 되돌리기 버튼과 함께 알림이 갑니다. 영웅적 영감이라고 부르는 D&D 2024 시트와 2014 OGL 시트 모두에서 작동합니다.',
@@ -232,6 +307,18 @@ const TRANSLATION = {
         '파티는 플레이어가 조종하는 모든 캐릭터입니다. 토큰을 선택하고 파티에 추가 또는 파티에서 제외를 클릭해 바꿀 수 있습니다.',
         'GM의 개요에는 파티원마다 주기, 회수, 사용 버튼이 있습니다.',
         '플레이어 파티 보기를 켜면 플레이어도 개요를 볼 수 있습니다. 사용 버튼은 자신의 캐릭터에만 표시됩니다.',
+      ],
+    },
+    pools: {
+      heading: '포인트 풀',
+      points: [
+        '포인트 풀은 쌓였다가 조금씩 사용하는 숫자입니다. 영감 포인트, 히어로 포인트, 행운, bennies 같은 것들의 풀입니다. 어떤 캐릭터 시트와도 작동합니다.',
+        '추적 대상을 포인트 풀로 설정하면 주기, 회수, 사용이 기본 풀에 적용되며 포인트 수를 묻습니다. 캐릭터에게 포인트가 있는 동안 마커가 표시됩니다.',
+        '부스트는 포인트를 사용해 굴림을 높입니다. 원하는 보너스를 입력하면 풀의 +1당 포인트에 따라 비용이 정해집니다. +1당 2포인트라면 보너스 4에는 8포인트가 듭니다. Mod는 사용을 알리기만 하므로 보너스는 직접 굴림에 더하세요.',
+        '캐릭터의 포인트가 모자라면 사용이 거부됩니다. GM에게는 누가 무엇을 사용했는지 되돌리기 버튼과 함께 알림이 갑니다.',
+        '저장 위치가 "시트의 자원 칸"이면 시트에서 풀과 같은 이름을 가진 자원 칸을 사용합니다. 예를 들어 2014 D&D 시트에서 Inspiration이라고 이름 붙인 Other Resource 칸입니다. 시트에 그 이름의 칸이 없거나 저장 위치가 "속성"이면 포인트는 inspiration_pool 같은 일반 속성에 저장됩니다. D&D 2024 시트는 항상 속성을 사용합니다.',
+        '시트의 숫자를 직접 바꿔도 괜찮습니다. 마커가 따라 바뀝니다.',
+        '풀을 클릭하면 기본 풀의 이름을 바꾸고, 비용과 최대치를 정하고, 풀을 더 추가할 수 있습니다. 다른 풀은 각 풀의 파티 버튼으로, 또는 명령어에 --pool과 풀 이름을 덧붙여 사용합니다.',
       ],
     },
     markers: {
@@ -294,6 +381,8 @@ const TRANSLATION = {
     subtitle: '명령 데크',
     selectedDesc: '토큰을 하나 이상 선택한 뒤 클릭하세요.',
     partyDesc: '누가 영감을 가졌는지 보고, 파티에 누구를 넣을지 고릅니다.',
+    poolsTitle: '포인트 풀',
+    poolsDesc: '추적 대상이 포인트 풀일 때: 토큰을 선택하고 클릭한 뒤 숫자를 입력하세요.',
     toolsDesc: '메뉴, 설정, 플레이어 매크로, 도움말.',
     footer: '자세한 설명은 "{help}" 핸드아웃에 있습니다.',
   },

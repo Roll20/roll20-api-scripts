@@ -8,6 +8,8 @@ const TRANSLATION = {
     settings: 'InspirationTracker-indstillinger',
     help: 'InspirationTracker-kommandoer',
     party: 'Gruppens inspiration',
+    poolParty: 'Gruppens {term}',
+    pools: 'Pointpuljer',
     yours: 'Dine figurer',
     status: 'InspirationTracker-status',
   },
@@ -40,7 +42,50 @@ const TRANSLATION = {
     journal: 'Hjælp- og Command Deck-dokumenterne er genopbygget.',
     readyHint: 'Skriv {command} for menuen, eller åbn Command Deck-dokumentet.',
   },
+  pool: {
+    gained: '{name} får {amount} {term} ({before} → {after}).',
+    spent: '{name} bruger {amount} {term} ({before} → {after}).',
+    boosted: '{name} bruger {amount} {term} for +{bonus} til slaget ({before} → {after}).',
+    spentBy: '{player} brugte {amount} {term} for {name}.',
+    restored: '{name} har fået {amount} {term} tilbage ({before} → {after}).',
+    removed: '{amount} {term} er fjernet fra {name} ({before} → {after}).',
+    none: '{name} har ingen {term}.',
+    short: '{name} har {have} {term}, og det kræver {need}.',
+    full: '{name} har allerede det højeste tilladte antal {term} ({max}).',
+  },
+  pools: {
+    introFlag:
+      'Sporing er sat til arkets inspirationsfelt. Sæt den til Pointpulje for at gøre "{name}" til den pulje, som Giv og Brug virker på. Andre puljer bruges med --pool.',
+    introPool:
+      'Giv, Brug og Boost virker på "{name}". Andre puljer bruges fra deres Gruppe-knap eller med --pool.',
+    defaultLabel: '{name} (standard)',
+    name: 'Navn',
+    source: 'Gemmes i',
+    cost: 'Point pr. +1',
+    max: 'Maksimum',
+    marker: 'Markør',
+    attribute: 'Attribut, når arket ikke har et felt med dette navn: {attribute}',
+    partyTotal: 'Gruppen i alt: {total} {term}.',
+  },
+  prompts: {
+    points: 'Point',
+    bonus: 'Bonus til slaget',
+    max: 'Højeste tilladte antal point (0 for ingen grænse)',
+  },
   errors: {
+    unknownPool: 'Der findes ingen pulje ved navn "{value}".',
+    unknownPoolHint: 'Puljer: {pools}.',
+    badAmount: '"{value}" er ikke et antal point.',
+    badAmountHint: 'Brug et helt tal fra 1 til 9999.',
+    boostNoPool: 'Boost bruger point fra en pulje.',
+    poolInvalid: 'En pulje kan ikke hedde "{value}".',
+    poolExists: 'Der findes allerede en pulje ved navn "{value}".',
+    poolFull: 'Der er ikke plads til endnu en pulje.',
+    poolNameHint:
+      'Brug et navn på op til 40 bogstaver, cifre og mellemrum, som ingen anden pulje har.',
+    poolDefault: 'Standardpuljen, "{name}", kan ikke slettes. Den kan omdøbes.',
+    poolMarkerHint: 'Vælg en markør fra dine markørsæt, som ikke er den i indstillingen Markør.',
+    poolSetHint: 'Skriv !inspiration pools for at se alle puljer og deres indstillinger.',
     denied: 'Det kan du ikke gøre for {name}.',
     gmOnly: 'Kun GM kan bruge den kommando.',
     gmOnlyHint: 'Spillere kan bruge spend, party og help.',
@@ -90,14 +135,28 @@ const TRANSLATION = {
     refresh: 'Opdater',
     undo: 'Fortryd',
     decline: 'Lad den gå',
+    boost: 'Boost',
+    pools: 'Puljer',
+    addPool: 'Tilføj pulje',
+    deletePool: 'Slet pulje',
   },
   values: {
     on: 'Til',
     off: 'Fra',
+    none: 'Ingen',
+    noLimit: 'Ingen grænse',
+    tracking: {
+      flag: 'Arkets inspirationsfelt',
+      pool: 'Pointpulje',
+    },
+    source: {
+      resource: 'Arkets ressourcefelt',
+      attribute: 'Attribut',
+    },
     wording: {
-      auto: 'Fra arket',
       2014: 'Inspiration (2014)',
       2024: 'Heroisk inspiration (2024)',
+      auto: 'Fra arket',
     },
     announce: {
       public: 'Alle',
@@ -109,6 +168,10 @@ const TRANSLATION = {
     language: {
       label: 'Sprog',
       desc: 'Sprog for menuer, beskeder og dokumenter.',
+    },
+    tracking: {
+      label: 'Sporing',
+      desc: 'Hvad Giv og Brug virker på: inspirationsfeltet på D&D-arkene, som en figur enten har eller ikke har, eller en pulje af point, der bygges op og bruges nogle få ad gangen.',
     },
     marker: {
       label: 'Markør',
@@ -150,6 +213,8 @@ const TRANSLATION = {
     none: 'Figurer uden inspirationsfelt',
     rules2024: 'Bruger 2024-regler',
     party: 'Gruppemedlemmer',
+    tracking: 'Sporing',
+    pools: 'Puljer',
     marker: 'Markør',
     fx: 'Specialeffekt',
     legacyCommand: 'Gammel kommando',
@@ -164,6 +229,15 @@ const TRANSLATION = {
       'Viser, hvem i gruppen der har inspiration, med knapper til at give, fjerne eller bruge den.',
     partyEdit: 'Føjer de valgte figurer til gruppen eller fjerner dem.',
     ids: 'Virker på de angivne brik- eller figur-ID’er i stedet for de valgte brikker.',
+    points:
+      'Med en pointpulje: giver, fjerner eller bruger så mange point. Uden et tal, 1. remove all fjerner alle point.',
+    boost:
+      'Med en pointpulje: bruger point på at lægge den bonus til et slag, til puljens pris for hver +1.',
+    poolFlag: 'Virker på den navngivne pulje i stedet for standardpuljen.',
+    pools: 'Viser pointpuljerne og deres indstillinger.',
+    poolEdit: 'Tilføjer en pulje eller sletter en. Pointene på arkene lades, som de er.',
+    poolSet:
+      'Ændrer en pulje: dens navn, hvor den gemmes (resource eller attribute), hvor mange point hver +1 koster, det højeste tilladte antal point (0 for ingen grænse) eller dens brikmarkør.',
     undo: 'Giver brugt inspiration tilbage. ID’et kommer fra GM-beskeden om brugen.',
     macro:
       'Tilføjer brikhandlingen "Inspiration", som spillerne klikker på for at bruge inspiration.',
@@ -177,12 +251,13 @@ const TRANSLATION = {
   helpPlayer: {
     menu: 'Viser dine figurer, og om de har inspiration.',
     spend: 'Bruger inspiration for den valgte figur.',
+    boost: 'Bruger point fra en pulje på at lægge den bonus til et slag.',
     party: 'Viser gruppen, hvis GM tillader det.',
     help: 'Viser denne liste.',
   },
   handout: {
     versionLabel: 'Version',
-    subtitle: 'Inspiration og Heroisk inspiration til D&D 5e 2014- og 2024-arkene',
+    subtitle: 'Inspiration, Heroisk inspiration og pointpuljer til ethvert spil',
     overview: {
       heading: 'Oversigt',
       body: 'InspirationTracker holder D&D-inspiration i takt på figurarket, brikken og i chatten. Giv den fra menuen, arket eller brikmarkøren, og alle brikker for den figur viser markøren. Spillere kan bruge den med ét klik, og GM får besked, med en Fortryd-knap. Den virker med D&D 2024-arket, hvor den hedder Heroisk inspiration, og med 2014 OGL-arket.',
@@ -234,6 +309,18 @@ const TRANSLATION = {
         'Gruppen er alle figurer, som en spiller styrer. Vælg brikker og klik på Føj til gruppe eller Fjern fra gruppe for at ændre den.',
         'GM’s oversigt har Giv-, Fjern- og Brug-knapper for hvert medlem.',
         'Slå Spillere ser gruppen til for også at lade spillerne se oversigten. De får kun Brug-knapper for deres egne figurer.',
+      ],
+    },
+    pools: {
+      heading: 'Pointpuljer',
+      points: [
+        'En pointpulje er et tal, der bygges op og bruges nogle få ad gangen: en pulje af inspirationspoint, heltepoint, held, bennies og lignende. Den virker med ethvert figurark.',
+        'Sæt Sporing til Pointpulje, så virker Giv, Fjern og Brug på standardpuljen og spørger, hvor mange point. Markøren vises, så længe en figur har point.',
+        'Boost bruger point på at hæve et slag: skriv den ønskede bonus, og puljens Point pr. +1 afgør prisen. Ved 2 point pr. +1 koster en bonus på 4 i alt 8 point. Mod’en meddeler forbruget; læg selv bonussen til slaget.',
+        'Et forbrug afvises, når figuren ikke har point nok. GM får besked om, hvem der brugte hvad, med en Fortryd-knap.',
+        'Gemmes i "Arkets ressourcefelt" bruger det ressourcefelt på arket, der har puljens navn, fx et Other Resource-felt ved navn Inspiration på 2014 D&D-arket. Når arket ikke har et felt med det navn, eller med "Attribut", gemmes pointene i en almindelig attribut, fx inspiration_pool. D&D 2024-arket bruger altid attributten.',
+        'Det er fint at ændre tallet på arket i hånden: markøren følger med.',
+        'Klik på Puljer for at omdøbe standardpuljen, sætte dens pris og maksimum eller tilføje flere puljer. Andre puljer bruges fra deres Gruppe-knap eller ved at føje --pool og puljens navn til en kommando.',
       ],
     },
     markers: {
@@ -296,6 +383,8 @@ const TRANSLATION = {
     subtitle: 'Command Deck',
     selectedDesc: 'Vælg en eller flere brikker, og klik derefter.',
     partyDesc: 'Se, hvem der har inspiration, og vælg, hvem der er i gruppen.',
+    poolsTitle: 'Pointpulje',
+    poolsDesc: 'Med Sporing sat til Pointpulje: vælg brikker, klik, og skriv tallet.',
     toolsDesc: 'Menu, indstillinger, spillermakroen og hjælp.',
     footer: 'Den fulde vejledning findes i dokumentet "{help}".',
   },

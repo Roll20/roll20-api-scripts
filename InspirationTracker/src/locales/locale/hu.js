@@ -8,6 +8,8 @@ const TRANSLATION = {
     settings: 'InspirationTracker beállítások',
     help: 'InspirationTracker parancsok',
     party: 'A csapat ihlete',
+    poolParty: 'Csapat: {term}',
+    pools: 'Pontkészletek',
     yours: 'Karaktereid',
     status: 'InspirationTracker állapot',
   },
@@ -40,7 +42,51 @@ const TRANSLATION = {
     journal: 'A Súgó és a Command Deck segédletek újra elkészültek.',
     readyHint: 'Írd be: {command} a menühöz, vagy nyisd meg a Command Deck segédletet.',
   },
+  pool: {
+    gained: '{name} kapott: {amount} {term} ({before} → {after}).',
+    spent: '{name} felhasznált: {amount} {term} ({before} → {after}).',
+    boosted: '{name} felhasznált: {amount} {term}, +{bonus} a dobásra ({before} → {after}).',
+    spentBy: '{player} felhasználta {name} nevében: {amount} {term}.',
+    restored: '{name} visszakapott: {amount} {term} ({before} → {after}).',
+    removed: '{name} elvesztett: {amount} {term} ({before} → {after}).',
+    none: '{name} egyetlen ponttal sem rendelkezik: {term}.',
+    short: '{name} készlete {have}, de {need} kellene: {term}.',
+    full: '{name} már elérte a megengedett legtöbbet ({max}): {term}.',
+  },
+  pools: {
+    introFlag:
+      'A nyilvántartás a lap ihletmezőjére van állítva. Állítsd Pontkészletre, hogy az Ad és a Felhasznál a(z) „{name}” készleten működjön. A többi készlet a --pool kapcsolóval használható.',
+    introPool:
+      'Az Ad, a Felhasznál és az Erősít a(z) „{name}” készleten működik. A többi készlet a saját Csapat gombjáról vagy a --pool kapcsolóval használható.',
+    defaultLabel: '{name} (alapértelmezett)',
+    name: 'Név',
+    source: 'Tárolás helye',
+    cost: 'Pont +1-enként',
+    max: 'Maximum',
+    marker: 'Jelölő',
+    attribute: 'Attribútum, ha a lapon nincs ilyen nevű mező: {attribute}',
+    partyTotal: 'A csapat összesen: {total} {term}.',
+  },
+  prompts: {
+    points: 'Pontok',
+    bonus: 'Bónusz a dobásra',
+    max: 'Legtöbb megengedett pont (0 = nincs korlát)',
+  },
   errors: {
+    unknownPool: 'Nincs „{value}” nevű készlet.',
+    unknownPoolHint: 'Készletek: {pools}.',
+    badAmount: 'A(z) „{value}” nem pontszám.',
+    badAmountHint: 'Egész számot adj meg 1 és 9999 között.',
+    boostNoPool: 'Az Erősít egy készlet pontjait használja fel.',
+    poolInvalid: 'Készlet neve nem lehet „{value}”.',
+    poolExists: 'Már van „{value}” nevű készlet.',
+    poolFull: 'Nincs hely újabb készletnek.',
+    poolNameHint:
+      'Legfeljebb 40 betűből, számjegyből és szóközből álló nevet adj meg, amelyet más készlet nem visel.',
+    poolDefault: 'Az alapértelmezett készlet („{name}”) nem törölhető. Átnevezni lehet.',
+    poolMarkerHint:
+      'Válassz a jelölőkészleteidből olyan jelölőt, amely nem azonos a Jelölő beállításban megadottal.',
+    poolSetHint: 'Írd be: !inspiration pools, hogy lásd az összes készletet és beállításaikat.',
     denied: 'Ezt nem teheted meg {name} esetében.',
     gmOnly: 'Ezt a parancsot csak a KM használhatja.',
     gmOnlyHint: 'A játékosok a spend, party és help parancsokat használhatják.',
@@ -90,14 +136,28 @@ const TRANSLATION = {
     refresh: 'Frissítés',
     undo: 'Visszavonás',
     decline: 'Lemondok róla',
+    boost: 'Erősít',
+    pools: 'Készletek',
+    addPool: 'Készlet hozzáadása',
+    deletePool: 'Készlet törlése',
   },
   values: {
     on: 'Be',
     off: 'Ki',
+    none: 'Nincs',
+    noLimit: 'Nincs korlát',
+    tracking: {
+      flag: 'A lap ihletmezője',
+      pool: 'Pontkészlet',
+    },
+    source: {
+      resource: 'A lap erőforrásmezője',
+      attribute: 'Attribútum',
+    },
     wording: {
-      auto: 'A lap szerint',
       2014: 'Ihlet (2014)',
       2024: 'Hősi ihlet (2024)',
+      auto: 'A lap szerint',
     },
     announce: {
       public: 'Mindenki',
@@ -109,6 +169,10 @@ const TRANSLATION = {
     language: {
       label: 'Nyelv',
       desc: 'A menük, üzenetek és segédletek nyelve.',
+    },
+    tracking: {
+      label: 'Nyilvántartás',
+      desc: 'Min működik az Ad és a Felhasznál: a D&D lapok ihletmezőjén, amely egy karakternek vagy van, vagy nincs, illetve egy pontkészleten, amely gyűlik, és egyszerre néhány pontonként fogy.',
     },
     marker: {
       label: 'Jelölő',
@@ -150,6 +214,8 @@ const TRANSLATION = {
     none: 'Ihletmező nélküli karakterek',
     rules2024: '2024-es szabályokat használ',
     party: 'Csapattagok',
+    tracking: 'Nyilvántartás',
+    pools: 'Készletek',
     marker: 'Jelölő',
     fx: 'Különleges effekt',
     legacyCommand: 'Régi parancs',
@@ -165,6 +231,16 @@ const TRANSLATION = {
       'Megmutatja, kinek van ihlete a csapatban, gombokkal az adáshoz, elvételhez vagy felhasználáshoz.',
     partyEdit: 'Hozzáadja a kijelölt karaktereket a csapathoz, vagy kiveszi őket.',
     ids: 'A megadott token- vagy karakterazonosítókon működik a kijelölt tokenek helyett.',
+    points:
+      'Pontkészlettel: ennyi pontot ad, vesz el vagy használ fel. Szám nélkül 1. A remove all minden pontot elvesz.',
+    boost:
+      'Pontkészlettel: pontokat használ fel, hogy ekkora bónuszt adjon egy dobáshoz, a készletben megadott áron minden +1 után.',
+    poolFlag: 'A megnevezett készleten működik az alapértelmezett helyett.',
+    pools: 'Megjeleníti a pontkészleteket és beállításaikat.',
+    poolEdit:
+      'Hozzáad egy készletet, vagy töröl egyet. A lapokon lévő pontok érintetlenek maradnak.',
+    poolSet:
+      'Módosít egy készletet: a nevét, a tárolás helyét (resource vagy attribute), azt, hogy hány pontba kerül minden +1, a legtöbb megengedett pontot (0 = nincs korlát) vagy a tokenjelölőjét.',
     undo: 'Visszaadja a felhasznált ihletet. Az azonosító a KM-nek küldött, felhasználásról szóló üzenetben található.',
     macro:
       'Hozzáadja az „Inspiration” tokenműveletet, amelyre kattintva a játékosok felhasználhatják az ihletet.',
@@ -178,12 +254,13 @@ const TRANSLATION = {
   helpPlayer: {
     menu: 'Megjeleníti a karaktereidet, és hogy van-e ihletük.',
     spend: 'Felhasználja a kijelölt karakter ihletét.',
+    boost: 'Egy készlet pontjait használja fel, hogy ekkora bónuszt adjon egy dobáshoz.',
     party: 'Megjeleníti a csapatot, ha a KM engedi.',
     help: 'Megjeleníti ezt a listát.',
   },
   handout: {
     versionLabel: 'Verzió',
-    subtitle: 'Ihlet és Hősi ihlet a D&D 5e 2014-es és 2024-es lapjaihoz',
+    subtitle: 'Ihlet, Hősi ihlet és pontkészletek bármilyen játékhoz',
     overview: {
       heading: 'Áttekintés',
       body: 'Az InspirationTracker összhangban tartja a D&D ihletet a karakterlapon, a tokenen és a csevegőben. Add meg a menüből, a lapról vagy a tokenjelölővel, és a karakter minden tokenje mutatja a jelölőt. A játékosok egy kattintással felhasználhatják, a KM pedig értesítést kap, Visszavonás gombbal. Működik a D&D 2024 lappal, ahol Hősi ihletnek hívják, és a 2014-es OGL lappal.',
@@ -235,6 +312,18 @@ const TRANSLATION = {
         'A csapat minden olyan karakter, amelyet egy játékos irányít. Jelölj ki tokeneket, és kattints a Csapathoz ad vagy a Csapatból kivesz gombra a módosításhoz.',
         'A KM áttekintőjében minden tagnál van Ad, Elvesz és Felhasznál gomb.',
         'Kapcsold be a Játékosok látják a csapatot beállítást, hogy a játékosok is lássák az áttekintőt. Felhasznál gombot csak a saját karaktereikhez kapnak.',
+      ],
+    },
+    pools: {
+      heading: 'Pontkészletek',
+      points: [
+        'A pontkészlet egy szám, amely gyűlik, és egyszerre néhány pontonként fogy: ihletpontok, hőspontok, szerencse, bennies és hasonlók készlete. Bármilyen karakterlappal működik.',
+        'Állítsd a Nyilvántartást Pontkészletre, és az Ad, az Elvesz és a Felhasznál az alapértelmezett készleten működik, és megkérdezi, hány pontról van szó. A jelölő addig látszik, amíg a karakternek van pontja.',
+        'Az Erősít pontokat használ fel egy dobás növelésére: írd be a kívánt bónuszt, és a készlet Pont +1-enként beállítása határozza meg az árát. Ha minden +1 2 pontba kerül, a 4-es bónusz 8 pont. A Mod bejelenti a felhasználást; a bónuszt te add hozzá a dobáshoz.',
+        'A rendszer elutasítja a felhasználást, ha a karakternek nincs elég pontja. A KM értesítést kap arról, ki mit használt fel, Visszavonás gombbal.',
+        'Ha a Tárolás helye „A lap erőforrásmezője”, a lapnak azt az erőforrásmezőjét használja, amely a készlet nevét viseli, például egy Ihlet nevű Other Resource mezőt a 2014-es D&D lapon. Ha a lapon nincs ilyen nevű mező, vagy a beállítás „Attribútum”, a pontok egy egyszerű attribútumban tárolódnak, például: inspiration_pool. A D&D 2024 lap mindig az attribútumot használja.',
+        'A számot nyugodtan átírhatod kézzel a lapon: a jelölő követi.',
+        'Kattints a Készletek gombra az alapértelmezett készlet átnevezéséhez, árának és maximumának beállításához vagy további készletek hozzáadásához. A többi készlet a saját Csapat gombjáról használható, vagy úgy, hogy a parancshoz hozzáadod a --pool kapcsolót és a készlet nevét.',
       ],
     },
     markers: {
@@ -298,6 +387,9 @@ const TRANSLATION = {
     subtitle: 'Command Deck',
     selectedDesc: 'Jelölj ki egy vagy több tokent, majd kattints.',
     partyDesc: 'Nézd meg, kinek van ihlete, és válaszd ki, ki tartozik a csapathoz.',
+    poolsTitle: 'Pontkészlet',
+    poolsDesc:
+      'Ha a Nyilvántartás Pontkészletre van állítva: jelöld ki a tokeneket, kattints, és írd be a számot.',
     toolsDesc: 'Menü, beállítások, a játékosmakró és a súgó.',
     footer: 'A teljes útmutató a(z) „{help}” segédletben található.',
   },
