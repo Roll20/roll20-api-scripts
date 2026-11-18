@@ -5,7 +5,7 @@
  * Name: InspirationTracker
  * Script: InspirationTracker.js
  * Version: 1.0.0
- * Built: 2026-11-18T06:23:24.460Z
+ * Built: 2026-11-18T09:00:10.199Z
  */
 const InspirationTrackerMod = (() => {
   'use strict';
@@ -13,7 +13,7 @@ const InspirationTrackerMod = (() => {
   // Build-time placeholders replaced by rollup.config.js inject-build-metadata plugin.
   const SCRIPT_NAME = 'InspirationTracker';
   const SCRIPT_VERSION = '1.0.0';
-  const SCRIPT_LAST_UPDATED = '2026-11-18T06:23:24.460Z';
+  const SCRIPT_LAST_UPDATED = '2026-11-18T09:00:10.199Z';
 
   const DEFAULT_LOCALE$1 = 'en-US';
 
@@ -429,15 +429,20 @@ const InspirationTrackerMod = (() => {
 
   const CHAT_CONTENT_STYLE = 'padding:5px 8px;line-height:1.5';
 
+  // How a button sits in a line of text, and how it fills a cell of a button grid.
+  const BUTTON_INLINE_LAYOUT = 'display:inline-block;margin:1px 2px';
+  const BUTTON_GRID_LAYOUT = 'display:block;margin:0;text-align:center';
+
   const BUTTON_STYLE = [
     `background:${COLOR_BUTTON_BG}`,
     `color:${COLOR_BUTTON_TEXT}`,
+    // Same width of border as the secondary button, so both are the same height.
+    `border:1px solid ${COLOR_BUTTON_BG}`,
     'padding:2px 7px',
     'border-radius:3px',
     'text-decoration:none',
     'font-size:0.9em',
-    'display:inline-block',
-    'margin:1px 2px',
+    BUTTON_INLINE_LAYOUT,
   ].join(';');
 
   const BUTTON_SECONDARY_STYLE = [
@@ -448,20 +453,28 @@ const InspirationTrackerMod = (() => {
     'border-radius:3px',
     'text-decoration:none',
     'font-size:0.9em',
-    'display:inline-block',
-    'margin:1px 2px',
+    BUTTON_INLINE_LAYOUT,
   ].join(';');
 
+  // Matches the section headings of the Help and Command Deck handouts.
   const SECTION_LABEL_STYLE = [
-    `color:${COLOR_MUTED}`,
-    'font-size:0.8em',
-    'text-transform:uppercase',
-    'letter-spacing:0.08em',
-    'margin-top:4px',
-    'margin-bottom:2px',
+    `background:${COLOR_HEADER_BG}`,
+    `color:${COLOR_ACCENT}`,
+    `border-left:3px solid ${COLOR_ACCENT}`,
+    'padding:2px 8px',
+    'font-variant:small-caps',
+    'font-weight:bold',
+    'letter-spacing:0.05em',
+    'margin:8px 0 3px 0',
   ].join(';');
 
-  const DIVIDER_STYLE = `border:none;border-top:1px solid ${COLOR_BORDER};margin:4px 0`;
+  // A name inside a section, such as a character or a pool.
+  const ITEM_TITLE_STYLE = 'font-weight:bold;margin:6px 0 1px 0';
+
+  // Small print under an item or at the foot of a card.
+  const NOTE_STYLE = `color:${COLOR_MUTED};font-size:0.85em;line-height:1.35;margin:2px 0`;
+
+  const DIVIDER_STYLE = `border:none;border-top:1px solid ${COLOR_BORDER};margin:6px 0 4px 0`;
 
   /**
    * Returns the whisper target for a player, falling back to all GMs.
@@ -602,6 +615,83 @@ const InspirationTrackerMod = (() => {
   }
 
   /**
+   * Lays buttons out in equal columns, each button filling its cell, so a set
+   * of buttons lines up instead of wrapping wherever the labels happen to end.
+   * A button left over on the last row takes the whole row.
+   *
+   * @param {string[]} buttons Button HTML from buildButton or buildSecondaryButton; empty items are skipped.
+   * @param {number} [columns=2] Buttons per row.
+   * @returns {string} HTML table, or an empty string when there are no buttons.
+   */
+  function buildButtonGrid(buttons, columns = 2) {
+    const list = buttons.filter(Boolean);
+    if (list.length === 0) {
+      return '';
+    }
+    const width = Math.floor(100 / columns);
+    const rows = [];
+    for (let i = 0; i < list.length; i += columns) {
+      const row = list.slice(i, i + columns);
+      const span = row.length === 1 && columns > 1 ? ` colspan="${columns}"` : '';
+      rows.push(
+        `<tr>${row
+          .map(
+            (button) =>
+              `<td${span} style="width:${span ? 100 : width}%;padding:2px">${button.replace(BUTTON_INLINE_LAYOUT, BUTTON_GRID_LAYOUT)}</td>`
+          )
+          .join('')}</tr>`
+      );
+    }
+    return `<table style="width:100%;border-collapse:collapse;table-layout:fixed;margin:2px 0">${rows.join('')}</table>`;
+  }
+
+  /**
+   * Builds the name of one item in a section, such as a character, with its
+   * value (a tick, or a number of points) at the right-hand edge.
+   *
+   * @param {string} text Name (escaped).
+   * @param {string} [valueHtml=''] Trusted HTML for the right-hand edge.
+   * @param {string} [afterHtml=''] Trusted HTML after the name, such as a muted tag.
+   * @returns {string} HTML string.
+   */
+  function buildItemTitle(text, valueHtml = '', afterHtml = '') {
+    if (!valueHtml) {
+      return `<div style="${ITEM_TITLE_STYLE}">${escapeHtml(text)}${afterHtml}</div>`;
+    }
+    return [
+      `<table style="width:100%;border-collapse:collapse;${ITEM_TITLE_STYLE}"><tr>`,
+      `<td style="vertical-align:middle">${escapeHtml(text)}${afterHtml}</td>`,
+      `<td style="text-align:right;white-space:nowrap;vertical-align:middle;padding-left:6px">${valueHtml}</td>`,
+      '</tr></table>',
+    ].join('');
+  }
+
+  /**
+   * Builds a line of small print.
+   *
+   * @param {string} text Text (escaped).
+   * @returns {string} HTML string.
+   */
+  function buildNote(text) {
+    return `<div style="${NOTE_STYLE}">${escapeHtml(text)}</div>`;
+  }
+
+  /**
+   * Builds one entry of a command list: the command in the accent colour, with
+   * what it does underneath.
+   *
+   * @param {string} command Command text (escaped).
+   * @param {string} description What it does (escaped).
+   * @returns {string} HTML string.
+   */
+  function buildCommandHelp(command, description) {
+    return [
+      `<div style="margin:7px 0 1px 0;font-family:monospace;font-size:0.85em;color:${COLOR_ACCENT};word-break:break-word">${escapeHtml(command)}</div>`,
+      `<div style="font-size:0.9em;line-height:1.35">${escapeHtml(description)}</div>`,
+    ].join('');
+  }
+
+  /**
    * Builds a section label.
    *
    * @param {string} text Label text.
@@ -625,13 +715,16 @@ const InspirationTrackerMod = (() => {
    *
    * @param {string} label Label text (escaped).
    * @param {string} valueHtml Value HTML.
+   * @param {boolean} [keepTogether=false] Keeps the value on one line and lets the label take what is left, for a button whose words should not wrap.
    * @returns {string} HTML string.
    */
-  function buildRow(label, valueHtml) {
+  function buildRow(label, valueHtml, keepTogether = false) {
+    const labelWidth = keepTogether ? '' : 'width:50%;';
+    const valueWidth = keepTogether ? 'white-space:nowrap;' : 'width:50%;';
     return [
-      '<table style="width:100%;border-collapse:collapse;margin:1px 0"><tr>',
-      `<td style="color:${COLOR_MUTED};width:50%;font-size:0.9em">${escapeHtml(label)}</td>`,
-      `<td style="text-align:right;width:50%">${valueHtml}</td>`,
+      '<table style="width:100%;border-collapse:collapse;margin:2px 0"><tr>',
+      `<td style="color:${COLOR_MUTED};${labelWidth}font-size:0.9em;vertical-align:middle">${escapeHtml(label)}</td>`,
+      `<td style="text-align:right;${valueWidth}vertical-align:middle">${valueHtml}</td>`,
       '</tr></table>',
     ].join('');
   }
@@ -704,6 +797,9 @@ const InspirationTrackerMod = (() => {
       marker: 'Merker',
       attribute: 'Eienskap wanneer die blad geen blokkie met hierdie naam het nie: {attribute}',
       partyTotal: 'Groeptotaal: {total} {term}.',
+      keptBox: 'Blokkie op blad: {name}',
+      keptAttribute: 'Eienskap: {attribute}',
+      keptNote: '’n Eienskap word nie op die karakterblad gewys nie.',
     },
     prompts: {
       points: 'Punte',
@@ -960,8 +1056,10 @@ const InspirationTrackerMod = (() => {
           'Versterk gebruik punte om ’n worp te verhoog: tik die bonus wat jy wil hê, en die poel se Punte per +1 bepaal die koste. Teen 2 punte per +1 kos ’n bonus van 4 dus 8 punte. Die Mod kondig die gebruik aan; voeg self die bonus by die worp.',
           '’n Gebruik word geweier wanneer die karakter nie genoeg punte het nie. Die GM word ingelig wie wat gebruik het, met ’n Ontdoen-knoppie.',
           'Gehou in "Blad se hulpbronblokkie" gebruik die hulpbronblokkie op die blad wat die poel se naam het, soos ’n Other Resource-blokkie genaamd Inspiration op die 2014 D&D-blad. Wanneer die blad geen blokkie met daardie naam het nie, of met "Eienskap", word die punte in ’n gewone eienskap gehou, soos inspiration_pool. Die D&D 2024-blad gebruik altyd die eienskap.',
+          'Die groepkaart en ’n speler se eie kaart sê waar elke karakter se punte gehou word: die naam van die blokkie op die blad, of die eienskap. ’n Eienskap word nie op die karakterblad gewys nie.',
           'Om die getal met die hand op die blad te verander is in orde: die merker volg.',
           'Klik Poele om die verstekpoel te hernoem, sy koste en maksimum te stel, of nog poele by te voeg. Ander poele word vanaf hul Groep-knoppie gebruik, of deur --pool en die poel se naam by ’n opdrag te voeg.',
+          'Bardic Inspiration werk as ’n poel van sy eie: klik Voeg poel by en noem dit Bardic Inspiration, stel sy Maksimum op 1 en kies sy Merker. Die GM gee 1 vanaf daardie poel se Groep-kaart wanneer die bard ’n dobbelsteen uitdeel, en die houer klik Gebruik wanneer hy dit gebruik. Die Mod merk wie ’n dobbelsteen hou; die speler gooi dit self.',
         ],
       },
       markers: {
@@ -1100,6 +1198,9 @@ const InspirationTrackerMod = (() => {
       marker: 'Marcador',
       attribute: 'Atribut quan la fitxa no té cap casella amb aquest nom: {attribute}',
       partyTotal: 'Total del grup: {total} {term}.',
+      keptBox: 'Casella de la fitxa: {name}',
+      keptAttribute: 'Atribut: {attribute}',
+      keptNote: 'Un atribut no es mostra a la fitxa del personatge.',
     },
     prompts: {
       points: 'Punts',
@@ -1358,8 +1459,10 @@ const InspirationTrackerMod = (() => {
           'Potencia gasta punts per apujar una tirada: escriu la bonificació que vols, i l’opció Punts per +1 de la reserva en decideix el cost. A 2 punts per +1, una bonificació de 4 costa 8 punts. El Mod anuncia la despesa; afegeix tu mateix la bonificació a la tirada.',
           'Una despesa es rebutja quan el personatge no té prou punts. S’avisa el GM de qui ha gastat què, amb un botó Desfés.',
           'Es guarda a "Casella de recurs de la fitxa" fa servir la casella de recurs de la fitxa que té el nom de la reserva, com ara una casella Other Resource anomenada Inspiration a la fitxa de D&D de 2014. Quan la fitxa no té cap casella amb aquest nom, o amb "Atribut", els punts es guarden en un atribut senzill, com ara inspiration_pool. La fitxa de D&D 2024 sempre fa servir l’atribut.',
+          "La targeta del grup i la targeta pròpia d'un jugador diuen on es guarden els punts de cada personatge: el nom de la casella de la fitxa, o l'atribut. Un atribut no es mostra a la fitxa del personatge.",
           'Canviar el nombre a la fitxa a mà no és cap problema: el marcador el segueix.',
           'Fes clic a Reserves per canviar el nom de la reserva per defecte, posar-ne el cost i el màxim, o afegir més reserves. Les altres reserves es fan servir des del seu botó Grup, o afegint --pool i el nom de la reserva a una ordre.',
+          "Bardic Inspiration funciona com una reserva pròpia: fes clic a Afegeix reserva i anomena-la Bardic Inspiration, posa-hi el Màxim a 1 i tria'n el Marcador. El GM dona 1 des de la targeta Grup d'aquesta reserva quan el bard reparteix un dau, i qui el té fa clic a Gasta quan el fa servir. El Mod marca qui té un dau; el jugador el tira.",
         ],
       },
       markers: {
@@ -1494,6 +1597,9 @@ const InspirationTrackerMod = (() => {
       marker: '標記',
       attribute: '角色卡上沒有同名欄位時使用的屬性：{attribute}',
       partyTotal: '隊伍合計：{total} 點{term}。',
+      keptBox: '角色卡欄位：{name}',
+      keptAttribute: '屬性：{attribute}',
+      keptNote: '屬性不會顯示在角色卡上。',
     },
     prompts: {
       points: '點數',
@@ -1741,8 +1847,10 @@ const InspirationTrackerMod = (() => {
           '「加值」會花費點數來提高擲骰：輸入想要的加值，費用由點數池的「每 +1 所需點數」決定。若每 +1 需要 2 點，加值 4 就要花費 8 點。Mod 會公告這次花費；加值請自行加到擲骰上。',
           '角色的點數不足時，花費會被拒絕。GM 會收到誰花費了多少的通知，並附有「復原」按鈕。',
           '儲存位置設為「角色卡資源欄位」時，會使用角色卡上與點數池同名的資源欄位，例如 2014 版 D&D 角色卡上名為 Inspiration 的 Other Resource 欄位。若角色卡上沒有同名欄位，或設為「屬性」，點數會存放在一般屬性中，例如 inspiration_pool。D&D 2024 角色卡一律使用屬性。',
+          '隊伍卡片和玩家自己的卡片會標示每個角色的點數存放位置：角色卡欄位的名稱，或屬性。屬性不會顯示在角色卡上。',
           '直接在角色卡上手動修改數字也沒問題：標記會隨之更新。',
           '點擊「點數池」可重新命名預設點數池、設定其費用與上限，或新增更多點數池。其他點數池可從各自的「隊伍」按鈕使用，或在指令中加上 --pool 與點數池名稱。',
+          'Bardic Inspiration 可以當作獨立的點數池使用：點擊「新增點數池」並命名為 Bardic Inspiration，將「上限」設為 1，並選擇它的「標記」。吟遊詩人給出骰子時，GM 從該點數池的「隊伍」卡片給予 1 點，持有者使用時點擊「花費」。Mod 只標示誰持有骰子；骰子由玩家自己擲。',
         ],
       },
       markers: {
@@ -1879,6 +1987,9 @@ const InspirationTrackerMod = (() => {
       marker: 'Značka',
       attribute: 'Atribut, když deník nemá políčko s tímto názvem: {attribute}',
       partyTotal: 'Družina celkem: {total} ({term}).',
+      keptBox: 'Políčko v deníku: {name}',
+      keptAttribute: 'Atribut: {attribute}',
+      keptNote: 'Atribut se v deníku postavy nezobrazuje.',
     },
     prompts: {
       points: 'Body',
@@ -2131,8 +2242,10 @@ const InspirationTrackerMod = (() => {
           'Posílit utrácí body za zvýšení hodu: napiš požadovaný bonus a cenu určí Body za +1 dané zásoby. Při 2 bodech za +1 stojí bonus 4 celkem 8 bodů. Mod útratu oznámí; bonus si k hodu přičti sám.',
           'Útrata je odmítnuta, když postava nemá dost bodů. GM dostane zprávu, kdo co utratil, s tlačítkem Vrátit.',
           'Uloženo v „Políčko zdroje v deníku“ používá políčko zdroje v deníku, které nese název zásoby, například políčko Other Resource pojmenované Inspiration v deníku D&D 2014. Když deník políčko s tímto názvem nemá, nebo při volbě „Atribut“, jsou body uloženy v obyčejném atributu, například inspiration_pool. Deník D&D 2024 používá atribut vždy.',
+          'Karta družiny i hráčova vlastní karta uvádějí, kde jsou body každé postavy uloženy: název políčka v deníku, nebo atribut. Atribut se v deníku postavy nezobrazuje.',
           'Ruční změna čísla v deníku nevadí: značka ji následuje.',
           'Klikni na Zásoby, chceš-li přejmenovat výchozí zásobu, nastavit její cenu a maximum, nebo přidat další zásoby. Ostatní zásoby se používají jejich tlačítkem Družina, nebo přidáním --pool a názvu zásoby k příkazu.',
+          'Bardic Inspiration funguje jako samostatná zásoba: klikni na Přidat zásobu a pojmenuj ji Bardic Inspiration, nastav její Maximum na 1 a vyber její Značku. GM dá 1 z karty Družina této zásoby, když bard rozdá kostku, a její držitel klikne na Využít, když ji použije. Mod označuje, kdo kostku drží; hráč si jí hodí sám.',
         ],
       },
       markers: {
@@ -2270,6 +2383,9 @@ const InspirationTrackerMod = (() => {
       marker: 'Markør',
       attribute: 'Attribut, når arket ikke har et felt med dette navn: {attribute}',
       partyTotal: 'Gruppen i alt: {total} {term}.',
+      keptBox: 'Felt på arket: {name}',
+      keptAttribute: 'Attribut: {attribute}',
+      keptNote: 'Et attribut vises ikke på figurarket.',
     },
     prompts: {
       points: 'Point',
@@ -2524,8 +2640,10 @@ const InspirationTrackerMod = (() => {
           'Boost bruger point på at hæve et slag: skriv den ønskede bonus, og puljens Point pr. +1 afgør prisen. Ved 2 point pr. +1 koster en bonus på 4 i alt 8 point. Mod’en meddeler forbruget; læg selv bonussen til slaget.',
           'Et forbrug afvises, når figuren ikke har point nok. GM får besked om, hvem der brugte hvad, med en Fortryd-knap.',
           'Gemmes i "Arkets ressourcefelt" bruger det ressourcefelt på arket, der har puljens navn, fx et Other Resource-felt ved navn Inspiration på 2014 D&D-arket. Når arket ikke har et felt med det navn, eller med "Attribut", gemmes pointene i en almindelig attribut, fx inspiration_pool. D&D 2024-arket bruger altid attributten.',
+          'Gruppekortet og en spillers eget kort fortæller, hvor hver figurs point gemmes: navnet på feltet på arket eller attributtet. Et attribut vises ikke på figurarket.',
           'Det er fint at ændre tallet på arket i hånden: markøren følger med.',
           'Klik på Puljer for at omdøbe standardpuljen, sætte dens pris og maksimum eller tilføje flere puljer. Andre puljer bruges fra deres Gruppe-knap eller ved at føje --pool og puljens navn til en kommando.',
+          "Bardic Inspiration fungerer som sin egen pulje: klik på Tilføj pulje og kald den Bardic Inspiration, sæt dens Maksimum til 1 og vælg dens Markør. GM'en giver 1 fra den puljes Gruppe-kort, når barden deler en terning ud, og indehaveren klikker på Brug, når den bruges. Mod'et markerer, hvem der har en terning; spilleren slår den selv.",
         ],
       },
       markers: {
@@ -2664,6 +2782,9 @@ const InspirationTrackerMod = (() => {
       marker: 'Marker',
       attribute: 'Attribuut als het blad geen vakje met deze naam heeft: {attribute}',
       partyTotal: 'Totaal van de groep: {total} {term}.',
+      keptBox: 'Vakje op het blad: {name}',
+      keptAttribute: 'Attribuut: {attribute}',
+      keptNote: 'Een attribuut wordt niet op het personageblad getoond.',
     },
     prompts: {
       points: 'Punten',
@@ -2924,8 +3045,10 @@ const InspirationTrackerMod = (() => {
           'Boost gebruikt punten om een worp te verhogen: typ de gewenste bonus, en Punten per +1 van de pool bepaalt de kosten. Bij 2 punten per +1 kost een bonus van 4 dus 8 punten. De Mod kondigt het gebruik aan; tel de bonus zelf bij de worp op.',
           'Gebruik wordt geweigerd als het personage niet genoeg punten heeft. De GM krijgt te horen wie wat heeft gebruikt, met een knop Ongedaan maken.',
           'Bewaard in "Resourcevakje op het blad" gebruikt het resourcevakje op het blad dat de naam van de pool heeft, zoals een vakje Other Resource met de naam Inspiration op het 2014 D&D-blad. Heeft het blad geen vakje met die naam, of staat er "Attribuut", dan worden de punten bewaard in een gewoon attribuut, zoals inspiration_pool. Het D&D 2024-blad gebruikt altijd het attribuut.',
+          'De groepskaart en de eigen kaart van een speler zeggen waar de punten van elk personage worden bewaard: de naam van het vakje op het blad, of het attribuut. Een attribuut wordt niet op het personageblad getoond.',
           'Het getal op het blad met de hand wijzigen kan gewoon: de marker volgt.',
           'Klik op Pools om de standaardpool te hernoemen, de kosten en het maximum in te stellen, of meer pools toe te voegen. Andere pools gebruik je met hun knop Groep, of door --pool en de naam van de pool aan een commando toe te voegen.',
+          'Bardic Inspiration werkt als een eigen pool: klik op Pool toevoegen en noem hem Bardic Inspiration, zet het Maximum op 1 en kies de Marker. De GM geeft 1 vanaf de Groep-kaart van die pool wanneer de bard een dobbelsteen uitdeelt, en de houder klikt op Gebruiken wanneer hij hem inzet. De Mod markeert wie een dobbelsteen heeft; de speler gooit hem zelf.',
         ],
       },
       markers: {
@@ -3063,6 +3186,9 @@ const InspirationTrackerMod = (() => {
       marker: 'Marker',
       attribute: 'Attribute when the sheet has no box with this name: {attribute}',
       partyTotal: 'Party total: {total} {term}.',
+      keptBox: 'Sheet box: {name}',
+      keptAttribute: 'Attribute: {attribute}',
+      keptNote: 'An attribute is not shown on the character sheet.',
     },
     prompts: {
       points: 'Points',
@@ -3316,8 +3442,10 @@ const InspirationTrackerMod = (() => {
           "Boost spends points to raise a roll: type the bonus wanted, and the pool's Points per +1 decides the cost. At 2 points per +1, a bonus of 4 costs 8 points. The Mod announces the spend; add the bonus to the roll yourself.",
           'A spend is refused when the character does not have enough points. The GM is told who spent what, with an Undo button.',
           'Kept in "Sheet resource box" uses the resource box on the sheet that has the pool\'s name, such as an Other Resource box named Inspiration on the 2014 D&D sheet. When the sheet has no box with that name, or with "Attribute", the points are kept in a plain attribute, such as inspiration_pool. The D&D 2024 sheet always uses the attribute.',
+          "The Party card and a player's own card say where each character's points are kept: the name of the sheet box, or the attribute. An attribute is not shown on the character sheet.",
           'Changing the number on the sheet by hand is fine: the marker follows.',
           "Click Pools to rename the default pool, set its cost and maximum, or add more pools. Other pools are used from their Party button, or by adding --pool and the pool's name to a command.",
+          "Bardic Inspiration works as a pool of its own: click Add Pool and name it Bardic Inspiration, set its Maximum to 1 and choose its Marker. The GM gives 1 from that pool's Party card when the bard hands out a die, and the holder clicks Spend when they use it. The Mod marks who holds a die; the player rolls it.",
         ],
       },
       markers: {
@@ -3455,6 +3583,9 @@ const InspirationTrackerMod = (() => {
       marker: 'Tunnus',
       attribute: 'Attribuutti, kun lomakkeella ei ole tämän nimistä ruutua: {attribute}',
       partyTotal: 'Seurueella yhteensä: {total} {term}.',
+      keptBox: 'Lomakkeen ruutu: {name}',
+      keptAttribute: 'Attribuutti: {attribute}',
+      keptNote: 'Attribuuttia ei näytetä hahmolomakkeella.',
     },
     prompts: {
       points: 'Pisteet',
@@ -3711,8 +3842,10 @@ const InspirationTrackerMod = (() => {
           'Tehosta käyttää pisteitä heiton korottamiseen: kirjoita haluamasi bonus, ja varannon Pisteitä per +1 -asetus ratkaisee hinnan. Kun +1 maksaa 2 pistettä, bonus 4 maksaa 8 pistettä. Mod ilmoittaa käytöstä; lisää bonus heittoon itse.',
           'Käyttö hylätään, jos hahmolla ei ole tarpeeksi pisteitä. GM saa tiedon siitä, kuka käytti ja mitä, sekä Kumoa-painikkeen.',
           'Säilytyspaikka "Lomakkeen resurssiruutu" käyttää lomakkeen resurssiruutua, jolla on varannon nimi, esimerkiksi Inspiraatio-nimistä Other Resource -ruutua vuoden 2014 D&D-lomakkeella. Jos lomakkeella ei ole sen nimistä ruutua tai valittuna on "Attribuutti", pisteet säilytetään tavallisessa attribuutissa, esimerkiksi inspiration_pool. D&D 2024 -lomake käyttää aina attribuuttia.',
+          'Seurueen kortti ja pelaajan oma kortti kertovat, missä kunkin hahmon pisteet säilytetään: lomakkeen ruudun nimi tai attribuutti. Attribuuttia ei näytetä hahmolomakkeella.',
           'Luvun voi hyvin muuttaa lomakkeella käsin: tunnus seuraa perässä.',
           'Napsauta Varannot nimetäksesi oletusvarannon uudelleen, asettaaksesi sen hinnan ja enimmäismäärän tai lisätäksesi varantoja. Muita varantoja käytetään niiden Seurue-painikkeesta tai lisäämällä komentoon --pool ja varannon nimi.',
+          'Bardic Inspiration toimii omana varantonaan: napsauta Lisää varanto ja anna nimeksi Bardic Inspiration, aseta Enimmäismäärä arvoon 1 ja valitse Tunnus. GM antaa 1 pisteen kyseisen varannon Seurue-kortista, kun bardi jakaa nopan, ja nopan haltija napsauttaa Käytä, kun käyttää sen. Mod merkitsee, kenellä on noppa; pelaaja heittää sen itse.',
         ],
       },
       markers: {
@@ -3851,6 +3984,9 @@ const InspirationTrackerMod = (() => {
       marker: 'Marqueur',
       attribute: "Attribut quand la fiche n'a pas de case portant ce nom : {attribute}",
       partyTotal: 'Total du groupe : {total} {term}.',
+      keptBox: 'Case de la fiche : {name}',
+      keptAttribute: 'Attribut : {attribute}',
+      keptNote: "Un attribut n'est pas affiché sur la fiche de personnage.",
     },
     prompts: {
       points: 'Points',
@@ -4109,8 +4245,10 @@ const InspirationTrackerMod = (() => {
           'Renforcer dépense des points pour augmenter un jet : tapez le bonus voulu, et les Points par +1 de la réserve fixent le coût. À 2 points par +1, un bonus de 4 coûte 8 points. Le Mod annonce la dépense ; ajoutez vous-même le bonus au jet.',
           "Une dépense est refusée quand le personnage n'a pas assez de points. Le MJ est informé de qui a dépensé quoi, avec un bouton Annuler.",
           "Conservé dans « Case de ressource de la fiche » utilise la case de ressource de la fiche qui porte le nom de la réserve, par exemple une case Other Resource nommée Inspiration sur la fiche D&D 2014. Quand la fiche n'a pas de case portant ce nom, ou avec « Attribut », les points sont conservés dans un simple attribut, par exemple inspiration_pool. La fiche D&D 2024 utilise toujours l'attribut.",
+          "La carte du groupe et la carte personnelle d'un joueur indiquent où sont conservés les points de chaque personnage : le nom de la case de la fiche, ou l'attribut. Un attribut n'est pas affiché sur la fiche de personnage.",
           'Modifier le nombre à la main sur la fiche ne pose aucun problème : le marqueur suit.',
           "Cliquez sur Réserves pour renommer la réserve par défaut, régler son coût et son maximum, ou ajouter d'autres réserves. Les autres réserves s'utilisent depuis leur bouton Groupe, ou en ajoutant --pool et le nom de la réserve à une commande.",
+          "Bardic Inspiration fonctionne comme une réserve à part : cliquez sur Ajouter une réserve et nommez-la Bardic Inspiration, réglez son Maximum sur 1 et choisissez son Marqueur. Le MJ donne 1 depuis la carte Groupe de cette réserve quand le barde distribue un dé, et son détenteur clique sur Dépenser quand il l'utilise. Le Mod indique qui détient un dé ; le joueur le lance lui-même.",
         ],
       },
       markers: {
@@ -4250,6 +4388,9 @@ const InspirationTrackerMod = (() => {
       marker: 'Marker',
       attribute: 'Attribut, wenn der Bogen kein Feld mit diesem Namen hat: {attribute}',
       partyTotal: 'Gruppe gesamt: {total} {term}.',
+      keptBox: 'Feld auf dem Bogen: {name}',
+      keptAttribute: 'Attribut: {attribute}',
+      keptNote: 'Ein Attribut wird auf dem Charakterbogen nicht angezeigt.',
     },
     prompts: {
       points: 'Punkte',
@@ -4509,8 +4650,10 @@ const InspirationTrackerMod = (() => {
           'Verstärken gibt Punkte aus, um einen Wurf zu erhöhen: Gib den gewünschten Bonus ein, und Punkte pro +1 des Pools bestimmt die Kosten. Bei 2 Punkten pro +1 kostet ein Bonus von 4 also 8 Punkte. Die Mod kündigt die Ausgabe an; den Bonus addierst du selbst zum Wurf.',
           'Eine Ausgabe wird abgelehnt, wenn der Charakter nicht genug Punkte hat. Die SL erfährt, wer was ausgegeben hat, mit einem Rückgängig-Button.',
           'Gespeichert in „Ressourcenfeld des Bogens“ nutzt das Ressourcenfeld auf dem Bogen, das den Namen des Pools trägt, etwa ein Feld Other Resource namens Inspiration auf dem D&D-Bogen von 2014. Hat der Bogen kein Feld mit diesem Namen, oder bei „Attribut“, werden die Punkte in einem einfachen Attribut gespeichert, etwa inspiration_pool. Der D&D-2024-Bogen nutzt immer das Attribut.',
+          'Die Gruppenkarte und die eigene Karte eines Spielers nennen, wo die Punkte jedes Charakters gespeichert sind: der Name des Feldes auf dem Bogen oder das Attribut. Ein Attribut wird auf dem Charakterbogen nicht angezeigt.',
           'Die Zahl von Hand auf dem Bogen zu ändern ist in Ordnung: Der Marker folgt.',
           'Klicke auf Pools, um den Standardpool umzubenennen, seine Kosten und sein Maximum festzulegen oder weitere Pools hinzuzufügen. Andere Pools nutzt du über ihren Gruppe-Button oder indem du --pool und den Namen des Pools an einen Befehl anhängst.',
+          'Bardic Inspiration funktioniert als eigener Pool: Klicke auf Pool hinzufügen und nenne ihn Bardic Inspiration, setze sein Maximum auf 1 und wähle seinen Marker. Der GM gibt 1 über die Gruppe-Karte dieses Pools, wenn der Barde einen Würfel vergibt, und wer ihn hält, klickt auf Ausgeben, wenn er ihn einsetzt. Der Mod markiert, wer einen Würfel hält; der Spieler würfelt ihn selbst.',
         ],
       },
       markers: {
@@ -4650,6 +4793,9 @@ const InspirationTrackerMod = (() => {
       marker: 'Δείκτης',
       attribute: 'Χαρακτηριστικό όταν το φύλλο δεν έχει πεδίο με αυτό το όνομα: {attribute}',
       partyTotal: 'Σύνολο ομάδας: {total} {term}.',
+      keptBox: 'Πεδίο του φύλλου: {name}',
+      keptAttribute: 'Χαρακτηριστικό: {attribute}',
+      keptNote: 'Ένα χαρακτηριστικό δεν εμφανίζεται στο φύλλο χαρακτήρα.',
     },
     prompts: {
       points: 'Πόντοι',
@@ -4908,8 +5054,10 @@ const InspirationTrackerMod = (() => {
           'Το Ενίσχυσε ξοδεύει πόντους για να ανεβάσει μια ζαριά: γράψε το μπόνους που θέλεις, και η ρύθμιση Πόντοι ανά +1 του αποθέματος καθορίζει το κόστος. Με 2 πόντους ανά +1, ένα μπόνους 4 κοστίζει 8 πόντους. Το Mod ανακοινώνει το ξόδεμα· πρόσθεσε εσύ το μπόνους στη ζαριά.',
           'Ένα ξόδεμα απορρίπτεται όταν ο χαρακτήρας δεν έχει αρκετούς πόντους. Ο GM ενημερώνεται για το ποιος ξόδεψε τι, με κουμπί Αναίρεση.',
           'Το Αποθηκεύεται σε «Πεδίο πόρου του φύλλου» χρησιμοποιεί το πεδίο πόρου του φύλλου που έχει το όνομα του αποθέματος, όπως ένα πεδίο Other Resource με όνομα Inspiration στο φύλλο D&D 2014. Όταν το φύλλο δεν έχει πεδίο με αυτό το όνομα, ή με το «Χαρακτηριστικό», οι πόντοι αποθηκεύονται σε ένα απλό χαρακτηριστικό, όπως το inspiration_pool. Το φύλλο D&D 2024 χρησιμοποιεί πάντα το χαρακτηριστικό.',
+          'Η κάρτα της ομάδας και η κάρτα του ίδιου του παίκτη δείχνουν πού αποθηκεύονται οι πόντοι κάθε χαρακτήρα: το όνομα του πεδίου του φύλλου ή το χαρακτηριστικό. Ένα χαρακτηριστικό δεν εμφανίζεται στο φύλλο χαρακτήρα.',
           'Η αλλαγή του αριθμού στο φύλλο με το χέρι δεν πειράζει: ο δείκτης ακολουθεί.',
           'Πάτησε Αποθέματα για να μετονομάσεις το προεπιλεγμένο απόθεμα, να ορίσεις το κόστος και το μέγιστό του, ή να προσθέσεις κι άλλα αποθέματα. Τα άλλα αποθέματα χρησιμοποιούνται από το κουμπί Ομάδα τους, ή προσθέτοντας --pool και το όνομα του αποθέματος σε μια εντολή.',
+          'Το Bardic Inspiration λειτουργεί ως ξεχωριστό απόθεμα: πάτησε Προσθήκη αποθέματος και ονόμασέ το Bardic Inspiration, όρισε το Μέγιστο στο 1 και διάλεξε τον Δείκτη του. Ο GM δίνει 1 από την κάρτα Ομάδα αυτού του αποθέματος όταν ο βάρδος μοιράζει ένα ζάρι, και όποιος το κρατά πατά Ξόδεψε όταν το χρησιμοποιεί. Το Mod σημειώνει ποιος κρατά ζάρι· ο παίκτης το ρίχνει μόνος του.',
         ],
       },
       markers: {
@@ -5046,6 +5194,9 @@ const InspirationTrackerMod = (() => {
       marker: 'סמן',
       attribute: 'התכונה כשאין בגיליון תיבה בשם הזה: {attribute}',
       partyTotal: 'סך הכול בחבורה: {total} {term}.',
+      keptBox: 'תיבה בגיליון: {name}',
+      keptAttribute: 'תכונה: {attribute}',
+      keptNote: 'תכונה אינה מוצגת בגיליון הדמות.',
     },
     prompts: {
       points: 'נקודות',
@@ -5296,8 +5447,10 @@ const InspirationTrackerMod = (() => {
           'חיזוק מנצל נקודות כדי להעלות הטלה: הקלד את הבונוס הרצוי, וההגדרה נקודות לכל +1 של המאגר קובעת את העלות. ב-2 נקודות לכל +1, בונוס של 4 עולה 8 נקודות. ה-Mod מכריז על השימוש; את הבונוס הוסף להטלה בעצמך.',
           'שימוש נדחה כשלדמות אין מספיק נקודות. ה-GM מקבל הודעה מי השתמש במה, עם כפתור בטל.',
           'מקום שמירה "תיבת משאב בגיליון" משתמש בתיבת המשאב בגיליון שנושאת את שם המאגר, למשל תיבת Other Resource בשם השראה בגיליון D&D של 2014. כשאין בגיליון תיבה בשם הזה, או עם "תכונה", הנקודות נשמרות בתכונה רגילה, למשל inspiration_pool. גיליון D&D 2024 משתמש תמיד בתכונה.',
+          'כרטיס החבורה והכרטיס האישי של שחקן מציינים היכן נשמרות הנקודות של כל דמות: שם התיבה בגיליון, או התכונה. תכונה אינה מוצגת בגיליון הדמות.',
           'אפשר לשנות את המספר בגיליון ידנית: הסמן מתעדכן בהתאם.',
           'לחץ על מאגרים כדי לשנות את שם מאגר ברירת המחדל, לקבוע את העלות והמקסימום שלו, או להוסיף מאגרים. במאגרים אחרים משתמשים מכפתור החבורה שלהם, או על ידי הוספת --pool ושם המאגר לפקודה.',
+          'Bardic Inspiration פועל כמאגר נפרד: לחץ על הוסף מאגר וקרא לו Bardic Inspiration, קבע את המקסימום שלו ל-1 ובחר את הסמן שלו. ה-GM נותן 1 מכרטיס החבורה של המאגר הזה כשהפייטן מחלק קובייה, ומי שמחזיק בה לוחץ על השתמש כשהוא משתמש בה. ה-Mod מסמן מי מחזיק קובייה; השחקן מטיל אותה בעצמו.',
         ],
       },
       markers: {
@@ -5435,6 +5588,9 @@ const InspirationTrackerMod = (() => {
       marker: 'Jelölő',
       attribute: 'Attribútum, ha a lapon nincs ilyen nevű mező: {attribute}',
       partyTotal: 'A csapat összesen: {total} {term}.',
+      keptBox: 'Mező a lapon: {name}',
+      keptAttribute: 'Attribútum: {attribute}',
+      keptNote: 'Az attribútum nem látszik a karakterlapon.',
     },
     prompts: {
       points: 'Pontok',
@@ -5692,8 +5848,10 @@ const InspirationTrackerMod = (() => {
           'Az Erősít pontokat használ fel egy dobás növelésére: írd be a kívánt bónuszt, és a készlet Pont +1-enként beállítása határozza meg az árát. Ha minden +1 2 pontba kerül, a 4-es bónusz 8 pont. A Mod bejelenti a felhasználást; a bónuszt te add hozzá a dobáshoz.',
           'A rendszer elutasítja a felhasználást, ha a karakternek nincs elég pontja. A KM értesítést kap arról, ki mit használt fel, Visszavonás gombbal.',
           'Ha a Tárolás helye „A lap erőforrásmezője”, a lapnak azt az erőforrásmezőjét használja, amely a készlet nevét viseli, például egy Ihlet nevű Other Resource mezőt a 2014-es D&D lapon. Ha a lapon nincs ilyen nevű mező, vagy a beállítás „Attribútum”, a pontok egy egyszerű attribútumban tárolódnak, például: inspiration_pool. A D&D 2024 lap mindig az attribútumot használja.',
+          'A csapat kártyája és a játékos saját kártyája megmutatja, hol tárolódnak az egyes karakterek pontjai: a lapon lévő mező neve vagy az attribútum. Az attribútum nem látszik a karakterlapon.',
           'A számot nyugodtan átírhatod kézzel a lapon: a jelölő követi.',
           'Kattints a Készletek gombra az alapértelmezett készlet átnevezéséhez, árának és maximumának beállításához vagy további készletek hozzáadásához. A többi készlet a saját Csapat gombjáról használható, vagy úgy, hogy a parancshoz hozzáadod a --pool kapcsolót és a készlet nevét.',
+          'A Bardic Inspiration saját készletként működik: kattints a Készlet hozzáadása gombra, és nevezd el Bardic Inspiration néven, állítsd a Maximum értékét 1-re, és válaszd ki a Jelölőt. A GM 1 pontot ad a készlet Csapat kártyájáról, amikor a bárd kockát oszt, a birtokosa pedig a Felhasznál gombra kattint, amikor él vele. A Mod jelöli, kinél van kocka; a játékos maga dobja el.',
         ],
       },
       markers: {
@@ -5833,6 +5991,9 @@ const InspirationTrackerMod = (() => {
       marker: 'Segnalino',
       attribute: 'Attributo quando la scheda non ha una casella con questo nome: {attribute}',
       partyTotal: 'Totale del gruppo: {total} {term}.',
+      keptBox: 'Casella della scheda: {name}',
+      keptAttribute: 'Attributo: {attribute}',
+      keptNote: 'Un attributo non è mostrato sulla scheda del personaggio.',
     },
     prompts: {
       points: 'Punti',
@@ -6092,8 +6253,10 @@ const InspirationTrackerMod = (() => {
           'Potenzia spende punti per alzare un tiro: scrivi il bonus desiderato, e i Punti per +1 della riserva stabiliscono il costo. A 2 punti per +1, un bonus di 4 costa 8 punti. La Mod annuncia la spesa; aggiungi tu il bonus al tiro.',
           'Una spesa viene rifiutata quando il personaggio non ha abbastanza punti. Il GM viene avvisato di chi ha speso cosa, con un pulsante Annulla.',
           "Conservata in «Casella risorsa della scheda» usa la casella risorsa della scheda che ha il nome della riserva, come una casella Other Resource chiamata Ispirazione sulla scheda D&D 2014. Quando la scheda non ha una casella con quel nome, oppure con «Attributo», i punti sono conservati in un semplice attributo, come inspiration_pool. La scheda D&D 2024 usa sempre l'attributo.",
+          "Il riquadro del gruppo in chat e quello personale di un giocatore dicono dove sono conservati i punti di ogni personaggio: il nome della casella della scheda, oppure l'attributo. Un attributo non è mostrato sulla scheda del personaggio.",
           'Cambiare a mano il numero sulla scheda va benissimo: il segnalino lo segue.',
           'Fai clic su Riserve per rinominare la riserva predefinita, impostarne costo e massimo, o aggiungere altre riserve. Le altre riserve si usano dal loro pulsante Gruppo, oppure aggiungendo --pool e il nome della riserva a un comando.',
+          'Bardic Inspiration funziona come una riserva a sé: fai clic su Aggiungi riserva e chiamala Bardic Inspiration, imposta il Massimo a 1 e scegli il Segnalino. Il GM dà 1 dal riquadro Gruppo di quella riserva quando il bardo assegna un dado, e chi lo possiede fa clic su Spendi quando lo usa. Il Mod segna chi possiede un dado; il giocatore lo tira da sé.',
         ],
       },
       markers: {
@@ -6234,6 +6397,9 @@ const InspirationTrackerMod = (() => {
       marker: 'マーカー',
       attribute: 'シートにこの名前の欄がない場合の属性: {attribute}',
       partyTotal: 'パーティー合計: {term} {total}。',
+      keptBox: 'シートの欄: {name}',
+      keptAttribute: '属性: {attribute}',
+      keptNote: '属性はキャラクターシートには表示されません。',
     },
     prompts: {
       points: 'ポイント',
@@ -6490,8 +6656,10 @@ const InspirationTrackerMod = (() => {
           '「ブースト」はポイントを使用してロールを上げます。欲しいボーナスを入力すると、プールの「+1 あたりのポイント」でコストが決まります。+1 あたり 2 ポイントなら、ボーナス 4 には 8 ポイントかかります。Mod は使用を通知するだけなので、ボーナスは自分でロールに加えてください。',
           'キャラクターのポイントが足りない場合、使用は拒否されます。GM には誰が何を使用したかが「元に戻す」ボタン付きで通知されます。',
           '保存先が「シートのリソース欄」の場合、シート上でプールと同じ名前を持つリソース欄を使います。たとえば 2014 D&D シートで Inspiration と名付けた Other Resource 欄です。シートにその名前の欄がない場合、または保存先が「属性」の場合、ポイントは inspiration_pool のような単純な属性に保存されます。D&D 2024 シートでは常に属性を使います。',
+          'パーティーのカードとプレイヤー自身のカードには、各キャラクターのポイントの保存先（シートの欄の名前、または属性）が表示されます。属性はキャラクターシートには表示されません。',
           'シート上の数値を手で変更しても問題ありません。マーカーも追従します。',
           '「プール」をクリックすると、既定のプールの名前を変更したり、コストと上限を設定したり、プールを追加したりできます。他のプールは、それぞれの「パーティー」ボタンから、またはコマンドに --pool とプール名を追加して使います。',
+          'Bardic Inspiration は専用のプールとして扱えます。「プールを追加」をクリックして Bardic Inspiration と名付け、「上限」を 1 にし、「マーカー」を選びます。バードがダイスを与えたら、GM がそのプールの「パーティー」カードから 1 を与え、持っているキャラクターは使うときに「使用」をクリックします。Mod は誰がダイスを持っているかを示すだけで、ダイスはプレイヤーが自分で振ります。',
         ],
       },
       markers: {
@@ -6630,6 +6798,9 @@ const InspirationTrackerMod = (() => {
       marker: '마커',
       attribute: '시트에 이 이름의 칸이 없을 때 쓰는 속성: {attribute}',
       partyTotal: '파티 합계: {term} {total}.',
+      keptBox: '시트의 칸: {name}',
+      keptAttribute: '속성: {attribute}',
+      keptNote: '속성은 캐릭터 시트에 표시되지 않습니다.',
     },
     prompts: {
       points: '포인트',
@@ -6881,8 +7052,10 @@ const InspirationTrackerMod = (() => {
           '부스트는 포인트를 사용해 굴림을 높입니다. 원하는 보너스를 입력하면 풀의 +1당 포인트에 따라 비용이 정해집니다. +1당 2포인트라면 보너스 4에는 8포인트가 듭니다. Mod는 사용을 알리기만 하므로 보너스는 직접 굴림에 더하세요.',
           '캐릭터의 포인트가 모자라면 사용이 거부됩니다. GM에게는 누가 무엇을 사용했는지 되돌리기 버튼과 함께 알림이 갑니다.',
           '저장 위치가 "시트의 자원 칸"이면 시트에서 풀과 같은 이름을 가진 자원 칸을 사용합니다. 예를 들어 2014 D&D 시트에서 Inspiration이라고 이름 붙인 Other Resource 칸입니다. 시트에 그 이름의 칸이 없거나 저장 위치가 "속성"이면 포인트는 inspiration_pool 같은 일반 속성에 저장됩니다. D&D 2024 시트는 항상 속성을 사용합니다.',
+          '파티 카드와 플레이어 자신의 카드에는 각 캐릭터의 포인트가 저장된 위치(시트의 칸 이름 또는 속성)가 표시됩니다. 속성은 캐릭터 시트에 표시되지 않습니다.',
           '시트의 숫자를 직접 바꿔도 괜찮습니다. 마커가 따라 바뀝니다.',
           '풀을 클릭하면 기본 풀의 이름을 바꾸고, 비용과 최대치를 정하고, 풀을 더 추가할 수 있습니다. 다른 풀은 각 풀의 파티 버튼으로, 또는 명령어에 --pool과 풀 이름을 덧붙여 사용합니다.',
+          'Bardic Inspiration은 별도의 풀로 쓸 수 있습니다. 풀 추가를 클릭해 Bardic Inspiration이라고 이름 붙이고, 최대치를 1로 정하고, 마커를 고릅니다. 바드가 주사위를 나눠 주면 GM이 그 풀의 파티 카드에서 1을 주고, 주사위를 가진 캐릭터는 쓸 때 사용을 클릭합니다. Mod는 누가 주사위를 가졌는지만 표시하며, 주사위는 플레이어가 직접 굴립니다.',
         ],
       },
       markers: {
@@ -7021,6 +7194,9 @@ const InspirationTrackerMod = (() => {
       marker: 'Znacznik',
       attribute: 'Atrybut, gdy karta nie ma pola o tej nazwie: {attribute}',
       partyTotal: 'Suma drużyny: {term} × {total}.',
+      keptBox: 'Pole na karcie: {name}',
+      keptAttribute: 'Atrybut: {attribute}',
+      keptNote: 'Atrybut nie jest pokazywany na karcie postaci.',
     },
     prompts: {
       points: 'Punkty',
@@ -7275,8 +7451,10 @@ const InspirationTrackerMod = (() => {
           'Wzmocnij wydaje punkty, aby podnieść wynik rzutu: wpisz żądaną premię, a o koszcie decyduje ustawienie puli Punkty za +1. Przy 2 punktach za +1 premia 4 kosztuje 8 punktów. Mod ogłasza wydanie punktów; premię dodaj do rzutu samodzielnie.',
           'Wydanie punktów jest odrzucane, gdy postać ma ich za mało. GM dostaje informację, kto co wydał, z przyciskiem Cofnij.',
           'Miejsce zapisu „Pole zasobu na karcie” używa pola zasobu na karcie, które ma nazwę puli, na przykład pola Other Resource nazwanego Inspiration na karcie D&D 2014. Gdy karta nie ma pola o tej nazwie albo wybrano „Atrybut”, punkty są zapisywane w zwykłym atrybucie, takim jak inspiration_pool. Karta D&D 2024 zawsze używa atrybutu.',
+          'Przegląd drużyny i własny przegląd gracza podają, gdzie zapisane są punkty każdej postaci: nazwa pola na karcie albo atrybut. Atrybut nie jest pokazywany na karcie postaci.',
           'Liczbę na karcie można zmieniać ręcznie: znacznik podąża za nią.',
           'Kliknij Pule, aby zmienić nazwę domyślnej puli, ustawić jej koszt i maksimum albo dodać kolejne pule. Innych pul używa się przyciskiem Drużyna danej puli albo przez dodanie do polecenia --pool i nazwy puli.',
+          'Bardic Inspiration działa jako osobna pula: kliknij Dodaj pulę i nazwij ją Bardic Inspiration, ustaw jej Maksimum na 1 i wybierz jej Znacznik. GM daje 1 z przeglądu Drużyna tej puli, gdy bard rozdaje kość, a jej posiadacz klika Wykorzystaj, gdy jej używa. Mod oznacza, kto ma kość; gracz rzuca nią sam.',
         ],
       },
       markers: {
@@ -7415,6 +7593,9 @@ const InspirationTrackerMod = (() => {
       marker: 'Marcador',
       attribute: 'Atributo quando a ficha não tem um campo com este nome: {attribute}',
       partyTotal: 'Total do grupo: {total} de {term}.',
+      keptBox: 'Campo da ficha: {name}',
+      keptAttribute: 'Atributo: {attribute}',
+      keptNote: 'Um atributo não é mostrado na ficha da personagem.',
     },
     prompts: {
       points: 'Pontos',
@@ -7670,8 +7851,10 @@ const InspirationTrackerMod = (() => {
           'Impulsionar gasta pontos para aumentar um lançamento: escreva o bónus pretendido, e o valor de Pontos por +1 da reserva determina o custo. A 2 pontos por +1, um bónus de 4 custa 8 pontos. O Mod anuncia o gasto; some o bónus ao lançamento por si.',
           'Um gasto é recusado quando a personagem não tem pontos suficientes. O Mestre é avisado de quem gastou o quê, com um botão Anular.',
           'Guardada em "Campo de recurso da ficha" usa o campo de recurso da ficha que tem o nome da reserva, como um campo Other Resource chamado Inspiration na ficha D&D 2014. Quando a ficha não tem um campo com esse nome, ou com "Atributo", os pontos são guardados num atributo simples, como inspiration_pool. A ficha D&D 2024 usa sempre o atributo.',
+          'O cartão do grupo e o cartão do próprio jogador dizem onde ficam guardados os pontos de cada personagem: o nome do campo da ficha, ou o atributo. Um atributo não é mostrado na ficha da personagem.',
           'Não há problema em alterar à mão o número na ficha: o marcador acompanha.',
           'Clique em Reservas para mudar o nome da reserva predefinida, definir o seu custo e o seu máximo, ou acrescentar mais reservas. As outras reservas usam-se a partir do respetivo botão Grupo, ou acrescentando --pool e o nome da reserva a um comando.',
+          'Bardic Inspiration funciona como uma reserva própria: clique em Adicionar Reserva e dê-lhe o nome Bardic Inspiration, defina o Máximo como 1 e escolha o Marcador. O GM dá 1 a partir do cartão Grupo dessa reserva quando o bardo distribui um dado, e quem o tem clica em Gastar quando o usa. O Mod marca quem tem um dado; o jogador lança-o por si.',
         ],
       },
       markers: {
@@ -7809,6 +7992,9 @@ const InspirationTrackerMod = (() => {
       marker: 'Marcador',
       attribute: 'Atributo quando a ficha não tem um campo com este nome: {attribute}',
       partyTotal: 'Total do grupo: {total} de {term}.',
+      keptBox: 'Campo da ficha: {name}',
+      keptAttribute: 'Atributo: {attribute}',
+      keptNote: 'Um atributo não aparece na ficha do personagem.',
     },
     prompts: {
       points: 'Pontos',
@@ -8063,8 +8249,10 @@ const InspirationTrackerMod = (() => {
           'Impulsionar gasta pontos para aumentar uma rolagem: digite o bônus desejado, e o valor de Pontos por +1 da reserva decide o custo. A 2 pontos por +1, um bônus de 4 custa 8 pontos. O Mod anuncia o gasto; some o bônus à rolagem você mesmo.',
           'Um gasto é recusado quando o personagem não tem pontos suficientes. O Mestre é avisado de quem gastou o quê, com um botão Desfazer.',
           'Guardada em "Campo de recurso da ficha" usa o campo de recurso da ficha que tem o nome da reserva, como um campo Other Resource chamado Inspiration na ficha D&D 2014. Quando a ficha não tem um campo com esse nome, ou com "Atributo", os pontos ficam guardados em um atributo simples, como inspiration_pool. A ficha D&D 2024 sempre usa o atributo.',
+          'O cartão do grupo e o cartão do próprio jogador dizem onde os pontos de cada personagem ficam guardados: o nome do campo da ficha, ou o atributo. Um atributo não aparece na ficha do personagem.',
           'Alterar o número na ficha manualmente não tem problema: o marcador acompanha.',
           'Clique em Reservas para renomear a reserva padrão, definir seu custo e seu máximo, ou adicionar mais reservas. As outras reservas são usadas pelo botão Grupo de cada uma, ou adicionando --pool e o nome da reserva a um comando.',
+          'Bardic Inspiration funciona como uma reserva própria: clique em Adicionar Reserva e dê a ela o nome Bardic Inspiration, defina o Máximo como 1 e escolha o Marcador. O GM dá 1 pelo cartão Grupo dessa reserva quando o bardo distribui um dado, e quem o tem clica em Gastar quando o usa. O Mod marca quem tem um dado; o jogador o rola por conta própria.',
         ],
       },
       markers: {
@@ -8203,6 +8391,9 @@ const InspirationTrackerMod = (() => {
       marker: 'Маркер',
       attribute: 'Атрибут, если на листе нет поля с таким названием: {attribute}',
       partyTotal: 'Всего у отряда: {term} — {total}.',
+      keptBox: 'Поле на листе: {name}',
+      keptAttribute: 'Атрибут: {attribute}',
+      keptNote: 'Атрибут не показывается на листе персонажа.',
     },
     prompts: {
       points: 'Очки',
@@ -8459,8 +8650,10 @@ const InspirationTrackerMod = (() => {
           '«Усилить» тратит очки, чтобы повысить бросок: введите нужный бонус, а настройка пула «Очков за +1» определит цену. При 2 очках за +1 бонус 4 стоит 8 очков. Mod объявляет трату; бонус к броску добавьте сами.',
           'Трата отклоняется, если у персонажа не хватает очков. GM получает сообщение о том, кто и сколько потратил, с кнопкой «Отменить».',
           'Вариант «Поле ресурса на листе» в настройке «Хранится в» использует поле ресурса на листе, названное так же, как пул, например поле Other Resource с названием Inspiration на листе D&D 2014. Если на листе нет поля с таким названием или выбран вариант «Атрибут», очки хранятся в обычном атрибуте, например inspiration_pool. Лист D&D 2024 всегда использует атрибут.',
+          'Карточка отряда и собственная карточка игрока сообщают, где хранятся очки каждого персонажа: название поля на листе или атрибут. Атрибут не показывается на листе персонажа.',
           'Менять число на листе вручную можно: маркер последует за ним.',
           'Нажмите «Пулы», чтобы переименовать пул по умолчанию, задать его цену и максимум или добавить другие пулы. Другие пулы используются через их кнопку «Отряд» или добавлением --pool и названия пула к команде.',
+          'Bardic Inspiration работает как отдельный пул: нажмите «Добавить пул» и назовите его Bardic Inspiration, задайте «Максимум» равным 1 и выберите «Маркер». GM даёт 1 с карточки «Отряд» этого пула, когда бард раздаёт кость, а её владелец нажимает «Потратить», когда использует её. Mod отмечает, у кого есть кость; игрок бросает её сам.',
         ],
       },
       markers: {
@@ -8599,6 +8792,9 @@ const InspirationTrackerMod = (() => {
       marker: 'Marcador',
       attribute: 'Atributo cuando la hoja no tiene una casilla con este nombre: {attribute}',
       partyTotal: 'Total del grupo: {total} {term}.',
+      keptBox: 'Casilla de la hoja: {name}',
+      keptAttribute: 'Atributo: {attribute}',
+      keptNote: 'Un atributo no se muestra en la hoja de personaje.',
     },
     prompts: {
       points: 'Puntos',
@@ -8857,8 +9053,10 @@ const InspirationTrackerMod = (() => {
           'Potenciar gasta puntos para subir una tirada: escribe el bonificador deseado, y los Puntos por +1 de la reserva deciden el coste. A 2 puntos por +1, un bonificador de 4 cuesta 8 puntos. El Mod anuncia el gasto; suma tú el bonificador a la tirada.',
           'Un gasto se rechaza cuando el personaje no tiene puntos suficientes. Se avisa al GM de quién ha gastado qué, con un botón Deshacer.',
           'Con Guardado en "Casilla de recurso de la hoja" se usa la casilla de recurso de la hoja que lleva el nombre de la reserva, como una casilla Other Resource llamada Inspiración en la hoja de D&D de 2014. Cuando la hoja no tiene una casilla con ese nombre, o con "Atributo", los puntos se guardan en un atributo normal, como inspiration_pool. La hoja de D&D 2024 siempre usa el atributo.',
+          'La tarjeta del grupo y la tarjeta propia de un jugador dicen dónde se guardan los puntos de cada personaje: el nombre de la casilla de la hoja, o el atributo. Un atributo no se muestra en la hoja de personaje.',
           'Cambiar el número en la hoja a mano no da problemas: el marcador lo sigue.',
           'Pulsa Reservas para cambiar el nombre de la reserva por defecto, fijar su coste y su máximo, o añadir más reservas. Las demás reservas se usan desde su botón Grupo, o añadiendo --pool y el nombre de la reserva a un comando.',
+          'Bardic Inspiration funciona como una reserva propia: pulsa Añadir reserva y llámala Bardic Inspiration, pon su Máximo en 1 y elige su Marcador. El GM da 1 desde la tarjeta Grupo de esa reserva cuando el bardo reparte un dado, y quien lo tiene pulsa Gastar cuando lo usa. El Mod marca quién tiene un dado; el jugador lo tira.',
         ],
       },
       markers: {
@@ -8997,6 +9195,9 @@ const InspirationTrackerMod = (() => {
       marker: 'Markör',
       attribute: 'Attribut när formuläret saknar en ruta med det namnet: {attribute}',
       partyTotal: 'Gruppen har totalt: {total} {term}.',
+      keptBox: 'Ruta på formuläret: {name}',
+      keptAttribute: 'Attribut: {attribute}',
+      keptNote: 'Ett attribut visas inte på rollformuläret.',
     },
     prompts: {
       points: 'Poäng',
@@ -9254,8 +9455,10 @@ const InspirationTrackerMod = (() => {
           'Förstärk använder poäng för att höja ett slag: skriv den bonus du vill ha, så avgör pottens Poäng per +1 kostnaden. Med 2 poäng per +1 kostar en bonus på 4 alltså 8 poäng. Mod meddelar användningen; lägg själv bonusen på slaget.',
           'En användning nekas när rollpersonen inte har tillräckligt med poäng. GM får veta vem som använde vad, med en Ångra-knapp.',
           'Sparas i "Formulärets resursruta" använder den resursruta på formuläret som har pottens namn, till exempel en Other Resource-ruta med namnet Inspiration på D&D 2014-formuläret. När formuläret inte har någon ruta med det namnet, eller med "Attribut", sparas poängen i ett vanligt attribut, till exempel inspiration_pool. D&D 2024-formuläret använder alltid attributet.',
+          'Gruppkortet och en spelares eget kort säger var varje rollpersons poäng sparas: namnet på rutan på formuläret, eller attributet. Ett attribut visas inte på rollformuläret.',
           'Det går bra att ändra talet på formuläret för hand: markören följer med.',
           'Klicka på Potter för att byta namn på standardpotten, sätta dess kostnad och maximum, eller lägga till fler potter. Andra potter används från sin Grupp-knapp, eller genom att lägga till --pool och pottens namn i ett kommando.',
+          'Bardic Inspiration fungerar som en egen pott: klicka på Lägg till pott och döp den till Bardic Inspiration, sätt dess Maximum till 1 och välj dess Markör. GM ger 1 från den pottens Grupp-kort när barden delar ut en tärning, och den som har tärningen klickar på Använd när den används. Mod:en markerar vem som har en tärning; spelaren slår den själv.',
         ],
       },
       markers: {
@@ -9394,6 +9597,9 @@ const InspirationTrackerMod = (() => {
       marker: 'İşaretçi',
       attribute: 'Sayfada bu adda bir kutu yoksa kullanılan özellik: {attribute}',
       partyTotal: 'Grup toplamı: {total} {term}.',
+      keptBox: 'Sayfadaki kutu: {name}',
+      keptAttribute: 'Özellik: {attribute}',
+      keptNote: 'Bir özellik karakter sayfasında gösterilmez.',
     },
     prompts: {
       points: 'Puan',
@@ -9647,8 +9853,10 @@ const InspirationTrackerMod = (() => {
           'Güçlendir, bir zarı yükseltmek için puan harcar: istediğin bonusu yaz, bedeli havuzun +1 başına puan ayarı belirler. +1 başına 2 puanda, 4 bonus 8 puana mal olur. Mod harcamayı duyurur; bonusu zara kendin ekle.',
           "Karakterin yeterli puanı yoksa harcama reddedilir. GM'e kimin ne harcadığı bir Geri Al düğmesiyle bildirilir.",
           'Tutulduğu yer ayarındaki "Sayfadaki kaynak kutusu", sayfada havuzun adını taşıyan kaynak kutusunu kullanır; örneğin 2014 D&D sayfasında Inspiration adlı bir Other Resource kutusu. Sayfada bu adda bir kutu yoksa veya "Özellik" seçiliyse puanlar inspiration_pool gibi düz bir özellikte tutulur. D&D 2024 sayfası her zaman özelliği kullanır.',
+          'Grup kartı ve oyuncunun kendi kartı, her karakterin puanlarının nerede tutulduğunu söyler: sayfadaki kutunun adı ya da özellik. Bir özellik karakter sayfasında gösterilmez.',
           'Sayfadaki sayıyı elle değiştirmek sorun olmaz: işaretçi buna uyar.',
           'Varsayılan havuzu yeniden adlandırmak, bedelini ve üst sınırını ayarlamak veya başka havuzlar eklemek için Havuzlar düğmesine tıkla. Diğer havuzlar kendi Grup düğmelerinden veya bir komuta --pool ve havuzun adı eklenerek kullanılır.',
+          'Bardic Inspiration ayrı bir havuz olarak çalışır: Havuz Ekle düğmesine tıkla ve adını Bardic Inspiration koy, En fazla değerini 1 yap ve İşaretçisini seç. Ozan bir zar verdiğinde GM o havuzun Grup kartından 1 verir, zarı elinde tutan da kullanırken Harca düğmesine tıklar. Mod kimin zar tuttuğunu işaretler; zarı oyuncu kendisi atar.',
         ],
       },
       markers: {
@@ -9787,6 +9995,9 @@ const InspirationTrackerMod = (() => {
       marker: 'Маркер',
       attribute: 'Атрибут, якщо на аркуші немає поля з такою назвою: {attribute}',
       partyTotal: 'Усього в групи: {term} — {total}.',
+      keptBox: 'Поле на аркуші: {name}',
+      keptAttribute: 'Атрибут: {attribute}',
+      keptNote: 'Атрибут не показується на аркуші персонажа.',
     },
     prompts: {
       points: 'Очки',
@@ -10042,8 +10253,10 @@ const InspirationTrackerMod = (() => {
           '«Підсилити» витрачає очки, щоб підвищити кидок: введіть потрібний бонус, а налаштування пулу «Очок за +1» визначить ціну. При 2 очках за +1 бонус 4 коштує 8 очок. Mod оголошує витрату; бонус до кидка додайте самі.',
           'Витрату буде відхилено, якщо персонаж не має достатньо очок. GM отримує повідомлення про те, хто і скільки витратив, з кнопкою «Скасувати».',
           'Варіант «Поле ресурсу на аркуші» в налаштуванні «Зберігається в» використовує поле ресурсу на аркуші, назване так само, як пул, наприклад поле Other Resource з назвою Inspiration на аркуші D&D 2014. Якщо на аркуші немає поля з такою назвою або вибрано «Атрибут», очки зберігаються у звичайному атрибуті, наприклад inspiration_pool. Аркуш D&D 2024 завжди використовує атрибут.',
+          'Картка групи та власна картка гравця повідомляють, де зберігаються очки кожного персонажа: назва поля на аркуші або атрибут. Атрибут не показується на аркуші персонажа.',
           'Змінювати число на аркуші вручну можна: маркер зміниться слідом.',
           'Натисніть «Пули», щоб перейменувати типовий пул, задати його ціну й максимум або додати інші пули. Інші пули використовуються через їхню кнопку «Група» або додаванням --pool і назви пулу до команди.',
+          'Bardic Inspiration працює як окремий пул: натисніть «Додати пул» і назвіть його Bardic Inspiration, задайте «Максимум» рівним 1 і виберіть «Маркер». GM дає 1 з картки «Група» цього пулу, коли бард роздає кістку, а її власник натискає «Витратити», коли використовує її. Mod позначає, у кого є кістка; гравець кидає її сам.',
         ],
       },
       markers: {
@@ -11425,12 +11638,12 @@ const InspirationTrackerMod = (() => {
    *
    * @param {string} charId Character ID.
    * @param {object} pool Pool.
-   * @returns {{where: string, exists: boolean, value: number}} Where it is kept, whether anything is stored yet, and the points.
+   * @returns {{where: string, name: string, exists: boolean, value: number}} Where it is kept, the attribute's name, whether anything is stored yet, and the points.
    */
   function readPool(charId, pool) {
-    const { where, attr } = locatePool(charId, pool);
+    const { where, name, attr } = locatePool(charId, pool);
     const n = Math.floor(Number(attr?.get('current')));
-    return { where, exists: Boolean(attr), value: Number.isFinite(n) && n > 0 ? n : 0 };
+    return { where, name, exists: Boolean(attr), value: Number.isFinite(n) && n > 0 ? n : 0 };
   }
 
   /**
@@ -11623,11 +11836,11 @@ const InspirationTrackerMod = (() => {
    */
   function announcementBody(text, buttons = '') {
     return [
-      '<div style="overflow:hidden">',
+      '<div style="overflow:hidden;min-height:38px">',
       `<img src="${ICON_URL}" alt="" style="float:right;width:36px;height:36px;margin-left:6px">`,
       `<div>${text}</div>`,
-      buttons ? `<div style="margin-top:4px">${buttons}</div>` : '',
       '</div>',
+      buttons ? `<div style="margin-top:4px">${buttons}</div>` : '',
     ].join('');
   }
 
@@ -11698,7 +11911,10 @@ const InspirationTrackerMod = (() => {
     const term = termFor(character.id, lang);
     const text = escapeHtml(t('messages.gained', lang, { name: nameOf(character), term }));
     const button = getConfig().playerSpend
-      ? buildButton(t('buttons.spend', lang), `${COMMAND} spend --ids ${character.id}`)
+      ? buildButtonGrid(
+          [buildButton(t('buttons.spend', lang), `${COMMAND} spend --ids ${character.id}`)],
+          1
+        )
       : '';
     announce(character, term, announcementBody(text, button));
   }
@@ -11727,7 +11943,7 @@ const InspirationTrackerMod = (() => {
     whisper(
       null,
       SCRIPT_NAME,
-      `<div>${escapeHtml(line)}</div><div style="margin-top:4px">${buildSecondaryButton(t('buttons.undo', lang), `${COMMAND} undo ${undoId}`)}</div>`
+      `<div>${escapeHtml(line)}</div>${buildButtonGrid([buildSecondaryButton(t('buttons.undo', lang), `${COMMAND} undo ${undoId}`)], 1)}`
     );
   }
 
@@ -11872,7 +12088,7 @@ const InspirationTrackerMod = (() => {
     }
     const lang = getConfig().language;
     const target = `--ids ${character.id} --pool ${pool.id}`;
-    return [
+    return buildButtonGrid([
       buildButton(
         t('buttons.spend', lang),
         `${COMMAND} spend ?{${queryText(t('prompts.points', lang))}|1} ${target}`
@@ -11881,7 +12097,7 @@ const InspirationTrackerMod = (() => {
         t('buttons.boost', lang),
         `${COMMAND} boost ?{${queryText(t('prompts.bonus', lang))}|1} ${target}`
       ),
-    ].join(' ');
+    ]);
   }
 
   /**
@@ -12003,7 +12219,7 @@ const InspirationTrackerMod = (() => {
       whisper(
         null,
         SCRIPT_NAME,
-        `<div>${escapeHtml(line)}</div><div style="margin-top:4px">${buildSecondaryButton(t('buttons.undo', lang), `${COMMAND} undo ${undoId}`)}</div>`
+        `<div>${escapeHtml(line)}</div>${buildButtonGrid([buildSecondaryButton(t('buttons.undo', lang), `${COMMAND} undo ${undoId}`)], 1)}`
       );
       return { status: 'spent', ...vars };
     });
@@ -12085,7 +12301,7 @@ const InspirationTrackerMod = (() => {
       candidates.length === 0
         ? `<div style="margin-top:3px;font-size:0.9em">${escapeHtml(t('messages.passNobody', lang))}</div>`
         : '',
-      `<div style="margin-top:4px">${buttons.join(' ')}</div>`,
+      buildButtonGrid(buttons, 2),
     ].join('');
     const owners = ownerIds(character);
     const recipients = owners.length > 0 ? owners : getGmPlayerIds();
@@ -12551,6 +12767,14 @@ const InspirationTrackerMod = (() => {
   // Chat menus: the GM menu, settings, party overview, the player card,
   // status and help.
 
+  // The settings card's sections: a Help handout heading, and the settings under it.
+  const SETTING_GROUPS = [
+    ['languages', ['language']],
+    ['sheets', ['tracking', 'wording']],
+    ['markers', ['marker', 'fx', 'fxType']],
+    ['players', ['announce', 'playerSpend', 'playerOverview', 'passOn']],
+  ];
+
   const YES = '✔';
   const NO = '—';
 
@@ -12610,19 +12834,24 @@ const InspirationTrackerMod = (() => {
       : [b('give', 'give'), b('remove', 'remove'), b('toggle', 'toggle'), b('spend', 'spend')];
     whisper(playerId, `${SCRIPT_NAME} v${SCRIPT_VERSION}`, [
       buildSectionLabel(t('menu.selected', lang)),
-      ...selected,
+      buildButtonGrid(selected, 2),
       buildSectionLabel(t('menu.party', lang)),
-      b('party', 'party'),
-      s('partyAdd', 'party add'),
-      s('partyRemove', 'party remove'),
+      buildButtonGrid([b('party', 'party')], 1),
+      buildButtonGrid([s('partyAdd', 'party add'), s('partyRemove', 'party remove')], 2),
       buildSectionLabel(t('menu.tools', lang)),
-      s('settings', 'set'),
-      s('pools', 'pools'),
-      s('macro', 'macro'),
-      s('sync', 'sync'),
-      s('status', 'status'),
-      s('help', 'help'),
-      `<div style="font-size:0.85em;margin-top:4px">${escapeHtml(t('menu.hint', lang, { help: HANDOUT_HELP_NAME }))}</div>`,
+      buildButtonGrid(
+        [
+          s('settings', 'set'),
+          s('pools', 'pools'),
+          s('macro', 'macro'),
+          s('sync', 'sync'),
+          s('status', 'status'),
+          s('help', 'help'),
+        ],
+        2
+      ),
+      buildDivider(),
+      buildNote(t('menu.hint', lang, { help: HANDOUT_HELP_NAME })),
     ]);
   }
 
@@ -12691,15 +12920,24 @@ const InspirationTrackerMod = (() => {
    */
   function showSettings(playerId) {
     const lang = getConfig().language;
-    const rows = SETTING_KEYS.map((key) =>
-      buildRow(t(`settings.${key}.label`, lang), settingButton(key, lang))
-    );
+    // Grouped under the headings the Help handout uses for the same subjects
+    const rows = SETTING_GROUPS.flatMap(([heading, keys]) => [
+      buildSectionLabel(t(`handout.${heading}.heading`, lang)),
+      ...keys.map((key) =>
+        buildRow(t(`settings.${key}.label`, lang), settingButton(key, lang), true)
+      ),
+    ]);
     whisper(playerId, t('titles.settings', lang), [
       ...rows,
       buildDivider(),
-      buildSecondaryButton(t('buttons.menu', lang), COMMAND),
-      buildSecondaryButton(t('buttons.pools', lang), `${COMMAND} pools`),
-      buildSecondaryButton(t('buttons.reset', lang), `${COMMAND} reset`),
+      buildButtonGrid(
+        [
+          buildSecondaryButton(t('buttons.menu', lang), COMMAND),
+          buildSecondaryButton(t('buttons.pools', lang), `${COMMAND} pools`),
+          buildSecondaryButton(t('buttons.reset', lang), `${COMMAND} reset`),
+        ],
+        2
+      ),
     ]);
   }
 
@@ -12712,14 +12950,17 @@ const InspirationTrackerMod = (() => {
   function showPools(playerId) {
     const lang = getConfig().language;
     const body = [
-      `<div style="font-size:0.9em">${escapeHtml(t(activePool() ? 'pools.introPool' : 'pools.introFlag', lang, { name: defaultPool().name }))}</div>`,
+      buildNote(
+        t(activePool() ? 'pools.introPool' : 'pools.introFlag', lang, { name: defaultPool().name })
+      ),
     ];
     for (const pool of getPools()) {
       const isDefault = pool === defaultPool();
       const set = (field, label, value) =>
         buildRow(
           t(`pools.${field}`, lang),
-          buildButton(label, `${COMMAND} pool set ${pool.id} ${field} ${value}`)
+          buildButton(label, `${COMMAND} pool set ${pool.id} ${field} ${value}`),
+          true
         );
       body.push(
         buildSectionLabel(
@@ -12752,23 +12993,38 @@ const InspirationTrackerMod = (() => {
                 .filter((m) => m.tag !== getConfig().marker)
                 .map((m) => ({ label: m.name, value: m.tag })),
             ])
-          ),
-          buildSecondaryButton(t('buttons.party', lang), `${COMMAND} party --pool ${pool.id}`),
-          buildSecondaryButton(t('buttons.deletePool', lang), `${COMMAND} pool delete ${pool.id}`)
+          )
         );
       }
-      body.push(
-        `<div style="font-size:0.8em;opacity:0.8">${escapeHtml(t('pools.attribute', lang, { attribute: poolAttributeName(pool) }))}</div>`
-      );
+      body.push(buildNote(t('pools.attribute', lang, { attribute: poolAttributeName(pool) })));
+      if (!isDefault) {
+        body.push(
+          buildButtonGrid(
+            [
+              buildSecondaryButton(t('buttons.party', lang), `${COMMAND} party --pool ${pool.id}`),
+              buildSecondaryButton(
+                t('buttons.deletePool', lang),
+                `${COMMAND} pool delete ${pool.id}`
+              ),
+            ],
+            2
+          )
+        );
+      }
     }
     body.push(
       buildDivider(),
-      buildButton(
-        t('buttons.addPool', lang),
-        `${COMMAND} pool add ?{${queryText(t('pools.name', lang))}}`
-      ),
-      buildSecondaryButton(t('buttons.settings', lang), `${COMMAND} set`),
-      buildSecondaryButton(t('buttons.menu', lang), COMMAND)
+      buildButtonGrid(
+        [
+          buildButton(
+            t('buttons.addPool', lang),
+            `${COMMAND} pool add ?{${queryText(t('pools.name', lang))}}`
+          ),
+          buildSecondaryButton(t('buttons.settings', lang), `${COMMAND} set`),
+          buildSecondaryButton(t('buttons.menu', lang), COMMAND),
+        ],
+        3
+      )
     );
     whisper(playerId, t('titles.pools', lang), body);
   }
@@ -12789,15 +13045,16 @@ const InspirationTrackerMod = (() => {
   }
 
   /**
-   * Builds one overview line.
+   * Builds one character's block in an overview: the name with its tick or
+   * points at the right-hand edge, where the points are kept, and the buttons
+   * in a row of their own underneath.
    *
-   * @param {object} row Row from readRows.
+   * @param {object} row Row from readRows or poolRow.
    * @param {string} lang Locale code.
-   * @param {string} buttons Button HTML.
+   * @param {string[]} buttons Button HTML; empty items are skipped.
    * @returns {string} HTML.
    */
   function overviewLine(row, lang, buttons) {
-    const name = escapeHtml(toText(row.character.get('name')));
     let mark = row.inspired
       ? `<span style="color:#f2c94c;font-weight:bold">${YES}</span>`
       : `<span style="opacity:0.6">${NO}</span>`;
@@ -12809,14 +13066,13 @@ const InspirationTrackerMod = (() => {
     }
     const sheet =
       row.kind === 'none'
-        ? ` <span style="font-size:0.8em;opacity:0.7">(${escapeHtml(t('menu.noSheet', lang))})</span>`
+        ? ` <span style="font-size:0.8em;font-weight:normal;opacity:0.7">(${escapeHtml(t('menu.noSheet', lang))})</span>`
         : '';
+    const list = buttons.filter(Boolean);
     return [
-      '<table style="width:100%;border-collapse:collapse;margin:1px 0"><tr>',
-      `<td style="min-width:1.4em;text-align:center;white-space:nowrap">${mark}</td>`,
-      `<td>${name}${sheet}</td>`,
-      `<td style="text-align:right;white-space:nowrap">${buttons}</td>`,
-      '</tr></table>',
+      buildItemTitle(toText(row.character.get('name')), mark, sheet),
+      row.kept ? buildNote(row.kept) : '',
+      buildButtonGrid(list, Math.min(Math.max(list.length, 2), 3)),
     ].join('');
   }
 
@@ -12844,17 +13100,22 @@ const InspirationTrackerMod = (() => {
     const rows = await readRows(visible);
     const lines = rows.map((row) => {
       const id = row.character.id;
-      let buttons = '';
+      let buttons = [];
       if (gm) {
         buttons = row.inspired
-          ? buildSecondaryButton(
-              t('buttons.remove', lang),
-              `${COMMAND} remove --ids ${id} --party`
-            ) +
-            buildSecondaryButton(t('buttons.spend', lang), `${COMMAND} spend --ids ${id} --party`)
-          : buildButton(t('buttons.give', lang), `${COMMAND} give --ids ${id} --party`);
+          ? [
+              buildSecondaryButton(
+                t('buttons.remove', lang),
+                `${COMMAND} remove --ids ${id} --party`
+              ),
+              buildSecondaryButton(
+                t('buttons.spend', lang),
+                `${COMMAND} spend --ids ${id} --party`
+              ),
+            ]
+          : [buildButton(t('buttons.give', lang), `${COMMAND} give --ids ${id} --party`)];
       } else if (row.inspired && config.playerSpend && canControl(playerId, row.character)) {
-        buttons = buildButton(t('buttons.spend', lang), `${COMMAND} spend --ids ${id} --party`);
+        buttons = [buildButton(t('buttons.spend', lang), `${COMMAND} spend --ids ${id} --party`)];
       }
       return overviewLine(row, lang, buttons);
     });
@@ -12866,12 +13127,15 @@ const InspirationTrackerMod = (() => {
         : `<div>${escapeHtml(t(gm ? 'menu.partyEmptyGm' : 'menu.partyEmpty', lang))}</div>`,
       buildDivider(),
       `<div style="font-size:0.9em">${escapeHtml(t('menu.partyCount', lang, { count, total: rows.length, term }))}</div>`,
-      buildSecondaryButton(t('buttons.refresh', lang), `${COMMAND} party`),
+      buildButtonGrid(
+        [
+          buildSecondaryButton(t('buttons.refresh', lang), `${COMMAND} party`),
+          gm ? buildSecondaryButton(t('buttons.menu', lang), COMMAND) : '',
+          ...otherPoolButtons(null, lang),
+        ],
+        2
+      ),
     ];
-    body.push(...otherPoolButtons(null, lang));
-    if (gm) {
-      body.push(buildSecondaryButton(t('buttons.menu', lang), COMMAND));
-    }
     whisper(playerId, t('titles.party', lang), body);
   }
 
@@ -12884,7 +13148,7 @@ const InspirationTrackerMod = (() => {
    * @param {object} character Roll20 character.
    * @param {number} points The character's points.
    * @param {boolean} party Whether to show the party again afterwards.
-   * @returns {string} Button HTML.
+   * @returns {string[]} Button HTML; empty items stand for buttons that do not apply.
    */
   function poolLineButtons(playerId, gm, pool, character, points, party) {
     const config = getConfig();
@@ -12897,15 +13161,46 @@ const InspirationTrackerMod = (() => {
         button(buildButton, 'give', 'give', 'points'),
         points > 0 ? button(buildSecondaryButton, 'remove', 'remove', 'points') : '',
         points > 0 ? button(buildSecondaryButton, 'spend', 'spend', 'points') : '',
-      ].join('');
+      ];
     }
     if (points > 0 && config.playerSpend && canControl(playerId, character)) {
-      return (
-        button(buildButton, 'spend', 'spend', 'points') +
-        button(buildSecondaryButton, 'boost', 'boost', 'bonus')
-      );
+      return [
+        button(buildButton, 'spend', 'spend', 'points'),
+        button(buildSecondaryButton, 'boost', 'boost', 'bonus'),
+      ];
     }
-    return '';
+    return [];
+  }
+
+  /**
+   * Reads a character's points in a pool for an overview line, with the words
+   * that say where they are kept: the sheet box's name, or the attribute.
+   *
+   * @param {object} character Roll20 character.
+   * @param {object} pool Pool.
+   * @param {string} lang Locale code.
+   * @returns {{character: object, points: number, kept: string, where: string}} Row.
+   */
+  function poolRow(character, pool, lang) {
+    const { where, name, value } = readPool(character.id, pool);
+    const kept =
+      where === 'resource'
+        ? t('pools.keptBox', lang, { name: pool.name })
+        : t('pools.keptAttribute', lang, { attribute: name });
+    return { character, points: value, kept, where };
+  }
+
+  /**
+   * Builds the note that explains an attribute, for a card that lists one.
+   *
+   * @param {{where: string}[]} rows Rows from poolRow.
+   * @param {string} lang Locale code.
+   * @returns {string[]} HTML, or nothing when every row is a sheet box.
+   */
+  function keptNote(rows, lang) {
+    return rows.some((row) => row.where === 'attribute')
+      ? [buildNote(t('pools.keptNote', lang))]
+      : [];
   }
 
   /**
@@ -12943,16 +13238,11 @@ const InspirationTrackerMod = (() => {
    */
   function showPoolParty(playerId, gm, pool, characters) {
     const lang = getConfig().language;
-    let total = 0;
-    const lines = characters.map((character) => {
-      const points = readPool(character.id, pool).value;
-      total += points;
-      return overviewLine(
-        { character, points },
-        lang,
-        poolLineButtons(playerId, gm, pool, character, points, true)
-      );
-    });
+    const rows = characters.map((character) => poolRow(character, pool, lang));
+    const total = rows.reduce((sum, row) => sum + row.points, 0);
+    const lines = rows.map((row) =>
+      overviewLine(row, lang, poolLineButtons(playerId, gm, pool, row.character, row.points, true))
+    );
     const flag = pool === activePool() ? '' : ` --pool ${pool.id}`;
     const body = [
       lines.length > 0
@@ -12960,12 +13250,16 @@ const InspirationTrackerMod = (() => {
         : `<div>${escapeHtml(t(gm ? 'menu.partyEmptyGm' : 'menu.partyEmpty', lang))}</div>`,
       buildDivider(),
       `<div style="font-size:0.9em">${escapeHtml(t('pools.partyTotal', lang, { total, term: pool.name }))}</div>`,
-      buildSecondaryButton(t('buttons.refresh', lang), `${COMMAND} party${flag}`),
-      ...otherPoolButtons(pool, lang),
+      ...keptNote(rows, lang),
+      buildButtonGrid(
+        [
+          buildSecondaryButton(t('buttons.refresh', lang), `${COMMAND} party${flag}`),
+          gm ? buildSecondaryButton(t('buttons.menu', lang), COMMAND) : '',
+          ...otherPoolButtons(pool, lang),
+        ],
+        2
+      ),
     ];
-    if (gm) {
-      body.push(buildSecondaryButton(t('buttons.menu', lang), COMMAND));
-    }
     whisper(playerId, t('titles.poolParty', lang, { term: pool.name }), body);
   }
 
@@ -12994,8 +13288,8 @@ const InspirationTrackerMod = (() => {
         row,
         lang,
         row.inspired && config.playerSpend
-          ? buildButton(t('buttons.spend', lang), `${COMMAND} spend --ids ${row.character.id}`)
-          : ''
+          ? [buildButton(t('buttons.spend', lang), `${COMMAND} spend --ids ${row.character.id}`)]
+          : []
       )
     );
     // The tracked pool, then the GM's other pools, for the characters that are theirs: in the
@@ -13006,22 +13300,28 @@ const InspirationTrackerMod = (() => {
       (c) => party.some((m) => m.id === c.id) || controllerIds(c).includes(playerId)
     );
     const pools = getPools().filter((pool) => pool === tracked || pool !== defaultPool());
+    const poolRows = [];
     for (const pool of pools) {
       const listed = controlled
-        .map((character) => ({ character, points: readPool(character.id, pool).value }))
+        .map((character) => poolRow(character, pool, lang))
         .filter((row) => row.points > 0 || theirs.includes(row.character));
+      poolRows.push(...listed);
       if (listed.length > 0 && (pools.length > 1 || !tracked)) {
         lines.push(buildSectionLabel(pool.name));
       }
-      for (const { character, points } of listed) {
+      for (const row of listed) {
         lines.push(
           overviewLine(
-            { character, points },
+            row,
             lang,
-            poolLineButtons(playerId, false, pool, character, points, false)
+            poolLineButtons(playerId, false, pool, row.character, row.points, false)
           )
         );
       }
+    }
+    const note = keptNote(poolRows, lang);
+    if (note.length > 0) {
+      lines.push(buildDivider(), ...note);
     }
     whisper(
       playerId,
@@ -13050,7 +13350,7 @@ const InspirationTrackerMod = (() => {
         rules2024 += 1;
       }
     }
-    const row = (key, value) => buildRow(t(`status.${key}`, lang), escapeHtml(String(value)));
+    const row = (key, value) => buildRow(t(`status.${key}`, lang), escapeHtml(String(value)), true);
     whisper(playerId, t('titles.status', lang), [
       row('version', SCRIPT_VERSION),
       row('beacon', counts.beacon),
@@ -13085,14 +13385,14 @@ const InspirationTrackerMod = (() => {
       : HELP_COMMANDS.filter(([, key]) =>
           ['menu', 'spend', 'boost', 'party', 'help'].includes(key)
         );
-    const lines = commands.map(
-      ([text, key]) =>
-        `<div style="margin:2px 0"><code>${escapeHtml(`${COMMAND} ${text}`.trim())}</code><br><span style="font-size:0.9em">${escapeHtml(t(gm ? `help.${key}` : `helpPlayer.${key}`, lang))}</span></div>`
+    const lines = commands.map(([text, key]) =>
+      buildCommandHelp(
+        `${COMMAND} ${text}`.trim(),
+        t(gm ? `help.${key}` : `helpPlayer.${key}`, lang)
+      )
     );
     if (gm) {
-      lines.push(
-        `<div style="font-size:0.85em;margin-top:4px">${escapeHtml(t('menu.hint', lang, { help: HANDOUT_HELP_NAME }))}</div>`
-      );
+      lines.push(buildDivider(), buildNote(t('menu.hint', lang, { help: HANDOUT_HELP_NAME })));
     }
     whisper(playerId, t('titles.help', lang), lines);
   }
