@@ -17,11 +17,12 @@ A rewrite by MidNiteShadow7 of Robin Kuiper's InspirationTracker, which was repo
 - **Heroic Inspiration wording**: characters on the 2024 rules say Heroic Inspiration, those on the 2014 rules say Inspiration, following each D&D 2024 sheet's rules setting. The **Wording** setting can force either.
 - **Passing it on (2024 rules)**: a character who would gain Heroic Inspiration while having it can give it to a party member who does not have it.
 - **Party overview** (`!inspiration party`) with Give, Remove and Spend buttons, and `party add` / `party remove` to change who is in it. Players can be allowed to see it.
+- **Points pools**: set **Tracking** to **Points pool** to track inspiration as points that build up and are spent a few at a time, with `give`, `remove` and `spend <points>`, and **Boost** (`boost <bonus>`) to spend points for a bonus to a roll at the pool's cost per +1. The points are kept in the sheet's resource box that has the pool's name, or in a plain attribute, so pools work on any sheet. The GM can rename the default pool and add more (`!inspiration pools`), for hero points, luck and the like, used with `--pool <name>`.
 - **Custom token markers**: any marker from the game's marker sets, stored by tag.
 - `give`, `remove`, `toggle`, `spend`, `undo`, `sync`, `status`, `set`, `reset`, `help` and `journal rebuild` commands, and `--ids` to act on tokens or characters by ID.
 - Settings for who sees announcements, player spending, the player overview and passing on.
 - Help and Command Deck handouts, and menus, messages and handouts in 24 languages.
-- Commands from other Mods, and an API: `InspirationTracker.give`, `spend`, `remove`, `isInspired` and `ObserveTokenChange`.
+- Commands from other Mods, and an API: `InspirationTracker.give`, `spend`, `remove`, `isInspired`, `points`, `givePoints`, `spendPoints` and `ObserveTokenChange`.
 
 ### Changed
 

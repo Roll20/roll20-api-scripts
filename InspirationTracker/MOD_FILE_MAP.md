@@ -26,17 +26,22 @@ Where to look for each part of the Mod. Line numbers drift; search for the funct
 
 ## Inspiration
 
-| What                               | Where                                                        |
-| ---------------------------------- | ------------------------------------------------------------ |
-| Give, remove, spend                | `src/actions.js` `give`, `remove`, `spend`                   |
-| Undo a spend                       | `src/actions.js` `undoSpend`                                 |
-| Pass on (2024 rules)               | `src/actions.js` `offerPassOn`, `passOn`                     |
-| Changes made on a sheet            | `src/actions.js` `handleSheetValue`                          |
-| Marker added or removed on a token | `src/actions.js` `handleMarkerChange`                        |
-| Markers on every token, effects    | `src/actions.js` `syncTokens`, `playFx`                      |
-| Announcements                      | `src/actions.js` `announce`, `announceGain`, `announceSpend` |
-| One action per character at a time | `src/actions.js` `exclusive`                                 |
-| Read every sheet                   | `src/actions.js` `syncAll`                                   |
+| What                               | Where                                                                                           |
+| ---------------------------------- | ----------------------------------------------------------------------------------------------- |
+| Give, remove, spend                | `src/actions.js` `give`, `remove`, `spend`                                                      |
+| Undo a spend                       | `src/actions.js` `undoSpend`                                                                    |
+| Pass on (2024 rules)               | `src/actions.js` `offerPassOn`, `passOn`                                                        |
+| Changes made on a sheet            | `src/actions.js` `handleSheetValue`                                                             |
+| Marker added or removed on a token | `src/actions.js` `handleMarkerChange`                                                           |
+| Markers on every token, effects    | `src/actions.js` `syncTokens`, `playFx`                                                         |
+| Announcements                      | `src/actions.js` `announce`, `announceGain`, `announceSpend`                                    |
+| One action per character at a time | `src/actions.js` `exclusive`                                                                    |
+| Read every sheet                   | `src/actions.js` `syncAll`                                                                      |
+| Points pools: give, remove, spend  | `src/actions.js` `poolGive`, `poolRemove`, `poolSpend`                                          |
+| Which pool a command works on      | `src/actions.js` `activePool`; `src/commands.js` `targetPool`                                   |
+| Pool markers                       | `src/actions.js` `poolMarker`, `syncPool`                                                       |
+| Add, delete and change pools       | `src/state.js` `addPool`, `deletePool`, `validatePoolField`; `src/commands.js` `handlePoolEdit` |
+| Pools card                         | `src/menu.js` `showPools`                                                                       |
 
 ## Sheets, Markers and Party
 
@@ -44,6 +49,8 @@ Where to look for each part of the Mod. Line numbers drift; search for the funct
 | ---------------------------- | ----------------------------------------------------- |
 | Which sheet a character uses | `src/sheet.js` `sheetKind`                            |
 | Read / write inspiration     | `src/sheet.js` `readInspiration`, `writeInspiration`  |
+| Where a pool is kept         | `src/sheet.js` `locatePool`, `poolAttributeName`      |
+| Read / write a pool          | `src/sheet.js` `readPool`, `writePool`                |
 | 2024 sheet store             | `src/sheet.js` `readStore`, `inspirationFromStore`    |
 | Rules edition and wording    | `src/sheet.js` `rulesFor`; `src/actions.js` `termFor` |
 | Marker list and lookup       | `src/markers.js`                                      |

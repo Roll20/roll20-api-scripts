@@ -1,7 +1,7 @@
 {
   "name": "inspirationtracker-roll20",
   "version": "1.0.0",
-  "description": "Roll20 API Mod that tracks D&D 5e Inspiration and Heroic Inspiration on the 2014 and 2024 sheets, with token markers, player spending and a party overview.",
+  "description": "Roll20 API Mod that tracks D&D 5e Inspiration and Heroic Inspiration on the 2014 and 2024 sheets, and points pools on any sheet, with token markers, player spending and a party overview.",
   "private": true,
   "type": "module",
   "scripts": {

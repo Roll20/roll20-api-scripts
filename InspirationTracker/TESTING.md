@@ -48,6 +48,18 @@ Use **Mod Test Lab - InspirationTracker** (a copy of Mod Test Lab): Jumpgate, D&
 
 - [ ] Give Seraphina Heroic Inspiration twice: the player is asked who gets it, the buttons list PCs without it, choosing one gives it to them, and the choice cannot be used again.
 
+## Points Pools
+
+The Node tests in `tests/pools.test.mjs` cover pools on both kinds of sheet. By hand, on a D&D 5E by Roll20 (2014 OGL) character with an Other Resource box named Inspiration holding 52:
+
+1. `!inspiration set tracking pool`: the character's tokens show the marker.
+2. `!inspiration pool set inspiration cost 2`, select the token, **Boost**, type 4: the box reads 44 and chat says "spends 8 Inspiration for +4 to the roll (52 → 44)". **Undo** in the GM whisper puts 52 back.
+3. `!inspiration spend 60`: refused, the box is unchanged.
+4. Type 0 into the box on the sheet: the marker goes. Type 5: it comes back.
+5. On a D&D 2024 character, `!inspiration give 3`: an `inspiration_pool` attribute holds 3 and the Heroic Inspiration box is untouched.
+6. `!inspiration pool add Luck`, `!inspiration give 2 --pool luck`: a `luck_pool` attribute holds 2. `!inspiration party --pool luck` lists it.
+7. `!inspiration set tracking flag`: Give and Spend work on the sheet's inspiration box again.
+
 ## Markers and Settings
 
 - [ ] Choose a custom marker from the **Marker** drop-down: it moves on every inspired token.
