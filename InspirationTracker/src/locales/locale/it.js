@@ -89,7 +89,7 @@ const TRANSLATION = {
     poolDefault:
       'La riserva predefinita, «{name}», non può essere eliminata. Può essere rinominata.',
     poolMarkerHint:
-      "Scegli dai tuoi set di segnalini un segnalino diverso da quello dell'impostazione Segnalino.",
+      "Scegli dai tuoi set di segnalini un segnalino che né l'impostazione Segnalino né le altre riserve usano.",
     poolSetHint: 'Scrivi !inspiration pools per vedere ogni riserva e le sue impostazioni.',
     denied: 'Non puoi farlo per {name}.',
     gmOnly: 'Solo il GM può usare quel comando.',
@@ -181,7 +181,7 @@ const TRANSLATION = {
     },
     marker: {
       label: 'Segnalino',
-      desc: "Segnalino mostrato sul token mentre un personaggio ha l'ispirazione. Sono elencati anche i set di segnalini personalizzati.",
+      desc: "Segnalino mostrato sul token mentre un personaggio ha l'ispirazione. Sono elencati anche i set di segnalini personalizzati. Scegli Nessuno per non mostrare alcun segnalino.",
     },
     wording: {
       label: 'Terminologia',
@@ -322,7 +322,7 @@ const TRANSLATION = {
       heading: 'Riserve di punti',
       points: [
         "Una riserva di punti è un numero che si accumula e si spende un po' alla volta: una riserva di punti ispirazione, punti eroe, fortuna, bennies e simili. Funziona con qualsiasi scheda del personaggio.",
-        'Imposta Tracciamento su Riserva di punti, e Dai, Togli e Spendi agiscono sulla riserva predefinita, chiedendo quanti punti. Il segnalino resta visibile finché un personaggio ha almeno un punto.',
+        'Imposta Tracciamento su Riserva di punti, e Dai, Togli e Spendi agiscono sulla riserva predefinita, chiedendo quanti punti.',
         'Potenzia spende punti per alzare un tiro: scrivi il bonus desiderato, e i Punti per +1 della riserva stabiliscono il costo. A 2 punti per +1, un bonus di 4 costa 8 punti. La Mod annuncia la spesa; aggiungi tu il bonus al tiro.',
         'Una spesa viene rifiutata quando il personaggio non ha abbastanza punti. Il GM viene avvisato di chi ha speso cosa, con un pulsante Annulla.',
         "Conservata in «Casella risorsa della scheda» usa la casella risorsa della scheda che ha il nome della riserva, come una casella Other Resource chiamata Ispirazione sulla scheda D&D 2014. Quando la scheda non ha una casella con quel nome, oppure con «Attributo», i punti sono conservati in un semplice attributo, come inspiration_pool. La scheda D&D 2024 usa sempre l'attributo.",
@@ -339,6 +339,7 @@ const TRANSLATION = {
         "Aggiungere il segnalino a un token a mano, o con TokenMod, dà l'ispirazione al personaggio. Toglierlo la spende.",
         'Cambiare segnalino lo sposta subito su ogni token.',
         'I segnalini di condizione della scheda D&D 2024 non sono proposti, perché è la scheda stessa a impostarli.',
+        "L'impostazione Segnalino riguarda la casella dell'ispirazione sulla scheda. Ogni riserva di punti ha un proprio Segnalino, nel riquadro Riserve, e parte da Nessuno. Scegli Nessuno per l'una o per l'altro per non mettere alcun segnalino sui token: il riquadro del gruppo mostra comunque chi ha l'ispirazione, o quanti punti.",
       ],
     },
     commands: {

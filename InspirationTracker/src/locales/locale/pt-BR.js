@@ -88,7 +88,7 @@ const TRANSLATION = {
       'Use um nome de até 40 letras, dígitos e espaços que nenhuma outra reserva tenha.',
     poolDefault: 'A reserva padrão, "{name}", não pode ser excluída. Ela pode ser renomeada.',
     poolMarkerHint:
-      'Escolha, nos seus conjuntos de marcadores, um marcador diferente do definido na configuração Marcador.',
+      'Escolha, nos seus conjuntos de marcadores, um marcador que nem a configuração Marcador nem as outras reservas usem.',
     poolSetHint: 'Digite !inspiration pools para ver todas as reservas e suas configurações.',
     denied: 'Você não pode fazer isso por {name}.',
     gmOnly: 'Apenas o Mestre pode usar esse comando.',
@@ -180,7 +180,7 @@ const TRANSLATION = {
     },
     marker: {
       label: 'Marcador',
-      desc: 'Marcador de token exibido enquanto o personagem tem inspiração. Conjuntos de marcadores personalizados também aparecem na lista.',
+      desc: 'Marcador de token exibido enquanto o personagem tem inspiração. Conjuntos de marcadores personalizados também aparecem na lista. Escolha Nenhum para não exibir marcador.',
     },
     wording: {
       label: 'Nomenclatura',
@@ -319,7 +319,7 @@ const TRANSLATION = {
       heading: 'Reservas de Pontos',
       points: [
         'Uma reserva de pontos é um número que se acumula e é gasto aos poucos: uma reserva de pontos de inspiração, pontos de herói, sorte, bennies e afins. Funciona com qualquer ficha de personagem.',
-        'Defina Controle como Reserva de pontos, e Dar, Remover e Gastar passam a agir sobre a reserva padrão, perguntando quantos pontos. O marcador aparece enquanto o personagem tiver algum ponto.',
+        'Defina Controle como Reserva de pontos, e Dar, Remover e Gastar passam a agir sobre a reserva padrão, perguntando quantos pontos.',
         'Impulsionar gasta pontos para aumentar uma rolagem: digite o bônus desejado, e o valor de Pontos por +1 da reserva decide o custo. A 2 pontos por +1, um bônus de 4 custa 8 pontos. O Mod anuncia o gasto; some o bônus à rolagem você mesmo.',
         'Um gasto é recusado quando o personagem não tem pontos suficientes. O Mestre é avisado de quem gastou o quê, com um botão Desfazer.',
         'Guardada em "Campo de recurso da ficha" usa o campo de recurso da ficha que tem o nome da reserva, como um campo Other Resource chamado Inspiration na ficha D&D 2014. Quando a ficha não tem um campo com esse nome, ou com "Atributo", os pontos ficam guardados em um atributo simples, como inspiration_pool. A ficha D&D 2024 sempre usa o atributo.',
@@ -336,6 +336,7 @@ const TRANSLATION = {
         'Adicionar o marcador a um token manualmente, ou com o TokenMod, dá inspiração ao personagem. Retirá-lo conta como gastar.',
         'Trocar o marcador o move em todos os tokens na hora.',
         'Os marcadores de condição próprios da ficha D&D 2024 não são oferecidos, porque a ficha os define sozinha.',
+        'A configuração Marcador é para o campo de inspiração da ficha. Cada reserva de pontos tem seu próprio Marcador, no cartão Reservas, e começa com Nenhum. Escolha Nenhum em qualquer um dos dois para não colocar marcador nos tokens: o cartão do grupo continua mostrando quem tem inspiração, ou quantos pontos.',
       ],
     },
     commands: {

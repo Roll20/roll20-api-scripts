@@ -87,7 +87,8 @@ const TRANSLATION = {
     poolNameHint:
       'Brug et navn på op til 40 bogstaver, cifre og mellemrum, som ingen anden pulje har.',
     poolDefault: 'Standardpuljen, "{name}", kan ikke slettes. Den kan omdøbes.',
-    poolMarkerHint: 'Vælg en markør fra dine markørsæt, som ikke er den i indstillingen Markør.',
+    poolMarkerHint:
+      'Vælg en markør fra dine markørsæt, som hverken indstillingen Markør eller de andre puljer bruger.',
     poolSetHint: 'Skriv !inspiration pools for at se alle puljer og deres indstillinger.',
     denied: 'Det kan du ikke gøre for {name}.',
     gmOnly: 'Kun GM kan bruge den kommando.',
@@ -178,7 +179,7 @@ const TRANSLATION = {
     },
     marker: {
       label: 'Markør',
-      desc: 'Brikmarkør, der vises, mens en figur har inspiration. Egne markørsæt vises også.',
+      desc: 'Brikmarkør, der vises, mens en figur har inspiration. Egne markørsæt vises også. Vælg Ingen for ikke at vise nogen markør.',
     },
     wording: {
       label: 'Ordlyd',
@@ -318,7 +319,7 @@ const TRANSLATION = {
       heading: 'Pointpuljer',
       points: [
         'En pointpulje er et tal, der bygges op og bruges nogle få ad gangen: en pulje af inspirationspoint, heltepoint, held, bennies og lignende. Den virker med ethvert figurark.',
-        'Sæt Sporing til Pointpulje, så virker Giv, Fjern og Brug på standardpuljen og spørger, hvor mange point. Markøren vises, så længe en figur har point.',
+        'Sæt Sporing til Pointpulje, så virker Giv, Fjern og Brug på standardpuljen og spørger, hvor mange point.',
         'Boost bruger point på at hæve et slag: skriv den ønskede bonus, og puljens Point pr. +1 afgør prisen. Ved 2 point pr. +1 koster en bonus på 4 i alt 8 point. Mod’en meddeler forbruget; læg selv bonussen til slaget.',
         'Et forbrug afvises, når figuren ikke har point nok. GM får besked om, hvem der brugte hvad, med en Fortryd-knap.',
         'Gemmes i "Arkets ressourcefelt" bruger det ressourcefelt på arket, der har puljens navn, fx et Other Resource-felt ved navn Inspiration på 2014 D&D-arket. Når arket ikke har et felt med det navn, eller med "Attribut", gemmes pointene i en almindelig attribut, fx inspiration_pool. D&D 2024-arket bruger altid attributten.',
@@ -335,6 +336,7 @@ const TRANSLATION = {
         'At sætte markøren på en brik i hånden eller med TokenMod giver figuren inspiration. At fjerne den bruger den.',
         'Når markøren ændres, flyttes den straks på alle brikker.',
         'D&D 2024-arkets egne tilstandsmarkører tilbydes ikke, fordi arket selv sætter dem.',
+        'Indstillingen Markør gælder arkets inspirationsfelt. Hver pointpulje har sin egen Markør på Puljer-kortet og starter med Ingen. Vælg Ingen for en af dem for ikke at sætte nogen markør på brikker: gruppekortet viser stadig, hvem der har inspiration, eller hvor mange point.',
       ],
     },
     commands: {

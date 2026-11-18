@@ -88,7 +88,7 @@ const TRANSLATION = {
       'Legfeljebb 40 betűből, számjegyből és szóközből álló nevet adj meg, amelyet más készlet nem visel.',
     poolDefault: 'Az alapértelmezett készlet („{name}”) nem törölhető. Átnevezni lehet.',
     poolMarkerHint:
-      'Válassz a jelölőkészleteidből olyan jelölőt, amely nem azonos a Jelölő beállításban megadottal.',
+      'Válassz a jelölőkészleteidből olyan jelölőt, amelyet sem a Jelölő beállítás, sem a többi készlet nem használ.',
     poolSetHint: 'Írd be: !inspiration pools, hogy lásd az összes készletet és beállításaikat.',
     denied: 'Ezt nem teheted meg {name} esetében.',
     gmOnly: 'Ezt a parancsot csak a KM használhatja.',
@@ -179,7 +179,7 @@ const TRANSLATION = {
     },
     marker: {
       label: 'Jelölő',
-      desc: 'Tokenjelölő, amely addig látszik, amíg a karakternek ihlete van. Az egyéni jelölőkészletek is szerepelnek a listában.',
+      desc: 'Tokenjelölő, amely addig látszik, amíg a karakternek ihlete van. Az egyéni jelölőkészletek is szerepelnek a listában. Válaszd a Nincs lehetőséget, ha ne jelenjen meg jelölő.',
     },
     wording: {
       label: 'Megnevezés',
@@ -321,7 +321,7 @@ const TRANSLATION = {
       heading: 'Pontkészletek',
       points: [
         'A pontkészlet egy szám, amely gyűlik, és egyszerre néhány pontonként fogy: ihletpontok, hőspontok, szerencse, bennies és hasonlók készlete. Bármilyen karakterlappal működik.',
-        'Állítsd a Nyilvántartást Pontkészletre, és az Ad, az Elvesz és a Felhasznál az alapértelmezett készleten működik, és megkérdezi, hány pontról van szó. A jelölő addig látszik, amíg a karakternek van pontja.',
+        'Állítsd a Nyilvántartást Pontkészletre, és az Ad, az Elvesz és a Felhasznál az alapértelmezett készleten működik, és megkérdezi, hány pontról van szó.',
         'Az Erősít pontokat használ fel egy dobás növelésére: írd be a kívánt bónuszt, és a készlet Pont +1-enként beállítása határozza meg az árát. Ha minden +1 2 pontba kerül, a 4-es bónusz 8 pont. A Mod bejelenti a felhasználást; a bónuszt te add hozzá a dobáshoz.',
         'A rendszer elutasítja a felhasználást, ha a karakternek nincs elég pontja. A KM értesítést kap arról, ki mit használt fel, Visszavonás gombbal.',
         'Ha a Tárolás helye „A lap erőforrásmezője”, a lapnak azt az erőforrásmezőjét használja, amely a készlet nevét viseli, például egy Ihlet nevű Other Resource mezőt a 2014-es D&D lapon. Ha a lapon nincs ilyen nevű mező, vagy a beállítás „Attribútum”, a pontok egy egyszerű attribútumban tárolódnak, például: inspiration_pool. A D&D 2024 lap mindig az attribútumot használja.',
@@ -338,6 +338,7 @@ const TRANSLATION = {
         'Ha kézzel vagy TokenModdal teszed fel a jelölőt egy tokenre, a karakter ihletet kap. Ha leveszed, felhasználja.',
         'A jelölő módosítása azonnal áthelyezi minden tokenen.',
         'A D&D 2024 lap saját állapotjelölői nem szerepelnek, mert azokat a lap maga állítja be.',
+        'A Jelölő beállítás a lap ihletmezőjéhez tartozik. Minden pontkészletnek saját Jelölője van a Készletek kártyán, és kezdetben Nincs. Válaszd bármelyiknél a Nincs lehetőséget, és a tokenekre nem kerül jelölő: a csapat kártyája továbbra is mutatja, kinek van ihlete, vagy hány pontja van.',
       ],
     },
     commands: {

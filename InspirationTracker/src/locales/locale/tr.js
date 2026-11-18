@@ -87,7 +87,8 @@ const TRANSLATION = {
     poolNameHint:
       'Başka hiçbir havuzda olmayan, en fazla 40 harf, rakam ve boşluktan oluşan bir ad kullan.',
     poolDefault: 'Varsayılan havuz "{name}" silinemez. Yeniden adlandırılabilir.',
-    poolMarkerHint: 'İşaretçi setlerinden, İşaretçi ayarındakinden farklı bir işaretçi seç.',
+    poolMarkerHint:
+      'İşaretçi setlerinden, İşaretçi ayarının ve diğer havuzların kullanmadığı bir işaretçi seç.',
     poolSetHint: 'Tüm havuzları ve ayarlarını görmek için !inspiration pools yaz.',
     denied: '{name} için bunu yapamazsın.',
     gmOnly: 'Bu komutu yalnızca GM kullanabilir.',
@@ -179,7 +180,7 @@ const TRANSLATION = {
     },
     marker: {
       label: 'İşaretçi',
-      desc: 'Bir karakterde ilham varken gösterilen jeton işaretçisi. Özel işaretçi setleri de listelenir.',
+      desc: 'Bir karakterde ilham varken gösterilen jeton işaretçisi. Özel işaretçi setleri de listelenir. İşaretçi gösterilmemesi için Yok seçeneğini seç.',
     },
     wording: {
       label: 'Adlandırma',
@@ -318,7 +319,7 @@ const TRANSLATION = {
       heading: 'Puan Havuzları',
       points: [
         'Puan havuzu, birikip azar azar harcanan bir sayıdır: ilham puanları, kahraman puanları, şans, bennies ve benzeri. Her karakter sayfasıyla çalışır.',
-        'Takip ayarını Puan havuzu yap; Ver, Kaldır ve Harca varsayılan havuz üzerinde çalışır ve kaç puan olduğunu sorar. Karakterin puanı olduğu sürece işaretçi görünür.',
+        'Takip ayarını Puan havuzu yap; Ver, Kaldır ve Harca varsayılan havuz üzerinde çalışır ve kaç puan olduğunu sorar.',
         'Güçlendir, bir zarı yükseltmek için puan harcar: istediğin bonusu yaz, bedeli havuzun +1 başına puan ayarı belirler. +1 başına 2 puanda, 4 bonus 8 puana mal olur. Mod harcamayı duyurur; bonusu zara kendin ekle.',
         "Karakterin yeterli puanı yoksa harcama reddedilir. GM'e kimin ne harcadığı bir Geri Al düğmesiyle bildirilir.",
         'Tutulduğu yer ayarındaki "Sayfadaki kaynak kutusu", sayfada havuzun adını taşıyan kaynak kutusunu kullanır; örneğin 2014 D&D sayfasında Inspiration adlı bir Other Resource kutusu. Sayfada bu adda bir kutu yoksa veya "Özellik" seçiliyse puanlar inspiration_pool gibi düz bir özellikte tutulur. D&D 2024 sayfası her zaman özelliği kullanır.',
@@ -335,6 +336,7 @@ const TRANSLATION = {
         'İşaretçiyi bir jetona elle veya TokenMod ile eklemek karaktere ilham verir. Kaldırmak ilhamı harcar.',
         'İşaretçiyi değiştirmek onu tüm jetonlarda hemen taşır.',
         'D&D 2024 sayfasının kendi durum işaretçileri sunulmaz, çünkü sayfa onları kendisi ayarlar.',
+        'İşaretçi ayarı sayfadaki ilham kutusu içindir. Her puan havuzunun Havuzlar kartında kendi İşaretçisi vardır ve başlangıçta Yok olarak gelir. Jetonlara işaretçi konmaması için ikisinden birinde Yok seçeneğini seç: Grup kartı kimde ilham olduğunu veya kaç puan olduğunu göstermeye devam eder.',
       ],
     },
     commands: {

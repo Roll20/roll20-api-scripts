@@ -89,7 +89,7 @@ const TRANSLATION = {
     poolDefault:
       'De standaardpool, "{name}", kan niet worden verwijderd. Je kunt hem wel hernoemen.',
     poolMarkerHint:
-      'Kies een marker uit je markersets die niet de marker van de instelling Marker is.',
+      'Kies uit je markersets een marker die de instelling Marker en de andere pools niet gebruiken.',
     poolSetHint: 'Typ !inspiration pools om elke pool en zijn instellingen te zien.',
     denied: 'Dat kun je niet doen voor {name}.',
     gmOnly: 'Alleen de GM kan dat commando gebruiken.',
@@ -181,7 +181,7 @@ const TRANSLATION = {
     },
     marker: {
       label: 'Marker',
-      desc: 'Tokenmarker die getoond wordt zolang een personage inspiratie heeft. Eigen markersets staan er ook bij.',
+      desc: 'Tokenmarker die getoond wordt zolang een personage inspiratie heeft. Eigen markersets staan er ook bij. Kies Geen om geen marker te tonen.',
     },
     wording: {
       label: 'Benaming',
@@ -325,7 +325,7 @@ const TRANSLATION = {
       heading: 'Puntenpools',
       points: [
         'Een puntenpool is een getal dat oploopt en met een paar punten tegelijk wordt gebruikt: een pool met inspiratiepunten, heldenpunten, geluk, bennies en dergelijke. Het werkt met elk personageblad.',
-        'Zet Bijhouden op Puntenpool, en Geven, Afnemen en Gebruiken werken op de standaardpool en vragen om hoeveel punten het gaat. De marker is zichtbaar zolang een personage punten heeft.',
+        'Zet Bijhouden op Puntenpool, en Geven, Afnemen en Gebruiken werken op de standaardpool en vragen om hoeveel punten het gaat.',
         'Boost gebruikt punten om een worp te verhogen: typ de gewenste bonus, en Punten per +1 van de pool bepaalt de kosten. Bij 2 punten per +1 kost een bonus van 4 dus 8 punten. De Mod kondigt het gebruik aan; tel de bonus zelf bij de worp op.',
         'Gebruik wordt geweigerd als het personage niet genoeg punten heeft. De GM krijgt te horen wie wat heeft gebruikt, met een knop Ongedaan maken.',
         'Bewaard in "Resourcevakje op het blad" gebruikt het resourcevakje op het blad dat de naam van de pool heeft, zoals een vakje Other Resource met de naam Inspiration op het 2014 D&D-blad. Heeft het blad geen vakje met die naam, of staat er "Attribuut", dan worden de punten bewaard in een gewoon attribuut, zoals inspiration_pool. Het D&D 2024-blad gebruikt altijd het attribuut.',
@@ -342,6 +342,7 @@ const TRANSLATION = {
         'De marker met de hand, of met TokenMod, aan een token toevoegen geeft het personage inspiratie. Hem eraf halen gebruikt hem.',
         'Een andere marker kiezen verplaatst hem meteen op elke token.',
         'De eigen conditiemarkers van het D&D 2024-blad worden niet aangeboden, omdat het blad die zelf zet.',
+        'De instelling Marker hoort bij het inspiratievakje op het blad. Elke puntenpool heeft een eigen Marker, op de Pools-kaart, en begint met Geen. Kies bij een van beide Geen om geen marker op tokens te zetten: de groepskaart toont nog steeds wie inspiratie heeft, of hoeveel punten.',
       ],
     },
     commands: {

@@ -88,7 +88,7 @@ const TRANSLATION = {
       'Fes servir un nom de fins a 40 lletres, xifres i espais que no tingui cap altra reserva.',
     poolDefault: 'La reserva per defecte, "{name}", no es pot suprimir. Se li pot canviar el nom.',
     poolMarkerHint:
-      'Tria un marcador dels teus jocs de marcadors que no sigui el de l’opció Marcador.',
+      "Tria un marcador dels teus jocs de marcadors que no facin servir ni l'opció Marcador ni les altres reserves.",
     poolSetHint: 'Escriu !inspiration pools per veure totes les reserves i les seves opcions.',
     denied: 'No pots fer això per a {name}.',
     gmOnly: 'Només el GM pot fer servir aquesta ordre.',
@@ -180,7 +180,7 @@ const TRANSLATION = {
     },
     marker: {
       label: 'Marcador',
-      desc: 'Marcador de testimoni que es mostra mentre un personatge té inspiració. També s’hi inclouen els jocs de marcadors personalitzats.',
+      desc: 'Marcador de testimoni que es mostra mentre un personatge té inspiració. També s’hi inclouen els jocs de marcadors personalitzats. Tria Cap per no mostrar cap marcador.',
     },
     wording: {
       label: 'Terminologia',
@@ -322,7 +322,7 @@ const TRANSLATION = {
       heading: 'Reserves de punts',
       points: [
         'Una reserva de punts és un nombre que s’acumula i es gasta de mica en mica: una reserva de punts d’inspiració, punts d’heroi, sort, bennies i similars. Funciona amb qualsevol fitxa de personatge.',
-        'Posa Seguiment a Reserva de punts, i Dona, Treu i Gasta actuen sobre la reserva per defecte i demanen quants punts. El marcador es mostra mentre un personatge té algun punt.',
+        'Posa Seguiment a Reserva de punts, i Dona, Treu i Gasta actuen sobre la reserva per defecte i demanen quants punts.',
         'Potencia gasta punts per apujar una tirada: escriu la bonificació que vols, i l’opció Punts per +1 de la reserva en decideix el cost. A 2 punts per +1, una bonificació de 4 costa 8 punts. El Mod anuncia la despesa; afegeix tu mateix la bonificació a la tirada.',
         'Una despesa es rebutja quan el personatge no té prou punts. S’avisa el GM de qui ha gastat què, amb un botó Desfés.',
         'Es guarda a "Casella de recurs de la fitxa" fa servir la casella de recurs de la fitxa que té el nom de la reserva, com ara una casella Other Resource anomenada Inspiration a la fitxa de D&D de 2014. Quan la fitxa no té cap casella amb aquest nom, o amb "Atribut", els punts es guarden en un atribut senzill, com ara inspiration_pool. La fitxa de D&D 2024 sempre fa servir l’atribut.',
@@ -339,6 +339,7 @@ const TRANSLATION = {
         'Afegir el marcador a un testimoni a mà, o amb TokenMod, dona inspiració al personatge. Treure’l la gasta.',
         'Canviar el marcador el mou a tots els testimonis immediatament.',
         'Els marcadors d’estat propis de la fitxa de D&D 2024 no s’ofereixen, perquè la fitxa ja els posa ella mateixa.',
+        "L'opció Marcador és per a la casella d'inspiració de la fitxa. Cada reserva de punts té el seu propi Marcador, a la targeta Reserves, i comença amb Cap. Tria Cap en qualsevol dels dos per no posar cap marcador als testimonis: la targeta del grup continua mostrant qui té inspiració, o quants punts.",
       ],
     },
     commands: {

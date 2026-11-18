@@ -87,7 +87,8 @@ const TRANSLATION = {
     poolNameHint:
       'Käytä enintään 40 merkin nimeä, jossa on kirjaimia, numeroita ja välilyöntejä ja jota ei ole millään muulla varannolla.',
     poolDefault: 'Oletusvarantoa "{name}" ei voi poistaa. Sen voi nimetä uudelleen.',
-    poolMarkerHint: 'Valitse tunnussarjoistasi tunnus, joka ei ole sama kuin Tunnus-asetuksessa.',
+    poolMarkerHint:
+      'Valitse tunnussarjoistasi tunnus, jota Tunnus-asetus tai muut varannot eivät käytä.',
     poolSetHint: 'Kirjoita !inspiration pools nähdäksesi kaikki varannot ja niiden asetukset.',
     denied: 'Et voi tehdä sitä hahmolle {name}.',
     gmOnly: 'Vain GM voi käyttää tätä komentoa.',
@@ -178,7 +179,7 @@ const TRANSLATION = {
     },
     marker: {
       label: 'Tunnus',
-      desc: 'Pelimerkin tunnus, joka näkyy, kun hahmolla on inspiraatio. Myös omat tunnussarjat näytetään.',
+      desc: 'Pelimerkin tunnus, joka näkyy, kun hahmolla on inspiraatio. Myös omat tunnussarjat näytetään. Valitse Ei mitään, jos et halua tunnusta näkyviin.',
     },
     wording: {
       label: 'Nimitys',
@@ -320,7 +321,7 @@ const TRANSLATION = {
       heading: 'Pistevarannot',
       points: [
         'Pistevaranto on luku, joka karttuu ja jota käytetään muutama piste kerrallaan: inspiraatiopisteitä, sankaripisteitä, onnea, bennies-pisteitä ja muuta vastaavaa. Se toimii minkä tahansa hahmolomakkeen kanssa.',
-        'Aseta Seuranta arvoon Pistevaranto, niin Anna, Poista ja Käytä kohdistuvat oletusvarantoon ja kysyvät pistemäärän. Tunnus näkyy niin kauan kuin hahmolla on pisteitä.',
+        'Aseta Seuranta arvoon Pistevaranto, niin Anna, Poista ja Käytä kohdistuvat oletusvarantoon ja kysyvät pistemäärän.',
         'Tehosta käyttää pisteitä heiton korottamiseen: kirjoita haluamasi bonus, ja varannon Pisteitä per +1 -asetus ratkaisee hinnan. Kun +1 maksaa 2 pistettä, bonus 4 maksaa 8 pistettä. Mod ilmoittaa käytöstä; lisää bonus heittoon itse.',
         'Käyttö hylätään, jos hahmolla ei ole tarpeeksi pisteitä. GM saa tiedon siitä, kuka käytti ja mitä, sekä Kumoa-painikkeen.',
         'Säilytyspaikka "Lomakkeen resurssiruutu" käyttää lomakkeen resurssiruutua, jolla on varannon nimi, esimerkiksi Inspiraatio-nimistä Other Resource -ruutua vuoden 2014 D&D-lomakkeella. Jos lomakkeella ei ole sen nimistä ruutua tai valittuna on "Attribuutti", pisteet säilytetään tavallisessa attribuutissa, esimerkiksi inspiration_pool. D&D 2024 -lomake käyttää aina attribuuttia.',
@@ -337,6 +338,7 @@ const TRANSLATION = {
         'Tunnuksen lisääminen pelimerkkiin käsin tai TokenModilla antaa hahmolle inspiraation. Sen poistaminen käyttää sen.',
         'Tunnuksen vaihtaminen siirtää sen heti jokaiseen pelimerkkiin.',
         'D&D 2024 -lomakkeen omia tilatunnuksia ei tarjota, koska lomake asettaa ne itse.',
+        'Tunnus-asetus koskee lomakkeen inspiraatioruutua. Jokaisella pistevarannolla on oma Tunnuksensa Varannot-kortissa, ja aluksi se on Ei mitään. Valitse kumpaan tahansa Ei mitään, jolloin pelimerkkeihin ei lisätä tunnusta: seurueen kortti näyttää silti, kenellä on inspiraatio tai kuinka monta pistettä.',
       ],
     },
     commands: {

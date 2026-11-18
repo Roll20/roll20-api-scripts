@@ -88,7 +88,7 @@ const TRANSLATION = {
       'Använd ett namn på högst 40 bokstäver, siffror och mellanslag som ingen annan pott har.',
     poolDefault: 'Standardpotten, "{name}", kan inte tas bort. Den kan byta namn.',
     poolMarkerHint:
-      'Välj en markör ur dina markörsamlingar som inte är den i inställningen Markör.',
+      'Välj en markör från dina markörsamlingar som varken inställningen Markör eller de andra potterna använder.',
     poolSetHint: 'Skriv !inspiration pools för att se alla potter och deras inställningar.',
     denied: 'Du kan inte göra det för {name}.',
     gmOnly: 'Bara GM kan använda det kommandot.',
@@ -180,7 +180,7 @@ const TRANSLATION = {
     },
     marker: {
       label: 'Markör',
-      desc: 'Tokenmarkör som visas medan en rollperson har inspiration. Egna markörsamlingar listas också.',
+      desc: 'Tokenmarkör som visas medan en rollperson har inspiration. Egna markörsamlingar listas också. Välj Ingen för att inte visa någon markör.',
     },
     wording: {
       label: 'Benämning',
@@ -321,7 +321,7 @@ const TRANSLATION = {
       heading: 'Poängpotter',
       points: [
         'En poängpott är ett tal som byggs upp och används några åt gången: en pott med inspirationspoäng, hjältepoäng, tur, bennies och liknande. Den fungerar med alla rollformulär.',
-        'Sätt Spårning till Poängpott, så verkar Ge, Ta bort och Använd på standardpotten och frågar hur många poäng. Markören visas så länge rollpersonen har några poäng.',
+        'Sätt Spårning till Poängpott, så verkar Ge, Ta bort och Använd på standardpotten och frågar hur många poäng.',
         'Förstärk använder poäng för att höja ett slag: skriv den bonus du vill ha, så avgör pottens Poäng per +1 kostnaden. Med 2 poäng per +1 kostar en bonus på 4 alltså 8 poäng. Mod meddelar användningen; lägg själv bonusen på slaget.',
         'En användning nekas när rollpersonen inte har tillräckligt med poäng. GM får veta vem som använde vad, med en Ångra-knapp.',
         'Sparas i "Formulärets resursruta" använder den resursruta på formuläret som har pottens namn, till exempel en Other Resource-ruta med namnet Inspiration på D&D 2014-formuläret. När formuläret inte har någon ruta med det namnet, eller med "Attribut", sparas poängen i ett vanligt attribut, till exempel inspiration_pool. D&D 2024-formuläret använder alltid attributet.',
@@ -338,6 +338,7 @@ const TRANSLATION = {
         'Att lägga till markören på en token för hand, eller med TokenMod, ger rollpersonen inspiration. Att ta bort den använder den.',
         'Att byta markör flyttar den på alla tokens direkt.',
         'D&D 2024-formulärets egna tillståndsmarkörer erbjuds inte, eftersom formuläret sätter dem själv.',
+        'Inställningen Markör gäller formulärets inspirationsruta. Varje poängpott har en egen Markör på Potter-kortet och börjar med Ingen. Välj Ingen för någon av dem för att inte sätta någon markör på tokens: gruppkortet visar fortfarande vem som har inspiration, eller hur många poäng.',
       ],
     },
     commands: {

@@ -88,7 +88,7 @@ const TRANSLATION = {
       'Verwende einen Namen aus bis zu 40 Buchstaben, Ziffern und Leerzeichen, den kein anderer Pool hat.',
     poolDefault: 'Der Standardpool „{name}“ kann nicht gelöscht werden. Er lässt sich umbenennen.',
     poolMarkerHint:
-      'Wähle einen Marker aus deinen Marker-Sets, der nicht der aus der Einstellung Marker ist.',
+      'Wähle einen Marker aus deinen Marker-Sets, den weder die Einstellung Marker noch ein anderer Pool verwendet.',
     poolSetHint: 'Gib !inspiration pools ein, um alle Pools und ihre Einstellungen zu sehen.',
     denied: 'Das kannst du für {name} nicht tun.',
     gmOnly: 'Nur die SL kann diesen Befehl verwenden.',
@@ -180,7 +180,7 @@ const TRANSLATION = {
     },
     marker: {
       label: 'Marker',
-      desc: 'Token-Marker, der angezeigt wird, solange ein Charakter Inspiration hat. Eigene Marker-Sets werden ebenfalls aufgeführt.',
+      desc: 'Token-Marker, der angezeigt wird, solange ein Charakter Inspiration hat. Eigene Marker-Sets werden ebenfalls aufgeführt. Wähle Keiner, um keinen Marker anzuzeigen.',
     },
     wording: {
       label: 'Bezeichnung',
@@ -322,7 +322,7 @@ const TRANSLATION = {
       heading: 'Punktepools',
       points: [
         'Ein Punktepool ist eine Zahl, die sich aufbaut und nach und nach ausgegeben wird: ein Pool aus Inspirationspunkten, Heldenpunkten, Glück, Bennies und Ähnlichem. Er funktioniert mit jedem Charakterbogen.',
-        'Stelle Erfassung auf Punktepool, und Geben, Entfernen und Ausgeben wirken auf den Standardpool und fragen nach der Punktzahl. Der Marker wird angezeigt, solange ein Charakter Punkte hat.',
+        'Stelle Erfassung auf Punktepool, und Geben, Entfernen und Ausgeben wirken auf den Standardpool und fragen nach der Punktzahl.',
         'Verstärken gibt Punkte aus, um einen Wurf zu erhöhen: Gib den gewünschten Bonus ein, und Punkte pro +1 des Pools bestimmt die Kosten. Bei 2 Punkten pro +1 kostet ein Bonus von 4 also 8 Punkte. Die Mod kündigt die Ausgabe an; den Bonus addierst du selbst zum Wurf.',
         'Eine Ausgabe wird abgelehnt, wenn der Charakter nicht genug Punkte hat. Die SL erfährt, wer was ausgegeben hat, mit einem Rückgängig-Button.',
         'Gespeichert in „Ressourcenfeld des Bogens“ nutzt das Ressourcenfeld auf dem Bogen, das den Namen des Pools trägt, etwa ein Feld Other Resource namens Inspiration auf dem D&D-Bogen von 2014. Hat der Bogen kein Feld mit diesem Namen, oder bei „Attribut“, werden die Punkte in einem einfachen Attribut gespeichert, etwa inspiration_pool. Der D&D-2024-Bogen nutzt immer das Attribut.',
@@ -339,6 +339,7 @@ const TRANSLATION = {
         'Fügst du einem Token den Marker von Hand oder mit TokenMod hinzu, erhält der Charakter Inspiration. Entfernst du ihn, wird sie ausgegeben.',
         'Wird der Marker geändert, wechselt er sofort auf allen Token.',
         'Die eigenen Zustandsmarker des D&D-2024-Bogens werden nicht angeboten, da der Bogen sie selbst setzt.',
+        'Die Einstellung Marker gilt für das Inspirationsfeld des Bogens. Jeder Punktepool hat einen eigenen Marker auf der Pools-Karte und beginnt mit Keiner. Wähle bei einem von beiden Keiner, damit kein Marker auf Tokens gesetzt wird: Die Gruppenkarte zeigt weiterhin, wer Inspiration hat oder wie viele Punkte.',
       ],
     },
     commands: {

@@ -89,7 +89,7 @@ const TRANSLATION = {
     poolDefault:
       'La réserve par défaut, « {name} », ne peut pas être supprimée. Elle peut être renommée.',
     poolMarkerHint:
-      'Choisissez dans vos jeux de marqueurs un marqueur autre que celui du paramètre Marqueur.',
+      "Choisissez dans vos jeux de marqueurs un marqueur que ni le réglage Marqueur ni les autres réserves n'utilisent.",
     poolSetHint: 'Tapez !inspiration pools pour voir chaque réserve et ses paramètres.',
     denied: 'Vous ne pouvez pas faire cela pour {name}.',
     gmOnly: 'Seul le MJ peut utiliser cette commande.',
@@ -181,7 +181,7 @@ const TRANSLATION = {
     },
     marker: {
       label: 'Marqueur',
-      desc: "Marqueur de jeton affiché tant qu'un personnage a l'inspiration. Les jeux de marqueurs personnalisés sont aussi proposés.",
+      desc: "Marqueur de jeton affiché tant qu'un personnage a l'inspiration. Les jeux de marqueurs personnalisés sont aussi proposés. Choisissez Aucun pour n'afficher aucun marqueur.",
     },
     wording: {
       label: 'Formulation',
@@ -323,7 +323,7 @@ const TRANSLATION = {
       heading: 'Réserves de points',
       points: [
         "Une réserve de points est un nombre qui s'accumule et se dépense quelques points à la fois : une réserve de points d'inspiration, de points d'héroïsme, de chance, de bennies, etc. Elle fonctionne avec n'importe quelle fiche de personnage.",
-        "Réglez Suivi sur Réserve de points, et Donner, Retirer et Dépenser agissent sur la réserve par défaut en demandant combien de points. Le marqueur s'affiche tant qu'un personnage a au moins un point.",
+        'Réglez Suivi sur Réserve de points, et Donner, Retirer et Dépenser agissent sur la réserve par défaut en demandant combien de points.',
         'Renforcer dépense des points pour augmenter un jet : tapez le bonus voulu, et les Points par +1 de la réserve fixent le coût. À 2 points par +1, un bonus de 4 coûte 8 points. Le Mod annonce la dépense ; ajoutez vous-même le bonus au jet.',
         "Une dépense est refusée quand le personnage n'a pas assez de points. Le MJ est informé de qui a dépensé quoi, avec un bouton Annuler.",
         "Conservé dans « Case de ressource de la fiche » utilise la case de ressource de la fiche qui porte le nom de la réserve, par exemple une case Other Resource nommée Inspiration sur la fiche D&D 2014. Quand la fiche n'a pas de case portant ce nom, ou avec « Attribut », les points sont conservés dans un simple attribut, par exemple inspiration_pool. La fiche D&D 2024 utilise toujours l'attribut.",
@@ -340,6 +340,7 @@ const TRANSLATION = {
         "Ajouter le marqueur à un jeton à la main, ou avec TokenMod, donne l'inspiration au personnage. Le retirer la dépense.",
         'Changer de marqueur le remplace immédiatement sur tous les jetons.',
         "Les marqueurs d'état propres à la fiche D&D 2024 ne sont pas proposés, car la fiche les gère elle-même.",
+        "Le réglage Marqueur concerne la case d'inspiration de la fiche. Chaque réserve de points a son propre Marqueur, sur la carte Réserves, et commence avec Aucun. Choisissez Aucun pour l'un ou l'autre afin de ne mettre aucun marqueur sur les jetons : la carte du groupe indique toujours qui a l'inspiration, ou combien de points.",
       ],
     },
     commands: {

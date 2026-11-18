@@ -87,7 +87,8 @@ const TRANSLATION = {
     poolFull: 'Nie ma miejsca na kolejną pulę.',
     poolNameHint: 'Użyj nazwy do 40 liter, cyfr i spacji, której nie ma żadna inna pula.',
     poolDefault: 'Domyślnej puli „{name}” nie można usunąć. Można zmienić jej nazwę.',
-    poolMarkerHint: 'Wybierz z zestawów znaczników znacznik inny niż ten z ustawienia Znacznik.',
+    poolMarkerHint:
+      'Wybierz ze swoich zestawów znaczników taki, którego nie używa ustawienie Znacznik ani inna pula.',
     poolSetHint: 'Wpisz !inspiration pools, aby zobaczyć wszystkie pule i ich ustawienia.',
     denied: 'Nie możesz tego zrobić dla postaci {name}.',
     gmOnly: 'Tylko GM może użyć tego polecenia.',
@@ -179,7 +180,7 @@ const TRANSLATION = {
     },
     marker: {
       label: 'Znacznik',
-      desc: 'Znacznik żetonu widoczny, gdy postać ma inspirację. Własne zestawy znaczników też są na liście.',
+      desc: 'Znacznik żetonu widoczny, gdy postać ma inspirację. Własne zestawy znaczników też są na liście. Wybierz Brak, aby nie pokazywać znacznika.',
     },
     wording: {
       label: 'Nazewnictwo',
@@ -320,7 +321,7 @@ const TRANSLATION = {
       heading: 'Pule punktów',
       points: [
         'Pula punktów to liczba, która rośnie i jest wydawana po kilka punktów naraz: pula punktów inspiracji, punktów bohatera, szczęścia, bennies i tym podobnych. Działa z każdą kartą postaci.',
-        'Ustaw Śledzenie na Pula punktów, a Daj, Odbierz i Wykorzystaj będą działać na domyślnej puli i pytać o liczbę punktów. Znacznik jest widoczny, dopóki postać ma jakiekolwiek punkty.',
+        'Ustaw Śledzenie na Pula punktów, a Daj, Odbierz i Wykorzystaj będą działać na domyślnej puli i pytać o liczbę punktów.',
         'Wzmocnij wydaje punkty, aby podnieść wynik rzutu: wpisz żądaną premię, a o koszcie decyduje ustawienie puli Punkty za +1. Przy 2 punktach za +1 premia 4 kosztuje 8 punktów. Mod ogłasza wydanie punktów; premię dodaj do rzutu samodzielnie.',
         'Wydanie punktów jest odrzucane, gdy postać ma ich za mało. GM dostaje informację, kto co wydał, z przyciskiem Cofnij.',
         'Miejsce zapisu „Pole zasobu na karcie” używa pola zasobu na karcie, które ma nazwę puli, na przykład pola Other Resource nazwanego Inspiration na karcie D&D 2014. Gdy karta nie ma pola o tej nazwie albo wybrano „Atrybut”, punkty są zapisywane w zwykłym atrybucie, takim jak inspiration_pool. Karta D&D 2024 zawsze używa atrybutu.',
@@ -337,6 +338,7 @@ const TRANSLATION = {
         'Dodanie znacznika do żetonu ręcznie lub przez TokenMod daje postaci inspirację. Zdjęcie go oznacza wykorzystanie.',
         'Zmiana znacznika od razu przenosi go na każdym żetonie.',
         'Własne znaczniki stanów karty D&D 2024 nie są oferowane, bo karta ustawia je sama.',
+        'Ustawienie Znacznik dotyczy pola inspiracji na karcie. Każda pula punktów ma własny Znacznik, w przeglądzie Pule, i zaczyna z opcją Brak. Wybierz Brak w jednym lub drugim miejscu, aby nie umieszczać znacznika na żetonach: przegląd drużyny nadal pokazuje, kto ma inspirację albo ile punktów.',
       ],
     },
     commands: {

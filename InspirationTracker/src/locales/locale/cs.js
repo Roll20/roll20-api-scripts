@@ -87,7 +87,8 @@ const TRANSLATION = {
     poolNameHint:
       'Použij název o nejvýše 40 písmenech, číslicích a mezerách, který nemá žádná jiná zásoba.',
     poolDefault: 'Výchozí zásobu „{name}“ nelze smazat. Lze ji přejmenovat.',
-    poolMarkerHint: 'Vyber ze svých sad značek značku, která není v nastavení Značka.',
+    poolMarkerHint:
+      'Vyber ze svých sad značek takovou, kterou nepoužívá nastavení Značka ani jiná zásoba.',
     poolSetHint: 'Napiš !inspiration pools a uvidíš všechny zásoby a jejich nastavení.',
     denied: 'Tohle pro {name} udělat nemůžeš.',
     gmOnly: 'Tento příkaz může použít jen GM.',
@@ -178,7 +179,7 @@ const TRANSLATION = {
     },
     marker: {
       label: 'Značka',
-      desc: 'Značka tokenu zobrazená, dokud má postava inspiraci. Uvedeny jsou i vlastní sady značek.',
+      desc: 'Značka tokenu zobrazená, dokud má postava inspiraci. Uvedeny jsou i vlastní sady značek. Zvol Žádná, a žádná značka se nezobrazí.',
     },
     wording: {
       label: 'Název',
@@ -316,7 +317,7 @@ const TRANSLATION = {
       heading: 'Zásoby bodů',
       points: [
         'Zásoba bodů je číslo, které se hromadí a utrácí po několika: zásoba bodů inspirace, hrdinských bodů, štěstí, bennies a podobně. Funguje s jakýmkoli deníkem postavy.',
-        'Nastav Sledování na Zásoba bodů a Dát, Odebrat a Využít budou pracovat s výchozí zásobou a zeptají se na počet bodů. Značka je vidět, dokud má postava nějaké body.',
+        'Nastav Sledování na Zásoba bodů a Dát, Odebrat a Využít budou pracovat s výchozí zásobou a zeptají se na počet bodů.',
         'Posílit utrácí body za zvýšení hodu: napiš požadovaný bonus a cenu určí Body za +1 dané zásoby. Při 2 bodech za +1 stojí bonus 4 celkem 8 bodů. Mod útratu oznámí; bonus si k hodu přičti sám.',
         'Útrata je odmítnuta, když postava nemá dost bodů. GM dostane zprávu, kdo co utratil, s tlačítkem Vrátit.',
         'Uloženo v „Políčko zdroje v deníku“ používá políčko zdroje v deníku, které nese název zásoby, například políčko Other Resource pojmenované Inspiration v deníku D&D 2014. Když deník políčko s tímto názvem nemá, nebo při volbě „Atribut“, jsou body uloženy v obyčejném atributu, například inspiration_pool. Deník D&D 2024 používá atribut vždy.',
@@ -333,6 +334,7 @@ const TRANSLATION = {
         'Přidání značky na token ručně nebo pomocí TokenMod dá postavě inspiraci. Její odebrání ji využije.',
         'Změna značky ji okamžitě přesune na všech tokenech.',
         'Vlastní značky stavů deníku D&D 2024 se nenabízejí, protože je deník nastavuje sám.',
+        'Nastavení Značka patří políčku inspirace v deníku. Každá zásoba bodů má vlastní Značku na kartě Zásoby a začíná s volbou Žádná. Zvol Žádná u kterékoli z nich, a na tokeny se značka nedává: karta družiny dál ukazuje, kdo má inspiraci nebo kolik bodů.',
       ],
     },
     commands: {

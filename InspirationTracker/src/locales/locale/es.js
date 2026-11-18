@@ -89,7 +89,7 @@ const TRANSLATION = {
     poolDefault:
       'La reserva por defecto, "{name}", no se puede eliminar. Se puede cambiar de nombre.',
     poolMarkerHint:
-      'Elige un marcador de tus conjuntos de marcadores que no sea el del ajuste Marcador.',
+      'Elige un marcador de tus conjuntos de marcadores que no usen ni el ajuste Marcador ni las otras reservas.',
     poolSetHint: 'Escribe !inspiration pools para ver todas las reservas y sus ajustes.',
     denied: 'No puedes hacer eso con {name}.',
     gmOnly: 'Solo el GM puede usar ese comando.',
@@ -181,7 +181,7 @@ const TRANSLATION = {
     },
     marker: {
       label: 'Marcador',
-      desc: 'Marcador de ficha que se muestra mientras un personaje tiene inspiración. También aparecen los conjuntos de marcadores personalizados.',
+      desc: 'Marcador de ficha que se muestra mientras un personaje tiene inspiración. También aparecen los conjuntos de marcadores personalizados. Elige Ninguno para no mostrar ningún marcador.',
     },
     wording: {
       label: 'Denominación',
@@ -322,7 +322,7 @@ const TRANSLATION = {
       heading: 'Reservas de puntos',
       points: [
         'Una reserva de puntos es un número que se acumula y se gasta poco a poco: una reserva de puntos de inspiración, puntos de héroe, suerte, bennies y similares. Funciona con cualquier hoja de personaje.',
-        'Pon Seguimiento en Reserva de puntos, y Dar, Quitar y Gastar actúan sobre la reserva por defecto y preguntan cuántos puntos. El marcador se muestra mientras un personaje tiene algún punto.',
+        'Pon Seguimiento en Reserva de puntos, y Dar, Quitar y Gastar actúan sobre la reserva por defecto y preguntan cuántos puntos.',
         'Potenciar gasta puntos para subir una tirada: escribe el bonificador deseado, y los Puntos por +1 de la reserva deciden el coste. A 2 puntos por +1, un bonificador de 4 cuesta 8 puntos. El Mod anuncia el gasto; suma tú el bonificador a la tirada.',
         'Un gasto se rechaza cuando el personaje no tiene puntos suficientes. Se avisa al GM de quién ha gastado qué, con un botón Deshacer.',
         'Con Guardado en "Casilla de recurso de la hoja" se usa la casilla de recurso de la hoja que lleva el nombre de la reserva, como una casilla Other Resource llamada Inspiración en la hoja de D&D de 2014. Cuando la hoja no tiene una casilla con ese nombre, o con "Atributo", los puntos se guardan en un atributo normal, como inspiration_pool. La hoja de D&D 2024 siempre usa el atributo.',
@@ -339,6 +339,7 @@ const TRANSLATION = {
         'Añadir el marcador a una ficha a mano, o con TokenMod, da inspiración al personaje. Quitarlo la gasta.',
         'Cambiar el marcador lo mueve en todas las fichas al instante.',
         'No se ofrecen los marcadores de estado propios de la hoja de D&D 2024, porque la hoja los pone ella misma.',
+        'El ajuste Marcador es para la casilla de inspiración de la hoja. Cada reserva de puntos tiene su propio Marcador, en la tarjeta Reservas, y empieza con Ninguno. Elige Ninguno en cualquiera de los dos para no poner ningún marcador en las fichas: la tarjeta del grupo sigue mostrando quién tiene inspiración, o cuántos puntos.',
       ],
     },
     commands: {

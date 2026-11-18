@@ -88,7 +88,7 @@ const TRANSLATION = {
       'Gebruik ’n naam van tot 40 letters, syfers en spasies wat geen ander poel het nie.',
     poolDefault: 'Die verstekpoel, "{name}", kan nie geskrap word nie. Dit kan hernoem word.',
     poolMarkerHint:
-      'Kies ’n merker uit jou merkerstelle wat nie die een in die Merker-instelling is nie.',
+      'Kies ’n merker uit jou merkerstelle wat nie deur die Merker-instelling of die ander poele gebruik word nie.',
     poolSetHint: 'Tik !inspiration pools om elke poel en sy instellings te sien.',
     denied: 'Jy kan dit nie vir {name} doen nie.',
     gmOnly: 'Slegs die GM kan daardie opdrag gebruik.',
@@ -180,7 +180,7 @@ const TRANSLATION = {
     },
     marker: {
       label: 'Merker',
-      desc: 'Tekenmerker wat gewys word terwyl ’n karakter inspirasie het. Pasgemaakte merkerstelle word ook gelys.',
+      desc: 'Tekenmerker wat gewys word terwyl ’n karakter inspirasie het. Pasgemaakte merkerstelle word ook gelys. Kies Geen om geen merker te wys nie.',
     },
     wording: {
       label: 'Bewoording',
@@ -320,7 +320,7 @@ const TRANSLATION = {
       heading: 'Puntepoele',
       points: [
         '’n Puntepoel is ’n getal wat opbou en ’n paar op ’n slag gebruik word: ’n poel inspirasiepunte, heldepunte, geluk, bennies en dies meer. Dit werk met enige karakterblad.',
-        'Stel Opsporing op Puntepoel, en Gee, Verwyder en Gebruik werk op die verstekpoel en vra hoeveel punte. Die merker wys terwyl ’n karakter enige punte het.',
+        'Stel Opsporing op Puntepoel, en Gee, Verwyder en Gebruik werk op die verstekpoel en vra hoeveel punte.',
         'Versterk gebruik punte om ’n worp te verhoog: tik die bonus wat jy wil hê, en die poel se Punte per +1 bepaal die koste. Teen 2 punte per +1 kos ’n bonus van 4 dus 8 punte. Die Mod kondig die gebruik aan; voeg self die bonus by die worp.',
         '’n Gebruik word geweier wanneer die karakter nie genoeg punte het nie. Die GM word ingelig wie wat gebruik het, met ’n Ontdoen-knoppie.',
         'Gehou in "Blad se hulpbronblokkie" gebruik die hulpbronblokkie op die blad wat die poel se naam het, soos ’n Other Resource-blokkie genaamd Inspiration op die 2014 D&D-blad. Wanneer die blad geen blokkie met daardie naam het nie, of met "Eienskap", word die punte in ’n gewone eienskap gehou, soos inspiration_pool. Die D&D 2024-blad gebruik altyd die eienskap.',
@@ -337,6 +337,7 @@ const TRANSLATION = {
         'Om die merker met die hand, of met TokenMod, by ’n teken te voeg, gee die karakter inspirasie. Om dit af te haal, gebruik dit.',
         'Om die merker te verander, skuif dit dadelik op elke teken.',
         'Die D&D 2024-blad se eie toestandmerkers word nie aangebied nie, omdat die blad dit self stel.',
+        'Die Merker-instelling is vir die blad se inspirasieblokkie. Elke puntepoel het sy eie Merker, op die Poele-kaart, en begin met Geen. Kies Geen vir enigeen om geen merker op tekens te sit nie: die groepkaart wys steeds wie inspirasie het, of hoeveel punte.',
       ],
     },
     commands: {
