@@ -29,7 +29,7 @@ The build writes the same bundle to `InspirationTracker.js` and `<version>/Inspi
 | `menu.js`      | Chat menus: GM menu, settings, party overview, player card, status, help.                              |
 | `journals.js`  | The Help and Command Deck handouts.                                                                    |
 | `state.js`     | Persistent state, settings validation, 0.1.x migration, undo entries, pass-on offers.                  |
-| `chat.js`      | Chat cards, buttons, whispers.                                                                         |
+| `chat.js`      | Chat cards, whispers, and the card parts: section labels, item titles, notes, rows and button grids.   |
 | `i18n.js`      | Translation lookup with en-US fallback.                                                                |
 | `constants.js` | Names, defaults, option lists, colours; build placeholders.                                            |
 

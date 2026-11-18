@@ -61,11 +61,24 @@ Some tables award inspiration as points that build up and are spent a few at a t
 | **Sheet resource box** | The resource box on the sheet that has the pool's name: on the D&D 5E by Roll20 (2014 OGL) sheet, a Class Resource, Other Resource or added resource box named Inspiration. |
 | **Attribute**          | A plain attribute named after the pool, such as `inspiration_pool`. It works on any sheet, and can be linked to a token bar.                                                |
 
+The Party card and a player's own card say where each character's points are kept, under its name: **Sheet box: Inspiration**, or **Attribute: inspiration_pool**. An attribute is not shown on the character sheet.
+
 With **Sheet resource box**, a character whose sheet has no box with that name uses the attribute instead. The D&D 2024 sheet keeps its resources where a Mod cannot change them, so its characters always use the attribute.
 
 ### More pools
 
 Click **Pools** (`!inspiration pools`) to rename the default pool, set its cost and maximum, or add more pools, each with its own name, cost, maximum and token marker. Other pools are used from their **Party** button, or by adding `--pool <name>` to a command: `!inspiration give 2 --pool "Hero Points"`. They work whatever Tracking is set to, so a game can use the D&D inspiration box and a pool of luck side by side.
+
+### Bardic Inspiration
+
+Bardic Inspiration, or anything else a character either holds or does not, works as a pool of its own, beside the party's inspiration:
+
+1. Click **Pools**, then **Add Pool**, and name it Bardic Inspiration.
+2. Set its **Maximum** to 1 and choose its **Marker**, so a token shows who holds a die.
+3. When the bard hands out a die, the GM clicks that pool's **Party** button and gives 1 to the character.
+4. The holder clicks **Spend** on their own card when they use the die. The marker goes, and the table is told.
+
+The Mod marks who holds a die. It does not roll it, count the bard's uses or end it after its time: the player rolls the die, and the bard's uses stay on the bard's sheet.
 
 ## Token Markers
 

@@ -58,7 +58,12 @@ The Node tests in `tests/pools.test.mjs` cover pools on both kinds of sheet. By 
 4. Type 0 into the box on the sheet: the marker goes. Type 5: it comes back.
 5. On a D&D 2024 character, `!inspiration give 3`: an `inspiration_pool` attribute holds 3 and the Heroic Inspiration box is untouched.
 6. `!inspiration pool add Luck`, `!inspiration give 2 --pool luck`: a `luck_pool` attribute holds 2. `!inspiration party --pool luck` lists it.
-7. `!inspiration set tracking flag`: Give and Spend work on the sheet's inspiration box again.
+7. `!inspiration party` with both characters in the party: under the 2014 character's name the card says "Sheet box: Inspiration", under the 2024 character's "Attribute: inspiration_pool", and a note at the foot says an attribute is not shown on the character sheet.
+8. `!inspiration set tracking flag`: Give and Spend work on the sheet's inspiration box again.
+
+## Chat Cards
+
+Look at each card in a chat panel of ordinary width: `!inspiration`, `!inspiration set`, `!inspiration pools`, `!inspiration party`, `!inspiration status`, `!inspiration help`, and a player's `!inspiration`. Section headings match the handouts, buttons line up in even columns, no button's words wrap, and each character has its name and value on one line with its buttons underneath.
 
 ## Markers and Settings
 
