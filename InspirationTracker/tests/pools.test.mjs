@@ -6,12 +6,13 @@ const BOX = 'repeating_resource_-abc_resource_left';
 
 /**
  * A game with a 2014 PC whose sheet has a resource box named Inspiration
- * holding 52 points, a 2024 PC and an NPC, with Tracking set to Points pool.
+ * holding 52 points, a 2024 PC and an NPC, with Tracking set to Points pool
+ * and the pool given the black-flag marker (a pool starts with none).
  *
- * @param {{tracking?: boolean}} [options] Leave Tracking on the sheet box with `tracking: false`.
+ * @param {{tracking?: boolean, marker?: boolean}} [options] Leave Tracking on the sheet box with `tracking: false`; leave the pool without a marker with `marker: false`.
  * @returns {Promise<object>} Sandbox, characters and tokens.
  */
-async function game({ tracking = true } = {}) {
+async function game({ tracking = true, marker = true } = {}) {
   let c;
   const api = createSandbox({
     setup(a) {
@@ -30,6 +31,9 @@ async function game({ tracking = true } = {}) {
   await api.ready();
   if (tracking) {
     await api.command('!inspiration set tracking pool');
+    if (marker) {
+      await api.command('!inspiration pool set inspiration marker black-flag');
+    }
   }
   return { api, ...c };
 }
@@ -161,6 +165,46 @@ test('a maximum caps the pool', async () => {
   assert.match(api.allChat(), /Seraphina gains 3 Inspiration \(0 → 3\)/);
   await api.command('!inspiration give', [sTok]);
   assert.match(api.lastChat(), /Seraphina already has the most Inspiration allowed \(3\)/);
+});
+
+test('a pool starts with no marker, and has a Marker of its own apart from the setting', async () => {
+  const { api, box, nTok, sTok } = await game({ marker: false });
+  assert.equal(api.itState().pools[0].marker, '');
+  assert.equal(nTok.get('statusmarkers'), '', 'Nox has 52 points, and no marker');
+  await api.command('!inspiration give 3', [sTok]);
+  assert.equal(sTok.get('statusmarkers'), '');
+  await api.editAttribute(box, '7');
+  assert.equal(nTok.get('statusmarkers'), '', 'a change on the sheet does not bring one');
+  await api.command('!inspiration party');
+  assert.match(api.lastChat(), /Party total: 10 Inspiration\./);
+  // The pool's own marker, chosen on the Pools card
+  await api.command('!inspiration pools');
+  assert.match(api.lastChat(), /pool set inspiration marker \?\{Marker\|None,none\|/);
+  await api.command('!inspiration pool set inspiration marker red');
+  assert.equal(nTok.get('statusmarkers'), 'red');
+  assert.equal(sTok.get('statusmarkers'), 'red');
+  // The Marker setting is the sheet box's, so changing it leaves the pool's marker alone
+  await api.command('!inspiration set marker blue');
+  assert.equal(nTok.get('statusmarkers'), 'red');
+  // Back on the sheet box, the pool's marker goes
+  await api.command('!inspiration set tracking flag');
+  assert.equal(nTok.get('statusmarkers'), '');
+  await api.command('!inspiration set tracking pool');
+  assert.equal(nTok.get('statusmarkers'), 'red');
+  await api.command('!inspiration pool set inspiration marker none');
+  assert.equal(nTok.get('statusmarkers'), '', 'None takes it off again');
+});
+
+test('two pools cannot share a marker', async () => {
+  const { api, sTok } = await game();
+  await api.command('!inspiration pool add Luck');
+  await api.command('!inspiration pool set luck marker black-flag');
+  assert.match(api.lastChat(), /no token marker called "black-flag"/);
+  await api.command('!inspiration pool set luck marker green');
+  await api.command('!inspiration give 1 --pool luck', [sTok]);
+  assert.equal(sTok.get('statusmarkers'), 'green');
+  await api.command('!inspiration pool set inspiration marker green');
+  assert.match(api.lastChat(), /no token marker called "green"/);
 });
 
 test('changing the number on the sheet moves the marker', async () => {

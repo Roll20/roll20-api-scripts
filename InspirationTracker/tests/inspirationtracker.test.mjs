@@ -283,6 +283,29 @@ test('custom markers: chosen by name, stored by tag, moved on every token', asyn
   assert.match(api.lastChat(), /no token marker called "nosuch"/);
 });
 
+test('Marker set to None takes the marker off and puts none on, and inspiration still works', async () => {
+  const { api, kildrak, sera, kTok, sTok } = await game();
+  await api.command(`!inspiration give --ids ${kildrak.id}`);
+  assert.equal(kTok.get('statusmarkers'), 'black-flag');
+  await api.command('!inspiration set marker none');
+  assert.equal(api.itState().config.marker, '');
+  assert.equal(kTok.get('statusmarkers'), '', 'the old marker is taken off');
+  assert.match(api.lastChat(), /Marker[\s\S]*?>None</, 'the settings card says None');
+  await api.command(`!inspiration give --ids ${sera.id}`);
+  assert.equal(api.inspired(sera), true);
+  assert.equal(sTok.get('statusmarkers'), '', 'no marker is put on');
+  // A marker a GM adds by hand means nothing to the Mod now
+  await api.editMarkers(sTok, 'black-flag');
+  await api.editMarkers(sTok, '');
+  assert.equal(api.inspired(sera), true, 'taking a marker off does not spend it');
+  await api.command('!inspiration party');
+  assert.match(api.lastChat(), /1 of|2 of/, 'the Party card still counts who has it');
+  // Choosing a marker again puts it on everyone who has inspiration
+  await api.command('!inspiration set marker black-flag');
+  assert.equal(kTok.get('statusmarkers'), 'black-flag');
+  assert.equal(sTok.get('statusmarkers'), 'black-flag');
+});
+
 test('the settings menu lists custom markers but not the 2024 sheet condition markers', async () => {
   const { api } = await game();
   await api.command('!inspiration set');
