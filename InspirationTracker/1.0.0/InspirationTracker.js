@@ -5,7 +5,7 @@
  * Name: InspirationTracker
  * Script: InspirationTracker.js
  * Version: 1.0.0
- * Built: 2026-11-10T00:57:32.422Z
+ * Built: 2026-11-18T05:07:30.548Z
  */
 const InspirationTrackerMod = (() => {
   'use strict';
@@ -13,7 +13,7 @@ const InspirationTrackerMod = (() => {
   // Build-time placeholders replaced by rollup.config.js inject-build-metadata plugin.
   const SCRIPT_NAME = 'InspirationTracker';
   const SCRIPT_VERSION = '1.0.0';
-  const SCRIPT_LAST_UPDATED = '2026-11-10T00:57:32.422Z';
+  const SCRIPT_LAST_UPDATED = '2026-11-18T05:07:30.548Z';
 
   const DEFAULT_LOCALE$1 = 'en-US';
 
@@ -64,6 +64,7 @@ const InspirationTrackerMod = (() => {
   const RULES_2024 = '2024';
 
   // Option lists for settings.
+  const TRACKING_OPTIONS = ['flag', 'pool'];
   const WORDING_OPTIONS = ['auto', RULES_2014, RULES_2024];
   const ANNOUNCE_OPTIONS = ['public', 'gm', 'off'];
 
@@ -78,6 +79,7 @@ const InspirationTrackerMod = (() => {
   // and special effect.
   const DEFAULT_CONFIG = {
     language: DEFAULT_LOCALE$1,
+    tracking: 'flag',
     marker: 'black-flag',
     wording: 'auto',
     announce: 'public',
@@ -94,6 +96,7 @@ const InspirationTrackerMod = (() => {
   // Settings shown in the settings menu, in order.
   const SETTING_KEYS = [
     'language',
+    'tracking',
     'marker',
     'wording',
     'announce',
@@ -103,6 +106,23 @@ const InspirationTrackerMod = (() => {
     'playerOverview',
     'passOn',
   ];
+
+  // Points pools: counters a GM can award and players can spend, such as a pool
+  // of inspiration points, hero points or luck. A pool is kept in the sheet's
+  // resource box with the pool's name, or in a plain attribute.
+  const POOL_SOURCES = ['resource', 'attribute'];
+  const DEFAULT_POOL = {
+    id: 'inspiration',
+    name: 'Inspiration',
+    source: 'resource',
+    cost: 1,
+    max: 0,
+    marker: '',
+  };
+  const MAX_POOLS = 8;
+  const MAX_POINTS = 9999;
+  // A pool's plain attribute is its ID with this ending: "inspiration_pool".
+  const POOL_ATTRIBUTE_SUFFIX = '_pool';
 
   // Roll20's built-in special effect names ("type-colour").
   const FX_TYPES = [
@@ -147,6 +167,12 @@ const InspirationTrackerMod = (() => {
     ['party', 'party'],
     ['party add / party remove', 'partyEdit'],
     ['give | remove | toggle | spend --ids <id;id;…>', 'ids'],
+    ['give | remove | spend <points>', 'points'],
+    ['boost <bonus>', 'boost'],
+    ['give | remove | spend | boost | party --pool <name>', 'poolFlag'],
+    ['pools', 'pools'],
+    ['pool add <name> / pool delete <name>', 'poolEdit'],
+    ['pool set <name> <name|source|cost|max|marker> <value>', 'poolSet'],
     ['undo <id>', 'undo'],
     ['macro', 'macro'],
     ['sync', 'sync'],
@@ -620,6 +646,8 @@ const InspirationTrackerMod = (() => {
       settings: 'InspirationTracker-instellings',
       help: 'InspirationTracker-opdragte',
       party: 'Groep se inspirasie',
+      poolParty: 'Groep se {term}',
+      pools: 'Puntepoele',
       yours: 'Jou karakters',
       status: 'InspirationTracker-status',
     },
@@ -652,7 +680,51 @@ const InspirationTrackerMod = (() => {
       journal: 'Hulp- en Command Deck-uitdeelstukke is herbou.',
       readyHint: 'Tik {command} vir die kieslys, of maak die Command Deck-uitdeelstuk oop.',
     },
+    pool: {
+      gained: '{name} kry {amount} {term} ({before} → {after}).',
+      spent: '{name} gebruik {amount} {term} ({before} → {after}).',
+      boosted: '{name} gebruik {amount} {term} vir +{bonus} op die worp ({before} → {after}).',
+      spentBy: '{player} het {amount} {term} vir {name} gebruik.',
+      restored: '{name} het {amount} {term} terug ({before} → {after}).',
+      removed: '{amount} {term} van {name} weggeneem ({before} → {after}).',
+      none: '{name} het geen {term} nie.',
+      short: '{name} het {have} {term}, en dit vereis {need}.',
+      full: '{name} het reeds die meeste {term} wat toegelaat word ({max}).',
+    },
+    pools: {
+      introFlag:
+        'Opsporing is op die blad se inspirasieblokkie gestel. Stel dit op Puntepoel om "{name}" die poel te maak waarop Gee en Gebruik werk. Ander poele word met --pool gebruik.',
+      introPool:
+        'Gee, Gebruik en Versterk werk op "{name}". Ander poele word vanaf hul Groep-knoppie gebruik, of met --pool.',
+      defaultLabel: '{name} (verstek)',
+      name: 'Naam',
+      source: 'Gehou in',
+      cost: 'Punte per +1',
+      max: 'Maksimum',
+      marker: 'Merker',
+      attribute: 'Eienskap wanneer die blad geen blokkie met hierdie naam het nie: {attribute}',
+      partyTotal: 'Groeptotaal: {total} {term}.',
+    },
+    prompts: {
+      points: 'Punte',
+      bonus: 'Bonus op die worp',
+      max: 'Meeste punte toegelaat (0 vir geen limiet)',
+    },
     errors: {
+      unknownPool: 'Daar is geen poel genaamd "{value}" nie.',
+      unknownPoolHint: 'Poele: {pools}.',
+      badAmount: '"{value}" is nie ’n aantal punte nie.',
+      badAmountHint: 'Gebruik ’n heelgetal van 1 tot 9999.',
+      boostNoPool: 'Versterk gebruik punte uit ’n poel.',
+      poolInvalid: '’n Poel kan nie "{value}" genoem word nie.',
+      poolExists: 'Daar is reeds ’n poel genaamd "{value}".',
+      poolFull: 'Daar is nie plek vir nog ’n poel nie.',
+      poolNameHint:
+        'Gebruik ’n naam van tot 40 letters, syfers en spasies wat geen ander poel het nie.',
+      poolDefault: 'Die verstekpoel, "{name}", kan nie geskrap word nie. Dit kan hernoem word.',
+      poolMarkerHint:
+        'Kies ’n merker uit jou merkerstelle wat nie die een in die Merker-instelling is nie.',
+      poolSetHint: 'Tik !inspiration pools om elke poel en sy instellings te sien.',
       denied: 'Jy kan dit nie vir {name} doen nie.',
       gmOnly: 'Slegs die GM kan daardie opdrag gebruik.',
       gmOnlyHint: 'Spelers kan spend, party en help gebruik.',
@@ -703,14 +775,28 @@ const InspirationTrackerMod = (() => {
       refresh: 'Verfris',
       undo: 'Ontdoen',
       decline: 'Laat gaan',
+      boost: 'Versterk',
+      pools: 'Poele',
+      addPool: 'Voeg poel by',
+      deletePool: 'Skrap poel',
     },
     values: {
       on: 'Aan',
       off: 'Af',
+      none: 'Geen',
+      noLimit: 'Geen limiet',
+      tracking: {
+        flag: 'Blad se inspirasieblokkie',
+        pool: 'Puntepoel',
+      },
+      source: {
+        resource: 'Blad se hulpbronblokkie',
+        attribute: 'Eienskap',
+      },
       wording: {
-        auto: 'Van die blad',
         2014: 'Inspirasie (2014)',
         2024: 'Heldhaftige Inspirasie (2024)',
+        auto: 'Van die blad',
       },
       announce: {
         public: 'Almal',
@@ -722,6 +808,10 @@ const InspirationTrackerMod = (() => {
       language: {
         label: 'Taal',
         desc: 'Taal vir kieslyste, boodskappe en uitdeelstukke.',
+      },
+      tracking: {
+        label: 'Opsporing',
+        desc: 'Waarop Gee en Gebruik werk: die inspirasieblokkie op die D&D-blaaie, wat ’n karakter het of nie het nie, of ’n poel punte wat opbou en ’n paar op ’n slag gebruik word.',
       },
       marker: {
         label: 'Merker',
@@ -763,6 +853,8 @@ const InspirationTrackerMod = (() => {
       none: 'Karakters sonder inspirasieblokkie',
       rules2024: 'Gebruik 2024-reëls',
       party: 'Groeplede',
+      tracking: 'Opsporing',
+      pools: 'Poele',
       marker: 'Merker',
       fx: 'Spesiale effek',
       legacyCommand: 'Ou opdrag',
@@ -778,6 +870,15 @@ const InspirationTrackerMod = (() => {
         'Wys wie in die groep inspirasie het, met knoppies om dit te gee, te verwyder of te gebruik.',
       partyEdit: 'Voeg die gekose karakters by die groep, of haal hulle uit.',
       ids: 'Werk op die gegewe teken- of karakter-ID’s in plaas van die gekose tekens.',
+      points:
+        'Met ’n puntepoel: gee, neem weg of gebruik soveel punte. Sonder ’n getal, 1. remove all neem elke punt weg.',
+      boost:
+        'Met ’n puntepoel: gebruik punte om daardie bonus by ’n worp te voeg, teen die poel se koste vir elke +1.',
+      poolFlag: 'Werk op die genoemde poel in plaas van die verstekpoel.',
+      pools: 'Wys die puntepoele en hul instellings.',
+      poolEdit: 'Voeg ’n poel by, of skrap een. Die punte op die blaaie bly soos hulle is.',
+      poolSet:
+        'Verander ’n poel: sy naam, waar dit gehou word (resource of attribute), die punte wat elke +1 kos, die meeste punte toegelaat (0 vir geen limiet), of sy tekenmerker.',
       undo: 'Gee inspirasie terug wat gebruik is. Die ID kom uit die GM-boodskap oor die gebruik.',
       macro: 'Voeg die "Inspiration"-tekenaksie by, wat spelers klik om inspirasie te gebruik.',
       sync: 'Lees elke blad weer en stel die merkers reg.',
@@ -790,12 +891,13 @@ const InspirationTrackerMod = (() => {
     helpPlayer: {
       menu: 'Wys jou karakters en of hulle inspirasie het.',
       spend: 'Gebruik inspirasie vir die gekose karakter.',
+      boost: 'Gebruik punte uit ’n poel om daardie bonus by ’n worp te voeg.',
       party: 'Wys die groep, as die GM dit toelaat.',
       help: 'Wys hierdie lys.',
     },
     handout: {
       versionLabel: 'Weergawe',
-      subtitle: 'Inspirasie en Heldhaftige Inspirasie vir die D&D 5e 2014- en 2024-blaaie',
+      subtitle: 'Inspirasie, Heldhaftige Inspirasie en puntepoele vir enige spel',
       overview: {
         heading: 'Oorsig',
         body: 'InspirationTracker hou D&D-inspirasie op die karakterblad, die teken en die klets gelyk. Gee dit vanaf die kieslys, die blad of die tekenmerker, en elke teken vir daardie karakter wys die merker. Spelers kan dit met een klik gebruik, en die GM word ingelig, met ’n Ontdoen-knoppie. Dit werk met die D&D 2024-blad, waar dit Heldhaftige Inspirasie genoem word, en met die 2014 OGL-blad.',
@@ -848,6 +950,18 @@ const InspirationTrackerMod = (() => {
           'Die groep is elke karakter wat ’n speler beheer. Kies tekens en klik Voeg by groep of Verwyder uit groep om dit te verander.',
           'Die GM se oorsig het Gee-, Verwyder- en Gebruik-knoppies vir elke lid.',
           'Skakel Spelers sien groep aan om spelers ook die oorsig te laat sien. Hulle kry Gebruik-knoppies slegs vir hul eie karakters.',
+        ],
+      },
+      pools: {
+        heading: 'Puntepoele',
+        points: [
+          '’n Puntepoel is ’n getal wat opbou en ’n paar op ’n slag gebruik word: ’n poel inspirasiepunte, heldepunte, geluk, bennies en dies meer. Dit werk met enige karakterblad.',
+          'Stel Opsporing op Puntepoel, en Gee, Verwyder en Gebruik werk op die verstekpoel en vra hoeveel punte. Die merker wys terwyl ’n karakter enige punte het.',
+          'Versterk gebruik punte om ’n worp te verhoog: tik die bonus wat jy wil hê, en die poel se Punte per +1 bepaal die koste. Teen 2 punte per +1 kos ’n bonus van 4 dus 8 punte. Die Mod kondig die gebruik aan; voeg self die bonus by die worp.',
+          '’n Gebruik word geweier wanneer die karakter nie genoeg punte het nie. Die GM word ingelig wie wat gebruik het, met ’n Ontdoen-knoppie.',
+          'Gehou in "Blad se hulpbronblokkie" gebruik die hulpbronblokkie op die blad wat die poel se naam het, soos ’n Other Resource-blokkie genaamd Inspiration op die 2014 D&D-blad. Wanneer die blad geen blokkie met daardie naam het nie, of met "Eienskap", word die punte in ’n gewone eienskap gehou, soos inspiration_pool. Die D&D 2024-blad gebruik altyd die eienskap.',
+          'Om die getal met die hand op die blad te verander is in orde: die merker volg.',
+          'Klik Poele om die verstekpoel te hernoem, sy koste en maksimum te stel, of nog poele by te voeg. Ander poele word vanaf hul Groep-knoppie gebruik, of deur --pool en die poel se naam by ’n opdrag te voeg.',
         ],
       },
       markers: {
@@ -911,6 +1025,8 @@ const InspirationTrackerMod = (() => {
       subtitle: 'Command Deck',
       selectedDesc: 'Kies een of meer tekens, en klik dan.',
       partyDesc: 'Sien wie inspirasie het, en kies wie in die groep is.',
+      poolsTitle: 'Puntepoel',
+      poolsDesc: 'Met Opsporing op Puntepoel gestel: kies tekens, klik, en tik die getal.',
       toolsDesc: 'Kieslys, instellings, die spelermakro en hulp.',
       footer: 'Volledige instruksies is in die "{help}"-uitdeelstuk.',
     },
@@ -926,6 +1042,8 @@ const InspirationTrackerMod = (() => {
       settings: 'Configuració d’InspirationTracker',
       help: 'Ordres d’InspirationTracker',
       party: 'Inspiració del grup',
+      poolParty: '{term} del grup',
+      pools: 'Reserves de punts',
       yours: 'Els teus personatges',
       status: 'Estat d’InspirationTracker',
     },
@@ -958,7 +1076,52 @@ const InspirationTrackerMod = (() => {
       journal: 'S’han refet els documents d’Ajuda i de Command Deck.',
       readyHint: 'Escriu {command} per al menú, o obre el document Command Deck.',
     },
+    pool: {
+      gained: '{name} guanya {amount} {term} ({before} → {after}).',
+      spent: '{name} gasta {amount} {term} ({before} → {after}).',
+      boosted: '{name} gasta {amount} {term} per a +{bonus} a la tirada ({before} → {after}).',
+      spentBy: '{player} ha gastat {amount} {term} per a {name}.',
+      restored: '{name} recupera {amount} {term} ({before} → {after}).',
+      removed: 'S’han tret {amount} {term} a {name} ({before} → {after}).',
+      none: '{name} no té {term}.',
+      short: '{name} té {have} {term}, i en calen {need}.',
+      full: '{name} ja ha arribat al màxim permès ({max}) per a {term}.',
+    },
+    pools: {
+      introFlag:
+        'El seguiment està posat a la casella d’inspiració de la fitxa. Posa’l a Reserva de punts perquè "{name}" sigui la reserva sobre la qual actuen Dona i Gasta. Les altres reserves es fan servir amb --pool.',
+      introPool:
+        'Dona, Gasta i Potencia actuen sobre "{name}". Les altres reserves es fan servir des del seu botó Grup, o amb --pool.',
+      defaultLabel: '{name} (per defecte)',
+      name: 'Nom',
+      source: 'Es guarda a',
+      cost: 'Punts per +1',
+      max: 'Màxim',
+      marker: 'Marcador',
+      attribute: 'Atribut quan la fitxa no té cap casella amb aquest nom: {attribute}',
+      partyTotal: 'Total del grup: {total} {term}.',
+    },
+    prompts: {
+      points: 'Punts',
+      bonus: 'Bonificació a la tirada',
+      max: 'Màxim de punts permès (0 per a sense límit)',
+    },
     errors: {
+      unknownPool: 'No hi ha cap reserva anomenada "{value}".',
+      unknownPoolHint: 'Reserves: {pools}.',
+      badAmount: '"{value}" no és un nombre de punts.',
+      badAmountHint: 'Fes servir un nombre enter de l’1 al 9999.',
+      boostNoPool: 'Potencia gasta punts d’una reserva.',
+      poolInvalid: 'Una reserva no es pot anomenar "{value}".',
+      poolExists: 'Ja hi ha una reserva anomenada "{value}".',
+      poolFull: 'No hi ha lloc per a cap altra reserva.',
+      poolNameHint:
+        'Fes servir un nom de fins a 40 lletres, xifres i espais que no tingui cap altra reserva.',
+      poolDefault:
+        'La reserva per defecte, "{name}", no es pot suprimir. Se li pot canviar el nom.',
+      poolMarkerHint:
+        'Tria un marcador dels teus jocs de marcadors que no sigui el de l’opció Marcador.',
+      poolSetHint: 'Escriu !inspiration pools per veure totes les reserves i les seves opcions.',
       denied: 'No pots fer això per a {name}.',
       gmOnly: 'Només el GM pot fer servir aquesta ordre.',
       gmOnlyHint: 'Els jugadors poden fer servir spend, party i help.',
@@ -1009,14 +1172,28 @@ const InspirationTrackerMod = (() => {
       refresh: 'Actualitza',
       undo: 'Desfés',
       decline: 'Deixa-la anar',
+      boost: 'Potencia',
+      pools: 'Reserves',
+      addPool: 'Afegeix reserva',
+      deletePool: 'Suprimeix reserva',
     },
     values: {
       on: 'Activat',
       off: 'Desactivat',
+      none: 'Cap',
+      noLimit: 'Sense límit',
+      tracking: {
+        flag: 'Casella d’inspiració de la fitxa',
+        pool: 'Reserva de punts',
+      },
+      source: {
+        resource: 'Casella de recurs de la fitxa',
+        attribute: 'Atribut',
+      },
       wording: {
-        auto: 'Segons la fitxa',
         2014: 'Inspiració (2014)',
         2024: 'Inspiració heroica (2024)',
+        auto: 'Segons la fitxa',
       },
       announce: {
         public: 'Tothom',
@@ -1028,6 +1205,10 @@ const InspirationTrackerMod = (() => {
       language: {
         label: 'Idioma',
         desc: 'Idioma dels menús, missatges i documents.',
+      },
+      tracking: {
+        label: 'Seguiment',
+        desc: 'Sobre què actuen Dona i Gasta: la casella d’inspiració de les fitxes de D&D, que un personatge té o no té, o una reserva de punts que s’acumula i es gasta de mica en mica.',
       },
       marker: {
         label: 'Marcador',
@@ -1069,6 +1250,8 @@ const InspirationTrackerMod = (() => {
       none: 'Personatges sense casella d’inspiració',
       rules2024: 'Amb regles de 2024',
       party: 'Membres del grup',
+      tracking: 'Seguiment',
+      pools: 'Reserves',
       marker: 'Marcador',
       fx: 'Efecte especial',
       legacyCommand: 'Ordre antiga',
@@ -1083,6 +1266,16 @@ const InspirationTrackerMod = (() => {
       party: 'Mostra qui del grup té inspiració, amb botons per donar-la, treure-la o gastar-la.',
       partyEdit: 'Afegeix els personatges seleccionats al grup, o els en treu.',
       ids: 'Actua sobre els identificadors de testimoni o de personatge indicats en lloc dels testimonis seleccionats.',
+      points:
+        'Amb una reserva de punts: dona, treu o gasta aquest nombre de punts. Sense nombre, 1. remove all treu tots els punts.',
+      boost:
+        'Amb una reserva de punts: gasta punts per afegir aquesta bonificació a una tirada, al cost de la reserva per cada +1.',
+      poolFlag: 'Actua sobre la reserva indicada en lloc de la reserva per defecte.',
+      pools: 'Mostra les reserves de punts i les seves opcions.',
+      poolEdit:
+        'Afegeix una reserva, o en suprimeix una. Els punts de les fitxes es deixen tal com estan.',
+      poolSet:
+        'Canvia una reserva: el nom, on es guarda (resource o attribute), els punts que costa cada +1, el màxim de punts permès (0 per a sense límit), o el seu marcador de testimoni.',
       undo: 'Retorna la inspiració gastada. L’ID ve del missatge al GM sobre la despesa.',
       macro:
         'Afegeix l’acció de testimoni "Inspiration", que els jugadors fan clic per gastar inspiració.',
@@ -1096,12 +1289,13 @@ const InspirationTrackerMod = (() => {
     helpPlayer: {
       menu: 'Mostra els teus personatges i si tenen inspiració.',
       spend: 'Gasta inspiració per al personatge seleccionat.',
+      boost: 'Gasta punts d’una reserva per afegir aquesta bonificació a una tirada.',
       party: 'Mostra el grup, si el GM ho permet.',
       help: 'Mostra aquesta llista.',
     },
     handout: {
       versionLabel: 'Versió',
-      subtitle: 'Inspiració i Inspiració heroica per a les fitxes de D&D 5e de 2014 i 2024',
+      subtitle: 'Inspiració, Inspiració heroica i reserves de punts per a qualsevol joc',
       overview: {
         heading: 'Visió general',
         body: 'InspirationTracker manté sincronitzada la inspiració de D&D entre la fitxa de personatge, el testimoni i el xat. Dona-la des del menú, la fitxa o el marcador del testimoni, i tots els testimonis d’aquell personatge mostren el marcador. Els jugadors la poden gastar amb un clic, i s’avisa el GM, amb un botó Desfés. Funciona amb la fitxa de D&D 2024, on s’anomena Inspiració heroica, i amb la fitxa OGL de 2014.',
@@ -1154,6 +1348,18 @@ const InspirationTrackerMod = (() => {
           'El grup és cada personatge que controla un jugador. Selecciona testimonis i fes clic a Afegeix al grup o Treu del grup per canviar-lo.',
           'La visió general del GM té botons Dona, Treu i Gasta per a cada membre.',
           'Activa Els jugadors veuen el grup perquè els jugadors també vegin la visió general. Només tenen botons Gasta per als seus propis personatges.',
+        ],
+      },
+      pools: {
+        heading: 'Reserves de punts',
+        points: [
+          'Una reserva de punts és un nombre que s’acumula i es gasta de mica en mica: una reserva de punts d’inspiració, punts d’heroi, sort, bennies i similars. Funciona amb qualsevol fitxa de personatge.',
+          'Posa Seguiment a Reserva de punts, i Dona, Treu i Gasta actuen sobre la reserva per defecte i demanen quants punts. El marcador es mostra mentre un personatge té algun punt.',
+          'Potencia gasta punts per apujar una tirada: escriu la bonificació que vols, i l’opció Punts per +1 de la reserva en decideix el cost. A 2 punts per +1, una bonificació de 4 costa 8 punts. El Mod anuncia la despesa; afegeix tu mateix la bonificació a la tirada.',
+          'Una despesa es rebutja quan el personatge no té prou punts. S’avisa el GM de qui ha gastat què, amb un botó Desfés.',
+          'Es guarda a "Casella de recurs de la fitxa" fa servir la casella de recurs de la fitxa que té el nom de la reserva, com ara una casella Other Resource anomenada Inspiration a la fitxa de D&D de 2014. Quan la fitxa no té cap casella amb aquest nom, o amb "Atribut", els punts es guarden en un atribut senzill, com ara inspiration_pool. La fitxa de D&D 2024 sempre fa servir l’atribut.',
+          'Canviar el nombre a la fitxa a mà no és cap problema: el marcador el segueix.',
+          'Fes clic a Reserves per canviar el nom de la reserva per defecte, posar-ne el cost i el màxim, o afegir més reserves. Les altres reserves es fan servir des del seu botó Grup, o afegint --pool i el nom de la reserva a una ordre.',
         ],
       },
       markers: {
@@ -1216,6 +1422,9 @@ const InspirationTrackerMod = (() => {
       subtitle: 'Command Deck',
       selectedDesc: 'Selecciona un o més testimonis i després fes clic.',
       partyDesc: 'Mira qui té inspiració, i tria qui és al grup.',
+      poolsTitle: 'Reserva de punts',
+      poolsDesc:
+        'Amb Seguiment a Reserva de punts: selecciona testimonis, fes clic i escriu el nombre.',
       toolsDesc: 'Menú, configuració, la macro de jugador i ajuda.',
       footer: 'Les instruccions completes són al document "{help}".',
     },
@@ -1231,6 +1440,8 @@ const InspirationTrackerMod = (() => {
       settings: 'InspirationTracker 設定',
       help: 'InspirationTracker 指令',
       party: '隊伍激勵',
+      poolParty: '隊伍{term}',
+      pools: '點數池',
       yours: '你的角色',
       status: 'InspirationTracker 狀態報告',
     },
@@ -1259,7 +1470,49 @@ const InspirationTrackerMod = (() => {
       journal: '已重建說明與指令面板講義。',
       readyHint: '輸入 {command} 開啟選單，或打開指令面板講義。',
     },
+    pool: {
+      gained: '{name} 獲得了 {amount} 點{term}（{before} → {after}）。',
+      spent: '{name} 花費了 {amount} 點{term}（{before} → {after}）。',
+      boosted: '{name} 花費了 {amount} 點{term}，讓擲骰 +{bonus}（{before} → {after}）。',
+      spentBy: '{player} 替 {name} 花費了 {amount} 點{term}。',
+      restored: '{name} 拿回了 {amount} 點{term}（{before} → {after}）。',
+      removed: '已移除 {name} 的 {amount} 點{term}（{before} → {after}）。',
+      none: '{name} 沒有{term}。',
+      short: '{name} 只有 {have} 點{term}，但這需要 {need} 點。',
+      full: '{name} 的{term}已達上限（{max}）。',
+    },
+    pools: {
+      introFlag:
+        '「追蹤方式」目前設為角色卡激勵核取方塊。將它設為「點數池」，「給予」與「花費」就會作用於「{name}」。其他點數池請搭配 --pool 使用。',
+      introPool:
+        '「給予」、「花費」與「加值」會作用於「{name}」。其他點數池可從各自的「隊伍」按鈕使用，或搭配 --pool。',
+      defaultLabel: '{name}（預設）',
+      name: '名稱',
+      source: '儲存位置',
+      cost: '每 +1 所需點數',
+      max: '上限',
+      marker: '標記',
+      attribute: '角色卡上沒有同名欄位時使用的屬性：{attribute}',
+      partyTotal: '隊伍合計：{total} 點{term}。',
+    },
+    prompts: {
+      points: '點數',
+      bonus: '擲骰加值',
+      max: '點數上限（0 表示無上限）',
+    },
     errors: {
+      unknownPool: '沒有名為「{value}」的點數池。',
+      unknownPoolHint: '點數池：{pools}。',
+      badAmount: '「{value}」不是有效的點數。',
+      badAmountHint: '請使用 1 到 9999 之間的整數。',
+      boostNoPool: '「加值」需要從點數池花費點數。',
+      poolInvalid: '點數池不能命名為「{value}」。',
+      poolExists: '已經有名為「{value}」的點數池。',
+      poolFull: '沒有空間再新增點數池了。',
+      poolNameHint: '請使用最多 40 個字母、數字和空格組成，且未被其他點數池使用的名稱。',
+      poolDefault: '預設點數池「{name}」無法刪除，但可以重新命名。',
+      poolMarkerHint: '請從你的標記組中挑選一個與「標記」設定不同的標記。',
+      poolSetHint: '輸入 !inspiration pools 以查看所有點數池及其設定。',
       denied: '你無法對 {name} 執行此操作。',
       gmOnly: '只有 GM 可以使用此指令。',
       gmOnlyHint: '玩家可以使用 spend、party 和 help。',
@@ -1307,14 +1560,28 @@ const InspirationTrackerMod = (() => {
       refresh: '重新整理',
       undo: '復原',
       decline: '放棄',
+      boost: '加值',
+      pools: '點數池',
+      addPool: '新增點數池',
+      deletePool: '刪除點數池',
     },
     values: {
       on: '開啟',
       off: '關閉',
+      none: '無',
+      noLimit: '無上限',
+      tracking: {
+        flag: '角色卡激勵核取方塊',
+        pool: '點數池',
+      },
+      source: {
+        resource: '角色卡資源欄位',
+        attribute: '屬性',
+      },
       wording: {
-        auto: '依角色卡',
         2014: '激勵（2014）',
         2024: '英雄激勵（2024）',
+        auto: '依角色卡',
       },
       announce: {
         public: '所有人',
@@ -1326,6 +1593,10 @@ const InspirationTrackerMod = (() => {
       language: {
         label: '語言',
         desc: '選單、訊息與講義所用的語言。',
+      },
+      tracking: {
+        label: '追蹤方式',
+        desc: '「給予」與「花費」作用的對象：D&D 角色卡上的激勵核取方塊（角色只有擁有或沒有兩種狀態），或是可以累積並一次花費幾點的點數池。',
       },
       marker: {
         label: '標記',
@@ -1367,6 +1638,8 @@ const InspirationTrackerMod = (() => {
       none: '沒有激勵欄位的角色',
       rules2024: '使用 2024 規則',
       party: '隊伍成員',
+      tracking: '追蹤方式',
+      pools: '點數池',
       marker: '標記',
       fx: '特效',
       legacyCommand: '舊指令',
@@ -1380,6 +1653,14 @@ const InspirationTrackerMod = (() => {
       party: '顯示隊伍中誰擁有激勵，並附有給予、移除或花費的按鈕。',
       partyEdit: '將所選角色加入隊伍，或將其移出。',
       ids: '改為作用於指定的棋子或角色 ID，而非所選棋子。',
+      points:
+        '使用點數池時：給予、移除或花費指定的點數。未指定數字時為 1。remove all 會移除所有點數。',
+      boost: '使用點數池時：花費點數為擲骰加上指定的加值，每 +1 的費用依點數池設定。',
+      poolFlag: '改為作用於指定名稱的點數池，而非預設點數池。',
+      pools: '顯示點數池及其設定。',
+      poolEdit: '新增或刪除點數池。角色卡上的點數會保持原樣。',
+      poolSet:
+        '變更點數池：名稱、儲存位置（resource 或 attribute）、每 +1 所需點數、點數上限（0 表示無上限），或其棋子標記。',
       undo: '退還已花費的激勵。ID 來自發給 GM 的花費訊息。',
       macro: '新增「Inspiration」棋子動作，玩家點擊即可花費激勵。',
       sync: '重新讀取所有角色卡並校正標記。',
@@ -1392,12 +1673,13 @@ const InspirationTrackerMod = (() => {
     helpPlayer: {
       menu: '顯示你的角色以及他們是否擁有激勵。',
       spend: '為所選角色花費激勵。',
+      boost: '從點數池花費點數，為擲骰加上指定的加值。',
       party: '顯示隊伍（若 GM 允許）。',
       help: '顯示此列表。',
     },
     handout: {
       versionLabel: '版本',
-      subtitle: '適用於 D&D 5e 2014 與 2024 角色卡的激勵與英雄激勵',
+      subtitle: '適用於任何遊戲的激勵、英雄激勵與點數池',
       overview: {
         heading: '概覽',
         body: 'InspirationTracker 讓角色卡、棋子與聊天中的 D&D 激勵保持一致。從選單、角色卡或棋子標記給予激勵，該角色的所有棋子都會顯示標記。玩家只需點擊一次即可花費，GM 會收到通知，並附有「復原」按鈕。它支援 D&D 2024 角色卡（其中稱為英雄激勵）以及 2014 OGL 角色卡。',
@@ -1449,6 +1731,18 @@ const InspirationTrackerMod = (() => {
           '隊伍包含所有由玩家控制的角色。選取棋子並點擊「加入隊伍」或「移出隊伍」即可變更。',
           'GM 的總覽中每位成員都有「給予」、「移除」和「花費」按鈕。',
           '開啟「玩家可見隊伍」，讓玩家也能看到總覽。他們只會看到自己角色的「花費」按鈕。',
+        ],
+      },
+      pools: {
+        heading: '點數池',
+        points: [
+          '點數池是一個可以累積並一次花費幾點的數字：激勵點數、英雄點數、幸運、bennies 等等。它適用於任何角色卡。',
+          '將「追蹤方式」設為「點數池」後，「給予」、「移除」與「花費」會作用於預設點數池，並詢問點數。只要角色還有點數，就會顯示標記。',
+          '「加值」會花費點數來提高擲骰：輸入想要的加值，費用由點數池的「每 +1 所需點數」決定。若每 +1 需要 2 點，加值 4 就要花費 8 點。Mod 會公告這次花費；加值請自行加到擲骰上。',
+          '角色的點數不足時，花費會被拒絕。GM 會收到誰花費了多少的通知，並附有「復原」按鈕。',
+          '儲存位置設為「角色卡資源欄位」時，會使用角色卡上與點數池同名的資源欄位，例如 2014 版 D&D 角色卡上名為 Inspiration 的 Other Resource 欄位。若角色卡上沒有同名欄位，或設為「屬性」，點數會存放在一般屬性中，例如 inspiration_pool。D&D 2024 角色卡一律使用屬性。',
+          '直接在角色卡上手動修改數字也沒問題：標記會隨之更新。',
+          '點擊「點數池」可重新命名預設點數池、設定其費用與上限，或新增更多點數池。其他點數池可從各自的「隊伍」按鈕使用，或在指令中加上 --pool 與點數池名稱。',
         ],
       },
       markers: {
@@ -1510,6 +1804,8 @@ const InspirationTrackerMod = (() => {
       subtitle: '指令面板',
       selectedDesc: '選取一個或多個棋子，然後點擊。',
       partyDesc: '查看誰擁有激勵，並選擇隊伍成員。',
+      poolsTitle: '點數池',
+      poolsDesc: '「追蹤方式」設為「點數池」時：選取棋子、點擊，然後輸入數字。',
       toolsDesc: '選單、設定、玩家巨集與說明。',
       footer: '完整說明請見「{help}」講義。',
     },
@@ -1525,6 +1821,8 @@ const InspirationTrackerMod = (() => {
       settings: 'Nastavení InspirationTracker',
       help: 'Příkazy InspirationTracker',
       party: 'Inspirace družiny',
+      poolParty: 'Družina: {term}',
+      pools: 'Zásoby bodů',
       yours: 'Tvoje postavy',
       status: 'Stav InspirationTracker',
     },
@@ -1557,7 +1855,50 @@ const InspirationTrackerMod = (() => {
       journal: 'Dokumenty Nápověda a Command Deck byly znovu vytvořeny.',
       readyHint: 'Napiš {command} pro nabídku, nebo otevři dokument Command Deck.',
     },
+    pool: {
+      gained: '{term}: {name} získává {amount} ({before} → {after}).',
+      spent: '{term}: {name} využívá {amount} ({before} → {after}).',
+      boosted: '{term}: {name} využívá {amount} za +{bonus} k hodu ({before} → {after}).',
+      spentBy: '{term}: {player} využil(a) {amount} pro {name}.',
+      restored: '{term}: {name} má {amount} zpět ({before} → {after}).',
+      removed: '{term}: {name} přichází o {amount} ({before} → {after}).',
+      none: '{term}: {name} nemá žádné body.',
+      short: '{term}: {name} má {have}, ale je potřeba {need}.',
+      full: '{term}: {name} už má povolené maximum ({max}).',
+    },
+    pools: {
+      introFlag:
+        'Sledování je nastaveno na políčko inspirace v deníku. Nastav ho na Zásoba bodů a „{name}“ bude zásobou, se kterou pracují Dát a Využít. Ostatní zásoby se používají pomocí --pool.',
+      introPool:
+        'Dát, Využít a Posílit pracují se zásobou „{name}“. Ostatní zásoby se používají jejich tlačítkem Družina, nebo pomocí --pool.',
+      defaultLabel: '{name} (výchozí)',
+      name: 'Název',
+      source: 'Uloženo v',
+      cost: 'Body za +1',
+      max: 'Maximum',
+      marker: 'Značka',
+      attribute: 'Atribut, když deník nemá políčko s tímto názvem: {attribute}',
+      partyTotal: 'Družina celkem: {total} ({term}).',
+    },
+    prompts: {
+      points: 'Body',
+      bonus: 'Bonus k hodu',
+      max: 'Nejvyšší povolený počet bodů (0 = bez omezení)',
+    },
     errors: {
+      unknownPool: 'Žádná zásoba „{value}“ neexistuje.',
+      unknownPoolHint: 'Zásoby: {pools}.',
+      badAmount: '„{value}“ není počet bodů.',
+      badAmountHint: 'Použij celé číslo od 1 do 9999.',
+      boostNoPool: 'Posílit utrácí body ze zásoby.',
+      poolInvalid: 'Zásoba se nemůže jmenovat „{value}“.',
+      poolExists: 'Zásoba „{value}“ už existuje.',
+      poolFull: 'Na další zásobu už není místo.',
+      poolNameHint:
+        'Použij název o nejvýše 40 písmenech, číslicích a mezerách, který nemá žádná jiná zásoba.',
+      poolDefault: 'Výchozí zásobu „{name}“ nelze smazat. Lze ji přejmenovat.',
+      poolMarkerHint: 'Vyber ze svých sad značek značku, která není v nastavení Značka.',
+      poolSetHint: 'Napiš !inspiration pools a uvidíš všechny zásoby a jejich nastavení.',
       denied: 'Tohle pro {name} udělat nemůžeš.',
       gmOnly: 'Tento příkaz může použít jen GM.',
       gmOnlyHint: 'Hráči mohou použít spend, party a help.',
@@ -1607,14 +1948,28 @@ const InspirationTrackerMod = (() => {
       refresh: 'Obnovit',
       undo: 'Vrátit',
       decline: 'Vzdát se',
+      boost: 'Posílit',
+      pools: 'Zásoby',
+      addPool: 'Přidat zásobu',
+      deletePool: 'Smazat zásobu',
     },
     values: {
       on: 'Zapnuto',
       off: 'Vypnuto',
+      none: 'Žádná',
+      noLimit: 'Bez omezení',
+      tracking: {
+        flag: 'Políčko inspirace v deníku',
+        pool: 'Zásoba bodů',
+      },
+      source: {
+        resource: 'Políčko zdroje v deníku',
+        attribute: 'Atribut',
+      },
       wording: {
-        auto: 'Podle deníku',
         2014: 'Inspirace (2014)',
         2024: 'Hrdinská inspirace (2024)',
+        auto: 'Podle deníku',
       },
       announce: {
         public: 'Všichni',
@@ -1626,6 +1981,10 @@ const InspirationTrackerMod = (() => {
       language: {
         label: 'Jazyk',
         desc: 'Jazyk nabídek, zpráv a dokumentů.',
+      },
+      tracking: {
+        label: 'Sledování',
+        desc: 'S čím pracují Dát a Využít: s políčkem inspirace v denících D&D, kterou postava buď má, nebo nemá, nebo se zásobou bodů, které se hromadí a utrácejí po několika.',
       },
       marker: {
         label: 'Značka',
@@ -1667,6 +2026,8 @@ const InspirationTrackerMod = (() => {
       none: 'Postavy bez políčka inspirace',
       rules2024: 'Používá pravidla 2024',
       party: 'Členové družiny',
+      tracking: 'Sledování',
+      pools: 'Zásoby',
       marker: 'Značka',
       fx: 'Speciální efekt',
       legacyCommand: 'Starý příkaz',
@@ -1681,6 +2042,14 @@ const InspirationTrackerMod = (() => {
         'Zobrazí, kdo v družině má inspiraci, s tlačítky pro její dání, odebrání nebo využití.',
       partyEdit: 'Přidá vybrané postavy do družiny, nebo je z ní odebere.',
       ids: 'Pracuje se zadanými ID tokenů nebo postav místo vybraných tokenů.',
+      points:
+        'Se zásobou bodů: dá, odebere nebo využije daný počet bodů. Bez čísla 1. remove all odebere všechny body.',
+      boost: 'Se zásobou bodů: utratí body a přidá k hodu daný bonus, za cenu zásoby za každé +1.',
+      poolFlag: 'Pracuje se jmenovanou zásobou místo výchozí.',
+      pools: 'Zobrazí zásoby bodů a jejich nastavení.',
+      poolEdit: 'Přidá zásobu, nebo jednu smaže. Body v denících zůstanou, jak jsou.',
+      poolSet:
+        'Změní zásobu: její název, kde je uložena (resource nebo attribute), kolik bodů stojí každé +1, nejvyšší povolený počet bodů (0 = bez omezení), nebo její značku tokenu.',
       undo: 'Vrátí využitou inspiraci. ID je ve zprávě pro GM o využití.',
       macro: 'Přidá akci tokenu „Inspiration“, na kterou hráči klikají, aby využili inspiraci.',
       sync: 'Znovu načte všechny deníky a opraví značky.',
@@ -1693,12 +2062,13 @@ const InspirationTrackerMod = (() => {
     helpPlayer: {
       menu: 'Zobrazí tvé postavy a zda mají inspiraci.',
       spend: 'Využije inspiraci za vybranou postavu.',
+      boost: 'Utratí body ze zásoby a přidá k hodu daný bonus.',
       party: 'Zobrazí družinu, pokud to GM dovolí.',
       help: 'Zobrazí tento seznam.',
     },
     handout: {
       versionLabel: 'Verze',
-      subtitle: 'Inspirace a Hrdinská inspirace pro deníky D&D 5e 2014 a 2024',
+      subtitle: 'Inspirace, Hrdinská inspirace a zásoby bodů pro jakoukoli hru',
       overview: {
         heading: 'Přehled',
         body: 'InspirationTracker udržuje inspiraci v D&D v souladu mezi deníkem postavy, tokenem a chatem. Dej ji z nabídky, z deníku nebo značkou tokenu a každý token dané postavy značku zobrazí. Hráči ji mohou využít jedním kliknutím a GM dostane zprávu s tlačítkem Vrátit. Funguje s deníkem D&D 2024, kde se jmenuje Hrdinská inspirace, a s deníkem 2014 OGL.',
@@ -1751,6 +2121,18 @@ const InspirationTrackerMod = (() => {
           'Družinu tvoří každá postava, kterou ovládá hráč. Vyber tokeny a klikni na Přidat do družiny nebo Odebrat z družiny, chceš-li ji změnit.',
           'Přehled GM má pro každého člena tlačítka Dát, Odebrat a Využít.',
           'Zapni Hráči vidí družinu, aby přehled viděli i hráči. Tlačítka Využít dostanou jen pro své vlastní postavy.',
+        ],
+      },
+      pools: {
+        heading: 'Zásoby bodů',
+        points: [
+          'Zásoba bodů je číslo, které se hromadí a utrácí po několika: zásoba bodů inspirace, hrdinských bodů, štěstí, bennies a podobně. Funguje s jakýmkoli deníkem postavy.',
+          'Nastav Sledování na Zásoba bodů a Dát, Odebrat a Využít budou pracovat s výchozí zásobou a zeptají se na počet bodů. Značka je vidět, dokud má postava nějaké body.',
+          'Posílit utrácí body za zvýšení hodu: napiš požadovaný bonus a cenu určí Body za +1 dané zásoby. Při 2 bodech za +1 stojí bonus 4 celkem 8 bodů. Mod útratu oznámí; bonus si k hodu přičti sám.',
+          'Útrata je odmítnuta, když postava nemá dost bodů. GM dostane zprávu, kdo co utratil, s tlačítkem Vrátit.',
+          'Uloženo v „Políčko zdroje v deníku“ používá políčko zdroje v deníku, které nese název zásoby, například políčko Other Resource pojmenované Inspiration v deníku D&D 2014. Když deník políčko s tímto názvem nemá, nebo při volbě „Atribut“, jsou body uloženy v obyčejném atributu, například inspiration_pool. Deník D&D 2024 používá atribut vždy.',
+          'Ruční změna čísla v deníku nevadí: značka ji následuje.',
+          'Klikni na Zásoby, chceš-li přejmenovat výchozí zásobu, nastavit její cenu a maximum, nebo přidat další zásoby. Ostatní zásoby se používají jejich tlačítkem Družina, nebo přidáním --pool a názvu zásoby k příkazu.',
         ],
       },
       markers: {
@@ -1813,6 +2195,8 @@ const InspirationTrackerMod = (() => {
       subtitle: 'Command Deck',
       selectedDesc: 'Vyber jeden nebo více tokenů a pak klikni.',
       partyDesc: 'Podívej se, kdo má inspiraci, a urči, kdo je v družině.',
+      poolsTitle: 'Zásoba bodů',
+      poolsDesc: 'Se Sledováním nastaveným na Zásoba bodů: vyber tokeny, klikni a napiš číslo.',
       toolsDesc: 'Nabídka, nastavení, hráčské makro a nápověda.',
       footer: 'Úplný návod je v dokumentu „{help}“.',
     },
@@ -1828,6 +2212,8 @@ const InspirationTrackerMod = (() => {
       settings: 'InspirationTracker-indstillinger',
       help: 'InspirationTracker-kommandoer',
       party: 'Gruppens inspiration',
+      poolParty: 'Gruppens {term}',
+      pools: 'Pointpuljer',
       yours: 'Dine figurer',
       status: 'InspirationTracker-status',
     },
@@ -1860,7 +2246,50 @@ const InspirationTrackerMod = (() => {
       journal: 'Hjælp- og Command Deck-dokumenterne er genopbygget.',
       readyHint: 'Skriv {command} for menuen, eller åbn Command Deck-dokumentet.',
     },
+    pool: {
+      gained: '{name} får {amount} {term} ({before} → {after}).',
+      spent: '{name} bruger {amount} {term} ({before} → {after}).',
+      boosted: '{name} bruger {amount} {term} for +{bonus} til slaget ({before} → {after}).',
+      spentBy: '{player} brugte {amount} {term} for {name}.',
+      restored: '{name} har fået {amount} {term} tilbage ({before} → {after}).',
+      removed: '{amount} {term} er fjernet fra {name} ({before} → {after}).',
+      none: '{name} har ingen {term}.',
+      short: '{name} har {have} {term}, og det kræver {need}.',
+      full: '{name} har allerede det højeste tilladte antal {term} ({max}).',
+    },
+    pools: {
+      introFlag:
+        'Sporing er sat til arkets inspirationsfelt. Sæt den til Pointpulje for at gøre "{name}" til den pulje, som Giv og Brug virker på. Andre puljer bruges med --pool.',
+      introPool:
+        'Giv, Brug og Boost virker på "{name}". Andre puljer bruges fra deres Gruppe-knap eller med --pool.',
+      defaultLabel: '{name} (standard)',
+      name: 'Navn',
+      source: 'Gemmes i',
+      cost: 'Point pr. +1',
+      max: 'Maksimum',
+      marker: 'Markør',
+      attribute: 'Attribut, når arket ikke har et felt med dette navn: {attribute}',
+      partyTotal: 'Gruppen i alt: {total} {term}.',
+    },
+    prompts: {
+      points: 'Point',
+      bonus: 'Bonus til slaget',
+      max: 'Højeste tilladte antal point (0 for ingen grænse)',
+    },
     errors: {
+      unknownPool: 'Der findes ingen pulje ved navn "{value}".',
+      unknownPoolHint: 'Puljer: {pools}.',
+      badAmount: '"{value}" er ikke et antal point.',
+      badAmountHint: 'Brug et helt tal fra 1 til 9999.',
+      boostNoPool: 'Boost bruger point fra en pulje.',
+      poolInvalid: 'En pulje kan ikke hedde "{value}".',
+      poolExists: 'Der findes allerede en pulje ved navn "{value}".',
+      poolFull: 'Der er ikke plads til endnu en pulje.',
+      poolNameHint:
+        'Brug et navn på op til 40 bogstaver, cifre og mellemrum, som ingen anden pulje har.',
+      poolDefault: 'Standardpuljen, "{name}", kan ikke slettes. Den kan omdøbes.',
+      poolMarkerHint: 'Vælg en markør fra dine markørsæt, som ikke er den i indstillingen Markør.',
+      poolSetHint: 'Skriv !inspiration pools for at se alle puljer og deres indstillinger.',
       denied: 'Det kan du ikke gøre for {name}.',
       gmOnly: 'Kun GM kan bruge den kommando.',
       gmOnlyHint: 'Spillere kan bruge spend, party og help.',
@@ -1911,14 +2340,28 @@ const InspirationTrackerMod = (() => {
       refresh: 'Opdater',
       undo: 'Fortryd',
       decline: 'Lad den gå',
+      boost: 'Boost',
+      pools: 'Puljer',
+      addPool: 'Tilføj pulje',
+      deletePool: 'Slet pulje',
     },
     values: {
       on: 'Til',
       off: 'Fra',
+      none: 'Ingen',
+      noLimit: 'Ingen grænse',
+      tracking: {
+        flag: 'Arkets inspirationsfelt',
+        pool: 'Pointpulje',
+      },
+      source: {
+        resource: 'Arkets ressourcefelt',
+        attribute: 'Attribut',
+      },
       wording: {
-        auto: 'Fra arket',
         2014: 'Inspiration (2014)',
         2024: 'Heroisk inspiration (2024)',
+        auto: 'Fra arket',
       },
       announce: {
         public: 'Alle',
@@ -1930,6 +2373,10 @@ const InspirationTrackerMod = (() => {
       language: {
         label: 'Sprog',
         desc: 'Sprog for menuer, beskeder og dokumenter.',
+      },
+      tracking: {
+        label: 'Sporing',
+        desc: 'Hvad Giv og Brug virker på: inspirationsfeltet på D&D-arkene, som en figur enten har eller ikke har, eller en pulje af point, der bygges op og bruges nogle få ad gangen.',
       },
       marker: {
         label: 'Markør',
@@ -1971,6 +2418,8 @@ const InspirationTrackerMod = (() => {
       none: 'Figurer uden inspirationsfelt',
       rules2024: 'Bruger 2024-regler',
       party: 'Gruppemedlemmer',
+      tracking: 'Sporing',
+      pools: 'Puljer',
       marker: 'Markør',
       fx: 'Specialeffekt',
       legacyCommand: 'Gammel kommando',
@@ -1985,6 +2434,15 @@ const InspirationTrackerMod = (() => {
         'Viser, hvem i gruppen der har inspiration, med knapper til at give, fjerne eller bruge den.',
       partyEdit: 'Føjer de valgte figurer til gruppen eller fjerner dem.',
       ids: 'Virker på de angivne brik- eller figur-ID’er i stedet for de valgte brikker.',
+      points:
+        'Med en pointpulje: giver, fjerner eller bruger så mange point. Uden et tal, 1. remove all fjerner alle point.',
+      boost:
+        'Med en pointpulje: bruger point på at lægge den bonus til et slag, til puljens pris for hver +1.',
+      poolFlag: 'Virker på den navngivne pulje i stedet for standardpuljen.',
+      pools: 'Viser pointpuljerne og deres indstillinger.',
+      poolEdit: 'Tilføjer en pulje eller sletter en. Pointene på arkene lades, som de er.',
+      poolSet:
+        'Ændrer en pulje: dens navn, hvor den gemmes (resource eller attribute), hvor mange point hver +1 koster, det højeste tilladte antal point (0 for ingen grænse) eller dens brikmarkør.',
       undo: 'Giver brugt inspiration tilbage. ID’et kommer fra GM-beskeden om brugen.',
       macro:
         'Tilføjer brikhandlingen "Inspiration", som spillerne klikker på for at bruge inspiration.',
@@ -1998,12 +2456,13 @@ const InspirationTrackerMod = (() => {
     helpPlayer: {
       menu: 'Viser dine figurer, og om de har inspiration.',
       spend: 'Bruger inspiration for den valgte figur.',
+      boost: 'Bruger point fra en pulje på at lægge den bonus til et slag.',
       party: 'Viser gruppen, hvis GM tillader det.',
       help: 'Viser denne liste.',
     },
     handout: {
       versionLabel: 'Version',
-      subtitle: 'Inspiration og Heroisk inspiration til D&D 5e 2014- og 2024-arkene',
+      subtitle: 'Inspiration, Heroisk inspiration og pointpuljer til ethvert spil',
       overview: {
         heading: 'Oversigt',
         body: 'InspirationTracker holder D&D-inspiration i takt på figurarket, brikken og i chatten. Giv den fra menuen, arket eller brikmarkøren, og alle brikker for den figur viser markøren. Spillere kan bruge den med ét klik, og GM får besked, med en Fortryd-knap. Den virker med D&D 2024-arket, hvor den hedder Heroisk inspiration, og med 2014 OGL-arket.',
@@ -2055,6 +2514,18 @@ const InspirationTrackerMod = (() => {
           'Gruppen er alle figurer, som en spiller styrer. Vælg brikker og klik på Føj til gruppe eller Fjern fra gruppe for at ændre den.',
           'GM’s oversigt har Giv-, Fjern- og Brug-knapper for hvert medlem.',
           'Slå Spillere ser gruppen til for også at lade spillerne se oversigten. De får kun Brug-knapper for deres egne figurer.',
+        ],
+      },
+      pools: {
+        heading: 'Pointpuljer',
+        points: [
+          'En pointpulje er et tal, der bygges op og bruges nogle få ad gangen: en pulje af inspirationspoint, heltepoint, held, bennies og lignende. Den virker med ethvert figurark.',
+          'Sæt Sporing til Pointpulje, så virker Giv, Fjern og Brug på standardpuljen og spørger, hvor mange point. Markøren vises, så længe en figur har point.',
+          'Boost bruger point på at hæve et slag: skriv den ønskede bonus, og puljens Point pr. +1 afgør prisen. Ved 2 point pr. +1 koster en bonus på 4 i alt 8 point. Mod’en meddeler forbruget; læg selv bonussen til slaget.',
+          'Et forbrug afvises, når figuren ikke har point nok. GM får besked om, hvem der brugte hvad, med en Fortryd-knap.',
+          'Gemmes i "Arkets ressourcefelt" bruger det ressourcefelt på arket, der har puljens navn, fx et Other Resource-felt ved navn Inspiration på 2014 D&D-arket. Når arket ikke har et felt med det navn, eller med "Attribut", gemmes pointene i en almindelig attribut, fx inspiration_pool. D&D 2024-arket bruger altid attributten.',
+          'Det er fint at ændre tallet på arket i hånden: markøren følger med.',
+          'Klik på Puljer for at omdøbe standardpuljen, sætte dens pris og maksimum eller tilføje flere puljer. Andre puljer bruges fra deres Gruppe-knap eller ved at føje --pool og puljens navn til en kommando.',
         ],
       },
       markers: {
@@ -2118,6 +2589,8 @@ const InspirationTrackerMod = (() => {
       subtitle: 'Command Deck',
       selectedDesc: 'Vælg en eller flere brikker, og klik derefter.',
       partyDesc: 'Se, hvem der har inspiration, og vælg, hvem der er i gruppen.',
+      poolsTitle: 'Pointpulje',
+      poolsDesc: 'Med Sporing sat til Pointpulje: vælg brikker, klik, og skriv tallet.',
       toolsDesc: 'Menu, indstillinger, spillermakroen og hjælp.',
       footer: 'Den fulde vejledning findes i dokumentet "{help}".',
     },
@@ -2133,6 +2606,8 @@ const InspirationTrackerMod = (() => {
       settings: 'InspirationTracker-instellingen',
       help: 'InspirationTracker-commando’s',
       party: 'Inspiratie van de groep',
+      poolParty: '{term} van de groep',
+      pools: 'Puntenpools',
       yours: 'Jouw personages',
       status: 'InspirationTracker-status',
     },
@@ -2165,7 +2640,52 @@ const InspirationTrackerMod = (() => {
       journal: 'De handouts Help en Command Deck zijn opnieuw opgebouwd.',
       readyHint: 'Typ {command} voor het menu, of open de handout Command Deck.',
     },
+    pool: {
+      gained: '{name} krijgt {amount} {term} ({before} → {after}).',
+      spent: '{name} gebruikt {amount} {term} ({before} → {after}).',
+      boosted: '{name} gebruikt {amount} {term} voor +{bonus} op de worp ({before} → {after}).',
+      spentBy: '{player} heeft {amount} {term} gebruikt voor {name}.',
+      restored: '{name} heeft {amount} {term} terug ({before} → {after}).',
+      removed: '{amount} {term} afgenomen van {name} ({before} → {after}).',
+      none: '{name} heeft geen {term}.',
+      short: '{name} heeft {have} {term}, en hiervoor is {need} nodig.',
+      full: '{name} heeft al het maximum aan {term} ({max}).',
+    },
+    pools: {
+      introFlag:
+        'Bijhouden staat op het inspiratievakje van het blad. Zet het op Puntenpool om van "{name}" de pool te maken waarop Geven en Gebruiken werken. Andere pools gebruik je met --pool.',
+      introPool:
+        'Geven, Gebruiken en Boost werken op "{name}". Andere pools gebruik je met hun knop Groep, of met --pool.',
+      defaultLabel: '{name} (standaard)',
+      name: 'Naam',
+      source: 'Bewaard in',
+      cost: 'Punten per +1',
+      max: 'Maximum',
+      marker: 'Marker',
+      attribute: 'Attribuut als het blad geen vakje met deze naam heeft: {attribute}',
+      partyTotal: 'Totaal van de groep: {total} {term}.',
+    },
+    prompts: {
+      points: 'Punten',
+      bonus: 'Bonus op de worp',
+      max: 'Maximumaantal punten (0 voor geen limiet)',
+    },
     errors: {
+      unknownPool: 'Er is geen pool met de naam "{value}".',
+      unknownPoolHint: 'Pools: {pools}.',
+      badAmount: '"{value}" is geen aantal punten.',
+      badAmountHint: 'Gebruik een geheel getal van 1 tot en met 9999.',
+      boostNoPool: 'Boost gebruikt punten uit een pool.',
+      poolInvalid: 'Een pool kan niet "{value}" heten.',
+      poolExists: 'Er is al een pool met de naam "{value}".',
+      poolFull: 'Er is geen ruimte voor nog een pool.',
+      poolNameHint:
+        'Gebruik een naam van hoogstens 40 letters, cijfers en spaties die geen andere pool heeft.',
+      poolDefault:
+        'De standaardpool, "{name}", kan niet worden verwijderd. Je kunt hem wel hernoemen.',
+      poolMarkerHint:
+        'Kies een marker uit je markersets die niet de marker van de instelling Marker is.',
+      poolSetHint: 'Typ !inspiration pools om elke pool en zijn instellingen te zien.',
       denied: 'Dat kun je niet doen voor {name}.',
       gmOnly: 'Alleen de GM kan dat commando gebruiken.',
       gmOnlyHint: 'Spelers kunnen spend, party en help gebruiken.',
@@ -2216,14 +2736,28 @@ const InspirationTrackerMod = (() => {
       refresh: 'Vernieuwen',
       undo: 'Ongedaan maken',
       decline: 'Laten gaan',
+      boost: 'Boost',
+      pools: 'Pools',
+      addPool: 'Pool toevoegen',
+      deletePool: 'Pool verwijderen',
     },
     values: {
       on: 'Aan',
       off: 'Uit',
+      none: 'Geen',
+      noLimit: 'Geen limiet',
+      tracking: {
+        flag: 'Inspiratievakje op het blad',
+        pool: 'Puntenpool',
+      },
+      source: {
+        resource: 'Resourcevakje op het blad',
+        attribute: 'Attribuut',
+      },
       wording: {
-        auto: 'Volgens het blad',
         2014: 'Inspiratie (2014)',
         2024: 'Heroïsche inspiratie (2024)',
+        auto: 'Volgens het blad',
       },
       announce: {
         public: 'Iedereen',
@@ -2235,6 +2769,10 @@ const InspirationTrackerMod = (() => {
       language: {
         label: 'Taal',
         desc: 'Taal voor menu’s, berichten en handouts.',
+      },
+      tracking: {
+        label: 'Bijhouden',
+        desc: 'Waarop Geven en Gebruiken werken: het inspiratievakje op de D&D-bladen, dat een personage wel of niet heeft, of een pool met punten die oploopt en met een paar punten tegelijk wordt gebruikt.',
       },
       marker: {
         label: 'Marker',
@@ -2276,6 +2814,8 @@ const InspirationTrackerMod = (() => {
       none: 'Personages zonder inspiratievakje',
       rules2024: 'Met 2024-regels',
       party: 'Groepsleden',
+      tracking: 'Bijhouden',
+      pools: 'Pools',
       marker: 'Marker',
       fx: 'Speciaal effect',
       legacyCommand: 'Oud commando',
@@ -2292,6 +2832,16 @@ const InspirationTrackerMod = (() => {
         'Toont wie in de groep inspiratie heeft, met knoppen om het te geven, af te nemen of te gebruiken.',
       partyEdit: 'Voegt de geselecteerde personages aan de groep toe, of haalt ze eruit.',
       ids: 'Werkt op de opgegeven token- of personage-ID’s in plaats van de geselecteerde tokens.',
+      points:
+        'Met een puntenpool: geeft, neemt af of gebruikt dat aantal punten. Zonder getal: 1. remove all neemt alle punten af.',
+      boost:
+        'Met een puntenpool: gebruikt punten om die bonus bij een worp op te tellen, tegen de kosten van de pool voor elke +1.',
+      poolFlag: 'Werkt op de genoemde pool in plaats van de standaardpool.',
+      pools: 'Toont de puntenpools en hun instellingen.',
+      poolEdit:
+        'Voegt een pool toe, of verwijdert er een. De punten op de bladen blijven zoals ze zijn.',
+      poolSet:
+        'Wijzigt een pool: de naam, waar hij wordt bewaard (resource of attribute), de punten die elke +1 kost, het maximumaantal punten (0 voor geen limiet), of de tokenmarker.',
       undo: 'Geeft gebruikte inspiratie terug. De ID staat in het GM-bericht over het gebruik.',
       macro:
         'Voegt de tokenactie "Inspiration" toe, waarop spelers klikken om inspiratie te gebruiken.',
@@ -2305,12 +2855,13 @@ const InspirationTrackerMod = (() => {
     helpPlayer: {
       menu: 'Toont je personages en of ze inspiratie hebben.',
       spend: 'Gebruikt inspiratie voor het geselecteerde personage.',
+      boost: 'Gebruikt punten uit een pool om die bonus bij een worp op te tellen.',
       party: 'Toont de groep, als de GM dat toestaat.',
       help: 'Toont deze lijst.',
     },
     handout: {
       versionLabel: 'Versie',
-      subtitle: 'Inspiratie en Heroïsche inspiratie voor de D&D 5e-bladen van 2014 en 2024',
+      subtitle: 'Inspiratie, Heroïsche inspiratie en puntenpools voor elk spel',
       overview: {
         heading: 'Overzicht',
         body: 'InspirationTracker houdt D&D-inspiratie op het personageblad, de token en in de chat gelijk. Geef het via het menu, het blad of de tokenmarker, en elke token van dat personage toont de marker. Spelers kunnen het met één klik gebruiken, en de GM krijgt bericht, met een knop Ongedaan maken. Het werkt met het D&D 2024-blad, waar het Heroïsche inspiratie heet, en met het 2014 OGL-blad.',
@@ -2363,6 +2914,18 @@ const InspirationTrackerMod = (() => {
           'De groep bestaat uit elk personage dat een speler bestuurt. Selecteer tokens en klik op Aan groep toevoegen of Uit groep halen om hem te wijzigen.',
           'Het overzicht van de GM heeft knoppen Geven, Afnemen en Gebruiken voor elk lid.',
           'Zet Spelers zien groep aan om spelers het overzicht ook te laten zien. Ze krijgen alleen knoppen Gebruiken voor hun eigen personages.',
+        ],
+      },
+      pools: {
+        heading: 'Puntenpools',
+        points: [
+          'Een puntenpool is een getal dat oploopt en met een paar punten tegelijk wordt gebruikt: een pool met inspiratiepunten, heldenpunten, geluk, bennies en dergelijke. Het werkt met elk personageblad.',
+          'Zet Bijhouden op Puntenpool, en Geven, Afnemen en Gebruiken werken op de standaardpool en vragen om hoeveel punten het gaat. De marker is zichtbaar zolang een personage punten heeft.',
+          'Boost gebruikt punten om een worp te verhogen: typ de gewenste bonus, en Punten per +1 van de pool bepaalt de kosten. Bij 2 punten per +1 kost een bonus van 4 dus 8 punten. De Mod kondigt het gebruik aan; tel de bonus zelf bij de worp op.',
+          'Gebruik wordt geweigerd als het personage niet genoeg punten heeft. De GM krijgt te horen wie wat heeft gebruikt, met een knop Ongedaan maken.',
+          'Bewaard in "Resourcevakje op het blad" gebruikt het resourcevakje op het blad dat de naam van de pool heeft, zoals een vakje Other Resource met de naam Inspiration op het 2014 D&D-blad. Heeft het blad geen vakje met die naam, of staat er "Attribuut", dan worden de punten bewaard in een gewoon attribuut, zoals inspiration_pool. Het D&D 2024-blad gebruikt altijd het attribuut.',
+          'Het getal op het blad met de hand wijzigen kan gewoon: de marker volgt.',
+          'Klik op Pools om de standaardpool te hernoemen, de kosten en het maximum in te stellen, of meer pools toe te voegen. Andere pools gebruik je met hun knop Groep, of door --pool en de naam van de pool aan een commando toe te voegen.',
         ],
       },
       markers: {
@@ -2425,6 +2988,8 @@ const InspirationTrackerMod = (() => {
       subtitle: 'Command Deck',
       selectedDesc: 'Selecteer een of meer tokens en klik dan.',
       partyDesc: 'Zie wie inspiratie heeft, en kies wie in de groep zit.',
+      poolsTitle: 'Puntenpool',
+      poolsDesc: 'Met Bijhouden op Puntenpool: selecteer tokens, klik en typ het aantal.',
       toolsDesc: 'Menu, instellingen, de spelersmacro en help.',
       footer: 'De volledige instructies staan in de handout "{help}".',
     },
@@ -2440,6 +3005,8 @@ const InspirationTrackerMod = (() => {
       settings: 'InspirationTracker Settings',
       help: 'InspirationTracker Commands',
       party: 'Party Inspiration',
+      poolParty: 'Party {term}',
+      pools: 'Points Pools',
       yours: 'Your Characters',
       status: 'InspirationTracker Status',
     },
@@ -2472,7 +3039,50 @@ const InspirationTrackerMod = (() => {
       journal: 'Help and Command Deck handouts rebuilt.',
       readyHint: 'Type {command} for the menu, or open the Command Deck handout.',
     },
+    pool: {
+      gained: '{name} gains {amount} {term} ({before} → {after}).',
+      spent: '{name} spends {amount} {term} ({before} → {after}).',
+      boosted: '{name} spends {amount} {term} for +{bonus} to the roll ({before} → {after}).',
+      spentBy: '{player} spent {amount} {term} for {name}.',
+      restored: '{name} has {amount} {term} back ({before} → {after}).',
+      removed: '{amount} {term} taken away from {name} ({before} → {after}).',
+      none: '{name} has no {term}.',
+      short: '{name} has {have} {term}, and that needs {need}.',
+      full: '{name} already has the most {term} allowed ({max}).',
+    },
+    pools: {
+      introFlag:
+        'Tracking is set to the sheet inspiration box. Set it to Points pool to make "{name}" the pool that Give and Spend work on. Other pools are used with --pool.',
+      introPool:
+        'Give, Spend and Boost work on "{name}". Other pools are used from their Party button, or with --pool.',
+      defaultLabel: '{name} (default)',
+      name: 'Name',
+      source: 'Kept in',
+      cost: 'Points per +1',
+      max: 'Maximum',
+      marker: 'Marker',
+      attribute: 'Attribute when the sheet has no box with this name: {attribute}',
+      partyTotal: 'Party total: {total} {term}.',
+    },
+    prompts: {
+      points: 'Points',
+      bonus: 'Bonus to the roll',
+      max: 'Most points allowed (0 for no limit)',
+    },
     errors: {
+      unknownPool: 'There is no pool called "{value}".',
+      unknownPoolHint: 'Pools: {pools}.',
+      badAmount: '"{value}" is not a number of points.',
+      badAmountHint: 'Use a whole number from 1 to 9999.',
+      boostNoPool: 'Boost spends points from a pool.',
+      poolInvalid: 'A pool cannot be called "{value}".',
+      poolExists: 'There is already a pool called "{value}".',
+      poolFull: 'There is no room for another pool.',
+      poolNameHint: 'Use a name of up to 40 letters, digits and spaces that no other pool has.',
+      poolDefault: 'The default pool, "{name}", cannot be deleted. It can be renamed.',
+      poolMarkerHint:
+        'Pick a marker from your marker sets that is not the one in the Marker setting.',
+      poolSetHint: 'Type !inspiration pools to see every pool and its settings.',
       denied: 'You cannot do that for {name}.',
       gmOnly: 'Only the GM can use that command.',
       gmOnlyHint: 'Players can use spend, party and help.',
@@ -2522,10 +3132,24 @@ const InspirationTrackerMod = (() => {
       refresh: 'Refresh',
       undo: 'Undo',
       decline: 'Let it go',
+      boost: 'Boost',
+      pools: 'Pools',
+      addPool: 'Add Pool',
+      deletePool: 'Delete Pool',
     },
     values: {
       on: 'On',
       off: 'Off',
+      none: 'None',
+      noLimit: 'No limit',
+      tracking: {
+        flag: 'Sheet inspiration box',
+        pool: 'Points pool',
+      },
+      source: {
+        resource: 'Sheet resource box',
+        attribute: 'Attribute',
+      },
       wording: {
         auto: 'From the sheet',
         2014: 'Inspiration (2014)',
@@ -2541,6 +3165,10 @@ const InspirationTrackerMod = (() => {
       language: {
         label: 'Language',
         desc: 'Language for menus, messages and handouts.',
+      },
+      tracking: {
+        label: 'Tracking',
+        desc: 'What Give and Spend work on: the inspiration box on the D&D sheets, which a character has or does not have, or a pool of points that builds up and is spent a few at a time.',
       },
       marker: {
         label: 'Marker',
@@ -2582,6 +3210,8 @@ const InspirationTrackerMod = (() => {
       none: 'Characters with no inspiration box',
       rules2024: 'Using 2024 rules',
       party: 'Party members',
+      tracking: 'Tracking',
+      pools: 'Pools',
       marker: 'Marker',
       fx: 'Special effect',
       legacyCommand: 'Old command',
@@ -2596,6 +3226,15 @@ const InspirationTrackerMod = (() => {
       party: 'Shows who in the party has inspiration, with buttons to give, remove or spend it.',
       partyEdit: 'Adds the selected characters to the party, or takes them out.',
       ids: 'Works on the token or character IDs given instead of the selected tokens.',
+      points:
+        'With a points pool: gives, takes away or spends that many points. Without a number, 1. remove all takes every point.',
+      boost:
+        "With a points pool: spends points to add that bonus to a roll, at the pool's cost for each +1.",
+      poolFlag: 'Works on the named pool instead of the default one.',
+      pools: 'Shows the points pools and their settings.',
+      poolEdit: 'Adds a pool, or deletes one. The points on the sheets are left as they are.',
+      poolSet:
+        'Changes a pool: its name, where it is kept (resource or attribute), the points each +1 costs, the most points allowed (0 for no limit), or its token marker.',
       undo: 'Gives back inspiration that was spent. The ID comes from the GM message about the spend.',
       macro: 'Adds the "Inspiration" token action, which players click to spend inspiration.',
       sync: 'Reads every sheet again and puts the markers right.',
@@ -2608,12 +3247,13 @@ const InspirationTrackerMod = (() => {
     helpPlayer: {
       menu: 'Shows your characters and whether they have inspiration.',
       spend: 'Spends inspiration for the selected character.',
+      boost: 'Spends points from a pool to add that bonus to a roll.',
       party: 'Shows the party, if the GM allows it.',
       help: 'Shows this list.',
     },
     handout: {
       versionLabel: 'Version',
-      subtitle: 'Inspiration and Heroic Inspiration for the D&D 5e 2014 and 2024 sheets',
+      subtitle: 'Inspiration, Heroic Inspiration and points pools for any game',
       overview: {
         heading: 'Overview',
         body: 'InspirationTracker keeps D&D inspiration on the character sheet, the token and the chat in step. Give it from the menu, the sheet or the token marker, and every token for that character shows the marker. Players can spend it with one click, and the GM is told, with an Undo button. It works with the D&D 2024 sheet, where it is called Heroic Inspiration, and with the 2014 OGL sheet.',
@@ -2666,6 +3306,18 @@ const InspirationTrackerMod = (() => {
           'The party is every character a player controls. Select tokens and click Add to Party or Remove from Party to change it.',
           "The GM's overview has Give, Remove and Spend buttons for each member.",
           'Turn Players See Party on to let players see the overview too. They get Spend buttons only for their own characters.',
+        ],
+      },
+      pools: {
+        heading: 'Points Pools',
+        points: [
+          'A points pool is a number that builds up and is spent a few at a time: a pool of inspiration points, hero points, luck, bennies and the like. It works with any character sheet.',
+          'Set Tracking to Points pool, and Give, Remove and Spend work on the default pool, asking how many points. The marker shows while a character has any points.',
+          "Boost spends points to raise a roll: type the bonus wanted, and the pool's Points per +1 decides the cost. At 2 points per +1, a bonus of 4 costs 8 points. The Mod announces the spend; add the bonus to the roll yourself.",
+          'A spend is refused when the character does not have enough points. The GM is told who spent what, with an Undo button.',
+          'Kept in "Sheet resource box" uses the resource box on the sheet that has the pool\'s name, such as an Other Resource box named Inspiration on the 2014 D&D sheet. When the sheet has no box with that name, or with "Attribute", the points are kept in a plain attribute, such as inspiration_pool. The D&D 2024 sheet always uses the attribute.',
+          'Changing the number on the sheet by hand is fine: the marker follows.',
+          "Click Pools to rename the default pool, set its cost and maximum, or add more pools. Other pools are used from their Party button, or by adding --pool and the pool's name to a command.",
         ],
       },
       markers: {
@@ -2728,6 +3380,8 @@ const InspirationTrackerMod = (() => {
       subtitle: 'Command Deck',
       selectedDesc: 'Select one or more tokens, then click.',
       partyDesc: 'See who has inspiration, and choose who is in the party.',
+      poolsTitle: 'Points pool',
+      poolsDesc: 'With Tracking set to Points pool: select tokens, click, and type the number.',
       toolsDesc: 'Menu, settings, the player macro and help.',
       footer: 'Full instructions are in the "{help}" handout.',
     },
@@ -2743,6 +3397,8 @@ const InspirationTrackerMod = (() => {
       settings: 'InspirationTrackerin asetukset',
       help: 'InspirationTrackerin komennot',
       party: 'Seurueen inspiraatio',
+      poolParty: 'Seurue: {term}',
+      pools: 'Pistevarannot',
       yours: 'Omat hahmosi',
       status: 'InspirationTrackerin tila',
     },
@@ -2775,7 +3431,50 @@ const InspirationTrackerMod = (() => {
       journal: 'Ohje- ja Command Deck -monisteet luotiin uudelleen.',
       readyHint: 'Kirjoita {command} avataksesi valikon, tai avaa Command Deck -moniste.',
     },
+    pool: {
+      gained: '{name} sai: {amount} {term} ({before} → {after}).',
+      spent: '{name} käyttää: {amount} {term} ({before} → {after}).',
+      boosted: '{name} käyttää: {amount} {term}, heittoon +{bonus} ({before} → {after}).',
+      spentBy: '{player} käytti hahmolle {name}: {amount} {term}.',
+      restored: '{name} sai takaisin: {amount} {term} ({before} → {after}).',
+      removed: '{name} menetti: {amount} {term} ({before} → {after}).',
+      none: 'Hahmolla {name} ei ole pisteitä: {term}.',
+      short: 'Hahmolla {name} on {have}, mutta tarvitaan {need}: {term}.',
+      full: 'Hahmolla {name} on jo suurin sallittu määrä ({max}): {term}.',
+    },
+    pools: {
+      introFlag:
+        'Seuranta on asetettu lomakkeen inspiraatioruutuun. Aseta se arvoon Pistevaranto, niin Anna ja Käytä kohdistuvat varantoon "{name}". Muita varantoja käytetään valitsimella --pool.',
+      introPool:
+        'Anna, Käytä ja Tehosta kohdistuvat varantoon "{name}". Muita varantoja käytetään niiden Seurue-painikkeesta tai valitsimella --pool.',
+      defaultLabel: '{name} (oletus)',
+      name: 'Nimi',
+      source: 'Säilytyspaikka',
+      cost: 'Pisteitä per +1',
+      max: 'Enimmäismäärä',
+      marker: 'Tunnus',
+      attribute: 'Attribuutti, kun lomakkeella ei ole tämän nimistä ruutua: {attribute}',
+      partyTotal: 'Seurueella yhteensä: {total} {term}.',
+    },
+    prompts: {
+      points: 'Pisteet',
+      bonus: 'Bonus heittoon',
+      max: 'Suurin sallittu pistemäärä (0 = ei rajaa)',
+    },
     errors: {
+      unknownPool: 'Varantoa nimeltä "{value}" ei ole.',
+      unknownPoolHint: 'Varannot: {pools}.',
+      badAmount: '"{value}" ei ole pistemäärä.',
+      badAmountHint: 'Käytä kokonaislukua väliltä 1–9999.',
+      boostNoPool: 'Tehosta käyttää pisteitä varannosta.',
+      poolInvalid: 'Varannon nimi ei voi olla "{value}".',
+      poolExists: 'Varanto nimeltä "{value}" on jo olemassa.',
+      poolFull: 'Uudelle varannolle ei ole tilaa.',
+      poolNameHint:
+        'Käytä enintään 40 merkin nimeä, jossa on kirjaimia, numeroita ja välilyöntejä ja jota ei ole millään muulla varannolla.',
+      poolDefault: 'Oletusvarantoa "{name}" ei voi poistaa. Sen voi nimetä uudelleen.',
+      poolMarkerHint: 'Valitse tunnussarjoistasi tunnus, joka ei ole sama kuin Tunnus-asetuksessa.',
+      poolSetHint: 'Kirjoita !inspiration pools nähdäksesi kaikki varannot ja niiden asetukset.',
       denied: 'Et voi tehdä sitä hahmolle {name}.',
       gmOnly: 'Vain GM voi käyttää tätä komentoa.',
       gmOnlyHint: 'Pelaajat voivat käyttää komentoja spend, party ja help.',
@@ -2826,14 +3525,28 @@ const InspirationTrackerMod = (() => {
       refresh: 'Päivitä',
       undo: 'Kumoa',
       decline: 'Luovu',
+      boost: 'Tehosta',
+      pools: 'Varannot',
+      addPool: 'Lisää varanto',
+      deletePool: 'Poista varanto',
     },
     values: {
       on: 'Päällä',
       off: 'Pois',
+      none: 'Ei mitään',
+      noLimit: 'Ei rajaa',
+      tracking: {
+        flag: 'Lomakkeen inspiraatioruutu',
+        pool: 'Pistevaranto',
+      },
+      source: {
+        resource: 'Lomakkeen resurssiruutu',
+        attribute: 'Attribuutti',
+      },
       wording: {
-        auto: 'Lomakkeen mukaan',
         2014: 'Inspiraatio (2014)',
         2024: 'Sankarillinen inspiraatio (2024)',
+        auto: 'Lomakkeen mukaan',
       },
       announce: {
         public: 'Kaikki',
@@ -2845,6 +3558,10 @@ const InspirationTrackerMod = (() => {
       language: {
         label: 'Kieli',
         desc: 'Valikkojen, viestien ja monisteiden kieli.',
+      },
+      tracking: {
+        label: 'Seuranta',
+        desc: 'Mihin Anna ja Käytä kohdistuvat: D&D-lomakkeiden inspiraatioruutuun, joka hahmolla joko on tai ei ole, vai pistevarantoon, joka karttuu ja jota käytetään muutama piste kerrallaan.',
       },
       marker: {
         label: 'Tunnus',
@@ -2886,6 +3603,8 @@ const InspirationTrackerMod = (() => {
       none: 'Hahmot ilman inspiraatioruutua',
       rules2024: 'Käyttää 2024-sääntöjä',
       party: 'Seurueen jäsenet',
+      tracking: 'Seuranta',
+      pools: 'Varannot',
       marker: 'Tunnus',
       fx: 'Erikoistehoste',
       legacyCommand: 'Vanha komento',
@@ -2901,6 +3620,15 @@ const InspirationTrackerMod = (() => {
         'Näyttää, kenellä seurueessa on inspiraatio, ja painikkeet sen antamiseen, poistamiseen tai käyttämiseen.',
       partyEdit: 'Lisää valitut hahmot seurueeseen tai poistaa ne siitä.',
       ids: 'Toimii annetuilla pelimerkkien tai hahmojen ID:illä valittujen pelimerkkien sijaan.',
+      points:
+        'Pistevarannon kanssa: antaa, poistaa tai käyttää sen verran pisteitä. Ilman lukua 1. remove all poistaa kaikki pisteet.',
+      boost:
+        'Pistevarannon kanssa: käyttää pisteitä ja lisää heittoon annetun bonuksen; jokainen +1 maksaa varannon hinnan verran.',
+      poolFlag: 'Kohdistuu nimettyyn varantoon oletusvarannon sijaan.',
+      pools: 'Näyttää pistevarannot ja niiden asetukset.',
+      poolEdit: 'Lisää varannon tai poistaa sellaisen. Lomakkeiden pisteet jätetään ennalleen.',
+      poolSet:
+        'Muuttaa varantoa: sen nimeä, säilytyspaikkaa (resource tai attribute), yhden +1:n pistehintaa, suurinta sallittua pistemäärää (0 = ei rajaa) tai sen pelimerkin tunnusta.',
       undo: 'Palauttaa käytetyn inspiraation. ID löytyy GM:n saamasta käyttöviestistä.',
       macro:
         'Lisää pelimerkkitoiminnon "Inspiration", jota pelaajat napsauttavat käyttääkseen inspiraation.',
@@ -2914,12 +3642,13 @@ const InspirationTrackerMod = (() => {
     helpPlayer: {
       menu: 'Näyttää hahmosi ja sen, onko niillä inspiraatio.',
       spend: 'Käyttää valitun hahmon inspiraation.',
+      boost: 'Käyttää pisteitä varannosta ja lisää heittoon annetun bonuksen.',
       party: 'Näyttää seurueen, jos GM sallii sen.',
       help: 'Näyttää tämän luettelon.',
     },
     handout: {
       versionLabel: 'Versio',
-      subtitle: 'Inspiraatio ja Sankarillinen inspiraatio D&D 5e:n 2014- ja 2024-lomakkeille',
+      subtitle: 'Inspiraatio, Sankarillinen inspiraatio ja pistevarannot mihin tahansa peliin',
       overview: {
         heading: 'Yleiskatsaus',
         body: 'InspirationTracker pitää D&D:n inspiraation ajan tasalla hahmolomakkeella, pelimerkissä ja chatissa. Anna se valikosta, lomakkeelta tai pelimerkin tunnuksella, niin jokainen hahmon pelimerkki näyttää tunnuksen. Pelaajat voivat käyttää sen yhdellä napsautuksella, ja GM saa tiedon ja Kumoa-painikkeen. Se toimii D&D 2024 -lomakkeen kanssa, jossa sitä kutsutaan Sankarilliseksi inspiraatioksi, sekä 2014 OGL -lomakkeen kanssa.',
@@ -2972,6 +3701,18 @@ const InspirationTrackerMod = (() => {
           'Seurueeseen kuuluu jokainen hahmo, jota pelaaja hallitsee. Valitse pelimerkkejä ja napsauta Lisää seurueeseen tai Poista seurueesta muuttaaksesi sitä.',
           'GM:n yleiskatsauksessa on Anna-, Poista- ja Käytä-painikkeet jokaiselle jäsenelle.',
           'Kytke Pelaajat näkevät seurueen päälle, jotta myös pelaajat näkevät yleiskatsauksen. He saavat Käytä-painikkeet vain omille hahmoilleen.',
+        ],
+      },
+      pools: {
+        heading: 'Pistevarannot',
+        points: [
+          'Pistevaranto on luku, joka karttuu ja jota käytetään muutama piste kerrallaan: inspiraatiopisteitä, sankaripisteitä, onnea, bennies-pisteitä ja muuta vastaavaa. Se toimii minkä tahansa hahmolomakkeen kanssa.',
+          'Aseta Seuranta arvoon Pistevaranto, niin Anna, Poista ja Käytä kohdistuvat oletusvarantoon ja kysyvät pistemäärän. Tunnus näkyy niin kauan kuin hahmolla on pisteitä.',
+          'Tehosta käyttää pisteitä heiton korottamiseen: kirjoita haluamasi bonus, ja varannon Pisteitä per +1 -asetus ratkaisee hinnan. Kun +1 maksaa 2 pistettä, bonus 4 maksaa 8 pistettä. Mod ilmoittaa käytöstä; lisää bonus heittoon itse.',
+          'Käyttö hylätään, jos hahmolla ei ole tarpeeksi pisteitä. GM saa tiedon siitä, kuka käytti ja mitä, sekä Kumoa-painikkeen.',
+          'Säilytyspaikka "Lomakkeen resurssiruutu" käyttää lomakkeen resurssiruutua, jolla on varannon nimi, esimerkiksi Inspiraatio-nimistä Other Resource -ruutua vuoden 2014 D&D-lomakkeella. Jos lomakkeella ei ole sen nimistä ruutua tai valittuna on "Attribuutti", pisteet säilytetään tavallisessa attribuutissa, esimerkiksi inspiration_pool. D&D 2024 -lomake käyttää aina attribuuttia.',
+          'Luvun voi hyvin muuttaa lomakkeella käsin: tunnus seuraa perässä.',
+          'Napsauta Varannot nimetäksesi oletusvarannon uudelleen, asettaaksesi sen hinnan ja enimmäismäärän tai lisätäksesi varantoja. Muita varantoja käytetään niiden Seurue-painikkeesta tai lisäämällä komentoon --pool ja varannon nimi.',
         ],
       },
       markers: {
@@ -3035,6 +3776,8 @@ const InspirationTrackerMod = (() => {
       subtitle: 'Command Deck',
       selectedDesc: 'Valitse yksi tai useampi pelimerkki ja napsauta sitten.',
       partyDesc: 'Katso, kenellä on inspiraatio, ja valitse, ketkä kuuluvat seurueeseen.',
+      poolsTitle: 'Pistevaranto',
+      poolsDesc: 'Kun Seuranta on Pistevaranto: valitse pelimerkit, napsauta ja kirjoita luku.',
       toolsDesc: 'Valikko, asetukset, pelaajan makro ja ohje.',
       footer: 'Täydet ohjeet ovat monisteessa "{help}".',
     },
@@ -3050,6 +3793,8 @@ const InspirationTrackerMod = (() => {
       settings: "Paramètres d'InspirationTracker",
       help: "Commandes d'InspirationTracker",
       party: 'Inspiration du groupe',
+      poolParty: '{term} du groupe',
+      pools: 'Réserves de points',
       yours: 'Vos personnages',
       status: "État d'InspirationTracker",
     },
@@ -3082,7 +3827,52 @@ const InspirationTrackerMod = (() => {
       journal: "Documents d'aide et Command Deck reconstruits.",
       readyHint: 'Tapez {command} pour le menu, ou ouvrez le document Command Deck.',
     },
+    pool: {
+      gained: '{name} gagne {amount} {term} ({before} → {after}).',
+      spent: '{name} dépense {amount} {term} ({before} → {after}).',
+      boosted: '{name} dépense {amount} {term} pour +{bonus} au jet ({before} → {after}).',
+      spentBy: '{player} a dépensé {amount} {term} pour {name}.',
+      restored: '{name} récupère {amount} {term} ({before} → {after}).',
+      removed: '{amount} {term} en moins pour {name} ({before} → {after}).',
+      none: "{name} n'a aucun point ({term}).",
+      short: '{name} a {have} {term}, et il en faut {need}.',
+      full: '{name} a déjà le maximum autorisé ({term} : {max}).',
+    },
+    pools: {
+      introFlag:
+        "Le suivi est réglé sur la case d'inspiration de la fiche. Réglez-le sur Réserve de points pour que Donner et Dépenser agissent sur la réserve « {name} ». Les autres réserves s'utilisent avec --pool.",
+      introPool:
+        "Donner, Dépenser et Renforcer agissent sur « {name} ». Les autres réserves s'utilisent depuis leur bouton Groupe, ou avec --pool.",
+      defaultLabel: '{name} (par défaut)',
+      name: 'Nom',
+      source: 'Conservé dans',
+      cost: 'Points par +1',
+      max: 'Maximum',
+      marker: 'Marqueur',
+      attribute: "Attribut quand la fiche n'a pas de case portant ce nom : {attribute}",
+      partyTotal: 'Total du groupe : {total} {term}.',
+    },
+    prompts: {
+      points: 'Points',
+      bonus: 'Bonus au jet',
+      max: 'Maximum de points autorisé (0 pour aucune limite)',
+    },
     errors: {
+      unknownPool: "Il n'existe aucune réserve nommée « {value} ».",
+      unknownPoolHint: 'Réserves : {pools}.',
+      badAmount: "« {value} » n'est pas un nombre de points.",
+      badAmountHint: 'Utilisez un nombre entier de 1 à 9999.',
+      boostNoPool: "Renforcer dépense des points d'une réserve.",
+      poolInvalid: "Une réserve ne peut pas s'appeler « {value} ».",
+      poolExists: 'Il existe déjà une réserve nommée « {value} ».',
+      poolFull: "Il n'y a plus de place pour une autre réserve.",
+      poolNameHint:
+        "Utilisez un nom de 40 lettres, chiffres et espaces au plus, qu'aucune autre réserve ne porte.",
+      poolDefault:
+        'La réserve par défaut, « {name} », ne peut pas être supprimée. Elle peut être renommée.',
+      poolMarkerHint:
+        'Choisissez dans vos jeux de marqueurs un marqueur autre que celui du paramètre Marqueur.',
+      poolSetHint: 'Tapez !inspiration pools pour voir chaque réserve et ses paramètres.',
       denied: 'Vous ne pouvez pas faire cela pour {name}.',
       gmOnly: 'Seul le MJ peut utiliser cette commande.',
       gmOnlyHint: 'Les joueurs peuvent utiliser spend, party et help.',
@@ -3133,14 +3923,28 @@ const InspirationTrackerMod = (() => {
       refresh: 'Actualiser',
       undo: 'Annuler',
       decline: 'Y renoncer',
+      boost: 'Renforcer',
+      pools: 'Réserves',
+      addPool: 'Ajouter une réserve',
+      deletePool: 'Supprimer la réserve',
     },
     values: {
       on: 'Activé',
       off: 'Désactivé',
+      none: 'Aucun',
+      noLimit: 'Aucune limite',
+      tracking: {
+        flag: "Case d'inspiration de la fiche",
+        pool: 'Réserve de points',
+      },
+      source: {
+        resource: 'Case de ressource de la fiche',
+        attribute: 'Attribut',
+      },
       wording: {
-        auto: 'Selon la fiche',
         2014: 'Inspiration (2014)',
         2024: 'Inspiration héroïque (2024)',
+        auto: 'Selon la fiche',
       },
       announce: {
         public: 'Tout le monde',
@@ -3152,6 +3956,10 @@ const InspirationTrackerMod = (() => {
       language: {
         label: 'Langue',
         desc: 'Langue des menus, des messages et des documents.',
+      },
+      tracking: {
+        label: 'Suivi',
+        desc: "Ce sur quoi agissent Donner et Dépenser : la case d'inspiration des fiches D&D, qu'un personnage a ou n'a pas, ou une réserve de points qui s'accumule et se dépense quelques points à la fois.",
       },
       marker: {
         label: 'Marqueur',
@@ -3193,6 +4001,8 @@ const InspirationTrackerMod = (() => {
       none: "Personnages sans case d'inspiration",
       rules2024: 'Règles 2024 utilisées',
       party: 'Membres du groupe',
+      tracking: 'Suivi',
+      pools: 'Réserves',
       marker: 'Marqueur',
       fx: 'Effet spécial',
       legacyCommand: 'Ancienne commande',
@@ -3208,6 +4018,16 @@ const InspirationTrackerMod = (() => {
         "Affiche qui, dans le groupe, a l'inspiration, avec des boutons pour la donner, la retirer ou la dépenser.",
       partyEdit: 'Ajoute les personnages sélectionnés au groupe, ou les en retire.',
       ids: 'Agit sur les ID de jetons ou de personnages indiqués au lieu des jetons sélectionnés.',
+      points:
+        'Avec une réserve de points : donne, retire ou dépense ce nombre de points. Sans nombre, 1. remove all retire tous les points.',
+      boost:
+        'Avec une réserve de points : dépense des points pour ajouter ce bonus à un jet, au coût de la réserve pour chaque +1.',
+      poolFlag: 'Agit sur la réserve nommée au lieu de la réserve par défaut.',
+      pools: 'Affiche les réserves de points et leurs paramètres.',
+      poolEdit:
+        'Ajoute une réserve, ou en supprime une. Les points sur les fiches restent tels quels.',
+      poolSet:
+        "Modifie une réserve : son nom, l'endroit où elle est conservée (resource ou attribute), les points que coûte chaque +1, le maximum de points autorisé (0 pour aucune limite), ou son marqueur de jeton.",
       undo: "Rend une inspiration dépensée. L'ID figure dans le message envoyé au MJ lors de la dépense.",
       macro:
         "Ajoute l'action de jeton « Inspiration », sur laquelle les joueurs cliquent pour dépenser l'inspiration.",
@@ -3221,12 +4041,13 @@ const InspirationTrackerMod = (() => {
     helpPlayer: {
       menu: "Affiche vos personnages et indique s'ils ont l'inspiration.",
       spend: "Dépense l'inspiration du personnage sélectionné.",
+      boost: "Dépense des points d'une réserve pour ajouter ce bonus à un jet.",
       party: "Affiche le groupe, si le MJ l'autorise.",
       help: 'Affiche cette liste.',
     },
     handout: {
       versionLabel: 'Version',
-      subtitle: 'Inspiration et Inspiration héroïque pour les fiches D&D 5e 2014 et 2024',
+      subtitle: 'Inspiration, Inspiration héroïque et réserves de points pour tous les jeux',
       overview: {
         heading: 'Présentation',
         body: "InspirationTracker synchronise l'inspiration D&D entre la fiche de personnage, le jeton et le chat. Donnez-la depuis le menu, la fiche ou le marqueur de jeton, et tous les jetons de ce personnage affichent le marqueur. Les joueurs peuvent la dépenser en un clic, et le MJ est prévenu, avec un bouton Annuler. Il fonctionne avec la fiche D&D 2024, où elle s'appelle Inspiration héroïque, et avec la fiche OGL 2014.",
@@ -3278,6 +4099,18 @@ const InspirationTrackerMod = (() => {
           'Le groupe comprend tous les personnages contrôlés par un joueur. Sélectionnez des jetons et cliquez sur Ajouter au groupe ou Retirer du groupe pour le modifier.',
           "La vue d'ensemble du MJ propose des boutons Donner, Retirer et Dépenser pour chaque membre.",
           "Activez Groupe visible des joueurs pour que les joueurs voient aussi la vue d'ensemble. Ils n'ont des boutons Dépenser que pour leurs propres personnages.",
+        ],
+      },
+      pools: {
+        heading: 'Réserves de points',
+        points: [
+          "Une réserve de points est un nombre qui s'accumule et se dépense quelques points à la fois : une réserve de points d'inspiration, de points d'héroïsme, de chance, de bennies, etc. Elle fonctionne avec n'importe quelle fiche de personnage.",
+          "Réglez Suivi sur Réserve de points, et Donner, Retirer et Dépenser agissent sur la réserve par défaut en demandant combien de points. Le marqueur s'affiche tant qu'un personnage a au moins un point.",
+          'Renforcer dépense des points pour augmenter un jet : tapez le bonus voulu, et les Points par +1 de la réserve fixent le coût. À 2 points par +1, un bonus de 4 coûte 8 points. Le Mod annonce la dépense ; ajoutez vous-même le bonus au jet.',
+          "Une dépense est refusée quand le personnage n'a pas assez de points. Le MJ est informé de qui a dépensé quoi, avec un bouton Annuler.",
+          "Conservé dans « Case de ressource de la fiche » utilise la case de ressource de la fiche qui porte le nom de la réserve, par exemple une case Other Resource nommée Inspiration sur la fiche D&D 2014. Quand la fiche n'a pas de case portant ce nom, ou avec « Attribut », les points sont conservés dans un simple attribut, par exemple inspiration_pool. La fiche D&D 2024 utilise toujours l'attribut.",
+          'Modifier le nombre à la main sur la fiche ne pose aucun problème : le marqueur suit.',
+          "Cliquez sur Réserves pour renommer la réserve par défaut, régler son coût et son maximum, ou ajouter d'autres réserves. Les autres réserves s'utilisent depuis leur bouton Groupe, ou en ajoutant --pool et le nom de la réserve à une commande.",
         ],
       },
       markers: {
@@ -3341,6 +4174,9 @@ const InspirationTrackerMod = (() => {
       subtitle: 'Command Deck',
       selectedDesc: 'Sélectionnez un ou plusieurs jetons, puis cliquez.',
       partyDesc: "Voyez qui a l'inspiration, et choisissez qui fait partie du groupe.",
+      poolsTitle: 'Réserve de points',
+      poolsDesc:
+        'Avec Suivi réglé sur Réserve de points : sélectionnez des jetons, cliquez et tapez le nombre.',
       toolsDesc: 'Menu, paramètres, macro joueurs et aide.',
       footer: 'Les instructions complètes sont dans le document « {help} ».',
     },
@@ -3356,6 +4192,8 @@ const InspirationTrackerMod = (() => {
       settings: 'InspirationTracker-Einstellungen',
       help: 'InspirationTracker-Befehle',
       party: 'Inspiration der Gruppe',
+      poolParty: '{term} der Gruppe',
+      pools: 'Punktepools',
       yours: 'Deine Charaktere',
       status: 'InspirationTracker-Status',
     },
@@ -3388,7 +4226,52 @@ const InspirationTrackerMod = (() => {
       journal: 'Hilfe- und Command-Deck-Handouts neu erstellt.',
       readyHint: 'Gib {command} für das Menü ein oder öffne das Command-Deck-Handout.',
     },
+    pool: {
+      gained: '{name} erhält {amount} {term} ({before} → {after}).',
+      spent: '{name} gibt {amount} {term} aus ({before} → {after}).',
+      boosted: '{name} gibt {amount} {term} für +{bonus} auf den Wurf aus ({before} → {after}).',
+      spentBy: '{player} hat {amount} {term} für {name} ausgegeben.',
+      restored: '{name} hat {amount} {term} zurück ({before} → {after}).',
+      removed: '{name} wurden {amount} {term} entzogen ({before} → {after}).',
+      none: '{name} hat keine {term}.',
+      short: '{name} hat {have} {term}, nötig sind {need}.',
+      full: '{name} hat bereits das erlaubte Maximum an {term} ({max}).',
+    },
+    pools: {
+      introFlag:
+        'Die Erfassung steht auf dem Inspirationsfeld des Bogens. Stelle sie auf Punktepool, damit Geben und Ausgeben auf den Pool „{name}“ wirken. Andere Pools nutzt du mit --pool.',
+      introPool:
+        'Geben, Ausgeben und Verstärken wirken auf „{name}“. Andere Pools nutzt du über ihren Gruppe-Button oder mit --pool.',
+      defaultLabel: '{name} (Standard)',
+      name: 'Name',
+      source: 'Gespeichert in',
+      cost: 'Punkte pro +1',
+      max: 'Maximum',
+      marker: 'Marker',
+      attribute: 'Attribut, wenn der Bogen kein Feld mit diesem Namen hat: {attribute}',
+      partyTotal: 'Gruppe gesamt: {total} {term}.',
+    },
+    prompts: {
+      points: 'Punkte',
+      bonus: 'Bonus auf den Wurf',
+      max: 'Höchstzahl an Punkten (0 für kein Limit)',
+    },
     errors: {
+      unknownPool: 'Es gibt keinen Pool namens „{value}“.',
+      unknownPoolHint: 'Pools: {pools}.',
+      badAmount: '„{value}“ ist keine Punktzahl.',
+      badAmountHint: 'Verwende eine ganze Zahl von 1 bis 9999.',
+      boostNoPool: 'Verstärken gibt Punkte aus einem Pool aus.',
+      poolInvalid: 'Ein Pool kann nicht „{value}“ heißen.',
+      poolExists: 'Es gibt bereits einen Pool namens „{value}“.',
+      poolFull: 'Für einen weiteren Pool ist kein Platz.',
+      poolNameHint:
+        'Verwende einen Namen aus bis zu 40 Buchstaben, Ziffern und Leerzeichen, den kein anderer Pool hat.',
+      poolDefault:
+        'Der Standardpool „{name}“ kann nicht gelöscht werden. Er lässt sich umbenennen.',
+      poolMarkerHint:
+        'Wähle einen Marker aus deinen Marker-Sets, der nicht der aus der Einstellung Marker ist.',
+      poolSetHint: 'Gib !inspiration pools ein, um alle Pools und ihre Einstellungen zu sehen.',
       denied: 'Das kannst du für {name} nicht tun.',
       gmOnly: 'Nur die SL kann diesen Befehl verwenden.',
       gmOnlyHint: 'Spieler können spend, party und help verwenden.',
@@ -3439,14 +4322,28 @@ const InspirationTrackerMod = (() => {
       refresh: 'Aktualisieren',
       undo: 'Rückgängig',
       decline: 'Verzichten',
+      boost: 'Verstärken',
+      pools: 'Pools',
+      addPool: 'Pool hinzufügen',
+      deletePool: 'Pool löschen',
     },
     values: {
       on: 'An',
       off: 'Aus',
+      none: 'Keiner',
+      noLimit: 'Kein Limit',
+      tracking: {
+        flag: 'Inspirationsfeld des Bogens',
+        pool: 'Punktepool',
+      },
+      source: {
+        resource: 'Ressourcenfeld des Bogens',
+        attribute: 'Attribut',
+      },
       wording: {
-        auto: 'Vom Bogen',
         2014: 'Inspiration (2014)',
         2024: 'Heldenhafte Inspiration (2024)',
+        auto: 'Vom Bogen',
       },
       announce: {
         public: 'Alle',
@@ -3458,6 +4355,10 @@ const InspirationTrackerMod = (() => {
       language: {
         label: 'Sprache',
         desc: 'Sprache für Menüs, Nachrichten und Handouts.',
+      },
+      tracking: {
+        label: 'Erfassung',
+        desc: 'Worauf Geben und Ausgeben wirken: auf das Inspirationsfeld der D&D-Bögen, das ein Charakter hat oder nicht hat, oder auf einen Pool aus Punkten, der sich aufbaut und nach und nach ausgegeben wird.',
       },
       marker: {
         label: 'Marker',
@@ -3499,6 +4400,8 @@ const InspirationTrackerMod = (() => {
       none: 'Charaktere ohne Inspirationsfeld',
       rules2024: 'Regeln von 2024 aktiv',
       party: 'Gruppenmitglieder',
+      tracking: 'Erfassung',
+      pools: 'Pools',
       marker: 'Marker',
       fx: 'Spezialeffekt',
       legacyCommand: 'Alter Befehl',
@@ -3515,6 +4418,16 @@ const InspirationTrackerMod = (() => {
         'Zeigt, wer in der Gruppe Inspiration hat, mit Buttons zum Geben, Entfernen oder Ausgeben.',
       partyEdit: 'Fügt die ausgewählten Charaktere der Gruppe hinzu oder nimmt sie heraus.',
       ids: 'Wirkt auf die angegebenen Token- oder Charakter-IDs statt auf die ausgewählten Token.',
+      points:
+        'Mit einem Punktepool: gibt so viele Punkte, entzieht sie oder gibt sie aus. Ohne Zahl: 1. remove all entzieht alle Punkte.',
+      boost:
+        'Mit einem Punktepool: gibt Punkte aus, um diesen Bonus auf einen Wurf zu addieren, zu den Kosten des Pools für jedes +1.',
+      poolFlag: 'Wirkt auf den genannten Pool statt auf den Standardpool.',
+      pools: 'Zeigt die Punktepools und ihre Einstellungen.',
+      poolEdit:
+        'Fügt einen Pool hinzu oder löscht einen. Die Punkte auf den Bögen bleiben, wie sie sind.',
+      poolSet:
+        'Ändert einen Pool: seinen Namen, wo er gespeichert wird (resource oder attribute), die Punkte, die jedes +1 kostet, die Höchstzahl an Punkten (0 für kein Limit) oder seinen Token-Marker.',
       undo: 'Gibt ausgegebene Inspiration zurück. Die ID steht in der SL-Nachricht zur Ausgabe.',
       macro: 'Fügt die Token-Aktion „Inspiration“ hinzu, mit der Spieler Inspiration ausgeben.',
       sync: 'Liest alle Bögen neu ein und korrigiert die Marker.',
@@ -3527,12 +4440,13 @@ const InspirationTrackerMod = (() => {
     helpPlayer: {
       menu: 'Zeigt deine Charaktere und ob sie Inspiration haben.',
       spend: 'Gibt die Inspiration des ausgewählten Charakters aus.',
+      boost: 'Gibt Punkte aus einem Pool aus, um diesen Bonus auf einen Wurf zu addieren.',
       party: 'Zeigt die Gruppe, wenn die SL es erlaubt.',
       help: 'Zeigt diese Liste.',
     },
     handout: {
       versionLabel: 'Version',
-      subtitle: 'Inspiration und Heldenhafte Inspiration für die D&D-5e-Bögen 2014 und 2024',
+      subtitle: 'Inspiration, Heldenhafte Inspiration und Punktepools für jedes Spiel',
       overview: {
         heading: 'Überblick',
         body: 'InspirationTracker hält D&D-Inspiration auf Charakterbogen, Token und im Chat synchron. Gib sie über das Menü, den Bogen oder den Token-Marker, und jeder Token dieses Charakters zeigt den Marker. Spieler können sie mit einem Klick ausgeben, und die SL wird informiert, mit einem Rückgängig-Button. Es funktioniert mit dem D&D-2024-Bogen, wo sie Heldenhafte Inspiration heißt, und mit dem 2014-OGL-Bogen.',
@@ -3585,6 +4499,18 @@ const InspirationTrackerMod = (() => {
           'Zur Gruppe gehört jeder Charakter, den ein Spieler steuert. Wähle Token aus und klicke auf Zur Gruppe hinzufügen oder Aus Gruppe entfernen, um sie zu ändern.',
           'Die Übersicht der SL hat für jedes Mitglied die Buttons Geben, Entfernen und Ausgeben.',
           'Schalte Spieler sehen Gruppe ein, damit auch Spieler die Übersicht sehen. Ausgeben-Buttons erhalten sie nur für ihre eigenen Charaktere.',
+        ],
+      },
+      pools: {
+        heading: 'Punktepools',
+        points: [
+          'Ein Punktepool ist eine Zahl, die sich aufbaut und nach und nach ausgegeben wird: ein Pool aus Inspirationspunkten, Heldenpunkten, Glück, Bennies und Ähnlichem. Er funktioniert mit jedem Charakterbogen.',
+          'Stelle Erfassung auf Punktepool, und Geben, Entfernen und Ausgeben wirken auf den Standardpool und fragen nach der Punktzahl. Der Marker wird angezeigt, solange ein Charakter Punkte hat.',
+          'Verstärken gibt Punkte aus, um einen Wurf zu erhöhen: Gib den gewünschten Bonus ein, und Punkte pro +1 des Pools bestimmt die Kosten. Bei 2 Punkten pro +1 kostet ein Bonus von 4 also 8 Punkte. Die Mod kündigt die Ausgabe an; den Bonus addierst du selbst zum Wurf.',
+          'Eine Ausgabe wird abgelehnt, wenn der Charakter nicht genug Punkte hat. Die SL erfährt, wer was ausgegeben hat, mit einem Rückgängig-Button.',
+          'Gespeichert in „Ressourcenfeld des Bogens“ nutzt das Ressourcenfeld auf dem Bogen, das den Namen des Pools trägt, etwa ein Feld Other Resource namens Inspiration auf dem D&D-Bogen von 2014. Hat der Bogen kein Feld mit diesem Namen, oder bei „Attribut“, werden die Punkte in einem einfachen Attribut gespeichert, etwa inspiration_pool. Der D&D-2024-Bogen nutzt immer das Attribut.',
+          'Die Zahl von Hand auf dem Bogen zu ändern ist in Ordnung: Der Marker folgt.',
+          'Klicke auf Pools, um den Standardpool umzubenennen, seine Kosten und sein Maximum festzulegen oder weitere Pools hinzuzufügen. Andere Pools nutzt du über ihren Gruppe-Button oder indem du --pool und den Namen des Pools an einen Befehl anhängst.',
         ],
       },
       markers: {
@@ -3648,6 +4574,9 @@ const InspirationTrackerMod = (() => {
       subtitle: 'Command Deck',
       selectedDesc: 'Wähle einen oder mehrere Token aus und klicke dann.',
       partyDesc: 'Sieh, wer Inspiration hat, und lege fest, wer zur Gruppe gehört.',
+      poolsTitle: 'Punktepool',
+      poolsDesc:
+        'Wenn Erfassung auf Punktepool steht: Token auswählen, klicken und die Zahl eingeben.',
       toolsDesc: 'Menü, Einstellungen, das Spielermakro und Hilfe.',
       footer: 'Die vollständige Anleitung steht im Handout „{help}“.',
     },
@@ -3663,6 +4592,8 @@ const InspirationTrackerMod = (() => {
       settings: 'Ρυθμίσεις InspirationTracker',
       help: 'Εντολές InspirationTracker',
       party: 'Έμπνευση ομάδας',
+      poolParty: 'Ομάδα: {term}',
+      pools: 'Αποθέματα πόντων',
       yours: 'Οι χαρακτήρες σου',
       status: 'Κατάσταση InspirationTracker',
     },
@@ -3695,7 +4626,52 @@ const InspirationTrackerMod = (() => {
       journal: 'Τα έγγραφα Βοήθειας και Command Deck δημιουργήθηκαν ξανά.',
       readyHint: 'Γράψε {command} για το μενού, ή άνοιξε το έγγραφο Command Deck.',
     },
+    pool: {
+      gained: '{name}: κερδίζει {amount} {term} ({before} → {after}).',
+      spent: '{name}: ξοδεύει {amount} {term} ({before} → {after}).',
+      boosted: '{name}: ξοδεύει {amount} {term} για +{bonus} στη ζαριά ({before} → {after}).',
+      spentBy: '{player}: ξόδεψε {amount} {term} για {name}.',
+      restored: '{name}: πήρε πίσω {amount} {term} ({before} → {after}).',
+      removed: 'Αφαιρέθηκαν {amount} {term} από {name} ({before} → {after}).',
+      none: '{name}: δεν έχει {term}.',
+      short: '{name}: έχει {have} {term}, ενώ χρειάζονται {need}.',
+      full: '{name}: έχει ήδη το μέγιστο επιτρεπτό ({max}) σε {term}.',
+    },
+    pools: {
+      introFlag:
+        'Η Παρακολούθηση είναι ορισμένη στο πεδίο έμπνευσης του φύλλου. Όρισέ τη σε Απόθεμα πόντων ώστε το «{name}» να γίνει το απόθεμα στο οποίο ενεργούν τα Δώσε και Ξόδεψε. Τα άλλα αποθέματα χρησιμοποιούνται με --pool.',
+      introPool:
+        'Τα Δώσε, Ξόδεψε και Ενίσχυσε ενεργούν στο «{name}». Τα άλλα αποθέματα χρησιμοποιούνται από το κουμπί Ομάδα τους, ή με --pool.',
+      defaultLabel: '{name} (προεπιλογή)',
+      name: 'Όνομα',
+      source: 'Αποθηκεύεται σε',
+      cost: 'Πόντοι ανά +1',
+      max: 'Μέγιστο',
+      marker: 'Δείκτης',
+      attribute: 'Χαρακτηριστικό όταν το φύλλο δεν έχει πεδίο με αυτό το όνομα: {attribute}',
+      partyTotal: 'Σύνολο ομάδας: {total} {term}.',
+    },
+    prompts: {
+      points: 'Πόντοι',
+      bonus: 'Μπόνους στη ζαριά',
+      max: 'Μέγιστοι επιτρεπτοί πόντοι (0 για χωρίς όριο)',
+    },
     errors: {
+      unknownPool: 'Δεν υπάρχει απόθεμα με όνομα «{value}».',
+      unknownPoolHint: 'Αποθέματα: {pools}.',
+      badAmount: 'Το «{value}» δεν είναι αριθμός πόντων.',
+      badAmountHint: 'Χρησιμοποίησε ακέραιο αριθμό από 1 έως 9999.',
+      boostNoPool: 'Το Ενίσχυσε ξοδεύει πόντους από ένα απόθεμα.',
+      poolInvalid: 'Ένα απόθεμα δεν μπορεί να ονομάζεται «{value}».',
+      poolExists: 'Υπάρχει ήδη απόθεμα με όνομα «{value}».',
+      poolFull: 'Δεν υπάρχει χώρος για άλλο απόθεμα.',
+      poolNameHint:
+        'Χρησιμοποίησε όνομα έως 40 γράμματα, ψηφία και κενά που δεν το έχει άλλο απόθεμα.',
+      poolDefault:
+        'Το προεπιλεγμένο απόθεμα, «{name}», δεν μπορεί να διαγραφεί. Μπορεί να μετονομαστεί.',
+      poolMarkerHint:
+        'Διάλεξε από τα σετ δεικτών σου έναν δείκτη διαφορετικό από αυτόν της ρύθμισης Δείκτης.',
+      poolSetHint: 'Γράψε !inspiration pools για να δεις κάθε απόθεμα και τις ρυθμίσεις του.',
       denied: 'Δεν μπορείς να το κάνεις αυτό για {name}.',
       gmOnly: 'Μόνο ο GM μπορεί να χρησιμοποιήσει αυτή την εντολή.',
       gmOnlyHint: 'Οι παίκτες μπορούν να χρησιμοποιούν spend, party και help.',
@@ -3746,14 +4722,28 @@ const InspirationTrackerMod = (() => {
       refresh: 'Ανανέωση',
       undo: 'Αναίρεση',
       decline: 'Άφησέ την',
+      boost: 'Ενίσχυσε',
+      pools: 'Αποθέματα',
+      addPool: 'Προσθήκη αποθέματος',
+      deletePool: 'Διαγραφή αποθέματος',
     },
     values: {
       on: 'Ναι',
       off: 'Όχι',
+      none: 'Κανένας',
+      noLimit: 'Χωρίς όριο',
+      tracking: {
+        flag: 'Πεδίο έμπνευσης του φύλλου',
+        pool: 'Απόθεμα πόντων',
+      },
+      source: {
+        resource: 'Πεδίο πόρου του φύλλου',
+        attribute: 'Χαρακτηριστικό',
+      },
       wording: {
-        auto: 'Από το φύλλο',
         2014: 'Έμπνευση (2014)',
         2024: 'Ηρωική Έμπνευση (2024)',
+        auto: 'Από το φύλλο',
       },
       announce: {
         public: 'Όλοι',
@@ -3765,6 +4755,10 @@ const InspirationTrackerMod = (() => {
       language: {
         label: 'Γλώσσα',
         desc: 'Γλώσσα για μενού, μηνύματα και έγγραφα.',
+      },
+      tracking: {
+        label: 'Παρακολούθηση',
+        desc: 'Σε τι ενεργούν τα Δώσε και Ξόδεψε: στο πεδίο έμπνευσης των φύλλων D&D, που ένας χαρακτήρας το έχει ή δεν το έχει, ή σε ένα απόθεμα πόντων που μαζεύονται και ξοδεύονται λίγοι λίγοι.',
       },
       marker: {
         label: 'Δείκτης',
@@ -3806,6 +4800,8 @@ const InspirationTrackerMod = (() => {
       none: 'Χαρακτήρες χωρίς πεδίο έμπνευσης',
       rules2024: 'Με κανόνες 2024',
       party: 'Μέλη ομάδας',
+      tracking: 'Παρακολούθηση',
+      pools: 'Αποθέματα',
       marker: 'Δείκτης',
       fx: 'Ειδικό εφέ',
       legacyCommand: 'Παλιά εντολή',
@@ -3821,6 +4817,15 @@ const InspirationTrackerMod = (() => {
         'Εμφανίζει ποιος στην ομάδα έχει έμπνευση, με κουμπιά για να δοθεί, να αφαιρεθεί ή να ξοδευτεί.',
       partyEdit: 'Προσθέτει τους επιλεγμένους χαρακτήρες στην ομάδα, ή τους αφαιρεί.',
       ids: 'Ενεργεί στα ID πιονιών ή χαρακτήρων που δίνονται αντί για τα επιλεγμένα πιόνια.',
+      points:
+        'Με απόθεμα πόντων: δίνει, αφαιρεί ή ξοδεύει τόσους πόντους. Χωρίς αριθμό, 1. Το remove all αφαιρεί όλους τους πόντους.',
+      boost:
+        'Με απόθεμα πόντων: ξοδεύει πόντους για να προσθέσει αυτό το μπόνους σε μια ζαριά, με το κόστος του αποθέματος για κάθε +1.',
+      poolFlag: 'Ενεργεί στο απόθεμα που ονομάζεται αντί για το προεπιλεγμένο.',
+      pools: 'Εμφανίζει τα αποθέματα πόντων και τις ρυθμίσεις τους.',
+      poolEdit: 'Προσθέτει ένα απόθεμα, ή διαγράφει ένα. Οι πόντοι στα φύλλα μένουν όπως είναι.',
+      poolSet:
+        'Αλλάζει ένα απόθεμα: το όνομά του, πού αποθηκεύεται (resource ή attribute), τους πόντους που κοστίζει κάθε +1, τους μέγιστους επιτρεπτούς πόντους (0 για χωρίς όριο), ή τον δείκτη πιονιού του.',
       undo: 'Επιστρέφει έμπνευση που ξοδεύτηκε. Το ID υπάρχει στο μήνυμα προς τον GM για το ξόδεμα.',
       macro:
         'Προσθέτει την ενέργεια πιονιού «Inspiration», που πατούν οι παίκτες για να ξοδέψουν έμπνευση.',
@@ -3834,12 +4839,13 @@ const InspirationTrackerMod = (() => {
     helpPlayer: {
       menu: 'Εμφανίζει τους χαρακτήρες σου και αν έχουν έμπνευση.',
       spend: 'Ξοδεύει την έμπνευση του επιλεγμένου χαρακτήρα.',
+      boost: 'Ξοδεύει πόντους από ένα απόθεμα για να προσθέσει αυτό το μπόνους σε μια ζαριά.',
       party: 'Εμφανίζει την ομάδα, αν το επιτρέπει ο GM.',
       help: 'Εμφανίζει αυτή τη λίστα.',
     },
     handout: {
       versionLabel: 'Έκδοση',
-      subtitle: 'Έμπνευση και Ηρωική Έμπνευση για τα φύλλα D&D 5e 2014 και 2024',
+      subtitle: 'Έμπνευση, Ηρωική Έμπνευση και αποθέματα πόντων για κάθε παιχνίδι',
       overview: {
         heading: 'Επισκόπηση',
         body: 'Το InspirationTracker κρατά συγχρονισμένη την έμπνευση του D&D στο φύλλο χαρακτήρα, στο πιόνι και στη συνομιλία. Δώσ’ την από το μενού, το φύλλο ή τον δείκτη πιονιού, και κάθε πιόνι του χαρακτήρα δείχνει τον δείκτη. Οι παίκτες μπορούν να την ξοδέψουν με ένα κλικ, και ο GM ενημερώνεται, με κουμπί Αναίρεση. Λειτουργεί με το φύλλο D&D 2024, όπου λέγεται Ηρωική Έμπνευση, και με το φύλλο OGL 2014.',
@@ -3892,6 +4898,18 @@ const InspirationTrackerMod = (() => {
           'Η ομάδα είναι κάθε χαρακτήρας που ελέγχει ένας παίκτης. Επίλεξε πιόνια και πάτησε Προσθήκη στην ομάδα ή Αφαίρεση από την ομάδα για να την αλλάξεις.',
           'Η επισκόπηση του GM έχει κουμπιά Δώσε, Αφαίρεσε και Ξόδεψε για κάθε μέλος.',
           'Ενεργοποίησε το Οι παίκτες βλέπουν την ομάδα για να βλέπουν και οι παίκτες την επισκόπηση. Παίρνουν κουμπιά Ξόδεψε μόνο για τους δικούς τους χαρακτήρες.',
+        ],
+      },
+      pools: {
+        heading: 'Αποθέματα πόντων',
+        points: [
+          'Ένα απόθεμα πόντων είναι ένας αριθμός που μαζεύεται και ξοδεύεται λίγο λίγο: ένα απόθεμα πόντων έμπνευσης, πόντων ήρωα, τύχης, bennies και παρόμοιων. Λειτουργεί με οποιοδήποτε φύλλο χαρακτήρα.',
+          'Όρισε την Παρακολούθηση σε Απόθεμα πόντων, και τα Δώσε, Αφαίρεσε και Ξόδεψε ενεργούν στο προεπιλεγμένο απόθεμα, ρωτώντας πόσους πόντους. Ο δείκτης εμφανίζεται όσο ένας χαρακτήρας έχει πόντους.',
+          'Το Ενίσχυσε ξοδεύει πόντους για να ανεβάσει μια ζαριά: γράψε το μπόνους που θέλεις, και η ρύθμιση Πόντοι ανά +1 του αποθέματος καθορίζει το κόστος. Με 2 πόντους ανά +1, ένα μπόνους 4 κοστίζει 8 πόντους. Το Mod ανακοινώνει το ξόδεμα· πρόσθεσε εσύ το μπόνους στη ζαριά.',
+          'Ένα ξόδεμα απορρίπτεται όταν ο χαρακτήρας δεν έχει αρκετούς πόντους. Ο GM ενημερώνεται για το ποιος ξόδεψε τι, με κουμπί Αναίρεση.',
+          'Το Αποθηκεύεται σε «Πεδίο πόρου του φύλλου» χρησιμοποιεί το πεδίο πόρου του φύλλου που έχει το όνομα του αποθέματος, όπως ένα πεδίο Other Resource με όνομα Inspiration στο φύλλο D&D 2014. Όταν το φύλλο δεν έχει πεδίο με αυτό το όνομα, ή με το «Χαρακτηριστικό», οι πόντοι αποθηκεύονται σε ένα απλό χαρακτηριστικό, όπως το inspiration_pool. Το φύλλο D&D 2024 χρησιμοποιεί πάντα το χαρακτηριστικό.',
+          'Η αλλαγή του αριθμού στο φύλλο με το χέρι δεν πειράζει: ο δείκτης ακολουθεί.',
+          'Πάτησε Αποθέματα για να μετονομάσεις το προεπιλεγμένο απόθεμα, να ορίσεις το κόστος και το μέγιστό του, ή να προσθέσεις κι άλλα αποθέματα. Τα άλλα αποθέματα χρησιμοποιούνται από το κουμπί Ομάδα τους, ή προσθέτοντας --pool και το όνομα του αποθέματος σε μια εντολή.',
         ],
       },
       markers: {
@@ -3954,6 +4972,9 @@ const InspirationTrackerMod = (() => {
       subtitle: 'Command Deck',
       selectedDesc: 'Επίλεξε ένα ή περισσότερα πιόνια και μετά πάτησε.',
       partyDesc: 'Δες ποιος έχει έμπνευση, και διάλεξε ποιος ανήκει στην ομάδα.',
+      poolsTitle: 'Απόθεμα πόντων',
+      poolsDesc:
+        'Με την Παρακολούθηση σε Απόθεμα πόντων: επίλεξε πιόνια, πάτησε και γράψε τον αριθμό.',
       toolsDesc: 'Μενού, ρυθμίσεις, η μακροεντολή παικτών και βοήθεια.',
       footer: 'Πλήρεις οδηγίες υπάρχουν στο έγγραφο «{help}».',
     },
@@ -3969,6 +4990,8 @@ const InspirationTrackerMod = (() => {
       settings: 'הגדרות InspirationTracker',
       help: 'פקודות InspirationTracker',
       party: 'השראה בחבורה',
+      poolParty: '{term} בחבורה',
+      pools: 'מאגרי נקודות',
       yours: 'הדמויות שלך',
       status: 'מצב InspirationTracker',
     },
@@ -3999,7 +5022,49 @@ const InspirationTrackerMod = (() => {
       journal: 'דפי המידע Help ו-Command Deck נבנו מחדש.',
       readyHint: 'הקלד {command} לתפריט, או פתח את דף המידע Command Deck.',
     },
+    pool: {
+      gained: '{name} מקבל {amount} {term} ({before} → {after}).',
+      spent: '{name} משתמש ב-{amount} {term} ({before} → {after}).',
+      boosted: '{name} משתמש ב-{amount} {term} בשביל +{bonus} להטלה ({before} → {after}).',
+      spentBy: '{player} השתמש ב-{amount} {term} עבור {name}.',
+      restored: '{name} קיבל בחזרה {amount} {term} ({before} → {after}).',
+      removed: '{amount} {term} נלקחו מ-{name} ({before} → {after}).',
+      none: 'ל-{name} אין {term}.',
+      short: 'ל-{name} יש {have} {term}, ונדרשות {need}.',
+      full: 'ל-{name} כבר יש את המקסימום המותר של {term} ({max}).',
+    },
+    pools: {
+      introFlag:
+        'המעקב מוגדר לתיבת ההשראה בגיליון. הגדר אותו למאגר נקודות כדי ש"{name}" יהיה המאגר שעליו פועלים תן והשתמש. במאגרים אחרים משתמשים עם --pool.',
+      introPool:
+        'תן, השתמש וחיזוק פועלים על "{name}". במאגרים אחרים משתמשים מכפתור החבורה שלהם, או עם --pool.',
+      defaultLabel: '{name} (ברירת מחדל)',
+      name: 'שם',
+      source: 'מקום שמירה',
+      cost: 'נקודות לכל +1',
+      max: 'מקסימום',
+      marker: 'סמן',
+      attribute: 'התכונה כשאין בגיליון תיבה בשם הזה: {attribute}',
+      partyTotal: 'סך הכול בחבורה: {total} {term}.',
+    },
+    prompts: {
+      points: 'נקודות',
+      bonus: 'בונוס להטלה',
+      max: 'מספר הנקודות המרבי (0 ללא הגבלה)',
+    },
     errors: {
+      unknownPool: 'אין מאגר בשם "{value}".',
+      unknownPoolHint: 'מאגרים: {pools}.',
+      badAmount: '"{value}" אינו מספר נקודות.',
+      badAmountHint: 'השתמש במספר שלם מ-1 עד 9999.',
+      boostNoPool: 'חיזוק משתמש בנקודות ממאגר.',
+      poolInvalid: 'אי אפשר לקרוא למאגר "{value}".',
+      poolExists: 'כבר יש מאגר בשם "{value}".',
+      poolFull: 'אין מקום למאגר נוסף.',
+      poolNameHint: 'השתמש בשם של עד 40 אותיות, ספרות ורווחים שאין לאף מאגר אחר.',
+      poolDefault: 'אי אפשר למחוק את מאגר ברירת המחדל, "{name}". אפשר לשנות את שמו.',
+      poolMarkerHint: 'בחר ממערכות הסמנים שלך סמן שאינו הסמן שבהגדרה סמן.',
+      poolSetHint: 'הקלד !inspiration pools כדי לראות כל מאגר וההגדרות שלו.',
       denied: 'אינך יכול לעשות זאת עבור {name}.',
       gmOnly: 'רק ה-GM יכול להשתמש בפקודה הזו.',
       gmOnlyHint: 'שחקנים יכולים להשתמש ב-spend, party ו-help.',
@@ -4049,14 +5114,28 @@ const InspirationTrackerMod = (() => {
       refresh: 'רענן',
       undo: 'בטל',
       decline: 'וותר',
+      boost: 'חיזוק',
+      pools: 'מאגרים',
+      addPool: 'הוסף מאגר',
+      deletePool: 'מחק מאגר',
     },
     values: {
       on: 'פעיל',
       off: 'כבוי',
+      none: 'ללא',
+      noLimit: 'ללא הגבלה',
+      tracking: {
+        flag: 'תיבת ההשראה בגיליון',
+        pool: 'מאגר נקודות',
+      },
+      source: {
+        resource: 'תיבת משאב בגיליון',
+        attribute: 'תכונה',
+      },
       wording: {
-        auto: 'לפי הגיליון',
         2014: 'השראה (2014)',
         2024: 'השראה הרואית (2024)',
+        auto: 'לפי הגיליון',
       },
       announce: {
         public: 'כולם',
@@ -4068,6 +5147,10 @@ const InspirationTrackerMod = (() => {
       language: {
         label: 'שפה',
         desc: 'השפה של התפריטים, ההודעות ודפי המידע.',
+      },
+      tracking: {
+        label: 'מעקב',
+        desc: 'על מה פועלים תן והשתמש: תיבת ההשראה בגיליונות D&D, שלדמות יש או אין, או מאגר נקודות שמצטבר ומנוצל כמה נקודות בכל פעם.',
       },
       marker: {
         label: 'סמן',
@@ -4109,6 +5192,8 @@ const InspirationTrackerMod = (() => {
       none: 'דמויות ללא תיבת השראה',
       rules2024: 'דמויות לפי כללי 2024',
       party: 'חברי החבורה',
+      tracking: 'מעקב',
+      pools: 'מאגרים',
       marker: 'סמן',
       fx: 'אפקט מיוחד',
       legacyCommand: 'פקודה ישנה',
@@ -4122,6 +5207,15 @@ const InspirationTrackerMod = (() => {
       party: 'מציג למי בחבורה יש השראה, עם כפתורים לתת, להסיר או להשתמש בה.',
       partyEdit: 'מוסיף את הדמויות שנבחרו לחבורה, או מוציא אותן ממנה.',
       ids: 'פועל על מזהי האסימונים או הדמויות שניתנו במקום על האסימונים שנבחרו.',
+      points:
+        'עם מאגר נקודות: נותן, לוקח או מנצל את מספר הנקודות הזה. בלי מספר, 1. remove all לוקח את כל הנקודות.',
+      boost:
+        'עם מאגר נקודות: מנצל נקודות כדי להוסיף את הבונוס הזה להטלה, לפי העלות של המאגר לכל +1.',
+      poolFlag: 'פועל על המאגר שצוין במקום על מאגר ברירת המחדל.',
+      pools: 'מציג את מאגרי הנקודות וההגדרות שלהם.',
+      poolEdit: 'מוסיף מאגר, או מוחק מאגר. הנקודות שבגיליונות נשארות כמו שהן.',
+      poolSet:
+        'משנה מאגר: השם שלו, היכן הוא נשמר (resource או attribute), כמה נקודות עולה כל +1, מספר הנקודות המרבי (0 ללא הגבלה), או סמן האסימון שלו.',
       undo: 'מחזיר השראה שנוצלה. המזהה מופיע בהודעה ל-GM על השימוש.',
       macro: 'מוסיף את פעולת האסימון "Inspiration", שהשחקנים לוחצים עליה כדי להשתמש בהשראה.',
       sync: 'קורא שוב כל גיליון ומתקן את הסמנים.',
@@ -4134,12 +5228,13 @@ const InspirationTrackerMod = (() => {
     helpPlayer: {
       menu: 'מציג את הדמויות שלך והאם יש להן השראה.',
       spend: 'משתמש בהשראה של הדמות שנבחרה.',
+      boost: 'מנצל נקודות ממאגר כדי להוסיף את הבונוס הזה להטלה.',
       party: 'מציג את החבורה, אם ה-GM מאפשר זאת.',
       help: 'מציג את הרשימה הזו.',
     },
     handout: {
       versionLabel: 'גרסה',
-      subtitle: 'השראה והשראה הרואית לגיליונות D&D 5e של 2014 ו-2024',
+      subtitle: 'השראה, השראה הרואית ומאגרי נקודות לכל משחק',
       overview: {
         heading: 'סקירה',
         body: 'InspirationTracker שומר על השראת D&D מתואמת בין גיליון הדמות, האסימון והצ׳אט. תן אותה מהתפריט, מהגיליון או מסמן האסימון, וכל אסימון של אותה דמות מציג את הסמן. שחקנים יכולים להשתמש בה בלחיצה אחת, וה-GM מקבל הודעה, עם כפתור בטל. הוא עובד עם גיליון D&D 2024, שבו היא נקראת השראה הרואית, ועם גיליון ה-OGL של 2014.',
@@ -4191,6 +5286,18 @@ const InspirationTrackerMod = (() => {
           'החבורה היא כל דמות ששחקן שולט בה. בחר אסימונים ולחץ הוסף לחבורה או הסר מהחבורה כדי לשנות אותה.',
           'בסקירה של ה-GM יש כפתורי תן, הסר והשתמש לכל חבר.',
           'הפעל את שחקנים רואים את החבורה כדי שגם השחקנים יראו את הסקירה. הם מקבלים כפתורי השתמש רק לדמויות שלהם.',
+        ],
+      },
+      pools: {
+        heading: 'מאגרי נקודות',
+        points: [
+          'מאגר נקודות הוא מספר שמצטבר ומנוצל כמה נקודות בכל פעם: מאגר של נקודות השראה, נקודות גיבור, מזל, bennies וכדומה. הוא עובד עם כל גיליון דמות.',
+          'הגדר את מעקב למאגר נקודות, ותן, הסר והשתמש יפעלו על מאגר ברירת המחדל וישאלו כמה נקודות. הסמן מוצג כל עוד לדמות יש נקודות.',
+          'חיזוק מנצל נקודות כדי להעלות הטלה: הקלד את הבונוס הרצוי, וההגדרה נקודות לכל +1 של המאגר קובעת את העלות. ב-2 נקודות לכל +1, בונוס של 4 עולה 8 נקודות. ה-Mod מכריז על השימוש; את הבונוס הוסף להטלה בעצמך.',
+          'שימוש נדחה כשלדמות אין מספיק נקודות. ה-GM מקבל הודעה מי השתמש במה, עם כפתור בטל.',
+          'מקום שמירה "תיבת משאב בגיליון" משתמש בתיבת המשאב בגיליון שנושאת את שם המאגר, למשל תיבת Other Resource בשם השראה בגיליון D&D של 2014. כשאין בגיליון תיבה בשם הזה, או עם "תכונה", הנקודות נשמרות בתכונה רגילה, למשל inspiration_pool. גיליון D&D 2024 משתמש תמיד בתכונה.',
+          'אפשר לשנות את המספר בגיליון ידנית: הסמן מתעדכן בהתאם.',
+          'לחץ על מאגרים כדי לשנות את שם מאגר ברירת המחדל, לקבוע את העלות והמקסימום שלו, או להוסיף מאגרים. במאגרים אחרים משתמשים מכפתור החבורה שלהם, או על ידי הוספת --pool ושם המאגר לפקודה.',
         ],
       },
       markers: {
@@ -4253,6 +5360,8 @@ const InspirationTrackerMod = (() => {
       subtitle: 'Command Deck',
       selectedDesc: 'בחר אסימון אחד או יותר, ואז לחץ.',
       partyDesc: 'ראה למי יש השראה, ובחר מי בחבורה.',
+      poolsTitle: 'מאגר נקודות',
+      poolsDesc: 'כשמעקב מוגדר למאגר נקודות: בחר אסימונים, לחץ והקלד את המספר.',
       toolsDesc: 'תפריט, הגדרות, מאקרו לשחקנים ועזרה.',
       footer: 'ההוראות המלאות נמצאות בדף המידע "{help}".',
     },
@@ -4268,6 +5377,8 @@ const InspirationTrackerMod = (() => {
       settings: 'InspirationTracker beállítások',
       help: 'InspirationTracker parancsok',
       party: 'A csapat ihlete',
+      poolParty: 'Csapat: {term}',
+      pools: 'Pontkészletek',
       yours: 'Karaktereid',
       status: 'InspirationTracker állapot',
     },
@@ -4300,7 +5411,51 @@ const InspirationTrackerMod = (() => {
       journal: 'A Súgó és a Command Deck segédletek újra elkészültek.',
       readyHint: 'Írd be: {command} a menühöz, vagy nyisd meg a Command Deck segédletet.',
     },
+    pool: {
+      gained: '{name} kapott: {amount} {term} ({before} → {after}).',
+      spent: '{name} felhasznált: {amount} {term} ({before} → {after}).',
+      boosted: '{name} felhasznált: {amount} {term}, +{bonus} a dobásra ({before} → {after}).',
+      spentBy: '{player} felhasználta {name} nevében: {amount} {term}.',
+      restored: '{name} visszakapott: {amount} {term} ({before} → {after}).',
+      removed: '{name} elvesztett: {amount} {term} ({before} → {after}).',
+      none: '{name} egyetlen ponttal sem rendelkezik: {term}.',
+      short: '{name} készlete {have}, de {need} kellene: {term}.',
+      full: '{name} már elérte a megengedett legtöbbet ({max}): {term}.',
+    },
+    pools: {
+      introFlag:
+        'A nyilvántartás a lap ihletmezőjére van állítva. Állítsd Pontkészletre, hogy az Ad és a Felhasznál a(z) „{name}” készleten működjön. A többi készlet a --pool kapcsolóval használható.',
+      introPool:
+        'Az Ad, a Felhasznál és az Erősít a(z) „{name}” készleten működik. A többi készlet a saját Csapat gombjáról vagy a --pool kapcsolóval használható.',
+      defaultLabel: '{name} (alapértelmezett)',
+      name: 'Név',
+      source: 'Tárolás helye',
+      cost: 'Pont +1-enként',
+      max: 'Maximum',
+      marker: 'Jelölő',
+      attribute: 'Attribútum, ha a lapon nincs ilyen nevű mező: {attribute}',
+      partyTotal: 'A csapat összesen: {total} {term}.',
+    },
+    prompts: {
+      points: 'Pontok',
+      bonus: 'Bónusz a dobásra',
+      max: 'Legtöbb megengedett pont (0 = nincs korlát)',
+    },
     errors: {
+      unknownPool: 'Nincs „{value}” nevű készlet.',
+      unknownPoolHint: 'Készletek: {pools}.',
+      badAmount: 'A(z) „{value}” nem pontszám.',
+      badAmountHint: 'Egész számot adj meg 1 és 9999 között.',
+      boostNoPool: 'Az Erősít egy készlet pontjait használja fel.',
+      poolInvalid: 'Készlet neve nem lehet „{value}”.',
+      poolExists: 'Már van „{value}” nevű készlet.',
+      poolFull: 'Nincs hely újabb készletnek.',
+      poolNameHint:
+        'Legfeljebb 40 betűből, számjegyből és szóközből álló nevet adj meg, amelyet más készlet nem visel.',
+      poolDefault: 'Az alapértelmezett készlet („{name}”) nem törölhető. Átnevezni lehet.',
+      poolMarkerHint:
+        'Válassz a jelölőkészleteidből olyan jelölőt, amely nem azonos a Jelölő beállításban megadottal.',
+      poolSetHint: 'Írd be: !inspiration pools, hogy lásd az összes készletet és beállításaikat.',
       denied: 'Ezt nem teheted meg {name} esetében.',
       gmOnly: 'Ezt a parancsot csak a KM használhatja.',
       gmOnlyHint: 'A játékosok a spend, party és help parancsokat használhatják.',
@@ -4350,14 +5505,28 @@ const InspirationTrackerMod = (() => {
       refresh: 'Frissítés',
       undo: 'Visszavonás',
       decline: 'Lemondok róla',
+      boost: 'Erősít',
+      pools: 'Készletek',
+      addPool: 'Készlet hozzáadása',
+      deletePool: 'Készlet törlése',
     },
     values: {
       on: 'Be',
       off: 'Ki',
+      none: 'Nincs',
+      noLimit: 'Nincs korlát',
+      tracking: {
+        flag: 'A lap ihletmezője',
+        pool: 'Pontkészlet',
+      },
+      source: {
+        resource: 'A lap erőforrásmezője',
+        attribute: 'Attribútum',
+      },
       wording: {
-        auto: 'A lap szerint',
         2014: 'Ihlet (2014)',
         2024: 'Hősi ihlet (2024)',
+        auto: 'A lap szerint',
       },
       announce: {
         public: 'Mindenki',
@@ -4369,6 +5538,10 @@ const InspirationTrackerMod = (() => {
       language: {
         label: 'Nyelv',
         desc: 'A menük, üzenetek és segédletek nyelve.',
+      },
+      tracking: {
+        label: 'Nyilvántartás',
+        desc: 'Min működik az Ad és a Felhasznál: a D&D lapok ihletmezőjén, amely egy karakternek vagy van, vagy nincs, illetve egy pontkészleten, amely gyűlik, és egyszerre néhány pontonként fogy.',
       },
       marker: {
         label: 'Jelölő',
@@ -4410,6 +5583,8 @@ const InspirationTrackerMod = (() => {
       none: 'Ihletmező nélküli karakterek',
       rules2024: '2024-es szabályokat használ',
       party: 'Csapattagok',
+      tracking: 'Nyilvántartás',
+      pools: 'Készletek',
       marker: 'Jelölő',
       fx: 'Különleges effekt',
       legacyCommand: 'Régi parancs',
@@ -4426,6 +5601,16 @@ const InspirationTrackerMod = (() => {
         'Megmutatja, kinek van ihlete a csapatban, gombokkal az adáshoz, elvételhez vagy felhasználáshoz.',
       partyEdit: 'Hozzáadja a kijelölt karaktereket a csapathoz, vagy kiveszi őket.',
       ids: 'A megadott token- vagy karakterazonosítókon működik a kijelölt tokenek helyett.',
+      points:
+        'Pontkészlettel: ennyi pontot ad, vesz el vagy használ fel. Szám nélkül 1. A remove all minden pontot elvesz.',
+      boost:
+        'Pontkészlettel: pontokat használ fel, hogy ekkora bónuszt adjon egy dobáshoz, a készletben megadott áron minden +1 után.',
+      poolFlag: 'A megnevezett készleten működik az alapértelmezett helyett.',
+      pools: 'Megjeleníti a pontkészleteket és beállításaikat.',
+      poolEdit:
+        'Hozzáad egy készletet, vagy töröl egyet. A lapokon lévő pontok érintetlenek maradnak.',
+      poolSet:
+        'Módosít egy készletet: a nevét, a tárolás helyét (resource vagy attribute), azt, hogy hány pontba kerül minden +1, a legtöbb megengedett pontot (0 = nincs korlát) vagy a tokenjelölőjét.',
       undo: 'Visszaadja a felhasznált ihletet. Az azonosító a KM-nek küldött, felhasználásról szóló üzenetben található.',
       macro:
         'Hozzáadja az „Inspiration” tokenműveletet, amelyre kattintva a játékosok felhasználhatják az ihletet.',
@@ -4439,12 +5624,13 @@ const InspirationTrackerMod = (() => {
     helpPlayer: {
       menu: 'Megjeleníti a karaktereidet, és hogy van-e ihletük.',
       spend: 'Felhasználja a kijelölt karakter ihletét.',
+      boost: 'Egy készlet pontjait használja fel, hogy ekkora bónuszt adjon egy dobáshoz.',
       party: 'Megjeleníti a csapatot, ha a KM engedi.',
       help: 'Megjeleníti ezt a listát.',
     },
     handout: {
       versionLabel: 'Verzió',
-      subtitle: 'Ihlet és Hősi ihlet a D&D 5e 2014-es és 2024-es lapjaihoz',
+      subtitle: 'Ihlet, Hősi ihlet és pontkészletek bármilyen játékhoz',
       overview: {
         heading: 'Áttekintés',
         body: 'Az InspirationTracker összhangban tartja a D&D ihletet a karakterlapon, a tokenen és a csevegőben. Add meg a menüből, a lapról vagy a tokenjelölővel, és a karakter minden tokenje mutatja a jelölőt. A játékosok egy kattintással felhasználhatják, a KM pedig értesítést kap, Visszavonás gombbal. Működik a D&D 2024 lappal, ahol Hősi ihletnek hívják, és a 2014-es OGL lappal.',
@@ -4496,6 +5682,18 @@ const InspirationTrackerMod = (() => {
           'A csapat minden olyan karakter, amelyet egy játékos irányít. Jelölj ki tokeneket, és kattints a Csapathoz ad vagy a Csapatból kivesz gombra a módosításhoz.',
           'A KM áttekintőjében minden tagnál van Ad, Elvesz és Felhasznál gomb.',
           'Kapcsold be a Játékosok látják a csapatot beállítást, hogy a játékosok is lássák az áttekintőt. Felhasznál gombot csak a saját karaktereikhez kapnak.',
+        ],
+      },
+      pools: {
+        heading: 'Pontkészletek',
+        points: [
+          'A pontkészlet egy szám, amely gyűlik, és egyszerre néhány pontonként fogy: ihletpontok, hőspontok, szerencse, bennies és hasonlók készlete. Bármilyen karakterlappal működik.',
+          'Állítsd a Nyilvántartást Pontkészletre, és az Ad, az Elvesz és a Felhasznál az alapértelmezett készleten működik, és megkérdezi, hány pontról van szó. A jelölő addig látszik, amíg a karakternek van pontja.',
+          'Az Erősít pontokat használ fel egy dobás növelésére: írd be a kívánt bónuszt, és a készlet Pont +1-enként beállítása határozza meg az árát. Ha minden +1 2 pontba kerül, a 4-es bónusz 8 pont. A Mod bejelenti a felhasználást; a bónuszt te add hozzá a dobáshoz.',
+          'A rendszer elutasítja a felhasználást, ha a karakternek nincs elég pontja. A KM értesítést kap arról, ki mit használt fel, Visszavonás gombbal.',
+          'Ha a Tárolás helye „A lap erőforrásmezője”, a lapnak azt az erőforrásmezőjét használja, amely a készlet nevét viseli, például egy Ihlet nevű Other Resource mezőt a 2014-es D&D lapon. Ha a lapon nincs ilyen nevű mező, vagy a beállítás „Attribútum”, a pontok egy egyszerű attribútumban tárolódnak, például: inspiration_pool. A D&D 2024 lap mindig az attribútumot használja.',
+          'A számot nyugodtan átírhatod kézzel a lapon: a jelölő követi.',
+          'Kattints a Készletek gombra az alapértelmezett készlet átnevezéséhez, árának és maximumának beállításához vagy további készletek hozzáadásához. A többi készlet a saját Csapat gombjáról használható, vagy úgy, hogy a parancshoz hozzáadod a --pool kapcsolót és a készlet nevét.',
         ],
       },
       markers: {
@@ -4559,6 +5757,9 @@ const InspirationTrackerMod = (() => {
       subtitle: 'Command Deck',
       selectedDesc: 'Jelölj ki egy vagy több tokent, majd kattints.',
       partyDesc: 'Nézd meg, kinek van ihlete, és válaszd ki, ki tartozik a csapathoz.',
+      poolsTitle: 'Pontkészlet',
+      poolsDesc:
+        'Ha a Nyilvántartás Pontkészletre van állítva: jelöld ki a tokeneket, kattints, és írd be a számot.',
       toolsDesc: 'Menü, beállítások, a játékosmakró és a súgó.',
       footer: 'A teljes útmutató a(z) „{help}” segédletben található.',
     },
@@ -4574,6 +5775,8 @@ const InspirationTrackerMod = (() => {
       settings: 'Impostazioni di InspirationTracker',
       help: 'Comandi di InspirationTracker',
       party: 'Ispirazione del gruppo',
+      poolParty: '{term} del gruppo',
+      pools: 'Riserve di punti',
       yours: 'I tuoi personaggi',
       status: 'Stato di InspirationTracker',
     },
@@ -4606,7 +5809,52 @@ const InspirationTrackerMod = (() => {
       journal: 'Dispense di aiuto e Command Deck ricreate.',
       readyHint: 'Scrivi {command} per il menu, oppure apri la dispensa Command Deck.',
     },
+    pool: {
+      gained: '{name} ottiene {amount} {term} ({before} → {after}).',
+      spent: '{name} spende {amount} {term} ({before} → {after}).',
+      boosted: '{name} spende {amount} {term} per +{bonus} al tiro ({before} → {after}).',
+      spentBy: '{player} ha speso {amount} {term} per {name}.',
+      restored: '{name} riottiene {amount} {term} ({before} → {after}).',
+      removed: '{amount} {term} in meno per {name} ({before} → {after}).',
+      none: '{name} non ha punti ({term}).',
+      short: '{name} ha {have} {term}, e ne servono {need}.',
+      full: '{name} ha già il massimo consentito ({term}: {max}).',
+    },
+    pools: {
+      introFlag:
+        "Il tracciamento è impostato sulla casella dell'ispirazione della scheda. Impostalo su Riserva di punti per fare di «{name}» la riserva su cui agiscono Dai e Spendi. Le altre riserve si usano con --pool.",
+      introPool:
+        'Dai, Spendi e Potenzia agiscono su «{name}». Le altre riserve si usano dal loro pulsante Gruppo, oppure con --pool.',
+      defaultLabel: '{name} (predefinita)',
+      name: 'Nome',
+      source: 'Conservata in',
+      cost: 'Punti per +1',
+      max: 'Massimo',
+      marker: 'Segnalino',
+      attribute: 'Attributo quando la scheda non ha una casella con questo nome: {attribute}',
+      partyTotal: 'Totale del gruppo: {total} {term}.',
+    },
+    prompts: {
+      points: 'Punti',
+      bonus: 'Bonus al tiro',
+      max: 'Massimo di punti consentito (0 per nessun limite)',
+    },
     errors: {
+      unknownPool: 'Non esiste una riserva chiamata «{value}».',
+      unknownPoolHint: 'Riserve: {pools}.',
+      badAmount: '«{value}» non è un numero di punti.',
+      badAmountHint: 'Usa un numero intero da 1 a 9999.',
+      boostNoPool: 'Potenzia spende punti da una riserva.',
+      poolInvalid: 'Una riserva non può chiamarsi «{value}».',
+      poolExists: 'Esiste già una riserva chiamata «{value}».',
+      poolFull: "Non c'è spazio per un'altra riserva.",
+      poolNameHint:
+        "Usa un nome di al massimo 40 lettere, cifre e spazi che nessun'altra riserva abbia.",
+      poolDefault:
+        'La riserva predefinita, «{name}», non può essere eliminata. Può essere rinominata.',
+      poolMarkerHint:
+        "Scegli dai tuoi set di segnalini un segnalino diverso da quello dell'impostazione Segnalino.",
+      poolSetHint: 'Scrivi !inspiration pools per vedere ogni riserva e le sue impostazioni.',
       denied: 'Non puoi farlo per {name}.',
       gmOnly: 'Solo il GM può usare quel comando.',
       gmOnlyHint: 'I giocatori possono usare spend, party e help.',
@@ -4657,14 +5905,28 @@ const InspirationTrackerMod = (() => {
       refresh: 'Aggiorna',
       undo: 'Annulla',
       decline: 'Lascia perdere',
+      boost: 'Potenzia',
+      pools: 'Riserve',
+      addPool: 'Aggiungi riserva',
+      deletePool: 'Elimina riserva',
     },
     values: {
       on: 'Attivo',
       off: 'Disattivo',
+      none: 'Nessuno',
+      noLimit: 'Nessun limite',
+      tracking: {
+        flag: "Casella dell'ispirazione della scheda",
+        pool: 'Riserva di punti',
+      },
+      source: {
+        resource: 'Casella risorsa della scheda',
+        attribute: 'Attributo',
+      },
       wording: {
-        auto: 'Dalla scheda',
         2014: 'Ispirazione (2014)',
         2024: 'Ispirazione eroica (2024)',
+        auto: 'Dalla scheda',
       },
       announce: {
         public: 'Tutti',
@@ -4676,6 +5938,10 @@ const InspirationTrackerMod = (() => {
       language: {
         label: 'Lingua',
         desc: 'Lingua di menu, messaggi e dispense.',
+      },
+      tracking: {
+        label: 'Tracciamento',
+        desc: "Su cosa agiscono Dai e Spendi: la casella dell'ispirazione delle schede D&D, che un personaggio ha o non ha, oppure una riserva di punti che si accumula e si spende un po' alla volta.",
       },
       marker: {
         label: 'Segnalino',
@@ -4717,6 +5983,8 @@ const InspirationTrackerMod = (() => {
       none: "Personaggi senza casella dell'ispirazione",
       rules2024: 'Regole 2024 in uso',
       party: 'Membri del gruppo',
+      tracking: 'Tracciamento',
+      pools: 'Riserve',
       marker: 'Segnalino',
       fx: 'Effetto speciale',
       legacyCommand: 'Vecchio comando',
@@ -4732,6 +6000,16 @@ const InspirationTrackerMod = (() => {
         "Mostra chi nel gruppo ha l'ispirazione, con pulsanti per darla, toglierla o spenderla.",
       partyEdit: 'Aggiunge i personaggi selezionati al gruppo, oppure li toglie.',
       ids: 'Agisce sugli ID di token o personaggi indicati invece che sui token selezionati.',
+      points:
+        'Con una riserva di punti: dà, toglie o spende quel numero di punti. Senza numero, 1. remove all toglie tutti i punti.',
+      boost:
+        'Con una riserva di punti: spende punti per aggiungere quel bonus a un tiro, al costo della riserva per ogni +1.',
+      poolFlag: 'Agisce sulla riserva indicata invece che su quella predefinita.',
+      pools: 'Mostra le riserve di punti e le loro impostazioni.',
+      poolEdit:
+        'Aggiunge una riserva, oppure ne elimina una. I punti sulle schede restano come sono.',
+      poolSet:
+        'Modifica una riserva: il nome, dove è conservata (resource o attribute), i punti che costa ogni +1, il massimo di punti consentito (0 per nessun limite) o il suo segnalino.',
       undo: "Restituisce l'ispirazione spesa. L'ID si trova nel messaggio al GM sulla spesa.",
       macro:
         "Aggiunge l'azione del token «Inspiration», che i giocatori cliccano per spendere l'ispirazione.",
@@ -4745,12 +6023,13 @@ const InspirationTrackerMod = (() => {
     helpPlayer: {
       menu: "Mostra i tuoi personaggi e se hanno l'ispirazione.",
       spend: "Spende l'ispirazione per il personaggio selezionato.",
+      boost: 'Spende punti da una riserva per aggiungere quel bonus a un tiro.',
       party: 'Mostra il gruppo, se il GM lo consente.',
       help: 'Mostra questo elenco.',
     },
     handout: {
       versionLabel: 'Versione',
-      subtitle: 'Ispirazione e Ispirazione eroica per le schede D&D 5e 2014 e 2024',
+      subtitle: 'Ispirazione, Ispirazione eroica e riserve di punti per qualsiasi gioco',
       overview: {
         heading: 'Panoramica',
         body: "InspirationTracker mantiene allineata l'ispirazione di D&D tra scheda del personaggio, token e chat. Dalla dal menu, dalla scheda o dal segnalino del token, e ogni token di quel personaggio mostra il segnalino. I giocatori possono spenderla con un clic, e il GM viene avvisato, con un pulsante Annulla. Funziona con la scheda D&D 2024, dove si chiama Ispirazione eroica, e con la scheda OGL 2014.",
@@ -4803,6 +6082,18 @@ const InspirationTrackerMod = (() => {
           'Il gruppo comprende ogni personaggio controllato da un giocatore. Seleziona dei token e fai clic su Aggiungi al gruppo o Togli dal gruppo per modificarlo.',
           'La panoramica del GM ha i pulsanti Dai, Togli e Spendi per ogni membro.',
           'Attiva I giocatori vedono il gruppo per far vedere la panoramica anche ai giocatori. Hanno pulsanti Spendi solo per i propri personaggi.',
+        ],
+      },
+      pools: {
+        heading: 'Riserve di punti',
+        points: [
+          "Una riserva di punti è un numero che si accumula e si spende un po' alla volta: una riserva di punti ispirazione, punti eroe, fortuna, bennies e simili. Funziona con qualsiasi scheda del personaggio.",
+          'Imposta Tracciamento su Riserva di punti, e Dai, Togli e Spendi agiscono sulla riserva predefinita, chiedendo quanti punti. Il segnalino resta visibile finché un personaggio ha almeno un punto.',
+          'Potenzia spende punti per alzare un tiro: scrivi il bonus desiderato, e i Punti per +1 della riserva stabiliscono il costo. A 2 punti per +1, un bonus di 4 costa 8 punti. La Mod annuncia la spesa; aggiungi tu il bonus al tiro.',
+          'Una spesa viene rifiutata quando il personaggio non ha abbastanza punti. Il GM viene avvisato di chi ha speso cosa, con un pulsante Annulla.',
+          "Conservata in «Casella risorsa della scheda» usa la casella risorsa della scheda che ha il nome della riserva, come una casella Other Resource chiamata Ispirazione sulla scheda D&D 2014. Quando la scheda non ha una casella con quel nome, oppure con «Attributo», i punti sono conservati in un semplice attributo, come inspiration_pool. La scheda D&D 2024 usa sempre l'attributo.",
+          'Cambiare a mano il numero sulla scheda va benissimo: il segnalino lo segue.',
+          'Fai clic su Riserve per rinominare la riserva predefinita, impostarne costo e massimo, o aggiungere altre riserve. Le altre riserve si usano dal loro pulsante Gruppo, oppure aggiungendo --pool e il nome della riserva a un comando.',
         ],
       },
       markers: {
@@ -4866,6 +6157,9 @@ const InspirationTrackerMod = (() => {
       subtitle: 'Command Deck',
       selectedDesc: 'Seleziona uno o più token, poi fai clic.',
       partyDesc: "Vedi chi ha l'ispirazione e scegli chi fa parte del gruppo.",
+      poolsTitle: 'Riserva di punti',
+      poolsDesc:
+        'Con Tracciamento impostato su Riserva di punti: seleziona i token, fai clic e scrivi il numero.',
       toolsDesc: 'Menu, impostazioni, la macro giocatori e aiuto.',
       footer: 'Le istruzioni complete sono nella dispensa «{help}».',
     },
@@ -4881,6 +6175,8 @@ const InspirationTrackerMod = (() => {
       settings: 'InspirationTracker 設定',
       help: 'InspirationTracker コマンド',
       party: 'パーティーのインスピレーション',
+      poolParty: 'パーティーの{term}',
+      pools: 'ポイントプール',
       yours: 'あなたのキャラクター',
       status: 'InspirationTracker ステータス',
     },
@@ -4914,7 +6210,50 @@ const InspirationTrackerMod = (() => {
       readyHint:
         '{command} と入力してメニューを開くか、コマンドデッキのハンドアウトを開いてください。',
     },
+    pool: {
+      gained: '{name} は{term}を {amount} 得た（{before} → {after}）。',
+      spent: '{name} は{term}を {amount} 使用した（{before} → {after}）。',
+      boosted: '{name} は{term}を {amount} 使用し、ロールに +{bonus}（{before} → {after}）。',
+      spentBy: '{player} が {name} の{term}を {amount} 使用しました。',
+      restored: '{name} の{term}が {amount} 戻りました（{before} → {after}）。',
+      removed: '{name} から{term}を {amount} 取り除きました（{before} → {after}）。',
+      none: '{name} は{term}を持っていません。',
+      short: '{name} の{term}は {have} で、{need} 必要です。',
+      full: '{name} の{term}はすでに上限（{max}）に達しています。',
+    },
+    pools: {
+      introFlag:
+        '管理対象はシートのインスピレーション欄になっています。「ポイントプール」に変更すると、「与える」と「使用」は「{name}」プールに対して働きます。他のプールは --pool で使います。',
+      introPool:
+        '「与える」「使用」「ブースト」は「{name}」に対して働きます。他のプールは、それぞれの「パーティー」ボタンか --pool で使います。',
+      defaultLabel: '{name}（既定）',
+      name: '名前',
+      source: '保存先',
+      cost: '+1 あたりのポイント',
+      max: '上限',
+      marker: 'マーカー',
+      attribute: 'シートにこの名前の欄がない場合の属性: {attribute}',
+      partyTotal: 'パーティー合計: {term} {total}。',
+    },
+    prompts: {
+      points: 'ポイント',
+      bonus: 'ロールへのボーナス',
+      max: 'ポイントの上限（0 で無制限）',
+    },
     errors: {
+      unknownPool: '「{value}」という名前のプールはありません。',
+      unknownPoolHint: 'プール: {pools}。',
+      badAmount: '「{value}」はポイント数として使えません。',
+      badAmountHint: '1 から 9999 までの整数を指定してください。',
+      boostNoPool: 'ブーストはプールのポイントを使用します。',
+      poolInvalid: 'プールに「{value}」という名前は付けられません。',
+      poolExists: '「{value}」という名前のプールはすでにあります。',
+      poolFull: 'これ以上プールを追加できません。',
+      poolNameHint:
+        '文字、数字、スペースで 40 文字以内の、他のプールと重複しない名前を使ってください。',
+      poolDefault: '既定のプール「{name}」は削除できません。名前の変更はできます。',
+      poolMarkerHint: 'マーカーセットから、「マーカー」設定とは別のマーカーを選んでください。',
+      poolSetHint: '!inspiration pools と入力すると、すべてのプールとその設定が表示されます。',
       denied: '{name} に対してその操作はできません。',
       gmOnly: 'そのコマンドは GM のみ使用できます。',
       gmOnlyHint: 'プレイヤーは spend、party、help を使用できます。',
@@ -4964,14 +6303,28 @@ const InspirationTrackerMod = (() => {
       refresh: '更新',
       undo: '元に戻す',
       decline: '手放す',
+      boost: 'ブースト',
+      pools: 'プール',
+      addPool: 'プールを追加',
+      deletePool: 'プールを削除',
     },
     values: {
       on: 'オン',
       off: 'オフ',
+      none: 'なし',
+      noLimit: '無制限',
+      tracking: {
+        flag: 'シートのインスピレーション欄',
+        pool: 'ポイントプール',
+      },
+      source: {
+        resource: 'シートのリソース欄',
+        attribute: '属性',
+      },
       wording: {
-        auto: 'シートに従う',
         2014: 'インスピレーション (2014)',
         2024: '英雄的インスピレーション (2024)',
+        auto: 'シートに従う',
       },
       announce: {
         public: '全員',
@@ -4983,6 +6336,10 @@ const InspirationTrackerMod = (() => {
       language: {
         label: '言語',
         desc: 'メニュー、メッセージ、ハンドアウトの言語。',
+      },
+      tracking: {
+        label: '管理対象',
+        desc: '「与える」と「使用」が何に対して働くか。D&D シートのインスピレーション欄（持っているか、いないかのどちらか）、または貯まっていき少しずつ使うポイントのプール。',
       },
       marker: {
         label: 'マーカー',
@@ -5024,6 +6381,8 @@ const InspirationTrackerMod = (() => {
       none: 'インスピレーション欄のないキャラクター',
       rules2024: '2024 ルールを使用',
       party: 'パーティーメンバー',
+      tracking: '管理対象',
+      pools: 'プール',
       marker: 'マーカー',
       fx: '特殊効果',
       legacyCommand: '以前のコマンド',
@@ -5040,6 +6399,15 @@ const InspirationTrackerMod = (() => {
         'パーティーの誰がインスピレーションを持っているかを、与える・外す・使用ボタン付きで表示します。',
       partyEdit: '選択したキャラクターをパーティーに追加、またはパーティーから外します。',
       ids: '選択中のトークンの代わりに、指定したトークンまたはキャラクターの ID に対して実行します。',
+      points:
+        'ポイントプール使用時: その数のポイントを与える、取り除く、または使用します。数を省略すると 1。remove all はすべてのポイントを取り除きます。',
+      boost:
+        'ポイントプール使用時: ポイントを使用して、そのボーナスをロールに加えます。+1 ごとのコストはプールの設定に従います。',
+      poolFlag: '既定のプールの代わりに、指定した名前のプールに対して実行します。',
+      pools: 'ポイントプールとその設定を表示します。',
+      poolEdit: 'プールを追加、または削除します。シート上のポイントはそのまま残ります。',
+      poolSet:
+        'プールを変更します: 名前、保存先（resource または attribute）、+1 あたりのポイント、ポイントの上限（0 で無制限）、トークンマーカー。',
       undo: '使用したインスピレーションを戻します。ID は使用時の GM 向けメッセージに記載されています。',
       macro:
         'トークンアクション「Inspiration」を追加します。プレイヤーはこれをクリックしてインスピレーションを使用します。',
@@ -5053,12 +6421,14 @@ const InspirationTrackerMod = (() => {
     helpPlayer: {
       menu: 'あなたのキャラクターと、インスピレーションを持っているかを表示します。',
       spend: '選択したキャラクターのインスピレーションを使用します。',
+      boost: 'プールのポイントを使用して、そのボーナスをロールに加えます。',
       party: 'GM が許可していれば、パーティーを表示します。',
       help: 'この一覧を表示します。',
     },
     handout: {
       versionLabel: 'バージョン',
-      subtitle: 'D&D 5e 2014 および 2024 シート用のインスピレーションと英雄的インスピレーション',
+      subtitle:
+        'あらゆるゲームで使えるインスピレーション、英雄的インスピレーション、ポイントプール',
       overview: {
         heading: '概要',
         body: 'InspirationTracker は、D&D のインスピレーションをキャラクターシート、トークン、チャットの間で常に一致させます。メニュー、シート、トークンマーカーのどこから与えても、そのキャラクターのすべてのトークンにマーカーが表示されます。プレイヤーはワンクリックで使用でき、GM には「元に戻す」ボタン付きで通知されます。英雄的インスピレーションと呼ばれる D&D 2024 シートと、2014 OGL シートの両方に対応しています。',
@@ -5110,6 +6480,18 @@ const InspirationTrackerMod = (() => {
           'パーティーは、プレイヤーが操作するすべてのキャラクターです。トークンを選択し、「パーティーに追加」または「パーティーから外す」をクリックして変更できます。',
           'GM の一覧には、メンバーごとに「与える」「外す」「使用」ボタンがあります。',
           '「プレイヤーのパーティー表示」をオンにすると、プレイヤーも一覧を見られます。「使用」ボタンは自分のキャラクターにだけ表示されます。',
+        ],
+      },
+      pools: {
+        heading: 'ポイントプール',
+        points: [
+          'ポイントプールは、貯まっていき少しずつ使う数値です。インスピレーションポイント、ヒーローポイント、幸運、bennies などのプールに使えます。どのキャラクターシートでも動作します。',
+          '「管理対象」を「ポイントプール」にすると、「与える」「外す」「使用」は既定のプールに対して働き、ポイント数を尋ねます。キャラクターがポイントを持っている間はマーカーが表示されます。',
+          '「ブースト」はポイントを使用してロールを上げます。欲しいボーナスを入力すると、プールの「+1 あたりのポイント」でコストが決まります。+1 あたり 2 ポイントなら、ボーナス 4 には 8 ポイントかかります。Mod は使用を通知するだけなので、ボーナスは自分でロールに加えてください。',
+          'キャラクターのポイントが足りない場合、使用は拒否されます。GM には誰が何を使用したかが「元に戻す」ボタン付きで通知されます。',
+          '保存先が「シートのリソース欄」の場合、シート上でプールと同じ名前を持つリソース欄を使います。たとえば 2014 D&D シートで Inspiration と名付けた Other Resource 欄です。シートにその名前の欄がない場合、または保存先が「属性」の場合、ポイントは inspiration_pool のような単純な属性に保存されます。D&D 2024 シートでは常に属性を使います。',
+          'シート上の数値を手で変更しても問題ありません。マーカーも追従します。',
+          '「プール」をクリックすると、既定のプールの名前を変更したり、コストと上限を設定したり、プールを追加したりできます。他のプールは、それぞれの「パーティー」ボタンから、またはコマンドに --pool とプール名を追加して使います。',
         ],
       },
       markers: {
@@ -5172,6 +6554,9 @@ const InspirationTrackerMod = (() => {
       subtitle: 'コマンドデッキ',
       selectedDesc: 'トークンを 1 つ以上選択してからクリックします。',
       partyDesc: '誰がインスピレーションを持っているかを確認し、パーティーのメンバーを選びます。',
+      poolsTitle: 'ポイントプール',
+      poolsDesc:
+        '「管理対象」が「ポイントプール」の場合: トークンを選択してクリックし、数を入力します。',
       toolsDesc: 'メニュー、設定、プレイヤー用マクロ、ヘルプ。',
       footer: '詳しい説明はハンドアウト「{help}」にあります。',
     },
@@ -5187,6 +6572,8 @@ const InspirationTrackerMod = (() => {
       settings: 'InspirationTracker 설정',
       help: 'InspirationTracker 명령어',
       party: '파티 영감',
+      poolParty: '파티 {term}',
+      pools: '포인트 풀',
       yours: '내 캐릭터',
       status: 'InspirationTracker 상태',
     },
@@ -5219,7 +6606,50 @@ const InspirationTrackerMod = (() => {
       journal: '도움말과 명령 데크 핸드아웃을 다시 만들었습니다.',
       readyHint: '메뉴를 보려면 {command}을(를) 입력하거나 명령 데크 핸드아웃을 여세요.',
     },
+    pool: {
+      gained: '{name}: {term} {amount} 획득 ({before} → {after}).',
+      spent: '{name}: {term} {amount} 사용 ({before} → {after}).',
+      boosted: '{name}: {term} {amount} 사용, 굴림에 +{bonus} ({before} → {after}).',
+      spentBy: '{player} 님이 {name}의 {term}을(를) {amount}만큼 사용했습니다.',
+      restored: '{name}: {term} {amount} 복구 ({before} → {after}).',
+      removed: '{name}: {term} {amount} 회수 ({before} → {after}).',
+      none: '{name}에게는 {term}이(가) 없습니다.',
+      short: '{name}: {term} {have} 보유, {need} 필요.',
+      full: '{name}은(는) 이미 {term}을(를) 최대치({max})까지 가지고 있습니다.',
+    },
+    pools: {
+      introFlag:
+        '추적 대상이 시트의 영감 칸으로 설정되어 있습니다. 포인트 풀로 바꾸면 주기와 사용이 "{name}" 풀에 적용됩니다. 다른 풀은 --pool로 사용합니다.',
+      introPool:
+        '주기, 사용, 부스트는 "{name}"에 적용됩니다. 다른 풀은 각 풀의 파티 버튼이나 --pool로 사용합니다.',
+      defaultLabel: '{name} (기본)',
+      name: '이름',
+      source: '저장 위치',
+      cost: '+1당 포인트',
+      max: '최대치',
+      marker: '마커',
+      attribute: '시트에 이 이름의 칸이 없을 때 쓰는 속성: {attribute}',
+      partyTotal: '파티 합계: {term} {total}.',
+    },
+    prompts: {
+      points: '포인트',
+      bonus: '굴림 보너스',
+      max: '포인트 최대치 (0은 제한 없음)',
+    },
     errors: {
+      unknownPool: '"{value}"(이)라는 풀이 없습니다.',
+      unknownPoolHint: '풀: {pools}.',
+      badAmount: '"{value}"은(는) 포인트 수가 아닙니다.',
+      badAmountHint: '1에서 9999 사이의 정수를 사용하세요.',
+      boostNoPool: '부스트는 풀의 포인트를 사용합니다.',
+      poolInvalid: '풀 이름을 "{value}"(으)로 지을 수 없습니다.',
+      poolExists: '"{value}"(이)라는 풀이 이미 있습니다.',
+      poolFull: '풀을 더 추가할 자리가 없습니다.',
+      poolNameHint:
+        '글자, 숫자, 공백으로 된 40자 이내의 이름 중 다른 풀이 쓰지 않는 이름을 사용하세요.',
+      poolDefault: '기본 풀 "{name}"은(는) 삭제할 수 없습니다. 이름은 바꿀 수 있습니다.',
+      poolMarkerHint: '마커 세트에서 마커 설정에 쓰인 것과 다른 마커를 고르세요.',
+      poolSetHint: '!inspiration pools를 입력하면 모든 풀과 그 설정을 볼 수 있습니다.',
       denied: '{name}에 대해서는 그 작업을 할 수 없습니다.',
       gmOnly: '그 명령어는 GM만 사용할 수 있습니다.',
       gmOnlyHint: '플레이어는 spend, party, help를 사용할 수 있습니다.',
@@ -5269,14 +6699,28 @@ const InspirationTrackerMod = (() => {
       refresh: '새로 고침',
       undo: '되돌리기',
       decline: '포기',
+      boost: '부스트',
+      pools: '풀',
+      addPool: '풀 추가',
+      deletePool: '풀 삭제',
     },
     values: {
       on: '켜짐',
       off: '꺼짐',
+      none: '없음',
+      noLimit: '제한 없음',
+      tracking: {
+        flag: '시트의 영감 칸',
+        pool: '포인트 풀',
+      },
+      source: {
+        resource: '시트의 자원 칸',
+        attribute: '속성',
+      },
       wording: {
-        auto: '시트 따름',
         2014: '영감 (2014)',
         2024: '영웅적 영감 (2024)',
+        auto: '시트 따름',
       },
       announce: {
         public: '모두',
@@ -5288,6 +6732,10 @@ const InspirationTrackerMod = (() => {
       language: {
         label: '언어',
         desc: '메뉴, 메시지, 핸드아웃의 언어입니다.',
+      },
+      tracking: {
+        label: '추적 대상',
+        desc: '주기와 사용이 적용되는 대상입니다. 캐릭터가 가지고 있거나 없거나 둘 중 하나인 D&D 시트의 영감 칸, 또는 쌓였다가 조금씩 사용하는 포인트 풀 중에서 고릅니다.',
       },
       marker: {
         label: '마커',
@@ -5329,6 +6777,8 @@ const InspirationTrackerMod = (() => {
       none: '영감 칸이 없는 캐릭터',
       rules2024: '2024 규칙 사용',
       party: '파티원',
+      tracking: '추적 대상',
+      pools: '풀',
       marker: '마커',
       fx: '특수 효과',
       legacyCommand: '예전 명령어',
@@ -5342,6 +6792,15 @@ const InspirationTrackerMod = (() => {
       party: '파티에서 누가 영감을 가졌는지 주기, 회수, 사용 버튼과 함께 보여 줍니다.',
       partyEdit: '선택한 캐릭터를 파티에 추가하거나 파티에서 제외합니다.',
       ids: '선택한 토큰 대신 지정한 토큰 또는 캐릭터 ID에 적용합니다.',
+      points:
+        '포인트 풀 사용 시: 그 수만큼 포인트를 주거나 회수하거나 사용합니다. 숫자가 없으면 1입니다. remove all은 모든 포인트를 회수합니다.',
+      boost:
+        '포인트 풀 사용 시: 포인트를 사용해 그 보너스를 굴림에 더합니다. +1마다 풀에 정해진 비용이 듭니다.',
+      poolFlag: '기본 풀 대신 지정한 이름의 풀에 적용합니다.',
+      pools: '포인트 풀과 그 설정을 보여 줍니다.',
+      poolEdit: '풀을 추가하거나 삭제합니다. 시트의 포인트는 그대로 둡니다.',
+      poolSet:
+        '풀을 변경합니다: 이름, 저장 위치(resource 또는 attribute), +1당 포인트, 포인트 최대치(0은 제한 없음), 토큰 마커.',
       undo: '사용한 영감을 되돌려 줍니다. ID는 사용에 관한 GM 메시지에 있습니다.',
       macro: '"Inspiration" 토큰 액션을 추가합니다. 플레이어는 이것을 클릭해 영감을 사용합니다.',
       sync: '모든 시트를 다시 읽고 마커를 바로잡습니다.',
@@ -5354,12 +6813,13 @@ const InspirationTrackerMod = (() => {
     helpPlayer: {
       menu: '내 캐릭터와 각 캐릭터의 영감 보유 여부를 보여 줍니다.',
       spend: '선택한 캐릭터의 영감을 사용합니다.',
+      boost: '풀의 포인트를 사용해 그 보너스를 굴림에 더합니다.',
       party: 'GM이 허용하면 파티를 보여 줍니다.',
       help: '이 목록을 보여 줍니다.',
     },
     handout: {
       versionLabel: '버전',
-      subtitle: 'D&D 5e 2014 및 2024 시트용 영감과 영웅적 영감',
+      subtitle: '모든 게임을 위한 영감, 영웅적 영감, 포인트 풀',
       overview: {
         heading: '개요',
         body: 'InspirationTracker는 D&D 영감을 캐릭터 시트, 토큰, 채팅에서 항상 일치시킵니다. 메뉴, 시트, 토큰 마커 중 어디서 주어도 그 캐릭터의 모든 토큰에 마커가 표시됩니다. 플레이어는 클릭 한 번으로 사용할 수 있고, GM에게는 되돌리기 버튼과 함께 알림이 갑니다. 영웅적 영감이라고 부르는 D&D 2024 시트와 2014 OGL 시트 모두에서 작동합니다.',
@@ -5411,6 +6871,18 @@ const InspirationTrackerMod = (() => {
           '파티는 플레이어가 조종하는 모든 캐릭터입니다. 토큰을 선택하고 파티에 추가 또는 파티에서 제외를 클릭해 바꿀 수 있습니다.',
           'GM의 개요에는 파티원마다 주기, 회수, 사용 버튼이 있습니다.',
           '플레이어 파티 보기를 켜면 플레이어도 개요를 볼 수 있습니다. 사용 버튼은 자신의 캐릭터에만 표시됩니다.',
+        ],
+      },
+      pools: {
+        heading: '포인트 풀',
+        points: [
+          '포인트 풀은 쌓였다가 조금씩 사용하는 숫자입니다. 영감 포인트, 히어로 포인트, 행운, bennies 같은 것들의 풀입니다. 어떤 캐릭터 시트와도 작동합니다.',
+          '추적 대상을 포인트 풀로 설정하면 주기, 회수, 사용이 기본 풀에 적용되며 포인트 수를 묻습니다. 캐릭터에게 포인트가 있는 동안 마커가 표시됩니다.',
+          '부스트는 포인트를 사용해 굴림을 높입니다. 원하는 보너스를 입력하면 풀의 +1당 포인트에 따라 비용이 정해집니다. +1당 2포인트라면 보너스 4에는 8포인트가 듭니다. Mod는 사용을 알리기만 하므로 보너스는 직접 굴림에 더하세요.',
+          '캐릭터의 포인트가 모자라면 사용이 거부됩니다. GM에게는 누가 무엇을 사용했는지 되돌리기 버튼과 함께 알림이 갑니다.',
+          '저장 위치가 "시트의 자원 칸"이면 시트에서 풀과 같은 이름을 가진 자원 칸을 사용합니다. 예를 들어 2014 D&D 시트에서 Inspiration이라고 이름 붙인 Other Resource 칸입니다. 시트에 그 이름의 칸이 없거나 저장 위치가 "속성"이면 포인트는 inspiration_pool 같은 일반 속성에 저장됩니다. D&D 2024 시트는 항상 속성을 사용합니다.',
+          '시트의 숫자를 직접 바꿔도 괜찮습니다. 마커가 따라 바뀝니다.',
+          '풀을 클릭하면 기본 풀의 이름을 바꾸고, 비용과 최대치를 정하고, 풀을 더 추가할 수 있습니다. 다른 풀은 각 풀의 파티 버튼으로, 또는 명령어에 --pool과 풀 이름을 덧붙여 사용합니다.',
         ],
       },
       markers: {
@@ -5473,6 +6945,8 @@ const InspirationTrackerMod = (() => {
       subtitle: '명령 데크',
       selectedDesc: '토큰을 하나 이상 선택한 뒤 클릭하세요.',
       partyDesc: '누가 영감을 가졌는지 보고, 파티에 누구를 넣을지 고릅니다.',
+      poolsTitle: '포인트 풀',
+      poolsDesc: '추적 대상이 포인트 풀일 때: 토큰을 선택하고 클릭한 뒤 숫자를 입력하세요.',
       toolsDesc: '메뉴, 설정, 플레이어 매크로, 도움말.',
       footer: '자세한 설명은 "{help}" 핸드아웃에 있습니다.',
     },
@@ -5488,6 +6962,8 @@ const InspirationTrackerMod = (() => {
       settings: 'Ustawienia InspirationTracker',
       help: 'Polecenia InspirationTracker',
       party: 'Inspiracja drużyny',
+      poolParty: '{term} drużyny',
+      pools: 'Pule punktów',
       yours: 'Twoje postacie',
       status: 'Stan InspirationTracker',
     },
@@ -5520,7 +6996,50 @@ const InspirationTrackerMod = (() => {
       journal: 'Odtworzono notatki Pomocy i Panelu poleceń.',
       readyHint: 'Wpisz {command}, aby otworzyć menu, albo otwórz notatkę Panelu poleceń.',
     },
+    pool: {
+      gained: '{name} zyskuje: {term} × {amount} ({before} → {after}).',
+      spent: '{name} wykorzystuje: {term} × {amount} ({before} → {after}).',
+      boosted:
+        '{name} wykorzystuje: {term} × {amount}, aby dodać +{bonus} do rzutu ({before} → {after}).',
+      spentBy: '{player} wykorzystuje za postać {name}: {term} × {amount}.',
+      restored: '{name} odzyskuje: {term} × {amount} ({before} → {after}).',
+      removed: 'Odebrano postaci {name}: {term} × {amount} ({before} → {after}).',
+      none: '{name} nie ma: {term}.',
+      short: '{name} ma: {term} × {have}, a potrzeba {need}.',
+      full: '{name} ma już dozwolone maksimum ({max}): {term}.',
+    },
+    pools: {
+      introFlag:
+        'Śledzenie jest ustawione na pole inspiracji na karcie. Ustaw je na Pula punktów, aby Daj i Wykorzystaj działały na puli „{name}”. Innych pul używa się z --pool.',
+      introPool:
+        'Daj, Wykorzystaj i Wzmocnij działają na puli „{name}”. Innych pul używa się przyciskiem Drużyna danej puli albo z --pool.',
+      defaultLabel: '{name} (domyślna)',
+      name: 'Nazwa',
+      source: 'Miejsce zapisu',
+      cost: 'Punkty za +1',
+      max: 'Maksimum',
+      marker: 'Znacznik',
+      attribute: 'Atrybut, gdy karta nie ma pola o tej nazwie: {attribute}',
+      partyTotal: 'Suma drużyny: {term} × {total}.',
+    },
+    prompts: {
+      points: 'Punkty',
+      bonus: 'Premia do rzutu',
+      max: 'Maksymalna liczba punktów (0 – bez limitu)',
+    },
     errors: {
+      unknownPool: 'Nie ma puli o nazwie „{value}”.',
+      unknownPoolHint: 'Pule: {pools}.',
+      badAmount: '„{value}” nie jest liczbą punktów.',
+      badAmountHint: 'Użyj liczby całkowitej od 1 do 9999.',
+      boostNoPool: 'Wzmocnij wydaje punkty z puli.',
+      poolInvalid: 'Pula nie może mieć nazwy „{value}”.',
+      poolExists: 'Pula o nazwie „{value}” już istnieje.',
+      poolFull: 'Nie ma miejsca na kolejną pulę.',
+      poolNameHint: 'Użyj nazwy do 40 liter, cyfr i spacji, której nie ma żadna inna pula.',
+      poolDefault: 'Domyślnej puli „{name}” nie można usunąć. Można zmienić jej nazwę.',
+      poolMarkerHint: 'Wybierz z zestawów znaczników znacznik inny niż ten z ustawienia Znacznik.',
+      poolSetHint: 'Wpisz !inspiration pools, aby zobaczyć wszystkie pule i ich ustawienia.',
       denied: 'Nie możesz tego zrobić dla postaci {name}.',
       gmOnly: 'Tylko GM może użyć tego polecenia.',
       gmOnlyHint: 'Gracze mogą używać spend, party i help.',
@@ -5571,14 +7090,28 @@ const InspirationTrackerMod = (() => {
       refresh: 'Odśwież',
       undo: 'Cofnij',
       decline: 'Zrezygnuj',
+      boost: 'Wzmocnij',
+      pools: 'Pule',
+      addPool: 'Dodaj pulę',
+      deletePool: 'Usuń pulę',
     },
     values: {
       on: 'Wł.',
       off: 'Wył.',
+      none: 'Brak',
+      noLimit: 'Bez limitu',
+      tracking: {
+        flag: 'Pole inspiracji na karcie',
+        pool: 'Pula punktów',
+      },
+      source: {
+        resource: 'Pole zasobu na karcie',
+        attribute: 'Atrybut',
+      },
       wording: {
-        auto: 'Z karty',
         2014: 'Inspiracja (2014)',
         2024: 'Bohaterska Inspiracja (2024)',
+        auto: 'Z karty',
       },
       announce: {
         public: 'Wszyscy',
@@ -5590,6 +7123,10 @@ const InspirationTrackerMod = (() => {
       language: {
         label: 'Język',
         desc: 'Język menu, komunikatów i notatek.',
+      },
+      tracking: {
+        label: 'Śledzenie',
+        desc: 'Na czym działają Daj i Wykorzystaj: na polu inspiracji na kartach D&D, którą postać ma albo jej nie ma, czy na puli punktów, które się gromadzi i wydaje po kilka naraz.',
       },
       marker: {
         label: 'Znacznik',
@@ -5631,6 +7168,8 @@ const InspirationTrackerMod = (() => {
       none: 'Postacie bez pola inspiracji',
       rules2024: 'Używają zasad 2024',
       party: 'Członkowie drużyny',
+      tracking: 'Śledzenie',
+      pools: 'Pule',
       marker: 'Znacznik',
       fx: 'Efekt specjalny',
       legacyCommand: 'Stare polecenie',
@@ -5646,6 +7185,15 @@ const InspirationTrackerMod = (() => {
         'Pokazuje, kto w drużynie ma inspirację, z przyciskami do dawania, odbierania i wykorzystania.',
       partyEdit: 'Dodaje zaznaczone postacie do drużyny lub je z niej usuwa.',
       ids: 'Działa na podanych identyfikatorach żetonów lub postaci zamiast na zaznaczonych żetonach.',
+      points:
+        'Przy puli punktów: daje, odbiera lub wykorzystuje podaną liczbę punktów. Bez liczby: 1. remove all odbiera wszystkie punkty.',
+      boost:
+        'Przy puli punktów: wydaje punkty, aby dodać podaną premię do rzutu, według kosztu puli za każde +1.',
+      poolFlag: 'Działa na wskazanej puli zamiast na domyślnej.',
+      pools: 'Pokazuje pule punktów i ich ustawienia.',
+      poolEdit: 'Dodaje pulę lub ją usuwa. Punkty na kartach pozostają bez zmian.',
+      poolSet:
+        'Zmienia pulę: jej nazwę, miejsce zapisu (resource lub attribute), liczbę punktów za każde +1, maksymalną liczbę punktów (0 – bez limitu) albo jej znacznik żetonu.',
       undo: 'Przywraca wykorzystaną inspirację. Identyfikator jest w wiadomości do GM o wykorzystaniu.',
       macro: 'Dodaje akcję żetonu „Inspiration”, którą gracze klikają, aby wykorzystać inspirację.',
       sync: 'Odczytuje ponownie wszystkie karty i poprawia znaczniki.',
@@ -5658,12 +7206,13 @@ const InspirationTrackerMod = (() => {
     helpPlayer: {
       menu: 'Pokazuje twoje postacie i to, czy mają inspirację.',
       spend: 'Wykorzystuje inspirację zaznaczonej postaci.',
+      boost: 'Wydaje punkty z puli, aby dodać podaną premię do rzutu.',
       party: 'Pokazuje drużynę, jeśli GM na to pozwala.',
       help: 'Pokazuje tę listę.',
     },
     handout: {
       versionLabel: 'Wersja',
-      subtitle: 'Inspiracja i Bohaterska Inspiracja dla kart D&D 5e 2014 i 2024',
+      subtitle: 'Inspiracja, Bohaterska Inspiracja i pule punktów do każdej gry',
       overview: {
         heading: 'Przegląd',
         body: 'InspirationTracker utrzymuje zgodność inspiracji D&D na karcie postaci, żetonie i czacie. Daj ją z menu, karty lub znacznika żetonu, a każdy żeton tej postaci pokaże znacznik. Gracze mogą ją wykorzystać jednym kliknięciem, a GM dostaje powiadomienie z przyciskiem Cofnij. Działa z kartą D&D 2024, gdzie nazywa się Bohaterską Inspiracją, oraz z kartą 2014 OGL.',
@@ -5716,6 +7265,18 @@ const InspirationTrackerMod = (() => {
           'Drużyna to wszystkie postacie, którymi sterują gracze. Zaznacz żetony i kliknij Dodaj do drużyny lub Usuń z drużyny, aby ją zmienić.',
           'Przegląd GM ma przyciski Daj, Odbierz i Wykorzystaj dla każdego członka.',
           'Włącz Gracze widzą drużynę, aby gracze też widzieli przegląd. Przyciski Wykorzystaj dostają tylko przy własnych postaciach.',
+        ],
+      },
+      pools: {
+        heading: 'Pule punktów',
+        points: [
+          'Pula punktów to liczba, która rośnie i jest wydawana po kilka punktów naraz: pula punktów inspiracji, punktów bohatera, szczęścia, bennies i tym podobnych. Działa z każdą kartą postaci.',
+          'Ustaw Śledzenie na Pula punktów, a Daj, Odbierz i Wykorzystaj będą działać na domyślnej puli i pytać o liczbę punktów. Znacznik jest widoczny, dopóki postać ma jakiekolwiek punkty.',
+          'Wzmocnij wydaje punkty, aby podnieść wynik rzutu: wpisz żądaną premię, a o koszcie decyduje ustawienie puli Punkty za +1. Przy 2 punktach za +1 premia 4 kosztuje 8 punktów. Mod ogłasza wydanie punktów; premię dodaj do rzutu samodzielnie.',
+          'Wydanie punktów jest odrzucane, gdy postać ma ich za mało. GM dostaje informację, kto co wydał, z przyciskiem Cofnij.',
+          'Miejsce zapisu „Pole zasobu na karcie” używa pola zasobu na karcie, które ma nazwę puli, na przykład pola Other Resource nazwanego Inspiration na karcie D&D 2014. Gdy karta nie ma pola o tej nazwie albo wybrano „Atrybut”, punkty są zapisywane w zwykłym atrybucie, takim jak inspiration_pool. Karta D&D 2024 zawsze używa atrybutu.',
+          'Liczbę na karcie można zmieniać ręcznie: znacznik podąża za nią.',
+          'Kliknij Pule, aby zmienić nazwę domyślnej puli, ustawić jej koszt i maksimum albo dodać kolejne pule. Innych pul używa się przyciskiem Drużyna danej puli albo przez dodanie do polecenia --pool i nazwy puli.',
         ],
       },
       markers: {
@@ -5778,6 +7339,9 @@ const InspirationTrackerMod = (() => {
       subtitle: 'Panel poleceń',
       selectedDesc: 'Zaznacz jeden lub więcej żetonów, a potem kliknij.',
       partyDesc: 'Zobacz, kto ma inspirację, i wybierz, kto jest w drużynie.',
+      poolsTitle: 'Pula punktów',
+      poolsDesc:
+        'Gdy Śledzenie jest ustawione na Pula punktów: zaznacz żetony, kliknij i wpisz liczbę.',
       toolsDesc: 'Menu, ustawienia, makro gracza i pomoc.',
       footer: 'Pełne instrukcje są w notatce „{help}”.',
     },
@@ -5793,6 +7357,8 @@ const InspirationTrackerMod = (() => {
       settings: 'Definições do InspirationTracker',
       help: 'Comandos do InspirationTracker',
       party: 'Inspiração do Grupo',
+      poolParty: '{term} do Grupo',
+      pools: 'Reservas de Pontos',
       yours: 'As Suas Personagens',
       status: 'Estado do InspirationTracker',
     },
@@ -5825,7 +7391,52 @@ const InspirationTrackerMod = (() => {
       journal: 'Folhetos de Ajuda e do Painel de Comandos recriados.',
       readyHint: 'Escreva {command} para abrir o menu, ou abra o folheto do Painel de Comandos.',
     },
+    pool: {
+      gained: '{name} ganha {amount} de {term} ({before} → {after}).',
+      spent: '{name} gasta {amount} de {term} ({before} → {after}).',
+      boosted: '{name} gasta {amount} de {term} para +{bonus} no lançamento ({before} → {after}).',
+      spentBy: '{player} gastou {amount} de {term} por {name}.',
+      restored: '{name} recuperou {amount} de {term} ({before} → {after}).',
+      removed: '{amount} de {term} a menos para {name} ({before} → {after}).',
+      none: '{name} não tem {term}.',
+      short: '{name} tem {have} de {term}, e isso exige {need}.',
+      full: '{name} já tem o máximo permitido de {term} ({max}).',
+    },
+    pools: {
+      introFlag:
+        'O Controlo está definido para o campo de inspiração da ficha. Mude-o para Reserva de pontos para que Dar e Gastar atuem sobre a reserva "{name}". As outras reservas usam-se com --pool.',
+      introPool:
+        'Dar, Gastar e Impulsionar atuam sobre "{name}". As outras reservas usam-se a partir do respetivo botão Grupo, ou com --pool.',
+      defaultLabel: '{name} (predefinida)',
+      name: 'Nome',
+      source: 'Guardada em',
+      cost: 'Pontos por +1',
+      max: 'Máximo',
+      marker: 'Marcador',
+      attribute: 'Atributo quando a ficha não tem um campo com este nome: {attribute}',
+      partyTotal: 'Total do grupo: {total} de {term}.',
+    },
+    prompts: {
+      points: 'Pontos',
+      bonus: 'Bónus no lançamento',
+      max: 'Máximo de pontos permitido (0 para sem limite)',
+    },
     errors: {
+      unknownPool: 'Não existe nenhuma reserva chamada "{value}".',
+      unknownPoolHint: 'Reservas: {pools}.',
+      badAmount: '"{value}" não é um número de pontos.',
+      badAmountHint: 'Use um número inteiro de 1 a 9999.',
+      boostNoPool: 'Impulsionar gasta pontos de uma reserva.',
+      poolInvalid: 'Uma reserva não se pode chamar "{value}".',
+      poolExists: 'Já existe uma reserva chamada "{value}".',
+      poolFull: 'Não há espaço para mais uma reserva.',
+      poolNameHint:
+        'Use um nome com até 40 letras, algarismos e espaços que nenhuma outra reserva tenha.',
+      poolDefault:
+        'A reserva predefinida, "{name}", não pode ser eliminada. Pode mudar-lhe o nome.',
+      poolMarkerHint:
+        'Escolha, nos seus conjuntos de marcadores, um marcador diferente do da definição Marcador.',
+      poolSetHint: 'Escreva !inspiration pools para ver todas as reservas e as suas definições.',
       denied: 'Não pode fazer isso por {name}.',
       gmOnly: 'Só o Mestre pode usar esse comando.',
       gmOnlyHint: 'Os jogadores podem usar spend, party e help.',
@@ -5876,14 +7487,28 @@ const InspirationTrackerMod = (() => {
       refresh: 'Atualizar',
       undo: 'Anular',
       decline: 'Prescindir',
+      boost: 'Impulsionar',
+      pools: 'Reservas',
+      addPool: 'Adicionar Reserva',
+      deletePool: 'Eliminar Reserva',
     },
     values: {
       on: 'Ligado',
       off: 'Desligado',
+      none: 'Nenhum',
+      noLimit: 'Sem limite',
+      tracking: {
+        flag: 'Campo de inspiração da ficha',
+        pool: 'Reserva de pontos',
+      },
+      source: {
+        resource: 'Campo de recurso da ficha',
+        attribute: 'Atributo',
+      },
       wording: {
-        auto: 'Da ficha',
         2014: 'Inspiração (2014)',
         2024: 'Inspiração Heroica (2024)',
+        auto: 'Da ficha',
       },
       announce: {
         public: 'Todos',
@@ -5895,6 +7520,10 @@ const InspirationTrackerMod = (() => {
       language: {
         label: 'Idioma',
         desc: 'Idioma dos menus, mensagens e folhetos.',
+      },
+      tracking: {
+        label: 'Controlo',
+        desc: 'Aquilo sobre que Dar e Gastar atuam: o campo de inspiração das fichas de D&D, que a personagem tem ou não tem, ou uma reserva de pontos que se vai acumulando e se gasta aos poucos.',
       },
       marker: {
         label: 'Marcador',
@@ -5936,6 +7565,8 @@ const InspirationTrackerMod = (() => {
       none: 'Personagens sem campo de inspiração',
       rules2024: 'A usar as regras de 2024',
       party: 'Membros do grupo',
+      tracking: 'Controlo',
+      pools: 'Reservas',
       marker: 'Marcador',
       fx: 'Efeito especial',
       legacyCommand: 'Comando antigo',
@@ -5949,6 +7580,15 @@ const InspirationTrackerMod = (() => {
       party: 'Mostra quem no grupo tem inspiração, com botões para a dar, retirar ou gastar.',
       partyEdit: 'Adiciona as personagens selecionadas ao grupo, ou retira-as dele.',
       ids: 'Atua sobre os IDs de token ou de personagem indicados, em vez dos tokens selecionados.',
+      points:
+        'Com uma reserva de pontos: dá, retira ou gasta esse número de pontos. Sem número, 1. remove all retira todos os pontos.',
+      boost:
+        'Com uma reserva de pontos: gasta pontos para somar esse bónus a um lançamento, ao custo da reserva por cada +1.',
+      poolFlag: 'Atua sobre a reserva indicada em vez da predefinida.',
+      pools: 'Mostra as reservas de pontos e as suas definições.',
+      poolEdit: 'Adiciona uma reserva, ou elimina uma. Os pontos nas fichas ficam como estão.',
+      poolSet:
+        'Altera uma reserva: o nome, onde é guardada (resource ou attribute), os pontos que cada +1 custa, o máximo de pontos permitido (0 para sem limite) ou o marcador de token.',
       undo: 'Devolve a inspiração gasta. O ID vem da mensagem ao Mestre sobre o gasto.',
       macro:
         'Adiciona a ação de token "Inspiration", na qual os jogadores clicam para gastar inspiração.',
@@ -5962,12 +7602,13 @@ const InspirationTrackerMod = (() => {
     helpPlayer: {
       menu: 'Mostra as suas personagens e se têm inspiração.',
       spend: 'Gasta a inspiração da personagem selecionada.',
+      boost: 'Gasta pontos de uma reserva para somar esse bónus a um lançamento.',
       party: 'Mostra o grupo, se o Mestre o permitir.',
       help: 'Mostra esta lista.',
     },
     handout: {
       versionLabel: 'Versão',
-      subtitle: 'Inspiração e Inspiração Heroica para as fichas D&D 5e 2014 e 2024',
+      subtitle: 'Inspiração, Inspiração Heroica e reservas de pontos para qualquer jogo',
       overview: {
         heading: 'Visão Geral',
         body: 'O InspirationTracker mantém a inspiração de D&D em sintonia entre a ficha da personagem, o token e o chat. Dê-a pelo menu, pela ficha ou pelo marcador do token, e todos os tokens dessa personagem mostram o marcador. Os jogadores podem gastá-la com um clique, e o Mestre é avisado, com um botão Anular. Funciona com a ficha D&D 2024, onde se chama Inspiração Heroica, e com a ficha 2014 OGL.',
@@ -6019,6 +7660,18 @@ const InspirationTrackerMod = (() => {
           'O grupo é composto por todas as personagens que um jogador controla. Selecione tokens e clique em Adicionar ao Grupo ou Retirar do Grupo para o alterar.',
           'A vista geral do Mestre tem botões Dar, Retirar e Gastar para cada membro.',
           'Ligue Jogadores Veem o Grupo para que os jogadores também vejam a vista geral. Só recebem botões Gastar para as suas próprias personagens.',
+        ],
+      },
+      pools: {
+        heading: 'Reservas de Pontos',
+        points: [
+          'Uma reserva de pontos é um número que se vai acumulando e se gasta aos poucos: uma reserva de pontos de inspiração, pontos de herói, sorte, bennies e afins. Funciona com qualquer ficha de personagem.',
+          'Defina Controlo como Reserva de pontos, e Dar, Retirar e Gastar passam a atuar sobre a reserva predefinida, perguntando quantos pontos. O marcador fica visível enquanto a personagem tiver pontos.',
+          'Impulsionar gasta pontos para aumentar um lançamento: escreva o bónus pretendido, e o valor de Pontos por +1 da reserva determina o custo. A 2 pontos por +1, um bónus de 4 custa 8 pontos. O Mod anuncia o gasto; some o bónus ao lançamento por si.',
+          'Um gasto é recusado quando a personagem não tem pontos suficientes. O Mestre é avisado de quem gastou o quê, com um botão Anular.',
+          'Guardada em "Campo de recurso da ficha" usa o campo de recurso da ficha que tem o nome da reserva, como um campo Other Resource chamado Inspiration na ficha D&D 2014. Quando a ficha não tem um campo com esse nome, ou com "Atributo", os pontos são guardados num atributo simples, como inspiration_pool. A ficha D&D 2024 usa sempre o atributo.',
+          'Não há problema em alterar à mão o número na ficha: o marcador acompanha.',
+          'Clique em Reservas para mudar o nome da reserva predefinida, definir o seu custo e o seu máximo, ou acrescentar mais reservas. As outras reservas usam-se a partir do respetivo botão Grupo, ou acrescentando --pool e o nome da reserva a um comando.',
         ],
       },
       markers: {
@@ -6081,6 +7734,8 @@ const InspirationTrackerMod = (() => {
       subtitle: 'Painel de Comandos',
       selectedDesc: 'Selecione um ou mais tokens e depois clique.',
       partyDesc: 'Veja quem tem inspiração e escolha quem faz parte do grupo.',
+      poolsTitle: 'Reserva de pontos',
+      poolsDesc: 'Com Controlo em Reserva de pontos: selecione tokens, clique e escreva o número.',
       toolsDesc: 'Menu, definições, a macro de jogador e a ajuda.',
       footer: 'As instruções completas estão no folheto "{help}".',
     },
@@ -6096,6 +7751,8 @@ const InspirationTrackerMod = (() => {
       settings: 'Configurações do InspirationTracker',
       help: 'Comandos do InspirationTracker',
       party: 'Inspiração do Grupo',
+      poolParty: '{term} do Grupo',
+      pools: 'Reservas de Pontos',
       yours: 'Seus Personagens',
       status: 'Status do InspirationTracker',
     },
@@ -6128,7 +7785,51 @@ const InspirationTrackerMod = (() => {
       journal: 'Handouts de Ajuda e do Painel de Comandos recriados.',
       readyHint: 'Digite {command} para o menu, ou abra o handout do Painel de Comandos.',
     },
+    pool: {
+      gained: '{name} ganha {amount} de {term} ({before} → {after}).',
+      spent: '{name} gasta {amount} de {term} ({before} → {after}).',
+      boosted: '{name} gasta {amount} de {term} para +{bonus} na rolagem ({before} → {after}).',
+      spentBy: '{player} gastou {amount} de {term} por {name}.',
+      restored: '{name} tem {amount} de {term} de volta ({before} → {after}).',
+      removed: '{amount} de {term} a menos para {name} ({before} → {after}).',
+      none: '{name} não tem {term}.',
+      short: '{name} tem {have} de {term}, e isso exige {need}.',
+      full: '{name} já tem o máximo permitido de {term} ({max}).',
+    },
+    pools: {
+      introFlag:
+        'O Controle está definido como o campo de inspiração da ficha. Mude para Reserva de pontos para que Dar e Gastar ajam sobre a reserva "{name}". As outras reservas são usadas com --pool.',
+      introPool:
+        'Dar, Gastar e Impulsionar agem sobre "{name}". As outras reservas são usadas pelo botão Grupo de cada uma, ou com --pool.',
+      defaultLabel: '{name} (padrão)',
+      name: 'Nome',
+      source: 'Guardada em',
+      cost: 'Pontos por +1',
+      max: 'Máximo',
+      marker: 'Marcador',
+      attribute: 'Atributo quando a ficha não tem um campo com este nome: {attribute}',
+      partyTotal: 'Total do grupo: {total} de {term}.',
+    },
+    prompts: {
+      points: 'Pontos',
+      bonus: 'Bônus na rolagem',
+      max: 'Máximo de pontos permitido (0 para sem limite)',
+    },
     errors: {
+      unknownPool: 'Não existe reserva chamada "{value}".',
+      unknownPoolHint: 'Reservas: {pools}.',
+      badAmount: '"{value}" não é uma quantidade de pontos.',
+      badAmountHint: 'Use um número inteiro de 1 a 9999.',
+      boostNoPool: 'Impulsionar gasta pontos de uma reserva.',
+      poolInvalid: 'Uma reserva não pode se chamar "{value}".',
+      poolExists: 'Já existe uma reserva chamada "{value}".',
+      poolFull: 'Não há espaço para mais uma reserva.',
+      poolNameHint:
+        'Use um nome de até 40 letras, dígitos e espaços que nenhuma outra reserva tenha.',
+      poolDefault: 'A reserva padrão, "{name}", não pode ser excluída. Ela pode ser renomeada.',
+      poolMarkerHint:
+        'Escolha, nos seus conjuntos de marcadores, um marcador diferente do definido na configuração Marcador.',
+      poolSetHint: 'Digite !inspiration pools para ver todas as reservas e suas configurações.',
       denied: 'Você não pode fazer isso por {name}.',
       gmOnly: 'Apenas o Mestre pode usar esse comando.',
       gmOnlyHint: 'Os jogadores podem usar spend, party e help.',
@@ -6179,14 +7880,28 @@ const InspirationTrackerMod = (() => {
       refresh: 'Atualizar',
       undo: 'Desfazer',
       decline: 'Abrir mão',
+      boost: 'Impulsionar',
+      pools: 'Reservas',
+      addPool: 'Adicionar Reserva',
+      deletePool: 'Excluir Reserva',
     },
     values: {
       on: 'Ligado',
       off: 'Desligado',
+      none: 'Nenhum',
+      noLimit: 'Sem limite',
+      tracking: {
+        flag: 'Campo de inspiração da ficha',
+        pool: 'Reserva de pontos',
+      },
+      source: {
+        resource: 'Campo de recurso da ficha',
+        attribute: 'Atributo',
+      },
       wording: {
-        auto: 'Da ficha',
         2014: 'Inspiração (2014)',
         2024: 'Inspiração Heroica (2024)',
+        auto: 'Da ficha',
       },
       announce: {
         public: 'Todos',
@@ -6198,6 +7913,10 @@ const InspirationTrackerMod = (() => {
       language: {
         label: 'Idioma',
         desc: 'Idioma dos menus, mensagens e handouts.',
+      },
+      tracking: {
+        label: 'Controle',
+        desc: 'Sobre o que Dar e Gastar agem: o campo de inspiração das fichas de D&D, que o personagem tem ou não tem, ou uma reserva de pontos que se acumula e é gasta aos poucos.',
       },
       marker: {
         label: 'Marcador',
@@ -6239,6 +7958,8 @@ const InspirationTrackerMod = (() => {
       none: 'Personagens sem campo de inspiração',
       rules2024: 'Usando regras de 2024',
       party: 'Membros do grupo',
+      tracking: 'Controle',
+      pools: 'Reservas',
       marker: 'Marcador',
       fx: 'Efeito especial',
       legacyCommand: 'Comando antigo',
@@ -6252,6 +7973,15 @@ const InspirationTrackerMod = (() => {
       party: 'Mostra quem no grupo tem inspiração, com botões para dar, remover ou gastar.',
       partyEdit: 'Adiciona os personagens selecionados ao grupo, ou os retira dele.',
       ids: 'Age sobre os IDs de token ou personagem informados em vez dos tokens selecionados.',
+      points:
+        'Com uma reserva de pontos: dá, retira ou gasta essa quantidade de pontos. Sem número, 1. remove all retira todos os pontos.',
+      boost:
+        'Com uma reserva de pontos: gasta pontos para somar esse bônus a uma rolagem, pelo custo da reserva para cada +1.',
+      poolFlag: 'Age sobre a reserva indicada em vez da padrão.',
+      pools: 'Mostra as reservas de pontos e suas configurações.',
+      poolEdit: 'Adiciona uma reserva, ou exclui uma. Os pontos nas fichas ficam como estão.',
+      poolSet:
+        'Altera uma reserva: o nome, onde é guardada (resource ou attribute), os pontos que cada +1 custa, o máximo de pontos permitido (0 para sem limite) ou o marcador de token.',
       undo: 'Devolve a inspiração gasta. O ID vem da mensagem ao Mestre sobre o gasto.',
       macro:
         'Adiciona a ação de token "Inspiration", que os jogadores clicam para gastar inspiração.',
@@ -6265,12 +7995,13 @@ const InspirationTrackerMod = (() => {
     helpPlayer: {
       menu: 'Mostra seus personagens e se eles têm inspiração.',
       spend: 'Gasta a inspiração do personagem selecionado.',
+      boost: 'Gasta pontos de uma reserva para somar esse bônus a uma rolagem.',
       party: 'Mostra o grupo, se o Mestre permitir.',
       help: 'Mostra esta lista.',
     },
     handout: {
       versionLabel: 'Versão',
-      subtitle: 'Inspiração e Inspiração Heroica para as fichas D&D 5e 2014 e 2024',
+      subtitle: 'Inspiração, Inspiração Heroica e reservas de pontos para qualquer jogo',
       overview: {
         heading: 'Visão Geral',
         body: 'O InspirationTracker mantém a inspiração de D&D sincronizada entre a ficha do personagem, o token e o chat. Dê inspiração pelo menu, pela ficha ou pelo marcador do token, e todos os tokens daquele personagem mostram o marcador. Os jogadores podem gastá-la com um clique, e o Mestre é avisado, com um botão Desfazer. Funciona com a ficha D&D 2024, onde se chama Inspiração Heroica, e com a ficha 2014 OGL.',
@@ -6322,6 +8053,18 @@ const InspirationTrackerMod = (() => {
           'O grupo é todo personagem controlado por um jogador. Selecione tokens e clique em Adicionar ao Grupo ou Remover do Grupo para alterá-lo.',
           'O resumo do Mestre tem botões Dar, Remover e Gastar para cada membro.',
           'Ligue Jogadores Veem o Grupo para que os jogadores também vejam o resumo. Eles só recebem botões Gastar para os próprios personagens.',
+        ],
+      },
+      pools: {
+        heading: 'Reservas de Pontos',
+        points: [
+          'Uma reserva de pontos é um número que se acumula e é gasto aos poucos: uma reserva de pontos de inspiração, pontos de herói, sorte, bennies e afins. Funciona com qualquer ficha de personagem.',
+          'Defina Controle como Reserva de pontos, e Dar, Remover e Gastar passam a agir sobre a reserva padrão, perguntando quantos pontos. O marcador aparece enquanto o personagem tiver algum ponto.',
+          'Impulsionar gasta pontos para aumentar uma rolagem: digite o bônus desejado, e o valor de Pontos por +1 da reserva decide o custo. A 2 pontos por +1, um bônus de 4 custa 8 pontos. O Mod anuncia o gasto; some o bônus à rolagem você mesmo.',
+          'Um gasto é recusado quando o personagem não tem pontos suficientes. O Mestre é avisado de quem gastou o quê, com um botão Desfazer.',
+          'Guardada em "Campo de recurso da ficha" usa o campo de recurso da ficha que tem o nome da reserva, como um campo Other Resource chamado Inspiration na ficha D&D 2014. Quando a ficha não tem um campo com esse nome, ou com "Atributo", os pontos ficam guardados em um atributo simples, como inspiration_pool. A ficha D&D 2024 sempre usa o atributo.',
+          'Alterar o número na ficha manualmente não tem problema: o marcador acompanha.',
+          'Clique em Reservas para renomear a reserva padrão, definir seu custo e seu máximo, ou adicionar mais reservas. As outras reservas são usadas pelo botão Grupo de cada uma, ou adicionando --pool e o nome da reserva a um comando.',
         ],
       },
       markers: {
@@ -6384,6 +8127,8 @@ const InspirationTrackerMod = (() => {
       subtitle: 'Painel de Comandos',
       selectedDesc: 'Selecione um ou mais tokens e depois clique.',
       partyDesc: 'Veja quem tem inspiração e escolha quem está no grupo.',
+      poolsTitle: 'Reserva de pontos',
+      poolsDesc: 'Com Controle em Reserva de pontos: selecione tokens, clique e digite o número.',
       toolsDesc: 'Menu, configurações, a macro de jogador e a ajuda.',
       footer: 'As instruções completas estão no handout "{help}".',
     },
@@ -6399,6 +8144,8 @@ const InspirationTrackerMod = (() => {
       settings: 'Настройки InspirationTracker',
       help: 'Команды InspirationTracker',
       party: 'Вдохновение отряда',
+      poolParty: 'Отряд: {term}',
+      pools: 'Пулы очков',
       yours: 'Ваши персонажи',
       status: 'Состояние InspirationTracker',
     },
@@ -6432,7 +8179,51 @@ const InspirationTrackerMod = (() => {
       readyHint:
         'Введите {command}, чтобы открыть меню, или откройте раздаточный материал командной панели.',
     },
+    pool: {
+      gained: '{name} получает {term}: {amount} ({before} → {after}).',
+      spent: '{name} тратит {term}: {amount} ({before} → {after}).',
+      boosted: '{name} тратит {term}: {amount} — +{bonus} к броску ({before} → {after}).',
+      spentBy: '{player} потратил {term} ({amount}) за персонажа {name}.',
+      restored: '{name} получает обратно {term}: {amount} ({before} → {after}).',
+      removed: '{term}: {amount} отнято у персонажа {name} ({before} → {after}).',
+      none: '{name}: нет очков ({term}).',
+      short: '{name}: {term} — {have}, а нужно {need}.',
+      full: '{name}: {term} уже на максимуме ({max}).',
+    },
+    pools: {
+      introFlag:
+        '«Отслеживание» установлено в «Поле вдохновения на листе». Установите «Пул очков», чтобы «Дать» и «Потратить» работали с пулом «{name}». Другие пулы используются через --pool.',
+      introPool:
+        '«Дать», «Потратить» и «Усилить» работают с пулом «{name}». Другие пулы используются через их кнопку «Отряд» или через --pool.',
+      defaultLabel: '{name} (по умолчанию)',
+      name: 'Название',
+      source: 'Хранится в',
+      cost: 'Очков за +1',
+      max: 'Максимум',
+      marker: 'Маркер',
+      attribute: 'Атрибут, если на листе нет поля с таким названием: {attribute}',
+      partyTotal: 'Всего у отряда: {term} — {total}.',
+    },
+    prompts: {
+      points: 'Очки',
+      bonus: 'Бонус к броску',
+      max: 'Максимум очков (0 — без ограничения)',
+    },
     errors: {
+      unknownPool: 'Пула с названием «{value}» не существует.',
+      unknownPoolHint: 'Пулы: {pools}.',
+      badAmount: '«{value}» — не количество очков.',
+      badAmountHint: 'Используйте целое число от 1 до 9999.',
+      boostNoPool: '«Усилить» тратит очки из пула.',
+      poolInvalid: 'Пул нельзя назвать «{value}».',
+      poolExists: 'Пул с названием «{value}» уже есть.',
+      poolFull: 'Для ещё одного пула нет места.',
+      poolNameHint:
+        'Используйте название до 40 букв, цифр и пробелов, которого нет у других пулов.',
+      poolDefault: 'Пул по умолчанию, «{name}», нельзя удалить. Его можно переименовать.',
+      poolMarkerHint:
+        'Выберите маркер из ваших наборов маркеров, отличный от выбранного в настройке «Маркер».',
+      poolSetHint: 'Введите !inspiration pools, чтобы увидеть все пулы и их настройки.',
       denied: 'Вы не можете сделать это для персонажа {name}.',
       gmOnly: 'Эту команду может использовать только GM.',
       gmOnlyHint: 'Игроки могут использовать spend, party и help.',
@@ -6483,14 +8274,28 @@ const InspirationTrackerMod = (() => {
       refresh: 'Обновить',
       undo: 'Отменить',
       decline: 'Отказаться',
+      boost: 'Усилить',
+      pools: 'Пулы',
+      addPool: 'Добавить пул',
+      deletePool: 'Удалить пул',
     },
     values: {
       on: 'Вкл.',
       off: 'Выкл.',
+      none: 'Нет',
+      noLimit: 'Без ограничения',
+      tracking: {
+        flag: 'Поле вдохновения на листе',
+        pool: 'Пул очков',
+      },
+      source: {
+        resource: 'Поле ресурса на листе',
+        attribute: 'Атрибут',
+      },
       wording: {
-        auto: 'Из листа',
         2014: 'Вдохновение (2014)',
         2024: 'Героическое вдохновение (2024)',
+        auto: 'Из листа',
       },
       announce: {
         public: 'Все',
@@ -6502,6 +8307,10 @@ const InspirationTrackerMod = (() => {
       language: {
         label: 'Язык',
         desc: 'Язык меню, сообщений и раздаточных материалов.',
+      },
+      tracking: {
+        label: 'Отслеживание',
+        desc: 'С чем работают «Дать» и «Потратить»: с полем вдохновения на листах D&D, которое у персонажа либо есть, либо нет, или с пулом очков, которые накапливаются и тратятся понемногу.',
       },
       marker: {
         label: 'Маркер',
@@ -6543,6 +8352,8 @@ const InspirationTrackerMod = (() => {
       none: 'Персонажи без поля вдохновения',
       rules2024: 'По правилам 2024',
       party: 'Члены отряда',
+      tracking: 'Отслеживание',
+      pools: 'Пулы',
       marker: 'Маркер',
       fx: 'Спецэффект',
       legacyCommand: 'Старая команда',
@@ -6557,6 +8368,15 @@ const InspirationTrackerMod = (() => {
         'Показывает, у кого в отряде есть вдохновение, с кнопками, чтобы дать, убрать или потратить его.',
       partyEdit: 'Добавляет выбранных персонажей в отряд или убирает их из него.',
       ids: 'Работает с указанными ID жетонов или персонажей вместо выбранных жетонов.',
+      points:
+        'С пулом очков: даёт, убирает или тратит указанное число очков. Без числа — 1. remove all убирает все очки.',
+      boost:
+        'С пулом очков: тратит очки, чтобы добавить указанный бонус к броску, по цене пула за каждый +1.',
+      poolFlag: 'Работает с указанным пулом вместо пула по умолчанию.',
+      pools: 'Показывает пулы очков и их настройки.',
+      poolEdit: 'Добавляет пул или удаляет его. Очки на листах остаются как есть.',
+      poolSet:
+        'Изменяет пул: его название, место хранения (resource или attribute), число очков за каждый +1, максимум очков (0 — без ограничения) или его маркер жетона.',
       undo: 'Возвращает потраченное вдохновение. ID берётся из сообщения GM о трате.',
       macro:
         'Добавляет действие жетона «Inspiration», которое игроки нажимают, чтобы потратить вдохновение.',
@@ -6570,12 +8390,13 @@ const InspirationTrackerMod = (() => {
     helpPlayer: {
       menu: 'Показывает ваших персонажей и есть ли у них вдохновение.',
       spend: 'Тратит вдохновение выбранного персонажа.',
+      boost: 'Тратит очки из пула, чтобы добавить указанный бонус к броску.',
       party: 'Показывает отряд, если GM это разрешает.',
       help: 'Показывает этот список.',
     },
     handout: {
       versionLabel: 'Версия',
-      subtitle: 'Вдохновение и Героическое вдохновение для листов D&D 5e 2014 и 2024',
+      subtitle: 'Вдохновение, Героическое вдохновение и пулы очков для любой игры',
       overview: {
         heading: 'Обзор',
         body: 'InspirationTracker согласует вдохновение D&D между листом персонажа, жетоном и чатом. Дайте его через меню, лист или маркер жетона — и каждый жетон этого персонажа покажет маркер. Игроки могут потратить его одним щелчком, а GM получает уведомление с кнопкой «Отменить». Работает с листом D&D 2024, где оно называется Героическим вдохновением, и с листом 2014 OGL.',
@@ -6628,6 +8449,18 @@ const InspirationTrackerMod = (() => {
           'Отряд — это все персонажи, которыми управляют игроки. Выберите жетоны и нажмите «В отряд» или «Из отряда», чтобы изменить его.',
           'В обзоре GM у каждого члена есть кнопки «Дать», «Убрать» и «Потратить».',
           'Включите «Игроки видят отряд», чтобы игроки тоже видели обзор. Кнопки «Потратить» у них есть только для своих персонажей.',
+        ],
+      },
+      pools: {
+        heading: 'Пулы очков',
+        points: [
+          'Пул очков — это число, которое накапливается и тратится понемногу: очки вдохновения, очки героя, удача, bennies и тому подобное. Он работает с любым листом персонажа.',
+          'Установите «Отслеживание» в «Пул очков», и кнопки «Дать», «Убрать» и «Потратить» будут работать с пулом по умолчанию, спрашивая количество очков. Маркер показывается, пока у персонажа есть хотя бы одно очко.',
+          '«Усилить» тратит очки, чтобы повысить бросок: введите нужный бонус, а настройка пула «Очков за +1» определит цену. При 2 очках за +1 бонус 4 стоит 8 очков. Mod объявляет трату; бонус к броску добавьте сами.',
+          'Трата отклоняется, если у персонажа не хватает очков. GM получает сообщение о том, кто и сколько потратил, с кнопкой «Отменить».',
+          'Вариант «Поле ресурса на листе» в настройке «Хранится в» использует поле ресурса на листе, названное так же, как пул, например поле Other Resource с названием Inspiration на листе D&D 2014. Если на листе нет поля с таким названием или выбран вариант «Атрибут», очки хранятся в обычном атрибуте, например inspiration_pool. Лист D&D 2024 всегда использует атрибут.',
+          'Менять число на листе вручную можно: маркер последует за ним.',
+          'Нажмите «Пулы», чтобы переименовать пул по умолчанию, задать его цену и максимум или добавить другие пулы. Другие пулы используются через их кнопку «Отряд» или добавлением --pool и названия пула к команде.',
         ],
       },
       markers: {
@@ -6690,6 +8523,9 @@ const InspirationTrackerMod = (() => {
       subtitle: 'Командная панель',
       selectedDesc: 'Выберите один или несколько жетонов, затем нажмите.',
       partyDesc: 'Смотрите, у кого есть вдохновение, и выбирайте, кто в отряде.',
+      poolsTitle: 'Пул очков',
+      poolsDesc:
+        'Когда «Отслеживание» установлено в «Пул очков»: выберите жетоны, нажмите и введите число.',
       toolsDesc: 'Меню, настройки, макрос игрока и справка.',
       footer: 'Полные инструкции — в раздаточном материале «{help}».',
     },
@@ -6705,6 +8541,8 @@ const InspirationTrackerMod = (() => {
       settings: 'Ajustes de InspirationTracker',
       help: 'Comandos de InspirationTracker',
       party: 'Inspiración del grupo',
+      poolParty: '{term} del grupo',
+      pools: 'Reservas de puntos',
       yours: 'Tus personajes',
       status: 'Estado de InspirationTracker',
     },
@@ -6737,7 +8575,52 @@ const InspirationTrackerMod = (() => {
       journal: 'Se han reconstruido los folletos de Ayuda y Panel de comandos.',
       readyHint: 'Escribe {command} para ver el menú, o abre el folleto del Panel de comandos.',
     },
+    pool: {
+      gained: '{name} gana {amount} {term} ({before} → {after}).',
+      spent: '{name} gasta {amount} {term} ({before} → {after}).',
+      boosted: '{name} gasta {amount} {term} para +{bonus} a la tirada ({before} → {after}).',
+      spentBy: '{player} ha gastado {amount} {term} por {name}.',
+      restored: '{name} recupera {amount} {term} ({before} → {after}).',
+      removed: 'Se han quitado {amount} {term} a {name} ({before} → {after}).',
+      none: '{name} no tiene {term}.',
+      short: '{name} tiene {have} {term} y hacen falta {need}.',
+      full: '{name} ya tiene el máximo de {term} permitido ({max}).',
+    },
+    pools: {
+      introFlag:
+        'El seguimiento está en la casilla de inspiración de la hoja. Ponlo en Reserva de puntos para que Dar y Gastar actúen sobre la reserva "{name}". Las demás reservas se usan con --pool.',
+      introPool:
+        'Dar, Gastar y Potenciar actúan sobre "{name}". Las demás reservas se usan desde su botón Grupo, o con --pool.',
+      defaultLabel: '{name} (por defecto)',
+      name: 'Nombre',
+      source: 'Guardado en',
+      cost: 'Puntos por +1',
+      max: 'Máximo',
+      marker: 'Marcador',
+      attribute: 'Atributo cuando la hoja no tiene una casilla con este nombre: {attribute}',
+      partyTotal: 'Total del grupo: {total} {term}.',
+    },
+    prompts: {
+      points: 'Puntos',
+      bonus: 'Bonificador a la tirada',
+      max: 'Máximo de puntos permitido (0 para sin límite)',
+    },
     errors: {
+      unknownPool: 'No hay ninguna reserva llamada "{value}".',
+      unknownPoolHint: 'Reservas: {pools}.',
+      badAmount: '"{value}" no es una cantidad de puntos.',
+      badAmountHint: 'Usa un número entero del 1 al 9999.',
+      boostNoPool: 'Potenciar gasta puntos de una reserva.',
+      poolInvalid: 'Una reserva no puede llamarse "{value}".',
+      poolExists: 'Ya hay una reserva llamada "{value}".',
+      poolFull: 'No hay sitio para otra reserva.',
+      poolNameHint:
+        'Usa un nombre de hasta 40 letras, cifras y espacios que no tenga ninguna otra reserva.',
+      poolDefault:
+        'La reserva por defecto, "{name}", no se puede eliminar. Se puede cambiar de nombre.',
+      poolMarkerHint:
+        'Elige un marcador de tus conjuntos de marcadores que no sea el del ajuste Marcador.',
+      poolSetHint: 'Escribe !inspiration pools para ver todas las reservas y sus ajustes.',
       denied: 'No puedes hacer eso con {name}.',
       gmOnly: 'Solo el GM puede usar ese comando.',
       gmOnlyHint: 'Los jugadores pueden usar spend, party y help.',
@@ -6788,14 +8671,28 @@ const InspirationTrackerMod = (() => {
       refresh: 'Actualizar',
       undo: 'Deshacer',
       decline: 'Dejar pasar',
+      boost: 'Potenciar',
+      pools: 'Reservas',
+      addPool: 'Añadir reserva',
+      deletePool: 'Eliminar reserva',
     },
     values: {
       on: 'Activado',
       off: 'Desactivado',
+      none: 'Ninguno',
+      noLimit: 'Sin límite',
+      tracking: {
+        flag: 'Casilla de inspiración de la hoja',
+        pool: 'Reserva de puntos',
+      },
+      source: {
+        resource: 'Casilla de recurso de la hoja',
+        attribute: 'Atributo',
+      },
       wording: {
-        auto: 'Según la hoja',
         2014: 'Inspiración (2014)',
         2024: 'Inspiración heroica (2024)',
+        auto: 'Según la hoja',
       },
       announce: {
         public: 'Todos',
@@ -6807,6 +8704,10 @@ const InspirationTrackerMod = (() => {
       language: {
         label: 'Idioma',
         desc: 'Idioma de los menús, mensajes y folletos.',
+      },
+      tracking: {
+        label: 'Seguimiento',
+        desc: 'Sobre qué actúan Dar y Gastar: la casilla de inspiración de las hojas de D&D, que un personaje tiene o no tiene, o una reserva de puntos que se acumula y se gasta poco a poco.',
       },
       marker: {
         label: 'Marcador',
@@ -6848,6 +8749,8 @@ const InspirationTrackerMod = (() => {
       none: 'Personajes sin casilla de inspiración',
       rules2024: 'Con reglas de 2024',
       party: 'Miembros del grupo',
+      tracking: 'Seguimiento',
+      pools: 'Reservas',
       marker: 'Marcador',
       fx: 'Efecto especial',
       legacyCommand: 'Comando antiguo',
@@ -6863,6 +8766,15 @@ const InspirationTrackerMod = (() => {
         'Muestra quién del grupo tiene inspiración, con botones para darla, quitarla o gastarla.',
       partyEdit: 'Añade los personajes seleccionados al grupo, o los saca de él.',
       ids: 'Actúa sobre los ID de fichas o personajes indicados en lugar de las fichas seleccionadas.',
+      points:
+        'Con una reserva de puntos: da, quita o gasta esa cantidad de puntos. Sin número, 1. remove all quita todos los puntos.',
+      boost:
+        'Con una reserva de puntos: gasta puntos para sumar ese bonificador a una tirada, al coste de la reserva por cada +1.',
+      poolFlag: 'Actúa sobre la reserva indicada en lugar de la reserva por defecto.',
+      pools: 'Muestra las reservas de puntos y sus ajustes.',
+      poolEdit: 'Añade una reserva, o elimina una. Los puntos de las hojas se dejan como están.',
+      poolSet:
+        'Cambia una reserva: su nombre, dónde se guarda (resource o attribute), los puntos que cuesta cada +1, el máximo de puntos permitido (0 para sin límite) o su marcador de ficha.',
       undo: 'Devuelve la inspiración que se gastó. El ID viene del mensaje al GM sobre el gasto.',
       macro:
         'Añade la acción de ficha "Inspiration", que los jugadores pulsan para gastar inspiración.',
@@ -6876,12 +8788,13 @@ const InspirationTrackerMod = (() => {
     helpPlayer: {
       menu: 'Muestra tus personajes y si tienen inspiración.',
       spend: 'Gasta la inspiración del personaje seleccionado.',
+      boost: 'Gasta puntos de una reserva para sumar ese bonificador a una tirada.',
       party: 'Muestra el grupo, si el GM lo permite.',
       help: 'Muestra esta lista.',
     },
     handout: {
       versionLabel: 'Versión',
-      subtitle: 'Inspiración e Inspiración heroica para las hojas de D&D 5e de 2014 y 2024',
+      subtitle: 'Inspiración, Inspiración heroica y reservas de puntos para cualquier juego',
       overview: {
         heading: 'Descripción general',
         body: 'InspirationTracker mantiene sincronizada la inspiración de D&D en la hoja de personaje, la ficha y el chat. Dala desde el menú, la hoja o el marcador de la ficha, y todas las fichas de ese personaje muestran el marcador. Los jugadores pueden gastarla con un clic, y se avisa al GM, con un botón Deshacer. Funciona con la hoja de D&D 2024, donde se llama Inspiración heroica, y con la hoja OGL de 2014.',
@@ -6934,6 +8847,18 @@ const InspirationTrackerMod = (() => {
           'El grupo son todos los personajes que controla algún jugador. Selecciona fichas y pulsa Añadir al grupo o Quitar del grupo para cambiarlo.',
           'La vista general del GM tiene botones Dar, Quitar y Gastar para cada miembro.',
           'Activa Los jugadores ven el grupo para que los jugadores también vean la vista general. Solo tienen botones Gastar para sus propios personajes.',
+        ],
+      },
+      pools: {
+        heading: 'Reservas de puntos',
+        points: [
+          'Una reserva de puntos es un número que se acumula y se gasta poco a poco: una reserva de puntos de inspiración, puntos de héroe, suerte, bennies y similares. Funciona con cualquier hoja de personaje.',
+          'Pon Seguimiento en Reserva de puntos, y Dar, Quitar y Gastar actúan sobre la reserva por defecto y preguntan cuántos puntos. El marcador se muestra mientras un personaje tiene algún punto.',
+          'Potenciar gasta puntos para subir una tirada: escribe el bonificador deseado, y los Puntos por +1 de la reserva deciden el coste. A 2 puntos por +1, un bonificador de 4 cuesta 8 puntos. El Mod anuncia el gasto; suma tú el bonificador a la tirada.',
+          'Un gasto se rechaza cuando el personaje no tiene puntos suficientes. Se avisa al GM de quién ha gastado qué, con un botón Deshacer.',
+          'Con Guardado en "Casilla de recurso de la hoja" se usa la casilla de recurso de la hoja que lleva el nombre de la reserva, como una casilla Other Resource llamada Inspiración en la hoja de D&D de 2014. Cuando la hoja no tiene una casilla con ese nombre, o con "Atributo", los puntos se guardan en un atributo normal, como inspiration_pool. La hoja de D&D 2024 siempre usa el atributo.',
+          'Cambiar el número en la hoja a mano no da problemas: el marcador lo sigue.',
+          'Pulsa Reservas para cambiar el nombre de la reserva por defecto, fijar su coste y su máximo, o añadir más reservas. Las demás reservas se usan desde su botón Grupo, o añadiendo --pool y el nombre de la reserva a un comando.',
         ],
       },
       markers: {
@@ -6996,6 +8921,9 @@ const InspirationTrackerMod = (() => {
       subtitle: 'Panel de comandos',
       selectedDesc: 'Selecciona una o más fichas y luego pulsa.',
       partyDesc: 'Mira quién tiene inspiración y elige quién está en el grupo.',
+      poolsTitle: 'Reserva de puntos',
+      poolsDesc:
+        'Con Seguimiento en Reserva de puntos: selecciona fichas, pulsa y escribe el número.',
       toolsDesc: 'Menú, ajustes, la macro de jugador y la ayuda.',
       footer: 'Las instrucciones completas están en el folleto "{help}".',
     },
@@ -7011,6 +8939,8 @@ const InspirationTrackerMod = (() => {
       settings: 'Inställningar för InspirationTracker',
       help: 'Kommandon för InspirationTracker',
       party: 'Gruppens inspiration',
+      poolParty: 'Gruppens {term}',
+      pools: 'Poängpotter',
       yours: 'Dina rollpersoner',
       status: 'Status för InspirationTracker',
     },
@@ -7043,7 +8973,51 @@ const InspirationTrackerMod = (() => {
       journal: 'Utdelningarna Hjälp och Kommandopanel har byggts om.',
       readyHint: 'Skriv {command} för menyn, eller öppna utdelningen Kommandopanel.',
     },
+    pool: {
+      gained: '{name} får {amount} {term} ({before} → {after}).',
+      spent: '{name} använder {amount} {term} ({before} → {after}).',
+      boosted: '{name} använder {amount} {term} för +{bonus} på slaget ({before} → {after}).',
+      spentBy: '{player} använde {amount} {term} åt {name}.',
+      restored: '{name} har fått tillbaka {amount} {term} ({before} → {after}).',
+      removed: '{amount} {term} togs bort från {name} ({before} → {after}).',
+      none: '{name} saknar {term}.',
+      short: '{name} har {have} {term}, och det krävs {need}.',
+      full: '{name} har redan så mycket {term} som tillåts ({max}).',
+    },
+    pools: {
+      introFlag:
+        'Spårning är satt till formulärets inspirationsruta. Sätt den till Poängpott för att göra "{name}" till den pott som Ge och Använd verkar på. Andra potter används med --pool.',
+      introPool:
+        'Ge, Använd och Förstärk verkar på "{name}". Andra potter används från sin Grupp-knapp, eller med --pool.',
+      defaultLabel: '{name} (standard)',
+      name: 'Namn',
+      source: 'Sparas i',
+      cost: 'Poäng per +1',
+      max: 'Maximum',
+      marker: 'Markör',
+      attribute: 'Attribut när formuläret saknar en ruta med det namnet: {attribute}',
+      partyTotal: 'Gruppen har totalt: {total} {term}.',
+    },
+    prompts: {
+      points: 'Poäng',
+      bonus: 'Bonus på slaget',
+      max: 'Högsta tillåtna poäng (0 för ingen gräns)',
+    },
     errors: {
+      unknownPool: 'Det finns ingen pott som heter "{value}".',
+      unknownPoolHint: 'Potter: {pools}.',
+      badAmount: '"{value}" är inte ett antal poäng.',
+      badAmountHint: 'Använd ett heltal från 1 till 9999.',
+      boostNoPool: 'Förstärk använder poäng från en pott.',
+      poolInvalid: 'En pott kan inte heta "{value}".',
+      poolExists: 'Det finns redan en pott som heter "{value}".',
+      poolFull: 'Det finns inte plats för fler potter.',
+      poolNameHint:
+        'Använd ett namn på högst 40 bokstäver, siffror och mellanslag som ingen annan pott har.',
+      poolDefault: 'Standardpotten, "{name}", kan inte tas bort. Den kan byta namn.',
+      poolMarkerHint:
+        'Välj en markör ur dina markörsamlingar som inte är den i inställningen Markör.',
+      poolSetHint: 'Skriv !inspiration pools för att se alla potter och deras inställningar.',
       denied: 'Du kan inte göra det för {name}.',
       gmOnly: 'Bara GM kan använda det kommandot.',
       gmOnlyHint: 'Spelare kan använda spend, party och help.',
@@ -7094,14 +9068,28 @@ const InspirationTrackerMod = (() => {
       refresh: 'Uppdatera',
       undo: 'Ångra',
       decline: 'Släpp den',
+      boost: 'Förstärk',
+      pools: 'Potter',
+      addPool: 'Lägg till pott',
+      deletePool: 'Ta bort pott',
     },
     values: {
       on: 'På',
       off: 'Av',
+      none: 'Ingen',
+      noLimit: 'Ingen gräns',
+      tracking: {
+        flag: 'Formulärets inspirationsruta',
+        pool: 'Poängpott',
+      },
+      source: {
+        resource: 'Formulärets resursruta',
+        attribute: 'Attribut',
+      },
       wording: {
-        auto: 'Från formuläret',
         2014: 'Inspiration (2014)',
         2024: 'Heroisk inspiration (2024)',
+        auto: 'Från formuläret',
       },
       announce: {
         public: 'Alla',
@@ -7113,6 +9101,10 @@ const InspirationTrackerMod = (() => {
       language: {
         label: 'Språk',
         desc: 'Språk för menyer, meddelanden och utdelningar.',
+      },
+      tracking: {
+        label: 'Spårning',
+        desc: 'Vad Ge och Använd verkar på: inspirationsrutan på D&D-formulären, som en rollperson antingen har eller inte har, eller en pott med poäng som byggs upp och används några åt gången.',
       },
       marker: {
         label: 'Markör',
@@ -7154,6 +9146,8 @@ const InspirationTrackerMod = (() => {
       none: 'Rollpersoner utan inspirationsruta',
       rules2024: 'Använder 2024 års regler',
       party: 'Gruppmedlemmar',
+      tracking: 'Spårning',
+      pools: 'Potter',
       marker: 'Markör',
       fx: 'Specialeffekt',
       legacyCommand: 'Gammalt kommando',
@@ -7170,6 +9164,15 @@ const InspirationTrackerMod = (() => {
         'Visar vem i gruppen som har inspiration, med knappar för att ge, ta bort eller använda den.',
       partyEdit: 'Lägger till de markerade rollpersonerna i gruppen, eller tar bort dem ur den.',
       ids: 'Arbetar på de angivna token- eller rollperson-ID:na i stället för de markerade tokens.',
+      points:
+        'Med en poängpott: ger, tar bort eller använder så många poäng. Utan tal, 1. remove all tar alla poäng.',
+      boost:
+        'Med en poängpott: använder poäng för att lägga den bonusen på ett slag, till pottens kostnad för varje +1.',
+      poolFlag: 'Verkar på den namngivna potten i stället för standardpotten.',
+      pools: 'Visar poängpotterna och deras inställningar.',
+      poolEdit: 'Lägger till en pott, eller tar bort en. Poängen på formulären lämnas som de är.',
+      poolSet:
+        'Ändrar en pott: dess namn, var den sparas (resource eller attribute), poängen varje +1 kostar, högsta tillåtna poäng (0 för ingen gräns) eller dess tokenmarkör.',
       undo: 'Ger tillbaka inspiration som använts. ID:t kommer från meddelandet till GM om användningen.',
       macro:
         'Lägger till token-åtgärden "Inspiration", som spelarna klickar på för att använda inspiration.',
@@ -7183,12 +9186,13 @@ const InspirationTrackerMod = (() => {
     helpPlayer: {
       menu: 'Visar dina rollpersoner och om de har inspiration.',
       spend: 'Använder inspiration för den markerade rollpersonen.',
+      boost: 'Använder poäng från en pott för att lägga den bonusen på ett slag.',
       party: 'Visar gruppen, om GM tillåter det.',
       help: 'Visar den här listan.',
     },
     handout: {
       versionLabel: 'Version',
-      subtitle: 'Inspiration och Heroisk inspiration för D&D 5e-formulären 2014 och 2024',
+      subtitle: 'Inspiration, Heroisk inspiration och poängpotter för alla spel',
       overview: {
         heading: 'Översikt',
         body: 'InspirationTracker håller D&D-inspiration i takt på rollformuläret, token och i chatten. Ge den från menyn, formuläret eller tokenmarkören, så visar alla tokens för den rollpersonen markören. Spelare kan använda den med ett klick, och GM meddelas, med en Ångra-knapp. Det fungerar med D&D 2024-formuläret, där det kallas Heroisk inspiration, och med 2014 OGL-formuläret.',
@@ -7240,6 +9244,18 @@ const InspirationTrackerMod = (() => {
           'Gruppen är alla rollpersoner som en spelare styr. Markera tokens och klicka på Lägg till i grupp eller Ta bort ur grupp för att ändra den.',
           'GM:s översikt har knapparna Ge, Ta bort och Använd för varje medlem.',
           'Slå på Spelare ser gruppen för att låta spelarna också se översikten. De får bara Använd-knappar för sina egna rollpersoner.',
+        ],
+      },
+      pools: {
+        heading: 'Poängpotter',
+        points: [
+          'En poängpott är ett tal som byggs upp och används några åt gången: en pott med inspirationspoäng, hjältepoäng, tur, bennies och liknande. Den fungerar med alla rollformulär.',
+          'Sätt Spårning till Poängpott, så verkar Ge, Ta bort och Använd på standardpotten och frågar hur många poäng. Markören visas så länge rollpersonen har några poäng.',
+          'Förstärk använder poäng för att höja ett slag: skriv den bonus du vill ha, så avgör pottens Poäng per +1 kostnaden. Med 2 poäng per +1 kostar en bonus på 4 alltså 8 poäng. Mod meddelar användningen; lägg själv bonusen på slaget.',
+          'En användning nekas när rollpersonen inte har tillräckligt med poäng. GM får veta vem som använde vad, med en Ångra-knapp.',
+          'Sparas i "Formulärets resursruta" använder den resursruta på formuläret som har pottens namn, till exempel en Other Resource-ruta med namnet Inspiration på D&D 2014-formuläret. När formuläret inte har någon ruta med det namnet, eller med "Attribut", sparas poängen i ett vanligt attribut, till exempel inspiration_pool. D&D 2024-formuläret använder alltid attributet.',
+          'Det går bra att ändra talet på formuläret för hand: markören följer med.',
+          'Klicka på Potter för att byta namn på standardpotten, sätta dess kostnad och maximum, eller lägga till fler potter. Andra potter används från sin Grupp-knapp, eller genom att lägga till --pool och pottens namn i ett kommando.',
         ],
       },
       markers: {
@@ -7303,6 +9319,8 @@ const InspirationTrackerMod = (() => {
       subtitle: 'Kommandopanel',
       selectedDesc: 'Markera en eller flera tokens och klicka sedan.',
       partyDesc: 'Se vem som har inspiration, och välj vilka som är med i gruppen.',
+      poolsTitle: 'Poängpott',
+      poolsDesc: 'Med Spårning satt till Poängpott: markera tokens, klicka och skriv antalet.',
       toolsDesc: 'Meny, inställningar, spelarmakrot och hjälp.',
       footer: 'Fullständiga instruktioner finns i utdelningen "{help}".',
     },
@@ -7318,6 +9336,8 @@ const InspirationTrackerMod = (() => {
       settings: 'InspirationTracker Ayarları',
       help: 'InspirationTracker Komutları',
       party: 'Grup İlhamı',
+      poolParty: 'Grup: {term}',
+      pools: 'Puan Havuzları',
       yours: 'Karakterlerin',
       status: 'InspirationTracker Durumu',
     },
@@ -7350,7 +9370,50 @@ const InspirationTrackerMod = (() => {
       journal: 'Yardım ve Komut Paneli belgeleri yeniden oluşturuldu.',
       readyHint: 'Menü için {command} yaz veya Komut Paneli belgesini aç.',
     },
+    pool: {
+      gained: '{name}, {amount} {term} kazandı ({before} → {after}).',
+      spent: '{name}, {amount} {term} harcadı ({before} → {after}).',
+      boosted: '{name}, zara +{bonus} için {amount} {term} harcadı ({before} → {after}).',
+      spentBy: '{player}, {name} için {amount} {term} harcadı.',
+      restored: '{name}, {amount} {term} geri kazandı ({before} → {after}).',
+      removed: '{name} için {amount} {term} geri alındı ({before} → {after}).',
+      none: '{name}: {term} yok.',
+      short: '{name}: {term} {have}, gereken {need}.',
+      full: '{name}: {term} zaten izin verilen en yüksek değerde ({max}).',
+    },
+    pools: {
+      introFlag:
+        'Takip, sayfadaki ilham kutusuna ayarlı. Ver ve Harca düğmelerinin "{name}" havuzunda çalışması için Puan havuzu olarak ayarla. Diğer havuzlar --pool ile kullanılır.',
+      introPool:
+        'Ver, Harca ve Güçlendir "{name}" havuzunda çalışır. Diğer havuzlar kendi Grup düğmelerinden veya --pool ile kullanılır.',
+      defaultLabel: '{name} (varsayılan)',
+      name: 'Ad',
+      source: 'Tutulduğu yer',
+      cost: '+1 başına puan',
+      max: 'En fazla',
+      marker: 'İşaretçi',
+      attribute: 'Sayfada bu adda bir kutu yoksa kullanılan özellik: {attribute}',
+      partyTotal: 'Grup toplamı: {total} {term}.',
+    },
+    prompts: {
+      points: 'Puan',
+      bonus: 'Zar bonusu',
+      max: 'İzin verilen en fazla puan (sınırsız için 0)',
+    },
     errors: {
+      unknownPool: '"{value}" adında bir havuz yok.',
+      unknownPoolHint: 'Havuzlar: {pools}.',
+      badAmount: '"{value}" geçerli bir puan sayısı değil.',
+      badAmountHint: '1 ile 9999 arasında bir tam sayı kullan.',
+      boostNoPool: 'Güçlendir, bir havuzdan puan harcar.',
+      poolInvalid: 'Bir havuza "{value}" adı verilemez.',
+      poolExists: '"{value}" adında bir havuz zaten var.',
+      poolFull: 'Yeni bir havuz için yer yok.',
+      poolNameHint:
+        'Başka hiçbir havuzda olmayan, en fazla 40 harf, rakam ve boşluktan oluşan bir ad kullan.',
+      poolDefault: 'Varsayılan havuz "{name}" silinemez. Yeniden adlandırılabilir.',
+      poolMarkerHint: 'İşaretçi setlerinden, İşaretçi ayarındakinden farklı bir işaretçi seç.',
+      poolSetHint: 'Tüm havuzları ve ayarlarını görmek için !inspiration pools yaz.',
       denied: '{name} için bunu yapamazsın.',
       gmOnly: 'Bu komutu yalnızca GM kullanabilir.',
       gmOnlyHint: 'Oyuncular spend, party ve help kullanabilir.',
@@ -7401,14 +9464,28 @@ const InspirationTrackerMod = (() => {
       refresh: 'Yenile',
       undo: 'Geri Al',
       decline: 'Bırak',
+      boost: 'Güçlendir',
+      pools: 'Havuzlar',
+      addPool: 'Havuz Ekle',
+      deletePool: 'Havuzu Sil',
     },
     values: {
       on: 'Açık',
       off: 'Kapalı',
+      none: 'Yok',
+      noLimit: 'Sınırsız',
+      tracking: {
+        flag: 'Sayfadaki ilham kutusu',
+        pool: 'Puan havuzu',
+      },
+      source: {
+        resource: 'Sayfadaki kaynak kutusu',
+        attribute: 'Özellik',
+      },
       wording: {
-        auto: 'Sayfadan',
         2014: 'İlham (2014)',
         2024: 'Kahramanlık İlhamı (2024)',
+        auto: 'Sayfadan',
       },
       announce: {
         public: 'Herkes',
@@ -7420,6 +9497,10 @@ const InspirationTrackerMod = (() => {
       language: {
         label: 'Dil',
         desc: 'Menüler, mesajlar ve belgeler için dil.',
+      },
+      tracking: {
+        label: 'Takip',
+        desc: 'Ver ve Harca düğmelerinin neyin üzerinde çalıştığı: D&D sayfalarındaki, bir karakterde ya olan ya da olmayan ilham kutusu veya birikip azar azar harcanan bir puan havuzu.',
       },
       marker: {
         label: 'İşaretçi',
@@ -7461,6 +9542,8 @@ const InspirationTrackerMod = (() => {
       none: 'İlham kutusu olmayan karakterler',
       rules2024: '2024 kuralları kullanılıyor',
       party: 'Grup üyeleri',
+      tracking: 'Takip',
+      pools: 'Havuzlar',
       marker: 'İşaretçi',
       fx: 'Özel efekt',
       legacyCommand: 'Eski komut',
@@ -7475,6 +9558,15 @@ const InspirationTrackerMod = (() => {
         'Gruptaki kimde ilham olduğunu, vermek, kaldırmak veya harcamak için düğmelerle gösterir.',
       partyEdit: 'Seçili karakterleri gruba ekler veya gruptan çıkarır.',
       ids: 'Seçili jetonlar yerine verilen jeton veya karakter kimlikleri üzerinde çalışır.',
+      points:
+        'Puan havuzuyla: o kadar puan verir, geri alır veya harcar. Sayı verilmezse 1. remove all tüm puanları alır.',
+      boost:
+        'Puan havuzuyla: bir zara o bonusu eklemek için, havuzun her +1 için belirlediği bedelle puan harcar.',
+      poolFlag: 'Varsayılan havuz yerine adı verilen havuz üzerinde çalışır.',
+      pools: 'Puan havuzlarını ve ayarlarını gösterir.',
+      poolEdit: 'Bir havuz ekler veya siler. Sayfalardaki puanlar olduğu gibi kalır.',
+      poolSet:
+        'Bir havuzu değiştirir: adını, nerede tutulduğunu (resource veya attribute), her +1 için gereken puanı, izin verilen en fazla puanı (sınırsız için 0) veya jeton işaretçisini.',
       undo: 'Harcanan ilhamı geri verir. Kimlik, harcama hakkındaki GM mesajından gelir.',
       macro: 'Oyuncuların ilham harcamak için tıkladığı "Inspiration" jeton eylemini ekler.',
       sync: 'Tüm sayfaları yeniden okur ve işaretçileri düzeltir.',
@@ -7487,12 +9579,13 @@ const InspirationTrackerMod = (() => {
     helpPlayer: {
       menu: 'Karakterlerini ve ilhamları olup olmadığını gösterir.',
       spend: 'Seçili karakter için ilham harcar.',
+      boost: 'Bir zara o bonusu eklemek için bir havuzdan puan harcar.',
       party: 'GM izin veriyorsa grubu gösterir.',
       help: 'Bu listeyi gösterir.',
     },
     handout: {
       versionLabel: 'Sürüm',
-      subtitle: 'D&D 5e 2014 ve 2024 sayfaları için İlham ve Kahramanlık İlhamı',
+      subtitle: 'Her oyun için İlham, Kahramanlık İlhamı ve puan havuzları',
       overview: {
         heading: 'Genel Bakış',
         body: 'InspirationTracker, D&D ilhamını karakter sayfası, jeton ve sohbet arasında uyumlu tutar. Menüden, sayfadan veya jeton işaretçisinden ver; o karakterin tüm jetonları işaretçiyi gösterir. Oyuncular tek tıkla harcayabilir ve GM bir Geri Al düğmesiyle bilgilendirilir. Kahramanlık İlhamı adıyla geçtiği D&D 2024 sayfasıyla ve 2014 OGL sayfasıyla çalışır.',
@@ -7544,6 +9637,18 @@ const InspirationTrackerMod = (() => {
           'Grup, bir oyuncunun kontrol ettiği tüm karakterlerdir. Değiştirmek için jetonları seç ve Gruba Ekle veya Gruptan Çıkar düğmesine tıkla.',
           "GM'in genel görünümünde her üye için Ver, Kaldır ve Harca düğmeleri vardır.",
           'Oyuncuların da genel görünümü görmesi için Oyuncular Grubu Görür ayarını aç. Harca düğmelerini yalnızca kendi karakterleri için görürler.',
+        ],
+      },
+      pools: {
+        heading: 'Puan Havuzları',
+        points: [
+          'Puan havuzu, birikip azar azar harcanan bir sayıdır: ilham puanları, kahraman puanları, şans, bennies ve benzeri. Her karakter sayfasıyla çalışır.',
+          'Takip ayarını Puan havuzu yap; Ver, Kaldır ve Harca varsayılan havuz üzerinde çalışır ve kaç puan olduğunu sorar. Karakterin puanı olduğu sürece işaretçi görünür.',
+          'Güçlendir, bir zarı yükseltmek için puan harcar: istediğin bonusu yaz, bedeli havuzun +1 başına puan ayarı belirler. +1 başına 2 puanda, 4 bonus 8 puana mal olur. Mod harcamayı duyurur; bonusu zara kendin ekle.',
+          "Karakterin yeterli puanı yoksa harcama reddedilir. GM'e kimin ne harcadığı bir Geri Al düğmesiyle bildirilir.",
+          'Tutulduğu yer ayarındaki "Sayfadaki kaynak kutusu", sayfada havuzun adını taşıyan kaynak kutusunu kullanır; örneğin 2014 D&D sayfasında Inspiration adlı bir Other Resource kutusu. Sayfada bu adda bir kutu yoksa veya "Özellik" seçiliyse puanlar inspiration_pool gibi düz bir özellikte tutulur. D&D 2024 sayfası her zaman özelliği kullanır.',
+          'Sayfadaki sayıyı elle değiştirmek sorun olmaz: işaretçi buna uyar.',
+          'Varsayılan havuzu yeniden adlandırmak, bedelini ve üst sınırını ayarlamak veya başka havuzlar eklemek için Havuzlar düğmesine tıkla. Diğer havuzlar kendi Grup düğmelerinden veya bir komuta --pool ve havuzun adı eklenerek kullanılır.',
         ],
       },
       markers: {
@@ -7606,6 +9711,8 @@ const InspirationTrackerMod = (() => {
       subtitle: 'Komut Paneli',
       selectedDesc: 'Bir veya daha fazla jeton seç, sonra tıkla.',
       partyDesc: 'Kimde ilham olduğunu gör ve grupta kimlerin olacağını seç.',
+      poolsTitle: 'Puan havuzu',
+      poolsDesc: 'Takip, Puan havuzu olarak ayarlıyken: jetonları seç, tıkla ve sayıyı yaz.',
       toolsDesc: 'Menü, ayarlar, oyuncu makrosu ve yardım.',
       footer: 'Tüm talimatlar "{help}" belgesinde.',
     },
@@ -7621,6 +9728,8 @@ const InspirationTrackerMod = (() => {
       settings: 'Налаштування InspirationTracker',
       help: 'Команди InspirationTracker',
       party: 'Натхнення групи',
+      poolParty: 'Група: {term}',
+      pools: 'Пули очок',
       yours: 'Ваші персонажі',
       status: 'Стан InspirationTracker',
     },
@@ -7654,7 +9763,51 @@ const InspirationTrackerMod = (() => {
       readyHint:
         'Введіть {command}, щоб відкрити меню, або відкрийте роздатковий матеріал «Панель команд».',
     },
+    pool: {
+      gained: '{name} отримує {term}: {amount} ({before} → {after}).',
+      spent: '{name} витрачає {term}: {amount} ({before} → {after}).',
+      boosted: '{name} витрачає {term}: {amount} — +{bonus} до кидка ({before} → {after}).',
+      spentBy: '{player} витратив {term} ({amount}) за {name}.',
+      restored: '{name} отримує назад {term}: {amount} ({before} → {after}).',
+      removed: '{term}: {amount} забрано в {name} ({before} → {after}).',
+      none: '{name}: немає очок ({term}).',
+      short: '{name}: {term} — {have}, а потрібно {need}.',
+      full: '{name}: {term} уже на максимумі ({max}).',
+    },
+    pools: {
+      introFlag:
+        '«Відстеження» має значення «Поле натхнення на аркуші». Установіть «Пул очок», щоб «Дати» і «Витратити» працювали з пулом "{name}". Інші пули використовуються через --pool.',
+      introPool:
+        '«Дати», «Витратити» і «Підсилити» працюють з пулом "{name}". Інші пули використовуються через їхню кнопку «Група» або через --pool.',
+      defaultLabel: '{name} (типовий)',
+      name: 'Назва',
+      source: 'Зберігається в',
+      cost: 'Очок за +1',
+      max: 'Максимум',
+      marker: 'Маркер',
+      attribute: 'Атрибут, якщо на аркуші немає поля з такою назвою: {attribute}',
+      partyTotal: 'Усього в групи: {term} — {total}.',
+    },
+    prompts: {
+      points: 'Очки',
+      bonus: 'Бонус до кидка',
+      max: 'Максимум очок (0 — без обмеження)',
+    },
     errors: {
+      unknownPool: 'Немає пулу з назвою "{value}".',
+      unknownPoolHint: 'Пули: {pools}.',
+      badAmount: '"{value}" — не кількість очок.',
+      badAmountHint: 'Використовуйте ціле число від 1 до 9999.',
+      boostNoPool: '«Підсилити» витрачає очки з пулу.',
+      poolInvalid: 'Пул не можна назвати "{value}".',
+      poolExists: 'Пул з назвою "{value}" уже є.',
+      poolFull: 'Для ще одного пулу немає місця.',
+      poolNameHint:
+        'Використовуйте назву до 40 літер, цифр і пробілів, якої не має жоден інший пул.',
+      poolDefault: 'Типовий пул, "{name}", не можна видалити. Його можна перейменувати.',
+      poolMarkerHint:
+        'Оберіть маркер з ваших наборів маркерів, інший, ніж у налаштуванні «Маркер».',
+      poolSetHint: 'Введіть !inspiration pools, щоб побачити всі пули та їхні налаштування.',
       denied: 'Ви не можете зробити це для {name}.',
       gmOnly: 'Цю команду може використовувати лише GM.',
       gmOnlyHint: 'Гравці можуть використовувати spend, party і help.',
@@ -7705,14 +9858,28 @@ const InspirationTrackerMod = (() => {
       refresh: 'Оновити',
       undo: 'Скасувати',
       decline: 'Відмовитися',
+      boost: 'Підсилити',
+      pools: 'Пули',
+      addPool: 'Додати пул',
+      deletePool: 'Видалити пул',
     },
     values: {
       on: 'Увімк.',
       off: 'Вимк.',
+      none: 'Немає',
+      noLimit: 'Без обмеження',
+      tracking: {
+        flag: 'Поле натхнення на аркуші',
+        pool: 'Пул очок',
+      },
+      source: {
+        resource: 'Поле ресурсу на аркуші',
+        attribute: 'Атрибут',
+      },
       wording: {
-        auto: 'З аркуша',
         2014: 'Натхнення (2014)',
         2024: 'Героїчне натхнення (2024)',
+        auto: 'З аркуша',
       },
       announce: {
         public: 'Усі',
@@ -7724,6 +9891,10 @@ const InspirationTrackerMod = (() => {
       language: {
         label: 'Мова',
         desc: 'Мова меню, повідомлень і роздаткових матеріалів.',
+      },
+      tracking: {
+        label: 'Відстеження',
+        desc: 'З чим працюють «Дати» і «Витратити»: з полем натхнення на аркушах D&D, яке персонаж або має, або ні, чи з пулом очок, які накопичуються і витрачаються потроху.',
       },
       marker: {
         label: 'Маркер',
@@ -7765,6 +9936,8 @@ const InspirationTrackerMod = (() => {
       none: 'Персонажі без поля натхнення',
       rules2024: 'Діють правила 2024',
       party: 'Учасники групи',
+      tracking: 'Відстеження',
+      pools: 'Пули',
       marker: 'Маркер',
       fx: 'Спецефект',
       legacyCommand: 'Стара команда',
@@ -7779,6 +9952,15 @@ const InspirationTrackerMod = (() => {
         'Показує, хто в групі має натхнення, з кнопками, щоб дати, забрати або витратити його.',
       partyEdit: 'Додає вибраних персонажів до групи або вилучає їх з неї.',
       ids: 'Працює з указаними ID токенів чи персонажів замість вибраних токенів.',
+      points:
+        'З пулом очок: дає, забирає або витрачає вказану кількість очок. Без числа — 1. remove all забирає всі очки.',
+      boost:
+        'З пулом очок: витрачає очки, щоб додати вказаний бонус до кидка, за ціною пулу за кожен +1.',
+      poolFlag: 'Працює з указаним пулом замість типового.',
+      pools: 'Показує пули очок та їхні налаштування.',
+      poolEdit: 'Додає пул або видаляє його. Очки на аркушах залишаються як є.',
+      poolSet:
+        'Змінює пул: його назву, місце зберігання (resource або attribute), кількість очок за кожен +1, максимум очок (0 — без обмеження) або його маркер токена.',
       undo: 'Повертає витрачене натхнення. ID береться з повідомлення для GM про витрату.',
       macro: 'Додає дію токена "Inspiration", яку гравці натискають, щоб витратити натхнення.',
       sync: 'Знову читає всі аркуші й виправляє маркери.',
@@ -7791,12 +9973,13 @@ const InspirationTrackerMod = (() => {
     helpPlayer: {
       menu: 'Показує ваших персонажів і чи мають вони натхнення.',
       spend: 'Витрачає натхнення вибраного персонажа.',
+      boost: 'Витрачає очки з пулу, щоб додати вказаний бонус до кидка.',
       party: 'Показує групу, якщо GM дозволяє.',
       help: 'Показує цей список.',
     },
     handout: {
       versionLabel: 'Версія',
-      subtitle: 'Натхнення і Героїчне натхнення для аркушів D&D 5e 2014 і 2024',
+      subtitle: 'Натхнення, Героїчне натхнення і пули очок для будь-якої гри',
       overview: {
         heading: 'Огляд',
         body: 'InspirationTracker узгоджує натхнення D&D на аркуші персонажа, токені та в чаті. Давайте його з меню, аркуша або маркером токена, і всі токени цього персонажа показують маркер. Гравці можуть витратити його одним натисканням, а GM отримує повідомлення з кнопкою «Скасувати». Працює з аркушем D&D 2024, де воно називається Героїчне натхнення, і з аркушем 2014 OGL.',
@@ -7849,6 +10032,18 @@ const InspirationTrackerMod = (() => {
           'Група — це всі персонажі, якими керують гравці. Виберіть токени й натисніть «Додати до групи» або «Вилучити з групи», щоб змінити її.',
           'В огляді GM є кнопки «Дати», «Забрати» і «Витратити» для кожного учасника.',
           'Увімкніть «Гравці бачать групу», щоб гравці теж бачили огляд. Кнопки «Витратити» вони отримують лише для власних персонажів.',
+        ],
+      },
+      pools: {
+        heading: 'Пули очок',
+        points: [
+          'Пул очок — це число, яке накопичується і витрачається потроху: очки натхнення, очки героя, удача, bennies тощо. Він працює з будь-яким аркушем персонажа.',
+          'Установіть для «Відстеження» значення «Пул очок», і кнопки «Дати», «Забрати» і «Витратити» працюватимуть з типовим пулом, запитуючи кількість очок. Маркер показується, поки персонаж має хоча б одне очко.',
+          '«Підсилити» витрачає очки, щоб підвищити кидок: введіть потрібний бонус, а налаштування пулу «Очок за +1» визначить ціну. При 2 очках за +1 бонус 4 коштує 8 очок. Mod оголошує витрату; бонус до кидка додайте самі.',
+          'Витрату буде відхилено, якщо персонаж не має достатньо очок. GM отримує повідомлення про те, хто і скільки витратив, з кнопкою «Скасувати».',
+          'Варіант «Поле ресурсу на аркуші» в налаштуванні «Зберігається в» використовує поле ресурсу на аркуші, назване так само, як пул, наприклад поле Other Resource з назвою Inspiration на аркуші D&D 2014. Якщо на аркуші немає поля з такою назвою або вибрано «Атрибут», очки зберігаються у звичайному атрибуті, наприклад inspiration_pool. Аркуш D&D 2024 завжди використовує атрибут.',
+          'Змінювати число на аркуші вручну можна: маркер зміниться слідом.',
+          'Натисніть «Пули», щоб перейменувати типовий пул, задати його ціну й максимум або додати інші пули. Інші пули використовуються через їхню кнопку «Група» або додаванням --pool і назви пулу до команди.',
         ],
       },
       markers: {
@@ -7911,6 +10106,9 @@ const InspirationTrackerMod = (() => {
       subtitle: 'Панель команд',
       selectedDesc: 'Виберіть один або кілька токенів, потім натисніть.',
       partyDesc: 'Подивіться, хто має натхнення, і оберіть, хто входить до групи.',
+      poolsTitle: 'Пул очок',
+      poolsDesc:
+        'Коли «Відстеження» має значення «Пул очок»: виберіть токени, натисніть і введіть число.',
       toolsDesc: 'Меню, налаштування, макрос гравця і довідка.',
       footer: 'Повні інструкції — у роздатковому матеріалі "{help}".',
     },
@@ -8343,6 +10541,8 @@ const InspirationTrackerMod = (() => {
         const text = toText(raw);
         return /^[^,@\s][^,@]{0,99}$/.test(text) ? ok(text) : bad;
       }
+      case 'tracking':
+        return option(TRACKING_OPTIONS);
       case 'wording':
         return option(WORDING_OPTIONS);
       case 'announce':
@@ -8414,6 +10614,8 @@ const InspirationTrackerMod = (() => {
       config: { ...DEFAULT_CONFIG },
       legacyCommand: '',
       known: {},
+      pools: [{ ...DEFAULT_POOL }],
+      points: {},
       party: { include: [], exclude: [] },
       undo: [],
       offers: {},
@@ -8480,6 +10682,7 @@ const InspirationTrackerMod = (() => {
       s.party.exclude = [];
     }
     s.config = mergeConfig(s.config);
+    s.pools = repairPools(s.pools);
     s.schemaVersion = SCHEMA_VERSION;
     s.version = SCRIPT_VERSION;
     pruneOffers();
@@ -8577,12 +10780,193 @@ const InspirationTrackerMod = (() => {
   function forgetCharacter(charId) {
     const s = getState();
     delete s.known[charId];
+    for (const values of Object.values(s.points)) {
+      if (isRecord(values)) {
+        delete values[charId];
+      }
+    }
     s.party.include = s.party.include.filter((id) => id !== charId);
     s.party.exclude = s.party.exclude.filter((id) => id !== charId);
     for (const [id, offer] of Object.entries(s.offers)) {
       if (offer.charId === charId) {
         delete s.offers[id];
       }
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Points pools
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Turns a pool name into its ID: lower-case letters, digits and hyphens.
+   *
+   * @param {string} name Pool name.
+   * @returns {string} ID, or an empty string when the name has no letters or digits.
+   */
+  function poolId(name) {
+    return toText(name)
+      .toLowerCase()
+      .normalize('NFKD')
+      .replaceAll(/[^a-z0-9]+/g, '-')
+      .replaceAll(/^-+|-+$/g, '')
+      .slice(0, 30);
+  }
+
+  /**
+   * Validates one field of a pool.
+   *
+   * @param {string} field name | source | cost | max | marker.
+   * @param {*} raw Raw value.
+   * @returns {{valid: boolean, value?: *}} Result; `value` is the normalised value when valid.
+   */
+  function validatePoolField(field, raw) {
+    const ok = (value) => ({ valid: true, value });
+    const bad = { valid: false };
+    const text = toText(raw);
+    const whole = /^\d{1,4}$/.test(text) ? Number(text) : NaN;
+    switch (field) {
+      case 'name':
+        return /^[^<>{}|@[\]]{1,40}$/.test(text) && poolId(text) ? ok(text) : bad;
+      case 'source': {
+        const found = POOL_SOURCES.find((o) => o === text.toLowerCase());
+        return found ? ok(found) : bad;
+      }
+      case 'cost':
+        return whole >= 1 && whole <= 100 ? ok(whole) : bad;
+      case 'max':
+        return whole >= 0 && whole <= MAX_POINTS ? ok(whole) : bad;
+      case 'marker':
+        return text === '' || /^[^,@\s][^,@]{0,99}$/.test(text) ? ok(text) : bad;
+      default:
+        return bad;
+    }
+  }
+
+  /**
+   * Repairs the stored pools: valid fields, unique IDs, and the default pool
+   * first.
+   *
+   * @param {*} pools Stored pools.
+   * @returns {object[]} Pools.
+   */
+  function repairPools(pools) {
+    const repaired = [];
+    for (const raw of Array.isArray(pools) ? pools : []) {
+      if (!isRecord(raw) || repaired.length >= MAX_POOLS) {
+        continue;
+      }
+      const name = validatePoolField('name', raw.name);
+      const id = poolId(raw.id) || (name.valid ? poolId(name.value) : '');
+      if (!name.valid || !id || repaired.some((p) => p.id === id)) {
+        continue;
+      }
+      const pool = { ...DEFAULT_POOL, id, name: name.value };
+      for (const field of ['source', 'cost', 'max', 'marker']) {
+        const result = validatePoolField(field, raw[field]);
+        if (result.valid) {
+          pool[field] = result.value;
+        }
+      }
+      repaired.push(pool);
+    }
+    if (repaired.length === 0) {
+      repaired.push({ ...DEFAULT_POOL });
+    }
+    return repaired;
+  }
+
+  /**
+   * Returns every pool, the default pool first.
+   *
+   * @returns {object[]} Pools.
+   */
+  function getPools() {
+    return getState().pools;
+  }
+
+  /**
+   * Returns the default pool: the one used by commands that name no pool while
+   * Tracking is set to a points pool.
+   *
+   * @returns {object} Pool.
+   */
+  function defaultPool() {
+    return getPools()[0];
+  }
+
+  /**
+   * Finds a pool by its ID or its name, whatever the case.
+   *
+   * @param {string} text Pool ID or name.
+   * @returns {object|undefined} Pool.
+   */
+  function findPool(text) {
+    const wanted = toText(text).toLowerCase();
+    const id = poolId(text);
+    return getPools().find(
+      (p) => p.id === wanted || p.name.toLowerCase() === wanted || p.id === id
+    );
+  }
+
+  /**
+   * Adds a pool.
+   *
+   * @param {string} name Pool name.
+   * @returns {{status: string, pool?: object}} added | invalid | exists | full.
+   */
+  function addPool(name) {
+    const result = validatePoolField('name', name);
+    if (!result.valid) {
+      return { status: 'invalid' };
+    }
+    if (findPool(result.value)) {
+      return { status: 'exists' };
+    }
+    const pools = getPools();
+    if (pools.length >= MAX_POOLS) {
+      return { status: 'full' };
+    }
+    const pool = { ...DEFAULT_POOL, id: poolId(result.value), name: result.value };
+    pools.push(pool);
+    return { status: 'added', pool };
+  }
+
+  /**
+   * Deletes a pool. The default pool stays. The points on the sheets are left
+   * as they are.
+   *
+   * @param {object} pool Pool.
+   * @returns {boolean} True when deleted.
+   */
+  function deletePool(pool) {
+    const s = getState();
+    const index = s.pools.indexOf(pool);
+    if (index <= 0) {
+      return false;
+    }
+    s.pools.splice(index, 1);
+    delete s.points[pool.id];
+    return true;
+  }
+
+  /**
+   * Records the points seen for a character in a pool.
+   *
+   * @param {string} id Pool ID.
+   * @param {string} charId Character ID.
+   * @param {number} value Points.
+   * @returns {void}
+   */
+  function setPoints(id, charId, value) {
+    const points = getState().points;
+    if (!isRecord(points[id])) {
+      points[id] = {};
+    }
+    if (value > 0) {
+      points[id][charId] = value;
+    } else {
+      delete points[id][charId];
     }
   }
 
@@ -8623,12 +11007,13 @@ const InspirationTrackerMod = (() => {
    * @param {string} charId Character ID.
    * @param {string} playerId Who spent it.
    * @param {number} now Current time.
+   * @param {{poolId: string, amount: number}} [points] The pool and points spent, for a pool spend.
    * @returns {string} Undo ID.
    */
-  function pushUndo(charId, playerId, now) {
+  function pushUndo(charId, playerId, now, points) {
     const s = getState();
     const id = shortId();
-    s.undo.push({ id, charId, playerId, at: now });
+    s.undo.push({ id, charId, playerId, at: now, ...(points || {}) });
     while (s.undo.length > MAX_UNDO) {
       s.undo.shift();
     }
@@ -8972,6 +11357,100 @@ const InspirationTrackerMod = (() => {
     return { ok: true, kind: 'legacy' };
   }
 
+  // ---------------------------------------------------------------------------
+  // Points pools
+  //
+  // A pool is kept in the sheet's resource box that carries the pool's name
+  // (the 2014 OGL sheet's Class Resource, Other Resource and added resource
+  // boxes: an attribute such as `other_resource`, named by `other_resource_name`),
+  // or in a plain attribute, `<pool id>_pool`. The D&D 2024 sheet keeps its
+  // resources inside its `store`, which a Mod cannot change safely, so its
+  // characters always use the plain attribute.
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Returns the name of a pool's plain attribute.
+   *
+   * @param {object} pool Pool.
+   * @returns {string} Attribute name, such as `inspiration_pool`.
+   */
+  function poolAttributeName(pool) {
+    return `${pool.id.replaceAll('-', '_')}${POOL_ATTRIBUTE_SUFFIX}`;
+  }
+
+  /**
+   * Returns true when an attribute name could hold a pool: a resource box, its
+   * name, or a pool's plain attribute.
+   *
+   * @param {string} name Attribute name.
+   * @returns {boolean} True when worth checking.
+   */
+  function isPoolAttributeName(name) {
+    const text = toText(name).toLowerCase();
+    return text.includes('resource') || text.endsWith(POOL_ATTRIBUTE_SUFFIX);
+  }
+
+  /**
+   * Finds where a character keeps a pool.
+   *
+   * @param {string} charId Character ID.
+   * @param {object} pool Pool.
+   * @returns {{where: 'resource'|'attribute', name: string, attr: object|undefined}} Where it is kept, the attribute's name, and the attribute when it exists.
+   */
+  function locatePool(charId, pool) {
+    const attrs = findObjs({ _type: 'attribute', _characterid: charId });
+    const named = (name) =>
+      attrs.find((attr) => toText(attr.get('name')).toLowerCase() === name.toLowerCase());
+    if (pool.source === 'resource') {
+      const wanted = pool.name.toLowerCase();
+      const label = attrs.find((attr) => {
+        const name = toText(attr.get('name')).toLowerCase();
+        return (
+          name.includes('resource') &&
+          name.endsWith('_name') &&
+          toText(attr.get('current')).trim().toLowerCase() === wanted
+        );
+      });
+      if (label) {
+        const name = toText(label.get('name')).slice(0, -'_name'.length);
+        return { where: 'resource', name, attr: named(name) };
+      }
+    }
+    const name = poolAttributeName(pool);
+    return { where: 'attribute', name, attr: named(name) };
+  }
+
+  /**
+   * Reads a character's points in a pool.
+   *
+   * @param {string} charId Character ID.
+   * @param {object} pool Pool.
+   * @returns {{where: string, exists: boolean, value: number}} Where it is kept, whether anything is stored yet, and the points.
+   */
+  function readPool(charId, pool) {
+    const { where, attr } = locatePool(charId, pool);
+    const n = Math.floor(Number(attr?.get('current')));
+    return { where, exists: Boolean(attr), value: Number.isFinite(n) && n > 0 ? n : 0 };
+  }
+
+  /**
+   * Writes a character's points in a pool, creating the attribute when needed.
+   *
+   * @param {string} charId Character ID.
+   * @param {object} pool Pool.
+   * @param {number} value Points.
+   * @returns {{where: string}} Where it was written.
+   */
+  function writePool(charId, pool, value) {
+    const { where, name, attr } = locatePool(charId, pool);
+    if (attr) {
+      attr.set('current', value);
+    } else {
+      createObj('attribute', { characterid: charId, name, current: value });
+    }
+    return { where };
+  }
+
   /**
    * Returns the rules edition used for a character: the GM's choice, or the
    * 2024 sheet's own setting, or 2014 for the 2014 OGL sheet.
@@ -9019,6 +11498,10 @@ const InspirationTrackerMod = (() => {
    * @returns {string} Translated term.
    */
   function termFor(charId, lang) {
+    const pool = activePool();
+    if (pool) {
+      return pool.name;
+    }
     return t(rulesFor(charId) === RULES_2024 ? 'terms.heroic' : 'terms.classic', lang);
   }
 
@@ -9040,7 +11523,62 @@ const InspirationTrackerMod = (() => {
    * @returns {void}
    */
   function syncTokens(charId, inspired) {
-    const marker = getConfig().marker;
+    applyMarker(charId, getConfig().marker, inspired);
+  }
+
+  /**
+   * Returns the pool that commands naming no pool work on: the default pool
+   * while Tracking is set to a points pool, otherwise none (the sheet's
+   * inspiration box is used).
+   *
+   * @returns {object|null} Pool.
+   */
+  function activePool() {
+    return getConfig().tracking === 'pool' ? defaultPool() : null;
+  }
+
+  /**
+   * Returns the marker shown while a character has points in a pool. The
+   * default pool uses the Marker setting while it is the one being tracked;
+   * other pools use their own marker, if they have one.
+   *
+   * @param {object} pool Pool.
+   * @returns {string} Marker tag, or an empty string for none.
+   */
+  function poolMarker(pool) {
+    if (pool === defaultPool()) {
+      return getConfig().tracking === 'pool' ? getConfig().marker : '';
+    }
+    return pool.marker === getConfig().marker ? '' : pool.marker;
+  }
+
+  /**
+   * Reads a character's points in a pool, records them and puts its markers
+   * right.
+   *
+   * @param {string} charId Character ID.
+   * @param {object} pool Pool.
+   * @returns {{where: string, exists: boolean, value: number}} What was read.
+   */
+  function syncPool(charId, pool) {
+    const read = readPool(charId, pool);
+    setPoints(pool.id, charId, read.value);
+    applyMarker(charId, poolMarker(pool), read.value > 0);
+    return read;
+  }
+
+  /**
+   * Shows or hides a marker on every token for a character.
+   *
+   * @param {string} charId Character ID.
+   * @param {string} marker Marker tag; nothing happens when empty.
+   * @param {boolean} inspired Whether to show it.
+   * @returns {void}
+   */
+  function applyMarker(charId, marker, inspired) {
+    if (!marker) {
+      return;
+    }
     for (const token of tokensFor(charId)) {
       const prev = { ...token.attributes, statusmarkers: token.get('statusmarkers') };
       if (setMarker(token, marker, inspired)) {
@@ -9286,6 +11824,10 @@ const InspirationTrackerMod = (() => {
     if (!character) {
       return { status: 'unknown' };
     }
+    if (entry.poolId) {
+      const pool = getPools().find((p) => p.id === entry.poolId);
+      return pool ? undoPoolSpend(character, pool, entry.amount) : { status: 'unknown' };
+    }
     const result = await exclusive(character.id, async () => {
       const { inspired } = await readInspiration(character.id);
       if (inspired) {
@@ -9309,6 +11851,210 @@ const InspirationTrackerMod = (() => {
       );
     }
     return { ...result, name: nameOf(character) };
+  }
+
+  // ---------------------------------------------------------------------------
+  // Points pools
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Builds the Spend and Boost buttons shown under a pool announcement.
+   *
+   * @param {object} character Roll20 character.
+   * @param {object} pool Pool.
+   * @returns {string} Button HTML, empty when players cannot spend.
+   */
+  function poolButtons(character, pool) {
+    if (!getConfig().playerSpend) {
+      return '';
+    }
+    const lang = getConfig().language;
+    const target = `--ids ${character.id} --pool ${pool.id}`;
+    return [
+      buildButton(
+        t('buttons.spend', lang),
+        `${COMMAND} spend ?{${queryText(t('prompts.points', lang))}|1} ${target}`
+      ),
+      buildSecondaryButton(
+        t('buttons.boost', lang),
+        `${COMMAND} boost ?{${queryText(t('prompts.bonus', lang))}|1} ${target}`
+      ),
+    ].join(' ');
+  }
+
+  /**
+   * Changes a character's points in a pool and puts its markers right.
+   *
+   * @param {object} character Roll20 character.
+   * @param {object} pool Pool.
+   * @param {number} after New points.
+   * @returns {void}
+   */
+  function storePool(character, pool, after) {
+    setPoints(pool.id, character.id, after);
+    writePool(character.id, pool, after);
+    applyMarker(character.id, poolMarker(pool), after > 0);
+  }
+
+  /**
+   * Adds points to a character's pool, up to the pool's maximum.
+   *
+   * @param {object} character Roll20 character.
+   * @param {object} pool Pool.
+   * @param {number} amount Points to add.
+   * @returns {Promise<object>} `{status}`: given | full | busy, with before, after and amount.
+   */
+  function poolGive(character, pool, amount) {
+    return exclusive(character.id, async () => {
+      const before = readPool(character.id, pool).value;
+      const after = pool.max > 0 ? Math.min(pool.max, before + amount) : before + amount;
+      if (after <= before) {
+        syncPool(character.id, pool);
+        return { status: 'full', term: pool.name, max: pool.max };
+      }
+      storePool(character, pool, after);
+      playFx(character.id);
+      const lang = getConfig().language;
+      const vars = {
+        name: nameOf(character),
+        term: pool.name,
+        amount: after - before,
+        before,
+        after,
+      };
+      announce(
+        character,
+        pool.name,
+        announcementBody(
+          escapeHtml(t('pool.gained', lang, vars)),
+          after > 0 ? poolButtons(character, pool) : ''
+        )
+      );
+      return { status: 'given', ...vars };
+    });
+  }
+
+  /**
+   * Takes points away without it counting as a spend.
+   *
+   * @param {object} character Roll20 character.
+   * @param {object} pool Pool.
+   * @param {number|'all'} amount Points to take, or `all`.
+   * @returns {Promise<object>} `{status}`: poolRemoved | poolNone | busy.
+   */
+  function poolRemove(character, pool, amount) {
+    return exclusive(character.id, async () => {
+      const before = readPool(character.id, pool).value;
+      if (before === 0) {
+        syncPool(character.id, pool);
+        return { status: 'poolNone', term: pool.name };
+      }
+      const taken = amount === 'all' ? before : Math.min(before, amount);
+      const after = before - taken;
+      storePool(character, pool, after);
+      return { status: 'poolRemoved', term: pool.name, amount: taken, before, after };
+    });
+  }
+
+  /**
+   * Spends points from a character's pool. With a bonus, the points bought a
+   * bonus to a roll, at the pool's cost per +1.
+   *
+   * @param {object} character Roll20 character.
+   * @param {object} pool Pool.
+   * @param {number} amount Points to spend.
+   * @param {string} actorId Who is spending them.
+   * @param {number} [bonus] The bonus the points buy.
+   * @returns {Promise<object>} `{status}`: spent | short | poolNone | denied | busy.
+   */
+  function poolSpend(character, pool, amount, actorId, bonus = 0) {
+    const gm = isGmOrMod(actorId, API_PLAYER_ID);
+    if (!gm && (!getConfig().playerSpend || !canControl(actorId, character))) {
+      return Promise.resolve({ status: 'denied' });
+    }
+    return exclusive(character.id, async () => {
+      const before = readPool(character.id, pool).value;
+      if (before === 0) {
+        syncPool(character.id, pool);
+        return { status: 'poolNone', term: pool.name };
+      }
+      if (amount > before) {
+        return { status: 'short', term: pool.name, have: before, need: amount };
+      }
+      const after = before - amount;
+      storePool(character, pool, after);
+      const lang = getConfig().language;
+      const name = nameOf(character);
+      const vars = { name, term: pool.name, amount, bonus, before, after };
+      announce(
+        character,
+        pool.name,
+        announcementBody(
+          escapeHtml(t(bonus > 0 ? 'pool.boosted' : 'pool.spent', lang, vars)),
+          after > 0 ? poolButtons(character, pool) : ''
+        )
+      );
+      const playerId = actorId === API_PLAYER_ID ? '' : actorId;
+      const undoId = pushUndo(character.id, playerId, Date.now(), { poolId: pool.id, amount });
+      const who = playerId && getObj('player', playerId)?.get('displayname');
+      const line = t('pool.spentBy', lang, { ...vars, player: who || SCRIPT_NAME });
+      whisper(
+        null,
+        SCRIPT_NAME,
+        `<div>${escapeHtml(line)}</div><div style="margin-top:4px">${buildSecondaryButton(t('buttons.undo', lang), `${COMMAND} undo ${undoId}`)}</div>`
+      );
+      return { status: 'spent', ...vars };
+    });
+  }
+
+  /**
+   * Gives back points that were spent.
+   *
+   * @param {object} character Roll20 character.
+   * @param {object} pool Pool.
+   * @param {number} amount Points to give back.
+   * @returns {Promise<object>} `{status}`: restored | busy, with the character's name.
+   */
+  async function undoPoolSpend(character, pool, amount) {
+    const result = await exclusive(character.id, async () => {
+      const before = readPool(character.id, pool).value;
+      const after = before + amount;
+      storePool(character, pool, after);
+      return { status: 'restored', before, after };
+    });
+    if (result.status === 'restored') {
+      const lang = getConfig().language;
+      const text = t('pool.restored', lang, {
+        name: nameOf(character),
+        term: pool.name,
+        amount,
+        before: result.before,
+        after: result.after,
+      });
+      whisperEach(
+        [...getGmPlayerIds(), ...ownerIds(character)],
+        pool.name,
+        announcementBody(escapeHtml(text))
+      );
+    }
+    return { ...result, name: nameOf(character) };
+  }
+
+  /**
+   * Reacts to a pool's points being changed on the sheet by hand: the value is
+   * recorded and the markers follow.
+   *
+   * @param {object} attr Roll20 attribute that changed.
+   * @returns {void}
+   */
+  function handlePoolAttribute(attr) {
+    const charId = attr.get('_characterid') || attr.get('characterid');
+    if (!charId || busy.has(charId)) {
+      return;
+    }
+    for (const pool of getPools()) {
+      syncPool(charId, pool);
+    }
   }
 
   /**
@@ -9418,6 +12164,11 @@ const InspirationTrackerMod = (() => {
     if (busy.has(charId) || getKnown(charId) === inspired) {
       return;
     }
+    // While a points pool is tracked, the sheet's inspiration box is only recorded.
+    if (activePool()) {
+      setKnown(charId, inspired);
+      return;
+    }
     const first = getKnown(charId) === undefined;
     setKnown(charId, inspired);
     syncTokens(charId, inspired);
@@ -9447,6 +12198,12 @@ const InspirationTrackerMod = (() => {
     if (!character) {
       return;
     }
+    // A pool's marker only shows whether there are points: it is put back.
+    const pool = activePool();
+    if (pool) {
+      syncPool(character.id, pool);
+      return;
+    }
     if (shown) {
       const result = await give(character, API_PLAYER_ID);
       if (result.status === 'offered' || result.status === 'already') {
@@ -9468,8 +12225,22 @@ const InspirationTrackerMod = (() => {
   async function syncAll() {
     let checked = 0;
     let inspired = 0;
+    const tracked = activePool();
     for (const character of findObjs({ _type: 'character' })) {
+      for (const pool of getPools()) {
+        const read = syncPool(character.id, pool);
+        if (pool === tracked && read.exists) {
+          checked += 1;
+          inspired += read.value > 0 ? 1 : 0;
+        }
+      }
       const value = await readInspiration(character.id);
+      if (tracked) {
+        if (value.kind !== 'none') {
+          setKnown(character.id, value.inspired);
+        }
+        continue;
+      }
       if (value.kind === 'none') {
         continue;
       }
@@ -9624,6 +12395,7 @@ const InspirationTrackerMod = (() => {
     ${section('players', list(raw('players.points')))}
     ${section('passOn', list(raw('passOn.points')))}
     ${section('party', list(raw('party.points')))}
+    ${section('pools', list(raw('pools.points')))}
     ${section('markers', list(raw('markers.points')))}
     ${section('commands', `<p style="${STYLE.p}">${h('commands.intro')}</p><p style="${STYLE.p}">${h('commands.mods')}</p>${table([t('handout.commands.colCommand', lang), t('handout.commands.colDesc', lang)], commands)}`)}
     ${section('settings', `<p style="${STYLE.p}">${h('settings.intro')}</p>${table([t('handout.settings.colKey', lang), t('handout.settings.colName', lang), t('handout.settings.colDesc', lang)], settings)}`)}
@@ -9660,6 +12432,7 @@ const InspirationTrackerMod = (() => {
       <p style="${STYLE.subtitle}">${escapeHtml(tr('deck.subtitle'))} • v${SCRIPT_VERSION}</p>
     </div>
     ${group('menu.selected', 'deck.selectedDesc', [btn('give', 'give'), btn('remove', 'remove', true), btn('toggle', 'toggle', true), btn('spend', 'spend', true)])}
+    ${group('deck.poolsTitle', 'deck.poolsDesc', [btn('give', `give ?{${queryText(tr('prompts.points'))}|1}`), btn('remove', `remove ?{${queryText(tr('prompts.points'))}|1}`, true), btn('spend', `spend ?{${queryText(tr('prompts.points'))}|1}`, true), btn('boost', `boost ?{${queryText(tr('prompts.bonus'))}|1}`, true), btn('pools', 'pools', true)])}
     ${group('menu.party', 'deck.partyDesc', [btn('party', 'party'), btn('partyAdd', 'party add', true), btn('partyRemove', 'party remove', true)])}
     ${group('menu.tools', 'deck.toolsDesc', [btn('menu', ''), btn('settings', 'set', true), btn('macro', 'macro', true), btn('sync', 'sync', true), btn('status', 'status', true), btn('help', 'help', true)])}
     <div style="${STYLE.footer}">${escapeHtml(tr('deck.footer', { help: HANDOUT_HELP_NAME }))}</div>
@@ -9803,6 +12576,18 @@ const InspirationTrackerMod = (() => {
   }
 
   /**
+   * Builds a roll query asking for a number.
+   *
+   * @param {string} key Prompt key under `prompts`.
+   * @param {string} lang Locale code.
+   * @param {number|string} [value] Value offered.
+   * @returns {string} Roll query.
+   */
+  function ask(key, lang, value = 1) {
+    return `?{${queryText(t(`prompts.${key}`, lang))}|${queryText(value)}}`;
+  }
+
+  /**
    * Shows the GM menu.
    *
    * @param {string|null} playerId Who asked.
@@ -9813,18 +12598,24 @@ const InspirationTrackerMod = (() => {
     const b = (key, args) => buildButton(t(`buttons.${key}`, lang), `${COMMAND} ${args}`.trim());
     const s = (key, args) =>
       buildSecondaryButton(t(`buttons.${key}`, lang), `${COMMAND} ${args}`.trim());
+    const selected = activePool()
+      ? [
+          b('give', `give ${ask('points', lang)}`),
+          b('remove', `remove ${ask('points', lang)}`),
+          b('spend', `spend ${ask('points', lang)}`),
+          b('boost', `boost ${ask('bonus', lang)}`),
+        ]
+      : [b('give', 'give'), b('remove', 'remove'), b('toggle', 'toggle'), b('spend', 'spend')];
     whisper(playerId, `${SCRIPT_NAME} v${SCRIPT_VERSION}`, [
       buildSectionLabel(t('menu.selected', lang)),
-      b('give', 'give'),
-      b('remove', 'remove'),
-      b('toggle', 'toggle'),
-      b('spend', 'spend'),
+      ...selected,
       buildSectionLabel(t('menu.party', lang)),
       b('party', 'party'),
       s('partyAdd', 'party add'),
       s('partyRemove', 'party remove'),
       buildSectionLabel(t('menu.tools', lang)),
       s('settings', 'set'),
+      s('pools', 'pools'),
       s('macro', 'macro'),
       s('sync', 'sync'),
       s('status', 'status'),
@@ -9856,6 +12647,11 @@ const InspirationTrackerMod = (() => {
             label: `${d.nativeName || d.name} (${d.code})`,
             value: d.code,
           }))
+        );
+      case 'tracking':
+        return set(
+          t(`values.tracking.${value}`, lang),
+          TRACKING_OPTIONS.map((o) => ({ label: t(`values.tracking.${o}`, lang), value: o }))
         );
       case 'marker':
         return set(
@@ -9900,8 +12696,79 @@ const InspirationTrackerMod = (() => {
       ...rows,
       buildDivider(),
       buildSecondaryButton(t('buttons.menu', lang), COMMAND),
+      buildSecondaryButton(t('buttons.pools', lang), `${COMMAND} pools`),
       buildSecondaryButton(t('buttons.reset', lang), `${COMMAND} reset`),
     ]);
+  }
+
+  /**
+   * Shows the points pools, with a button for each of their settings.
+   *
+   * @param {string|null} playerId Who asked.
+   * @returns {void}
+   */
+  function showPools(playerId) {
+    const lang = getConfig().language;
+    const body = [
+      `<div style="font-size:0.9em">${escapeHtml(t(activePool() ? 'pools.introPool' : 'pools.introFlag', lang, { name: defaultPool().name }))}</div>`,
+    ];
+    for (const pool of getPools()) {
+      const isDefault = pool === defaultPool();
+      const set = (field, label, value) =>
+        buildRow(
+          t(`pools.${field}`, lang),
+          buildButton(label, `${COMMAND} pool set ${pool.id} ${field} ${value}`)
+        );
+      body.push(
+        buildSectionLabel(
+          isDefault ? t('pools.defaultLabel', lang, { name: pool.name }) : pool.name
+        ),
+        set('name', pool.name, `?{${queryText(t('pools.name', lang))}|${queryText(pool.name)}}`),
+        set(
+          'source',
+          t(`values.source.${pool.source}`, lang),
+          query(
+            t('pools.source', lang),
+            POOL_SOURCES.map((o) => ({ label: t(`values.source.${o}`, lang), value: o }))
+          )
+        ),
+        set('cost', String(pool.cost), `?{${queryText(t('pools.cost', lang))}|${pool.cost}}`),
+        set(
+          'max',
+          pool.max > 0 ? String(pool.max) : t('values.noLimit', lang),
+          `?{${queryText(t('prompts.max', lang))}|${pool.max}}`
+        )
+      );
+      if (!isDefault) {
+        body.push(
+          set(
+            'marker',
+            pool.marker ? markerName(pool.marker) : t('values.none', lang),
+            query(t('pools.marker', lang), [
+              { label: t('values.none', lang), value: 'none' },
+              ...listMarkers()
+                .filter((m) => m.tag !== getConfig().marker)
+                .map((m) => ({ label: m.name, value: m.tag })),
+            ])
+          ),
+          buildSecondaryButton(t('buttons.party', lang), `${COMMAND} party --pool ${pool.id}`),
+          buildSecondaryButton(t('buttons.deletePool', lang), `${COMMAND} pool delete ${pool.id}`)
+        );
+      }
+      body.push(
+        `<div style="font-size:0.8em;opacity:0.8">${escapeHtml(t('pools.attribute', lang, { attribute: poolAttributeName(pool) }))}</div>`
+      );
+    }
+    body.push(
+      buildDivider(),
+      buildButton(
+        t('buttons.addPool', lang),
+        `${COMMAND} pool add ?{${queryText(t('pools.name', lang))}}`
+      ),
+      buildSecondaryButton(t('buttons.settings', lang), `${COMMAND} set`),
+      buildSecondaryButton(t('buttons.menu', lang), COMMAND)
+    );
+    whisper(playerId, t('titles.pools', lang), body);
   }
 
   /**
@@ -9929,16 +12796,22 @@ const InspirationTrackerMod = (() => {
    */
   function overviewLine(row, lang, buttons) {
     const name = escapeHtml(toText(row.character.get('name')));
-    const mark = row.inspired
+    let mark = row.inspired
       ? `<span style="color:#f2c94c;font-weight:bold">${YES}</span>`
       : `<span style="opacity:0.6">${NO}</span>`;
+    if (row.points !== undefined) {
+      mark =
+        row.points > 0
+          ? `<span style="color:#f2c94c;font-weight:bold">${row.points}</span>`
+          : '<span style="opacity:0.6">0</span>';
+    }
     const sheet =
       row.kind === 'none'
         ? ` <span style="font-size:0.8em;opacity:0.7">(${escapeHtml(t('menu.noSheet', lang))})</span>`
         : '';
     return [
       '<table style="width:100%;border-collapse:collapse;margin:1px 0"><tr>',
-      `<td style="width:1.4em;text-align:center">${mark}</td>`,
+      `<td style="min-width:1.4em;text-align:center;white-space:nowrap">${mark}</td>`,
       `<td>${name}${sheet}</td>`,
       `<td style="text-align:right;white-space:nowrap">${buttons}</td>`,
       '</tr></table>',
@@ -9952,14 +12825,20 @@ const InspirationTrackerMod = (() => {
    *
    * @param {string} playerId Who asked.
    * @param {boolean} gm Whether they act as GM.
+   * @param {object|null} [pool] The pool to show; the tracked one when left out.
    * @returns {Promise<void>}
    */
-  async function showParty(playerId, gm) {
+  async function showParty(playerId, gm, pool = null) {
     const config = getConfig();
     const lang = config.language;
     const members = partyMembers();
     const visible =
       gm || config.playerOverview ? members : members.filter((c) => canControl(playerId, c));
+    const shown = pool || activePool();
+    if (shown) {
+      showPoolParty(playerId, gm, shown, visible);
+      return;
+    }
     const rows = await readRows(visible);
     const lines = rows.map((row) => {
       const id = row.character.id;
@@ -9987,10 +12866,105 @@ const InspirationTrackerMod = (() => {
       `<div style="font-size:0.9em">${escapeHtml(t('menu.partyCount', lang, { count, total: rows.length, term }))}</div>`,
       buildSecondaryButton(t('buttons.refresh', lang), `${COMMAND} party`),
     ];
+    body.push(...otherPoolButtons(null, lang));
     if (gm) {
       body.push(buildSecondaryButton(t('buttons.menu', lang), COMMAND));
     }
     whisper(playerId, t('titles.party', lang), body);
+  }
+
+  /**
+   * Builds the buttons a character's pool line gets.
+   *
+   * @param {string} playerId Who is looking.
+   * @param {boolean} gm Whether they act as GM.
+   * @param {object} pool Pool.
+   * @param {object} character Roll20 character.
+   * @param {number} points The character's points.
+   * @param {boolean} party Whether to show the party again afterwards.
+   * @returns {string} Button HTML.
+   */
+  function poolLineButtons(playerId, gm, pool, character, points, party) {
+    const config = getConfig();
+    const lang = config.language;
+    const target = `--ids ${character.id} --pool ${pool.id}${party ? ' --party' : ''}`;
+    const button = (build, key, sub, prompt) =>
+      build(t(`buttons.${key}`, lang), `${COMMAND} ${sub} ${ask(prompt, lang)} ${target}`);
+    if (gm) {
+      return [
+        button(buildButton, 'give', 'give', 'points'),
+        points > 0 ? button(buildSecondaryButton, 'remove', 'remove', 'points') : '',
+        points > 0 ? button(buildSecondaryButton, 'spend', 'spend', 'points') : '',
+      ].join('');
+    }
+    if (points > 0 && config.playerSpend && canControl(playerId, character)) {
+      return (
+        button(buildButton, 'spend', 'spend', 'points') +
+        button(buildSecondaryButton, 'boost', 'boost', 'bonus')
+      );
+    }
+    return '';
+  }
+
+  /**
+   * Builds buttons to look at the other pools from an overview.
+   *
+   * @param {object|null} current The pool being shown, or null for the sheet's inspiration box.
+   * @param {string} lang Locale code.
+   * @returns {string[]} Button HTML.
+   */
+  function otherPoolButtons(current, lang) {
+    const tracked = activePool();
+    const buttons = [];
+    if (current && current !== tracked) {
+      buttons.push(
+        buildSecondaryButton(tracked ? tracked.name : t('terms.classic', lang), `${COMMAND} party`)
+      );
+    }
+    for (const pool of getPools()) {
+      if (pool !== current && pool !== tracked && pool !== defaultPool()) {
+        buttons.push(buildSecondaryButton(pool.name, `${COMMAND} party --pool ${pool.id}`));
+      }
+    }
+    return buttons;
+  }
+
+  /**
+   * Shows the party's points in a pool. The GM gets Give, Remove and Spend
+   * buttons; players get Spend and Boost for their own characters.
+   *
+   * @param {string} playerId Who asked.
+   * @param {boolean} gm Whether they act as GM.
+   * @param {object} pool Pool.
+   * @param {object[]} characters Party members the player may see.
+   * @returns {void}
+   */
+  function showPoolParty(playerId, gm, pool, characters) {
+    const lang = getConfig().language;
+    let total = 0;
+    const lines = characters.map((character) => {
+      const points = readPool(character.id, pool).value;
+      total += points;
+      return overviewLine(
+        { character, points },
+        lang,
+        poolLineButtons(playerId, gm, pool, character, points, true)
+      );
+    });
+    const flag = pool === activePool() ? '' : ` --pool ${pool.id}`;
+    const body = [
+      lines.length > 0
+        ? lines.join('')
+        : `<div>${escapeHtml(t(gm ? 'menu.partyEmptyGm' : 'menu.partyEmpty', lang))}</div>`,
+      buildDivider(),
+      `<div style="font-size:0.9em">${escapeHtml(t('pools.partyTotal', lang, { total, term: pool.name }))}</div>`,
+      buildSecondaryButton(t('buttons.refresh', lang), `${COMMAND} party${flag}`),
+      ...otherPoolButtons(pool, lang),
+    ];
+    if (gm) {
+      body.push(buildSecondaryButton(t('buttons.menu', lang), COMMAND));
+    }
+    whisper(playerId, t('titles.poolParty', lang, { term: pool.name }), body);
   }
 
   /**
@@ -10007,10 +12981,12 @@ const InspirationTrackerMod = (() => {
       return;
     }
     const lang = config.language;
-    const own = findObjs({ _type: 'character' })
-      .filter((c) => !c.get('archived') && canControl(playerId, c) && sheetKind(c.id) !== 'none')
+    const tracked = activePool();
+    const controlled = findObjs({ _type: 'character' })
+      .filter((c) => !c.get('archived') && canControl(playerId, c))
       .sort((a, b) => toText(a.get('name')).localeCompare(toText(b.get('name'))));
-    const rows = await readRows(own);
+    const own = controlled.filter((c) => sheetKind(c.id) !== 'none');
+    const rows = tracked ? [] : await readRows(own);
     const lines = rows.map((row) =>
       overviewLine(
         row,
@@ -10020,6 +12996,31 @@ const InspirationTrackerMod = (() => {
           : ''
       )
     );
+    // The tracked pool, then the GM's other pools, for the characters that are theirs: in the
+    // party, or named as theirs. A character everyone controls (a shared helper token) is only
+    // listed once it has points.
+    const party = partyMembers();
+    const theirs = controlled.filter(
+      (c) => party.some((m) => m.id === c.id) || controllerIds(c).includes(playerId)
+    );
+    const pools = getPools().filter((pool) => pool === tracked || pool !== defaultPool());
+    for (const pool of pools) {
+      const listed = controlled
+        .map((character) => ({ character, points: readPool(character.id, pool).value }))
+        .filter((row) => row.points > 0 || theirs.includes(row.character));
+      if (listed.length > 0 && (pools.length > 1 || !tracked)) {
+        lines.push(buildSectionLabel(pool.name));
+      }
+      for (const { character, points } of listed) {
+        lines.push(
+          overviewLine(
+            { character, points },
+            lang,
+            poolLineButtons(playerId, false, pool, character, points, false)
+          )
+        );
+      }
+    }
     whisper(
       playerId,
       t('titles.yours', lang),
@@ -10055,6 +13056,13 @@ const InspirationTrackerMod = (() => {
       row('none', counts.none),
       row('rules2024', rules2024),
       row('party', partyMembers().length),
+      row('tracking', t(`values.tracking.${config.tracking}`, lang)),
+      row(
+        'pools',
+        getPools()
+          .map((p) => p.name)
+          .join(', ')
+      ),
       row('marker', markerName(config.marker)),
       row('fx', config.fx ? config.fxType : onOff(false, lang)),
       legacyCommand ? row('legacyCommand', `!${legacyCommand}`) : '',
@@ -10072,7 +13080,9 @@ const InspirationTrackerMod = (() => {
     const lang = getConfig().language;
     const commands = gm
       ? HELP_COMMANDS
-      : HELP_COMMANDS.filter(([, key]) => ['menu', 'spend', 'party', 'help'].includes(key));
+      : HELP_COMMANDS.filter(([, key]) =>
+          ['menu', 'spend', 'boost', 'party', 'help'].includes(key)
+        );
     const lines = commands.map(
       ([text, key]) =>
         `<div style="margin:2px 0"><code>${escapeHtml(`${COMMAND} ${text}`.trim())}</code><br><span style="font-size:0.9em">${escapeHtml(t(gm ? `help.${key}` : `helpPlayer.${key}`, lang))}</span></div>`
@@ -10091,15 +13101,21 @@ const InspirationTrackerMod = (() => {
    * Splits a chat message into the command word, its arguments and flags.
    *
    * @param {string} content Message text after the command prefix.
-   * @returns {{sub: string, args: string[], ids: string[], party: boolean}} Parsed command.
+   * @returns {{sub: string, args: string[], ids: string[], party: boolean, pool: string}} Parsed command.
    */
   function parseCommand(content) {
     const words = tokenize(content);
     const args = [];
     const ids = [];
     let party = false;
+    let pool = '';
     for (let i = 0; i < words.length; i += 1) {
       const word = words[i];
+      if (word.toLowerCase() === '--pool') {
+        pool = words[i + 1] || '';
+        i += 1;
+        continue;
+      }
       if (word.toLowerCase() === '--ids') {
         const list = words[i + 1] || '';
         i += 1;
@@ -10116,7 +13132,7 @@ const InspirationTrackerMod = (() => {
       }
     }
     const sub = (args.shift() || '').toLowerCase();
-    return { sub, args, ids, party };
+    return { sub, args, ids, party, pool };
   }
 
   /**
@@ -10162,7 +13178,220 @@ const InspirationTrackerMod = (() => {
       case 'failed':
         whisperError(target, t('errors.writeFailed', lang, vars), result.error);
         break;
+      case 'poolNone':
+        whisperWarning(target, t('pool.none', lang, { ...vars, ...result }));
+        break;
+      case 'poolRemoved':
+        whisper(target, SCRIPT_NAME, escapeHtml(t('pool.removed', lang, { ...vars, ...result })));
+        break;
+      case 'short':
+        whisperWarning(target, t('pool.short', lang, { ...vars, ...result }));
+        break;
+      case 'full':
+        whisperWarning(target, t('pool.full', lang, { ...vars, ...result }));
+        break;
     }
+  }
+
+  /**
+   * Tells a player that no pool has the name they gave.
+   *
+   * @param {string|null} who Who asked.
+   * @param {string} value The name given.
+   * @returns {void}
+   */
+  function unknownPool(who, value) {
+    const lang = getConfig().language;
+    whisperError(
+      who,
+      t('errors.unknownPool', lang, { value }),
+      t('errors.unknownPoolHint', lang, {
+        pools: getPools()
+          .map((p) => p.name)
+          .join(', '),
+      })
+    );
+  }
+
+  /**
+   * Finds the pool a command works on: the one named with --pool, or the
+   * default pool while Tracking is set to a points pool. An unknown name is
+   * reported to the player.
+   *
+   * @param {object} msg Chat message.
+   * @param {object} cmd Parsed command.
+   * @returns {{pool: object|null, ok: boolean}} The pool (null for the sheet's inspiration box), and false when the name was unknown.
+   */
+  function targetPool(msg, cmd) {
+    if (!cmd.pool) {
+      return { pool: activePool(), ok: true };
+    }
+    const pool = findPool(cmd.pool);
+    if (!pool) {
+      unknownPool(msg.playerid === API_PLAYER_ID ? null : msg.playerid, cmd.pool);
+    }
+    return { pool: pool || null, ok: Boolean(pool) };
+  }
+
+  /**
+   * Reads the number of points (or the bonus) a command gives.
+   *
+   * @param {object} msg Chat message.
+   * @param {string|undefined} raw The argument.
+   * @param {{fallback?: number, all?: boolean}} [options] Value when nothing was typed, and whether "all" is accepted.
+   * @returns {number|'all'|null} The amount, or null when it was not a whole number (the player is told).
+   */
+  function amountArg(msg, raw, options = {}) {
+    const text = toText(raw).toLowerCase();
+    if (text === '' && options.fallback !== undefined) {
+      return options.fallback;
+    }
+    if (text === 'all' && options.all) {
+      return 'all';
+    }
+    const n = /^\+?\d{1,5}$/.test(text) ? Number(text) : 0;
+    if (n < 1 || n > MAX_POINTS) {
+      const lang = getConfig().language;
+      whisperError(
+        msg.playerid === API_PLAYER_ID ? null : msg.playerid,
+        t('errors.badAmount', lang, { value: toText(raw) }),
+        t('errors.badAmountHint', lang)
+      );
+      return null;
+    }
+    return n;
+  }
+
+  /**
+   * Handles give, remove, spend and boost for a points pool.
+   *
+   * @param {object} msg Chat message.
+   * @param {object} cmd Parsed command.
+   * @param {object} pool Pool.
+   * @returns {Promise<void>}
+   */
+  async function handlePoolAction(msg, cmd, pool) {
+    const sub = cmd.sub === '' || cmd.sub === 'toggle' ? 'give' : cmd.sub;
+    const amount = amountArg(msg, cmd.args[0], {
+      fallback: sub === 'boost' ? undefined : 1,
+      all: sub === 'remove',
+    });
+    if (amount === null) {
+      return;
+    }
+    const actions = {
+      give: (character) => poolGive(character, pool, amount),
+      remove: (character) => poolRemove(character, pool, amount),
+      spend: (character, playerId) => poolSpend(character, pool, amount, playerId),
+      boost: (character, playerId) =>
+        poolSpend(character, pool, amount * pool.cost, playerId, amount),
+    };
+    await forCharacters(msg, { ...cmd, pool: pool.id }, actions[sub]);
+  }
+
+  /**
+   * Returns the marker a pool shows on tokens, if any.
+   *
+   * @param {object} pool Pool.
+   * @returns {string} Marker tag, or an empty string.
+   */
+  function poolMarkerOf(pool) {
+    if (pool === defaultPool()) {
+      return activePool() ? getConfig().marker : '';
+    }
+    return pool.marker;
+  }
+
+  /**
+   * Handles "pool add", "pool delete" and "pool set", then shows the pools.
+   *
+   * @param {string|null} who Who asked.
+   * @param {string[]} args Arguments after "pool".
+   * @returns {Promise<void>}
+   */
+  async function handlePoolEdit(who, args) {
+    const lang = getConfig().language;
+    const [action = '', ...rest] = args;
+    switch (action.toLowerCase()) {
+      case 'add': {
+        const name = rest.join(' ');
+        const result = addPool(name);
+        if (result.status !== 'added') {
+          const key = { invalid: 'poolInvalid', exists: 'poolExists', full: 'poolFull' }[
+            result.status
+          ];
+          whisperError(
+            who,
+            t(`errors.${key}`, lang, { value: name }),
+            t('errors.poolNameHint', lang)
+          );
+          return;
+        }
+        break;
+      }
+      case 'delete': {
+        const pool = findPool(rest.join(' '));
+        if (!pool) {
+          unknownPool(who, rest.join(' '));
+          return;
+        }
+        const marker = poolMarkerOf(pool);
+        if (!deletePool(pool)) {
+          whisperError(who, t('errors.poolDefault', lang, { name: pool.name }));
+          return;
+        }
+        stripMarker(marker);
+        break;
+      }
+      case 'set': {
+        const [id = '', rawField = '', ...words] = rest;
+        const pool = findPool(id);
+        if (!pool) {
+          unknownPool(who, id);
+          return;
+        }
+        const field = rawField.toLowerCase();
+        let value = words.join(' ');
+        if (field === 'marker') {
+          if (!value || ['none', 'off'].includes(value.toLowerCase())) {
+            value = '';
+          } else {
+            const marker = resolveMarker(value);
+            if (!marker || marker.tag === getConfig().marker) {
+              whisperError(
+                who,
+                t('errors.unknownMarker', lang, { value }),
+                t('errors.poolMarkerHint', lang)
+              );
+              return;
+            }
+            value = marker.tag;
+          }
+        }
+        const result = validatePoolField(field, value);
+        const other = field === 'name' && result.valid ? findPool(value) : undefined;
+        if (
+          !result.valid ||
+          (other && other !== pool) ||
+          (field === 'marker' && pool === defaultPool())
+        ) {
+          whisperError(
+            who,
+            t('errors.badSetting', lang, { key: rawField, value }),
+            t('errors.poolSetHint', lang)
+          );
+          return;
+        }
+        const oldMarker = poolMarkerOf(pool);
+        pool[field] = result.value;
+        if (field === 'marker') {
+          stripMarker(oldMarker);
+        }
+        await syncAll();
+        break;
+      }
+    }
+    showPools(who);
   }
 
   /**
@@ -10193,7 +13422,11 @@ const InspirationTrackerMod = (() => {
       report(msg.playerid, character, await action(character, msg.playerid));
     }
     if (cmd.party) {
-      await showParty(msg.playerid, isGmOrMod(msg.playerid, API_PLAYER_ID));
+      await showParty(
+        msg.playerid,
+        isGmOrMod(msg.playerid, API_PLAYER_ID),
+        cmd.pool ? findPool(cmd.pool) : null
+      );
     }
   }
 
@@ -10215,9 +13448,9 @@ const InspirationTrackerMod = (() => {
    *
    * @param {string} playerId Who asked.
    * @param {string[]} args Setting key and value.
-   * @returns {void}
+   * @returns {Promise<void>}
    */
-  function handleSet(playerId, args) {
+  async function handleSet(playerId, args) {
     const lang = getConfig().language;
     if (args.length === 0) {
       showSettings(playerId);
@@ -10248,8 +13481,11 @@ const InspirationTrackerMod = (() => {
       );
       return;
     }
-    if (key === 'marker' && oldMarker !== result.value) {
-      moveMarker(oldMarker);
+    if (key === 'tracking' || (key === 'marker' && oldMarker !== result.value)) {
+      // The marker follows what is tracked: taken off everywhere, then put back
+      // on the characters who have inspiration (or points) now.
+      stripMarker(oldMarker);
+      await syncAll();
     }
     if (key === 'language') {
       installHandouts();
@@ -10258,14 +13494,15 @@ const InspirationTrackerMod = (() => {
   }
 
   /**
-   * Takes the old marker off every token and shows the new one where the
-   * character has inspiration.
+   * Takes a marker off every token.
    *
-   * @param {string} oldMarker Previous marker tag.
+   * @param {string} oldMarker Marker tag.
    * @returns {void}
    */
-  function moveMarker(oldMarker) {
-    const marker = getConfig().marker;
+  function stripMarker(oldMarker) {
+    if (!oldMarker) {
+      return;
+    }
     for (const token of findObjs({ _type: 'graphic', _subtype: 'token' })) {
       const tags = toText(token.get('statusmarkers')).split(',');
       if (tags.some((tag) => tag.split('@')[0] === oldMarker)) {
@@ -10273,11 +13510,6 @@ const InspirationTrackerMod = (() => {
           'statusmarkers',
           tags.filter((tag) => tag && tag.split('@')[0] !== oldMarker).join(',')
         );
-      }
-    }
-    for (const [charId, inspired] of Object.entries(getState().known)) {
-      if (inspired && marker) {
-        syncTokens(charId, true);
       }
     }
   }
@@ -10331,15 +13563,31 @@ const InspirationTrackerMod = (() => {
         await showPlayerCard(msg.playerid);
         return;
       case 'spend':
+      case 'boost': {
         if (!getConfig().playerSpend) {
           whisperError(msg.playerid, t('errors.spendOff', lang));
           return;
         }
-        await forCharacters(msg, cmd, spend);
+        const target = targetPool(msg, cmd);
+        if (!target.ok) {
+          return;
+        }
+        if (target.pool) {
+          await handlePoolAction(msg, cmd, target.pool);
+        } else if (cmd.sub === 'boost') {
+          whisperError(msg.playerid, t('errors.boostNoPool', lang));
+        } else {
+          await forCharacters(msg, cmd, spend);
+        }
         return;
-      case 'party':
-        await showParty(msg.playerid, false);
+      }
+      case 'party': {
+        const target = targetPool(msg, cmd);
+        if (target.ok) {
+          await showParty(msg.playerid, false, cmd.pool ? target.pool : null);
+        }
         return;
+      }
       case 'pass':
         await handlePass(msg, cmd);
         return;
@@ -10396,13 +13644,28 @@ const InspirationTrackerMod = (() => {
   async function handleGm(msg, cmd) {
     const lang = getConfig().language;
     const who = msg.playerid === API_PLAYER_ID ? null : msg.playerid;
+    if (['', 'give', 'remove', 'toggle', 'spend', 'boost'].includes(cmd.sub)) {
+      const chosen = (msg.selected || []).length > 0 || cmd.ids.length > 0;
+      if (cmd.sub === '' && !chosen) {
+        showMainMenu(who);
+        return;
+      }
+      const target = targetPool(msg, cmd);
+      if (!target.ok) {
+        return;
+      }
+      if (target.pool) {
+        await handlePoolAction(msg, cmd, target.pool);
+        return;
+      }
+      if (cmd.sub === 'boost') {
+        whisperError(who, t('errors.boostNoPool', lang));
+        return;
+      }
+    }
     switch (cmd.sub) {
       case '':
-        if ((msg.selected || []).length > 0 || cmd.ids.length > 0) {
-          await forCharacters(msg, cmd, toggle);
-        } else {
-          showMainMenu(who);
-        }
+        await forCharacters(msg, cmd, toggle);
         return;
       case 'menu':
         showMainMenu(who);
@@ -10435,9 +13698,18 @@ const InspirationTrackerMod = (() => {
             setPartyMember(character.id, action === 'add');
           }
         }
-        await showParty(who, true);
+        const target = targetPool(msg, cmd);
+        if (target.ok) {
+          await showParty(who, true, cmd.pool ? target.pool : null);
+        }
         return;
       }
+      case 'pools':
+        showPools(who);
+        return;
+      case 'pool':
+        await handlePoolEdit(who, cmd.args);
+        return;
       case 'pass':
         await handlePass(msg, cmd);
         return;
@@ -10463,12 +13735,19 @@ const InspirationTrackerMod = (() => {
       case 'set':
       case 'settings':
       case 'config':
-        handleSet(who, cmd.sub === 'set' ? cmd.args : []);
+        await handleSet(who, cmd.sub === 'set' ? cmd.args : []);
         return;
-      case 'reset':
+      case 'reset': {
+        const marker = getConfig().marker;
+        const tracked = getConfig().tracking;
         resetConfig();
+        if (marker !== getConfig().marker || tracked !== getConfig().tracking) {
+          stripMarker(marker);
+          await syncAll();
+        }
         showSettings(who);
         return;
+      }
       case 'status':
         showStatus(who, getState().legacyCommand);
         return;
@@ -10568,6 +13847,8 @@ const InspirationTrackerMod = (() => {
       if (value !== undefined) {
         handleSheetValue(charId, value);
       }
+    } else if (isPoolAttributeName(name)) {
+      handlePoolAttribute(attr);
     }
   }
 
@@ -10605,6 +13886,12 @@ const InspirationTrackerMod = (() => {
   async function markNewToken(token) {
     const charId = token.get('represents');
     if (!isToken(token) || !charId) {
+      return;
+    }
+    for (const pool of getPools()) {
+      syncPool(charId, pool);
+    }
+    if (activePool()) {
       return;
     }
     let inspired = getKnown(charId);
@@ -10687,6 +13974,47 @@ const InspirationTrackerMod = (() => {
        * @returns {Promise<string>} Result status.
        */
       remove: (id) => run(id, (c) => remove(c)),
+      /**
+       * Returns a character's points in a pool.
+       *
+       * @param {string} id Character or token ID.
+       * @param {string} [pool] Pool name or ID; the default pool when left out.
+       * @returns {number} Points, 0 when the character or pool is unknown.
+       */
+      points(id, pool) {
+        const c = character(id);
+        const p = pool ? findPool(pool) : getPools()[0];
+        return c && p ? readPool(c.id, p).value : 0;
+      },
+      /**
+       * Adds points to a character's pool.
+       *
+       * @param {string} id Character or token ID.
+       * @param {number} amount Points to add.
+       * @param {string} [pool] Pool name or ID; the default pool when left out.
+       * @returns {Promise<string>} Result status.
+       */
+      async givePoints(id, amount, pool) {
+        const c = character(id);
+        const p = pool ? findPool(pool) : getPools()[0];
+        const n = Math.floor(Number(amount));
+        return c && p && n > 0 ? (await poolGive(c, p, n)).status : 'unknown';
+      },
+      /**
+       * Spends points from a character's pool, announcing it as a player's
+       * spend would be.
+       *
+       * @param {string} id Character or token ID.
+       * @param {number} amount Points to spend.
+       * @param {string} [pool] Pool name or ID; the default pool when left out.
+       * @returns {Promise<string>} Result status.
+       */
+      async spendPoints(id, amount, pool) {
+        const c = character(id);
+        const p = pool ? findPool(pool) : getPools()[0];
+        const n = Math.floor(Number(amount));
+        return c && p && n > 0 ? (await poolSpend(c, p, n, API_PLAYER_ID)).status : 'unknown';
+      },
     });
   }
 
