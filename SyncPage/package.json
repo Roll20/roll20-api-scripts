@@ -1,0 +1,20 @@
+{
+  "name": "syncpage-roll20",
+  "version": "1.0.0",
+  "description": "Roll20 Mod that keeps linked pages in step (tokens, drawings, walls, doors, windows, text and page settings) so a GM can split players across copies and hide or show things per copy.",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "set-version": "node scripts/bump-version.mjs",
+    "watch": "node scripts/build.mjs --watch",
+    "test": "node --test \"tests/*.test.mjs\"",
+    "format": "prettier --write \"SyncPage.js\" \"rollup.config.js\" \"src/**/*.js\" \"tests/**/*.mjs\" \"*.md\" \"scripts/**/*.mjs\"",
+    "sync-locales": "node scripts/sync-locales.mjs",
+    "regenerate-locales": "node scripts/sync-locales.mjs --regenerate"
+  },
+  "devDependencies": {
+    "prettier": "^3.5.3",
+    "rollup": "^4.34.8"
+  }
+}
