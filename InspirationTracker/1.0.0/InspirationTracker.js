@@ -5,7 +5,7 @@
  * Name: InspirationTracker
  * Script: InspirationTracker.js
  * Version: 1.0.0
- * Built: 2026-11-18T09:00:10.199Z
+ * Built: 2026-11-18T10:35:20.535Z
  */
 const InspirationTrackerMod = (() => {
   'use strict';
@@ -13,7 +13,7 @@ const InspirationTrackerMod = (() => {
   // Build-time placeholders replaced by rollup.config.js inject-build-metadata plugin.
   const SCRIPT_NAME = 'InspirationTracker';
   const SCRIPT_VERSION = '1.0.0';
-  const SCRIPT_LAST_UPDATED = '2026-11-18T09:00:10.199Z';
+  const SCRIPT_LAST_UPDATED = '2026-11-18T10:35:20.535Z';
 
   const DEFAULT_LOCALE$1 = 'en-US';
 
@@ -819,7 +819,7 @@ const InspirationTrackerMod = (() => {
         'Gebruik ’n naam van tot 40 letters, syfers en spasies wat geen ander poel het nie.',
       poolDefault: 'Die verstekpoel, "{name}", kan nie geskrap word nie. Dit kan hernoem word.',
       poolMarkerHint:
-        'Kies ’n merker uit jou merkerstelle wat nie die een in die Merker-instelling is nie.',
+        'Kies ’n merker uit jou merkerstelle wat nie deur die Merker-instelling of die ander poele gebruik word nie.',
       poolSetHint: 'Tik !inspiration pools om elke poel en sy instellings te sien.',
       denied: 'Jy kan dit nie vir {name} doen nie.',
       gmOnly: 'Slegs die GM kan daardie opdrag gebruik.',
@@ -911,7 +911,7 @@ const InspirationTrackerMod = (() => {
       },
       marker: {
         label: 'Merker',
-        desc: 'Tekenmerker wat gewys word terwyl ’n karakter inspirasie het. Pasgemaakte merkerstelle word ook gelys.',
+        desc: 'Tekenmerker wat gewys word terwyl ’n karakter inspirasie het. Pasgemaakte merkerstelle word ook gelys. Kies Geen om geen merker te wys nie.',
       },
       wording: {
         label: 'Bewoording',
@@ -1052,7 +1052,7 @@ const InspirationTrackerMod = (() => {
         heading: 'Puntepoele',
         points: [
           '’n Puntepoel is ’n getal wat opbou en ’n paar op ’n slag gebruik word: ’n poel inspirasiepunte, heldepunte, geluk, bennies en dies meer. Dit werk met enige karakterblad.',
-          'Stel Opsporing op Puntepoel, en Gee, Verwyder en Gebruik werk op die verstekpoel en vra hoeveel punte. Die merker wys terwyl ’n karakter enige punte het.',
+          'Stel Opsporing op Puntepoel, en Gee, Verwyder en Gebruik werk op die verstekpoel en vra hoeveel punte.',
           'Versterk gebruik punte om ’n worp te verhoog: tik die bonus wat jy wil hê, en die poel se Punte per +1 bepaal die koste. Teen 2 punte per +1 kos ’n bonus van 4 dus 8 punte. Die Mod kondig die gebruik aan; voeg self die bonus by die worp.',
           '’n Gebruik word geweier wanneer die karakter nie genoeg punte het nie. Die GM word ingelig wie wat gebruik het, met ’n Ontdoen-knoppie.',
           'Gehou in "Blad se hulpbronblokkie" gebruik die hulpbronblokkie op die blad wat die poel se naam het, soos ’n Other Resource-blokkie genaamd Inspiration op die 2014 D&D-blad. Wanneer die blad geen blokkie met daardie naam het nie, of met "Eienskap", word die punte in ’n gewone eienskap gehou, soos inspiration_pool. Die D&D 2024-blad gebruik altyd die eienskap.',
@@ -1069,6 +1069,7 @@ const InspirationTrackerMod = (() => {
           'Om die merker met die hand, of met TokenMod, by ’n teken te voeg, gee die karakter inspirasie. Om dit af te haal, gebruik dit.',
           'Om die merker te verander, skuif dit dadelik op elke teken.',
           'Die D&D 2024-blad se eie toestandmerkers word nie aangebied nie, omdat die blad dit self stel.',
+          'Die Merker-instelling is vir die blad se inspirasieblokkie. Elke puntepoel het sy eie Merker, op die Poele-kaart, en begin met Geen. Kies Geen vir enigeen om geen merker op tekens te sit nie: die groepkaart wys steeds wie inspirasie het, of hoeveel punte.',
         ],
       },
       commands: {
@@ -1221,7 +1222,7 @@ const InspirationTrackerMod = (() => {
       poolDefault:
         'La reserva per defecte, "{name}", no es pot suprimir. Se li pot canviar el nom.',
       poolMarkerHint:
-        'Tria un marcador dels teus jocs de marcadors que no sigui el de l’opció Marcador.',
+        "Tria un marcador dels teus jocs de marcadors que no facin servir ni l'opció Marcador ni les altres reserves.",
       poolSetHint: 'Escriu !inspiration pools per veure totes les reserves i les seves opcions.',
       denied: 'No pots fer això per a {name}.',
       gmOnly: 'Només el GM pot fer servir aquesta ordre.',
@@ -1313,7 +1314,7 @@ const InspirationTrackerMod = (() => {
       },
       marker: {
         label: 'Marcador',
-        desc: 'Marcador de testimoni que es mostra mentre un personatge té inspiració. També s’hi inclouen els jocs de marcadors personalitzats.',
+        desc: 'Marcador de testimoni que es mostra mentre un personatge té inspiració. També s’hi inclouen els jocs de marcadors personalitzats. Tria Cap per no mostrar cap marcador.',
       },
       wording: {
         label: 'Terminologia',
@@ -1455,7 +1456,7 @@ const InspirationTrackerMod = (() => {
         heading: 'Reserves de punts',
         points: [
           'Una reserva de punts és un nombre que s’acumula i es gasta de mica en mica: una reserva de punts d’inspiració, punts d’heroi, sort, bennies i similars. Funciona amb qualsevol fitxa de personatge.',
-          'Posa Seguiment a Reserva de punts, i Dona, Treu i Gasta actuen sobre la reserva per defecte i demanen quants punts. El marcador es mostra mentre un personatge té algun punt.',
+          'Posa Seguiment a Reserva de punts, i Dona, Treu i Gasta actuen sobre la reserva per defecte i demanen quants punts.',
           'Potencia gasta punts per apujar una tirada: escriu la bonificació que vols, i l’opció Punts per +1 de la reserva en decideix el cost. A 2 punts per +1, una bonificació de 4 costa 8 punts. El Mod anuncia la despesa; afegeix tu mateix la bonificació a la tirada.',
           'Una despesa es rebutja quan el personatge no té prou punts. S’avisa el GM de qui ha gastat què, amb un botó Desfés.',
           'Es guarda a "Casella de recurs de la fitxa" fa servir la casella de recurs de la fitxa que té el nom de la reserva, com ara una casella Other Resource anomenada Inspiration a la fitxa de D&D de 2014. Quan la fitxa no té cap casella amb aquest nom, o amb "Atribut", els punts es guarden en un atribut senzill, com ara inspiration_pool. La fitxa de D&D 2024 sempre fa servir l’atribut.',
@@ -1472,6 +1473,7 @@ const InspirationTrackerMod = (() => {
           'Afegir el marcador a un testimoni a mà, o amb TokenMod, dona inspiració al personatge. Treure’l la gasta.',
           'Canviar el marcador el mou a tots els testimonis immediatament.',
           'Els marcadors d’estat propis de la fitxa de D&D 2024 no s’ofereixen, perquè la fitxa ja els posa ella mateixa.',
+          "L'opció Marcador és per a la casella d'inspiració de la fitxa. Cada reserva de punts té el seu propi Marcador, a la targeta Reserves, i comença amb Cap. Tria Cap en qualsevol dels dos per no posar cap marcador als testimonis: la targeta del grup continua mostrant qui té inspiració, o quants punts.",
         ],
       },
       commands: {
@@ -1617,7 +1619,7 @@ const InspirationTrackerMod = (() => {
       poolFull: '沒有空間再新增點數池了。',
       poolNameHint: '請使用最多 40 個字母、數字和空格組成，且未被其他點數池使用的名稱。',
       poolDefault: '預設點數池「{name}」無法刪除，但可以重新命名。',
-      poolMarkerHint: '請從你的標記組中挑選一個與「標記」設定不同的標記。',
+      poolMarkerHint: '請從你的標記組中選擇「標記」設定和其他點數池都沒有使用的標記。',
       poolSetHint: '輸入 !inspiration pools 以查看所有點數池及其設定。',
       denied: '你無法對 {name} 執行此操作。',
       gmOnly: '只有 GM 可以使用此指令。',
@@ -1706,7 +1708,7 @@ const InspirationTrackerMod = (() => {
       },
       marker: {
         label: '標記',
-        desc: '角色擁有激勵時顯示的棋子標記。自訂標記組也會列出。',
+        desc: '角色擁有激勵時顯示的棋子標記。自訂標記組也會列出。選擇「無」則不顯示標記。',
       },
       wording: {
         label: '用語',
@@ -1843,7 +1845,7 @@ const InspirationTrackerMod = (() => {
         heading: '點數池',
         points: [
           '點數池是一個可以累積並一次花費幾點的數字：激勵點數、英雄點數、幸運、bennies 等等。它適用於任何角色卡。',
-          '將「追蹤方式」設為「點數池」後，「給予」、「移除」與「花費」會作用於預設點數池，並詢問點數。只要角色還有點數，就會顯示標記。',
+          '將「追蹤方式」設為「點數池」後，「給予」、「移除」與「花費」會作用於預設點數池，並詢問點數。',
           '「加值」會花費點數來提高擲骰：輸入想要的加值，費用由點數池的「每 +1 所需點數」決定。若每 +1 需要 2 點，加值 4 就要花費 8 點。Mod 會公告這次花費；加值請自行加到擲骰上。',
           '角色的點數不足時，花費會被拒絕。GM 會收到誰花費了多少的通知，並附有「復原」按鈕。',
           '儲存位置設為「角色卡資源欄位」時，會使用角色卡上與點數池同名的資源欄位，例如 2014 版 D&D 角色卡上名為 Inspiration 的 Other Resource 欄位。若角色卡上沒有同名欄位，或設為「屬性」，點數會存放在一般屬性中，例如 inspiration_pool。D&D 2024 角色卡一律使用屬性。',
@@ -1860,6 +1862,7 @@ const InspirationTrackerMod = (() => {
           '手動或透過 TokenMod 為棋子加上標記，會給予角色激勵。移除標記則會花費激勵。',
           '變更標記會立即在所有棋子上更換。',
           'D&D 2024 角色卡自己的狀態標記不會列出，因為角色卡會自行設定它們。',
+          '「標記」設定用於角色卡的激勵欄位。每個點數池在「點數池」卡片上有自己的「標記」，一開始是「無」。任一處選擇「無」，棋子上就不會放置標記：隊伍卡片仍會顯示誰擁有激勵，或有多少點數。',
         ],
       },
       commands: {
@@ -2008,7 +2011,8 @@ const InspirationTrackerMod = (() => {
       poolNameHint:
         'Použij název o nejvýše 40 písmenech, číslicích a mezerách, který nemá žádná jiná zásoba.',
       poolDefault: 'Výchozí zásobu „{name}“ nelze smazat. Lze ji přejmenovat.',
-      poolMarkerHint: 'Vyber ze svých sad značek značku, která není v nastavení Značka.',
+      poolMarkerHint:
+        'Vyber ze svých sad značek takovou, kterou nepoužívá nastavení Značka ani jiná zásoba.',
       poolSetHint: 'Napiš !inspiration pools a uvidíš všechny zásoby a jejich nastavení.',
       denied: 'Tohle pro {name} udělat nemůžeš.',
       gmOnly: 'Tento příkaz může použít jen GM.',
@@ -2099,7 +2103,7 @@ const InspirationTrackerMod = (() => {
       },
       marker: {
         label: 'Značka',
-        desc: 'Značka tokenu zobrazená, dokud má postava inspiraci. Uvedeny jsou i vlastní sady značek.',
+        desc: 'Značka tokenu zobrazená, dokud má postava inspiraci. Uvedeny jsou i vlastní sady značek. Zvol Žádná, a žádná značka se nezobrazí.',
       },
       wording: {
         label: 'Název',
@@ -2238,7 +2242,7 @@ const InspirationTrackerMod = (() => {
         heading: 'Zásoby bodů',
         points: [
           'Zásoba bodů je číslo, které se hromadí a utrácí po několika: zásoba bodů inspirace, hrdinských bodů, štěstí, bennies a podobně. Funguje s jakýmkoli deníkem postavy.',
-          'Nastav Sledování na Zásoba bodů a Dát, Odebrat a Využít budou pracovat s výchozí zásobou a zeptají se na počet bodů. Značka je vidět, dokud má postava nějaké body.',
+          'Nastav Sledování na Zásoba bodů a Dát, Odebrat a Využít budou pracovat s výchozí zásobou a zeptají se na počet bodů.',
           'Posílit utrácí body za zvýšení hodu: napiš požadovaný bonus a cenu určí Body za +1 dané zásoby. Při 2 bodech za +1 stojí bonus 4 celkem 8 bodů. Mod útratu oznámí; bonus si k hodu přičti sám.',
           'Útrata je odmítnuta, když postava nemá dost bodů. GM dostane zprávu, kdo co utratil, s tlačítkem Vrátit.',
           'Uloženo v „Políčko zdroje v deníku“ používá políčko zdroje v deníku, které nese název zásoby, například políčko Other Resource pojmenované Inspiration v deníku D&D 2014. Když deník políčko s tímto názvem nemá, nebo při volbě „Atribut“, jsou body uloženy v obyčejném atributu, například inspiration_pool. Deník D&D 2024 používá atribut vždy.',
@@ -2255,6 +2259,7 @@ const InspirationTrackerMod = (() => {
           'Přidání značky na token ručně nebo pomocí TokenMod dá postavě inspiraci. Její odebrání ji využije.',
           'Změna značky ji okamžitě přesune na všech tokenech.',
           'Vlastní značky stavů deníku D&D 2024 se nenabízejí, protože je deník nastavuje sám.',
+          'Nastavení Značka patří políčku inspirace v deníku. Každá zásoba bodů má vlastní Značku na kartě Zásoby a začíná s volbou Žádná. Zvol Žádná u kterékoli z nich, a na tokeny se značka nedává: karta družiny dál ukazuje, kdo má inspiraci nebo kolik bodů.',
         ],
       },
       commands: {
@@ -2404,7 +2409,8 @@ const InspirationTrackerMod = (() => {
       poolNameHint:
         'Brug et navn på op til 40 bogstaver, cifre og mellemrum, som ingen anden pulje har.',
       poolDefault: 'Standardpuljen, "{name}", kan ikke slettes. Den kan omdøbes.',
-      poolMarkerHint: 'Vælg en markør fra dine markørsæt, som ikke er den i indstillingen Markør.',
+      poolMarkerHint:
+        'Vælg en markør fra dine markørsæt, som hverken indstillingen Markør eller de andre puljer bruger.',
       poolSetHint: 'Skriv !inspiration pools for at se alle puljer og deres indstillinger.',
       denied: 'Det kan du ikke gøre for {name}.',
       gmOnly: 'Kun GM kan bruge den kommando.',
@@ -2496,7 +2502,7 @@ const InspirationTrackerMod = (() => {
       },
       marker: {
         label: 'Markør',
-        desc: 'Brikmarkør, der vises, mens en figur har inspiration. Egne markørsæt vises også.',
+        desc: 'Brikmarkør, der vises, mens en figur har inspiration. Egne markørsæt vises også. Vælg Ingen for ikke at vise nogen markør.',
       },
       wording: {
         label: 'Ordlyd',
@@ -2636,7 +2642,7 @@ const InspirationTrackerMod = (() => {
         heading: 'Pointpuljer',
         points: [
           'En pointpulje er et tal, der bygges op og bruges nogle få ad gangen: en pulje af inspirationspoint, heltepoint, held, bennies og lignende. Den virker med ethvert figurark.',
-          'Sæt Sporing til Pointpulje, så virker Giv, Fjern og Brug på standardpuljen og spørger, hvor mange point. Markøren vises, så længe en figur har point.',
+          'Sæt Sporing til Pointpulje, så virker Giv, Fjern og Brug på standardpuljen og spørger, hvor mange point.',
           'Boost bruger point på at hæve et slag: skriv den ønskede bonus, og puljens Point pr. +1 afgør prisen. Ved 2 point pr. +1 koster en bonus på 4 i alt 8 point. Mod’en meddeler forbruget; læg selv bonussen til slaget.',
           'Et forbrug afvises, når figuren ikke har point nok. GM får besked om, hvem der brugte hvad, med en Fortryd-knap.',
           'Gemmes i "Arkets ressourcefelt" bruger det ressourcefelt på arket, der har puljens navn, fx et Other Resource-felt ved navn Inspiration på 2014 D&D-arket. Når arket ikke har et felt med det navn, eller med "Attribut", gemmes pointene i en almindelig attribut, fx inspiration_pool. D&D 2024-arket bruger altid attributten.',
@@ -2653,6 +2659,7 @@ const InspirationTrackerMod = (() => {
           'At sætte markøren på en brik i hånden eller med TokenMod giver figuren inspiration. At fjerne den bruger den.',
           'Når markøren ændres, flyttes den straks på alle brikker.',
           'D&D 2024-arkets egne tilstandsmarkører tilbydes ikke, fordi arket selv sætter dem.',
+          'Indstillingen Markør gælder arkets inspirationsfelt. Hver pointpulje har sin egen Markør på Puljer-kortet og starter med Ingen. Vælg Ingen for en af dem for ikke at sætte nogen markør på brikker: gruppekortet viser stadig, hvem der har inspiration, eller hvor mange point.',
         ],
       },
       commands: {
@@ -2805,7 +2812,7 @@ const InspirationTrackerMod = (() => {
       poolDefault:
         'De standaardpool, "{name}", kan niet worden verwijderd. Je kunt hem wel hernoemen.',
       poolMarkerHint:
-        'Kies een marker uit je markersets die niet de marker van de instelling Marker is.',
+        'Kies uit je markersets een marker die de instelling Marker en de andere pools niet gebruiken.',
       poolSetHint: 'Typ !inspiration pools om elke pool en zijn instellingen te zien.',
       denied: 'Dat kun je niet doen voor {name}.',
       gmOnly: 'Alleen de GM kan dat commando gebruiken.',
@@ -2897,7 +2904,7 @@ const InspirationTrackerMod = (() => {
       },
       marker: {
         label: 'Marker',
-        desc: 'Tokenmarker die getoond wordt zolang een personage inspiratie heeft. Eigen markersets staan er ook bij.',
+        desc: 'Tokenmarker die getoond wordt zolang een personage inspiratie heeft. Eigen markersets staan er ook bij. Kies Geen om geen marker te tonen.',
       },
       wording: {
         label: 'Benaming',
@@ -3041,7 +3048,7 @@ const InspirationTrackerMod = (() => {
         heading: 'Puntenpools',
         points: [
           'Een puntenpool is een getal dat oploopt en met een paar punten tegelijk wordt gebruikt: een pool met inspiratiepunten, heldenpunten, geluk, bennies en dergelijke. Het werkt met elk personageblad.',
-          'Zet Bijhouden op Puntenpool, en Geven, Afnemen en Gebruiken werken op de standaardpool en vragen om hoeveel punten het gaat. De marker is zichtbaar zolang een personage punten heeft.',
+          'Zet Bijhouden op Puntenpool, en Geven, Afnemen en Gebruiken werken op de standaardpool en vragen om hoeveel punten het gaat.',
           'Boost gebruikt punten om een worp te verhogen: typ de gewenste bonus, en Punten per +1 van de pool bepaalt de kosten. Bij 2 punten per +1 kost een bonus van 4 dus 8 punten. De Mod kondigt het gebruik aan; tel de bonus zelf bij de worp op.',
           'Gebruik wordt geweigerd als het personage niet genoeg punten heeft. De GM krijgt te horen wie wat heeft gebruikt, met een knop Ongedaan maken.',
           'Bewaard in "Resourcevakje op het blad" gebruikt het resourcevakje op het blad dat de naam van de pool heeft, zoals een vakje Other Resource met de naam Inspiration op het 2014 D&D-blad. Heeft het blad geen vakje met die naam, of staat er "Attribuut", dan worden de punten bewaard in een gewoon attribuut, zoals inspiration_pool. Het D&D 2024-blad gebruikt altijd het attribuut.',
@@ -3058,6 +3065,7 @@ const InspirationTrackerMod = (() => {
           'De marker met de hand, of met TokenMod, aan een token toevoegen geeft het personage inspiratie. Hem eraf halen gebruikt hem.',
           'Een andere marker kiezen verplaatst hem meteen op elke token.',
           'De eigen conditiemarkers van het D&D 2024-blad worden niet aangeboden, omdat het blad die zelf zet.',
+          'De instelling Marker hoort bij het inspiratievakje op het blad. Elke puntenpool heeft een eigen Marker, op de Pools-kaart, en begint met Geen. Kies bij een van beide Geen om geen marker op tokens te zetten: de groepskaart toont nog steeds wie inspiratie heeft, of hoeveel punten.',
         ],
       },
       commands: {
@@ -3207,7 +3215,7 @@ const InspirationTrackerMod = (() => {
       poolNameHint: 'Use a name of up to 40 letters, digits and spaces that no other pool has.',
       poolDefault: 'The default pool, "{name}", cannot be deleted. It can be renamed.',
       poolMarkerHint:
-        'Pick a marker from your marker sets that is not the one in the Marker setting.',
+        'Pick a marker from your marker sets that the Marker setting and the other pools do not use.',
       poolSetHint: 'Type !inspiration pools to see every pool and its settings.',
       denied: 'You cannot do that for {name}.',
       gmOnly: 'Only the GM can use that command.',
@@ -3298,7 +3306,7 @@ const InspirationTrackerMod = (() => {
       },
       marker: {
         label: 'Marker',
-        desc: 'Token marker shown while a character has inspiration. Custom marker sets are listed too.',
+        desc: 'Token marker shown while a character has inspiration. Custom marker sets are listed too. Choose None to show no marker.',
       },
       wording: {
         label: 'Wording',
@@ -3438,7 +3446,7 @@ const InspirationTrackerMod = (() => {
         heading: 'Points Pools',
         points: [
           'A points pool is a number that builds up and is spent a few at a time: a pool of inspiration points, hero points, luck, bennies and the like. It works with any character sheet.',
-          'Set Tracking to Points pool, and Give, Remove and Spend work on the default pool, asking how many points. The marker shows while a character has any points.',
+          'Set Tracking to Points pool, and Give, Remove and Spend work on the default pool, asking how many points.',
           "Boost spends points to raise a roll: type the bonus wanted, and the pool's Points per +1 decides the cost. At 2 points per +1, a bonus of 4 costs 8 points. The Mod announces the spend; add the bonus to the roll yourself.",
           'A spend is refused when the character does not have enough points. The GM is told who spent what, with an Undo button.',
           'Kept in "Sheet resource box" uses the resource box on the sheet that has the pool\'s name, such as an Other Resource box named Inspiration on the 2014 D&D sheet. When the sheet has no box with that name, or with "Attribute", the points are kept in a plain attribute, such as inspiration_pool. The D&D 2024 sheet always uses the attribute.',
@@ -3455,6 +3463,7 @@ const InspirationTrackerMod = (() => {
           'Adding the marker to a token by hand, or with TokenMod, gives the character inspiration. Taking it off spends it.',
           'Changing the marker moves it on every token straight away.',
           "The D&D 2024 sheet's own condition markers are not offered, because the sheet sets them itself.",
+          "The Marker setting is for the sheet's inspiration box. Each points pool has a Marker of its own, on the Pools card, and starts with None. Choose None for either to put no marker on tokens: the Party card still shows who has inspiration, or how many points.",
         ],
       },
       commands: {
@@ -3604,7 +3613,8 @@ const InspirationTrackerMod = (() => {
       poolNameHint:
         'Käytä enintään 40 merkin nimeä, jossa on kirjaimia, numeroita ja välilyöntejä ja jota ei ole millään muulla varannolla.',
       poolDefault: 'Oletusvarantoa "{name}" ei voi poistaa. Sen voi nimetä uudelleen.',
-      poolMarkerHint: 'Valitse tunnussarjoistasi tunnus, joka ei ole sama kuin Tunnus-asetuksessa.',
+      poolMarkerHint:
+        'Valitse tunnussarjoistasi tunnus, jota Tunnus-asetus tai muut varannot eivät käytä.',
       poolSetHint: 'Kirjoita !inspiration pools nähdäksesi kaikki varannot ja niiden asetukset.',
       denied: 'Et voi tehdä sitä hahmolle {name}.',
       gmOnly: 'Vain GM voi käyttää tätä komentoa.',
@@ -3696,7 +3706,7 @@ const InspirationTrackerMod = (() => {
       },
       marker: {
         label: 'Tunnus',
-        desc: 'Pelimerkin tunnus, joka näkyy, kun hahmolla on inspiraatio. Myös omat tunnussarjat näytetään.',
+        desc: 'Pelimerkin tunnus, joka näkyy, kun hahmolla on inspiraatio. Myös omat tunnussarjat näytetään. Valitse Ei mitään, jos et halua tunnusta näkyviin.',
       },
       wording: {
         label: 'Nimitys',
@@ -3838,7 +3848,7 @@ const InspirationTrackerMod = (() => {
         heading: 'Pistevarannot',
         points: [
           'Pistevaranto on luku, joka karttuu ja jota käytetään muutama piste kerrallaan: inspiraatiopisteitä, sankaripisteitä, onnea, bennies-pisteitä ja muuta vastaavaa. Se toimii minkä tahansa hahmolomakkeen kanssa.',
-          'Aseta Seuranta arvoon Pistevaranto, niin Anna, Poista ja Käytä kohdistuvat oletusvarantoon ja kysyvät pistemäärän. Tunnus näkyy niin kauan kuin hahmolla on pisteitä.',
+          'Aseta Seuranta arvoon Pistevaranto, niin Anna, Poista ja Käytä kohdistuvat oletusvarantoon ja kysyvät pistemäärän.',
           'Tehosta käyttää pisteitä heiton korottamiseen: kirjoita haluamasi bonus, ja varannon Pisteitä per +1 -asetus ratkaisee hinnan. Kun +1 maksaa 2 pistettä, bonus 4 maksaa 8 pistettä. Mod ilmoittaa käytöstä; lisää bonus heittoon itse.',
           'Käyttö hylätään, jos hahmolla ei ole tarpeeksi pisteitä. GM saa tiedon siitä, kuka käytti ja mitä, sekä Kumoa-painikkeen.',
           'Säilytyspaikka "Lomakkeen resurssiruutu" käyttää lomakkeen resurssiruutua, jolla on varannon nimi, esimerkiksi Inspiraatio-nimistä Other Resource -ruutua vuoden 2014 D&D-lomakkeella. Jos lomakkeella ei ole sen nimistä ruutua tai valittuna on "Attribuutti", pisteet säilytetään tavallisessa attribuutissa, esimerkiksi inspiration_pool. D&D 2024 -lomake käyttää aina attribuuttia.',
@@ -3855,6 +3865,7 @@ const InspirationTrackerMod = (() => {
           'Tunnuksen lisääminen pelimerkkiin käsin tai TokenModilla antaa hahmolle inspiraation. Sen poistaminen käyttää sen.',
           'Tunnuksen vaihtaminen siirtää sen heti jokaiseen pelimerkkiin.',
           'D&D 2024 -lomakkeen omia tilatunnuksia ei tarjota, koska lomake asettaa ne itse.',
+          'Tunnus-asetus koskee lomakkeen inspiraatioruutua. Jokaisella pistevarannolla on oma Tunnuksensa Varannot-kortissa, ja aluksi se on Ei mitään. Valitse kumpaan tahansa Ei mitään, jolloin pelimerkkeihin ei lisätä tunnusta: seurueen kortti näyttää silti, kenellä on inspiraatio tai kuinka monta pistettä.',
         ],
       },
       commands: {
@@ -4007,7 +4018,7 @@ const InspirationTrackerMod = (() => {
       poolDefault:
         'La réserve par défaut, « {name} », ne peut pas être supprimée. Elle peut être renommée.',
       poolMarkerHint:
-        'Choisissez dans vos jeux de marqueurs un marqueur autre que celui du paramètre Marqueur.',
+        "Choisissez dans vos jeux de marqueurs un marqueur que ni le réglage Marqueur ni les autres réserves n'utilisent.",
       poolSetHint: 'Tapez !inspiration pools pour voir chaque réserve et ses paramètres.',
       denied: 'Vous ne pouvez pas faire cela pour {name}.',
       gmOnly: 'Seul le MJ peut utiliser cette commande.',
@@ -4099,7 +4110,7 @@ const InspirationTrackerMod = (() => {
       },
       marker: {
         label: 'Marqueur',
-        desc: "Marqueur de jeton affiché tant qu'un personnage a l'inspiration. Les jeux de marqueurs personnalisés sont aussi proposés.",
+        desc: "Marqueur de jeton affiché tant qu'un personnage a l'inspiration. Les jeux de marqueurs personnalisés sont aussi proposés. Choisissez Aucun pour n'afficher aucun marqueur.",
       },
       wording: {
         label: 'Formulation',
@@ -4241,7 +4252,7 @@ const InspirationTrackerMod = (() => {
         heading: 'Réserves de points',
         points: [
           "Une réserve de points est un nombre qui s'accumule et se dépense quelques points à la fois : une réserve de points d'inspiration, de points d'héroïsme, de chance, de bennies, etc. Elle fonctionne avec n'importe quelle fiche de personnage.",
-          "Réglez Suivi sur Réserve de points, et Donner, Retirer et Dépenser agissent sur la réserve par défaut en demandant combien de points. Le marqueur s'affiche tant qu'un personnage a au moins un point.",
+          'Réglez Suivi sur Réserve de points, et Donner, Retirer et Dépenser agissent sur la réserve par défaut en demandant combien de points.',
           'Renforcer dépense des points pour augmenter un jet : tapez le bonus voulu, et les Points par +1 de la réserve fixent le coût. À 2 points par +1, un bonus de 4 coûte 8 points. Le Mod annonce la dépense ; ajoutez vous-même le bonus au jet.',
           "Une dépense est refusée quand le personnage n'a pas assez de points. Le MJ est informé de qui a dépensé quoi, avec un bouton Annuler.",
           "Conservé dans « Case de ressource de la fiche » utilise la case de ressource de la fiche qui porte le nom de la réserve, par exemple une case Other Resource nommée Inspiration sur la fiche D&D 2014. Quand la fiche n'a pas de case portant ce nom, ou avec « Attribut », les points sont conservés dans un simple attribut, par exemple inspiration_pool. La fiche D&D 2024 utilise toujours l'attribut.",
@@ -4258,6 +4269,7 @@ const InspirationTrackerMod = (() => {
           "Ajouter le marqueur à un jeton à la main, ou avec TokenMod, donne l'inspiration au personnage. Le retirer la dépense.",
           'Changer de marqueur le remplace immédiatement sur tous les jetons.',
           "Les marqueurs d'état propres à la fiche D&D 2024 ne sont pas proposés, car la fiche les gère elle-même.",
+          "Le réglage Marqueur concerne la case d'inspiration de la fiche. Chaque réserve de points a son propre Marqueur, sur la carte Réserves, et commence avec Aucun. Choisissez Aucun pour l'un ou l'autre afin de ne mettre aucun marqueur sur les jetons : la carte du groupe indique toujours qui a l'inspiration, ou combien de points.",
         ],
       },
       commands: {
@@ -4411,7 +4423,7 @@ const InspirationTrackerMod = (() => {
       poolDefault:
         'Der Standardpool „{name}“ kann nicht gelöscht werden. Er lässt sich umbenennen.',
       poolMarkerHint:
-        'Wähle einen Marker aus deinen Marker-Sets, der nicht der aus der Einstellung Marker ist.',
+        'Wähle einen Marker aus deinen Marker-Sets, den weder die Einstellung Marker noch ein anderer Pool verwendet.',
       poolSetHint: 'Gib !inspiration pools ein, um alle Pools und ihre Einstellungen zu sehen.',
       denied: 'Das kannst du für {name} nicht tun.',
       gmOnly: 'Nur die SL kann diesen Befehl verwenden.',
@@ -4503,7 +4515,7 @@ const InspirationTrackerMod = (() => {
       },
       marker: {
         label: 'Marker',
-        desc: 'Token-Marker, der angezeigt wird, solange ein Charakter Inspiration hat. Eigene Marker-Sets werden ebenfalls aufgeführt.',
+        desc: 'Token-Marker, der angezeigt wird, solange ein Charakter Inspiration hat. Eigene Marker-Sets werden ebenfalls aufgeführt. Wähle Keiner, um keinen Marker anzuzeigen.',
       },
       wording: {
         label: 'Bezeichnung',
@@ -4646,7 +4658,7 @@ const InspirationTrackerMod = (() => {
         heading: 'Punktepools',
         points: [
           'Ein Punktepool ist eine Zahl, die sich aufbaut und nach und nach ausgegeben wird: ein Pool aus Inspirationspunkten, Heldenpunkten, Glück, Bennies und Ähnlichem. Er funktioniert mit jedem Charakterbogen.',
-          'Stelle Erfassung auf Punktepool, und Geben, Entfernen und Ausgeben wirken auf den Standardpool und fragen nach der Punktzahl. Der Marker wird angezeigt, solange ein Charakter Punkte hat.',
+          'Stelle Erfassung auf Punktepool, und Geben, Entfernen und Ausgeben wirken auf den Standardpool und fragen nach der Punktzahl.',
           'Verstärken gibt Punkte aus, um einen Wurf zu erhöhen: Gib den gewünschten Bonus ein, und Punkte pro +1 des Pools bestimmt die Kosten. Bei 2 Punkten pro +1 kostet ein Bonus von 4 also 8 Punkte. Die Mod kündigt die Ausgabe an; den Bonus addierst du selbst zum Wurf.',
           'Eine Ausgabe wird abgelehnt, wenn der Charakter nicht genug Punkte hat. Die SL erfährt, wer was ausgegeben hat, mit einem Rückgängig-Button.',
           'Gespeichert in „Ressourcenfeld des Bogens“ nutzt das Ressourcenfeld auf dem Bogen, das den Namen des Pools trägt, etwa ein Feld Other Resource namens Inspiration auf dem D&D-Bogen von 2014. Hat der Bogen kein Feld mit diesem Namen, oder bei „Attribut“, werden die Punkte in einem einfachen Attribut gespeichert, etwa inspiration_pool. Der D&D-2024-Bogen nutzt immer das Attribut.',
@@ -4663,6 +4675,7 @@ const InspirationTrackerMod = (() => {
           'Fügst du einem Token den Marker von Hand oder mit TokenMod hinzu, erhält der Charakter Inspiration. Entfernst du ihn, wird sie ausgegeben.',
           'Wird der Marker geändert, wechselt er sofort auf allen Token.',
           'Die eigenen Zustandsmarker des D&D-2024-Bogens werden nicht angeboten, da der Bogen sie selbst setzt.',
+          'Die Einstellung Marker gilt für das Inspirationsfeld des Bogens. Jeder Punktepool hat einen eigenen Marker auf der Pools-Karte und beginnt mit Keiner. Wähle bei einem von beiden Keiner, damit kein Marker auf Tokens gesetzt wird: Die Gruppenkarte zeigt weiterhin, wer Inspiration hat oder wie viele Punkte.',
         ],
       },
       commands: {
@@ -4816,7 +4829,7 @@ const InspirationTrackerMod = (() => {
       poolDefault:
         'Το προεπιλεγμένο απόθεμα, «{name}», δεν μπορεί να διαγραφεί. Μπορεί να μετονομαστεί.',
       poolMarkerHint:
-        'Διάλεξε από τα σετ δεικτών σου έναν δείκτη διαφορετικό από αυτόν της ρύθμισης Δείκτης.',
+        'Διάλεξε έναν δείκτη από τα σετ δεικτών σου που δεν τον χρησιμοποιεί η ρύθμιση Δείκτης ούτε κάποιο άλλο απόθεμα.',
       poolSetHint: 'Γράψε !inspiration pools για να δεις κάθε απόθεμα και τις ρυθμίσεις του.',
       denied: 'Δεν μπορείς να το κάνεις αυτό για {name}.',
       gmOnly: 'Μόνο ο GM μπορεί να χρησιμοποιήσει αυτή την εντολή.',
@@ -4908,7 +4921,7 @@ const InspirationTrackerMod = (() => {
       },
       marker: {
         label: 'Δείκτης',
-        desc: 'Δείκτης πιονιού που εμφανίζεται όσο ένας χαρακτήρας έχει έμπνευση. Εμφανίζονται και τα προσαρμοσμένα σετ δεικτών.',
+        desc: 'Δείκτης πιονιού που εμφανίζεται όσο ένας χαρακτήρας έχει έμπνευση. Εμφανίζονται και τα προσαρμοσμένα σετ δεικτών. Διάλεξε Κανένας για να μην εμφανίζεται δείκτης.',
       },
       wording: {
         label: 'Ονομασία',
@@ -5050,7 +5063,7 @@ const InspirationTrackerMod = (() => {
         heading: 'Αποθέματα πόντων',
         points: [
           'Ένα απόθεμα πόντων είναι ένας αριθμός που μαζεύεται και ξοδεύεται λίγο λίγο: ένα απόθεμα πόντων έμπνευσης, πόντων ήρωα, τύχης, bennies και παρόμοιων. Λειτουργεί με οποιοδήποτε φύλλο χαρακτήρα.',
-          'Όρισε την Παρακολούθηση σε Απόθεμα πόντων, και τα Δώσε, Αφαίρεσε και Ξόδεψε ενεργούν στο προεπιλεγμένο απόθεμα, ρωτώντας πόσους πόντους. Ο δείκτης εμφανίζεται όσο ένας χαρακτήρας έχει πόντους.',
+          'Όρισε την Παρακολούθηση σε Απόθεμα πόντων, και τα Δώσε, Αφαίρεσε και Ξόδεψε ενεργούν στο προεπιλεγμένο απόθεμα, ρωτώντας πόσους πόντους.',
           'Το Ενίσχυσε ξοδεύει πόντους για να ανεβάσει μια ζαριά: γράψε το μπόνους που θέλεις, και η ρύθμιση Πόντοι ανά +1 του αποθέματος καθορίζει το κόστος. Με 2 πόντους ανά +1, ένα μπόνους 4 κοστίζει 8 πόντους. Το Mod ανακοινώνει το ξόδεμα· πρόσθεσε εσύ το μπόνους στη ζαριά.',
           'Ένα ξόδεμα απορρίπτεται όταν ο χαρακτήρας δεν έχει αρκετούς πόντους. Ο GM ενημερώνεται για το ποιος ξόδεψε τι, με κουμπί Αναίρεση.',
           'Το Αποθηκεύεται σε «Πεδίο πόρου του φύλλου» χρησιμοποιεί το πεδίο πόρου του φύλλου που έχει το όνομα του αποθέματος, όπως ένα πεδίο Other Resource με όνομα Inspiration στο φύλλο D&D 2014. Όταν το φύλλο δεν έχει πεδίο με αυτό το όνομα, ή με το «Χαρακτηριστικό», οι πόντοι αποθηκεύονται σε ένα απλό χαρακτηριστικό, όπως το inspiration_pool. Το φύλλο D&D 2024 χρησιμοποιεί πάντα το χαρακτηριστικό.',
@@ -5067,6 +5080,7 @@ const InspirationTrackerMod = (() => {
           'Αν προσθέσεις τον δείκτη σε ένα πιόνι με το χέρι, ή με το TokenMod, ο χαρακτήρας αποκτά έμπνευση. Αν τον αφαιρέσεις, την ξοδεύει.',
           'Η αλλαγή δείκτη τον μεταφέρει αμέσως σε κάθε πιόνι.',
           'Οι δικοί δείκτες καταστάσεων του φύλλου D&D 2024 δεν προσφέρονται, επειδή τους ορίζει το ίδιο το φύλλο.',
+          'Η ρύθμιση Δείκτης αφορά το πεδίο έμπνευσης του φύλλου. Κάθε απόθεμα πόντων έχει δικό του Δείκτη, στην κάρτα Αποθέματα, και ξεκινά με Κανένας. Διάλεξε Κανένας σε οποιοδήποτε από τα δύο για να μην μπαίνει δείκτης στα πιόνια: η κάρτα της ομάδας εξακολουθεί να δείχνει ποιος έχει έμπνευση ή πόσους πόντους.',
         ],
       },
       commands: {
@@ -5214,7 +5228,7 @@ const InspirationTrackerMod = (() => {
       poolFull: 'אין מקום למאגר נוסף.',
       poolNameHint: 'השתמש בשם של עד 40 אותיות, ספרות ורווחים שאין לאף מאגר אחר.',
       poolDefault: 'אי אפשר למחוק את מאגר ברירת המחדל, "{name}". אפשר לשנות את שמו.',
-      poolMarkerHint: 'בחר ממערכות הסמנים שלך סמן שאינו הסמן שבהגדרה סמן.',
+      poolMarkerHint: 'בחר מערכות הסמנים שלך סמן שההגדרה סמן והמאגרים האחרים אינם משתמשים בו.',
       poolSetHint: 'הקלד !inspiration pools כדי לראות כל מאגר וההגדרות שלו.',
       denied: 'אינך יכול לעשות זאת עבור {name}.',
       gmOnly: 'רק ה-GM יכול להשתמש בפקודה הזו.',
@@ -5305,7 +5319,7 @@ const InspirationTrackerMod = (() => {
       },
       marker: {
         label: 'סמן',
-        desc: 'סמן האסימון שמוצג כל עוד לדמות יש השראה. גם ערכות סמנים מותאמות אישית מופיעות ברשימה.',
+        desc: 'סמן האסימון שמוצג כל עוד לדמות יש השראה. גם ערכות סמנים מותאמות אישית מופיעות ברשימה. בחר ללא כדי שלא יוצג סמן.',
       },
       wording: {
         label: 'ניסוח',
@@ -5443,7 +5457,7 @@ const InspirationTrackerMod = (() => {
         heading: 'מאגרי נקודות',
         points: [
           'מאגר נקודות הוא מספר שמצטבר ומנוצל כמה נקודות בכל פעם: מאגר של נקודות השראה, נקודות גיבור, מזל, bennies וכדומה. הוא עובד עם כל גיליון דמות.',
-          'הגדר את מעקב למאגר נקודות, ותן, הסר והשתמש יפעלו על מאגר ברירת המחדל וישאלו כמה נקודות. הסמן מוצג כל עוד לדמות יש נקודות.',
+          'הגדר את מעקב למאגר נקודות, ותן, הסר והשתמש יפעלו על מאגר ברירת המחדל וישאלו כמה נקודות.',
           'חיזוק מנצל נקודות כדי להעלות הטלה: הקלד את הבונוס הרצוי, וההגדרה נקודות לכל +1 של המאגר קובעת את העלות. ב-2 נקודות לכל +1, בונוס של 4 עולה 8 נקודות. ה-Mod מכריז על השימוש; את הבונוס הוסף להטלה בעצמך.',
           'שימוש נדחה כשלדמות אין מספיק נקודות. ה-GM מקבל הודעה מי השתמש במה, עם כפתור בטל.',
           'מקום שמירה "תיבת משאב בגיליון" משתמש בתיבת המשאב בגיליון שנושאת את שם המאגר, למשל תיבת Other Resource בשם השראה בגיליון D&D של 2014. כשאין בגיליון תיבה בשם הזה, או עם "תכונה", הנקודות נשמרות בתכונה רגילה, למשל inspiration_pool. גיליון D&D 2024 משתמש תמיד בתכונה.',
@@ -5460,6 +5474,7 @@ const InspirationTrackerMod = (() => {
           'הוספת הסמן לאסימון ידנית, או עם TokenMod, נותנת לדמות השראה. הסרתו משתמשת בה.',
           'שינוי הסמן מעביר אותו מיד בכל האסימונים.',
           'סמני המצב של גיליון D&D 2024 עצמו אינם מוצעים, כי הגיליון מגדיר אותם בעצמו.',
+          'ההגדרה סמן מיועדת לתיבת ההשראה בגיליון. לכל מאגר נקודות יש סמן משלו, בכרטיס המאגרים, והוא מתחיל עם ללא. בחר ללא באחד מהם כדי שלא יושם סמן על אסימונים: כרטיס החבורה עדיין מראה למי יש השראה, או כמה נקודות.',
         ],
       },
       commands: {
@@ -5610,7 +5625,7 @@ const InspirationTrackerMod = (() => {
         'Legfeljebb 40 betűből, számjegyből és szóközből álló nevet adj meg, amelyet más készlet nem visel.',
       poolDefault: 'Az alapértelmezett készlet („{name}”) nem törölhető. Átnevezni lehet.',
       poolMarkerHint:
-        'Válassz a jelölőkészleteidből olyan jelölőt, amely nem azonos a Jelölő beállításban megadottal.',
+        'Válassz a jelölőkészleteidből olyan jelölőt, amelyet sem a Jelölő beállítás, sem a többi készlet nem használ.',
       poolSetHint: 'Írd be: !inspiration pools, hogy lásd az összes készletet és beállításaikat.',
       denied: 'Ezt nem teheted meg {name} esetében.',
       gmOnly: 'Ezt a parancsot csak a KM használhatja.',
@@ -5701,7 +5716,7 @@ const InspirationTrackerMod = (() => {
       },
       marker: {
         label: 'Jelölő',
-        desc: 'Tokenjelölő, amely addig látszik, amíg a karakternek ihlete van. Az egyéni jelölőkészletek is szerepelnek a listában.',
+        desc: 'Tokenjelölő, amely addig látszik, amíg a karakternek ihlete van. Az egyéni jelölőkészletek is szerepelnek a listában. Válaszd a Nincs lehetőséget, ha ne jelenjen meg jelölő.',
       },
       wording: {
         label: 'Megnevezés',
@@ -5844,7 +5859,7 @@ const InspirationTrackerMod = (() => {
         heading: 'Pontkészletek',
         points: [
           'A pontkészlet egy szám, amely gyűlik, és egyszerre néhány pontonként fogy: ihletpontok, hőspontok, szerencse, bennies és hasonlók készlete. Bármilyen karakterlappal működik.',
-          'Állítsd a Nyilvántartást Pontkészletre, és az Ad, az Elvesz és a Felhasznál az alapértelmezett készleten működik, és megkérdezi, hány pontról van szó. A jelölő addig látszik, amíg a karakternek van pontja.',
+          'Állítsd a Nyilvántartást Pontkészletre, és az Ad, az Elvesz és a Felhasznál az alapértelmezett készleten működik, és megkérdezi, hány pontról van szó.',
           'Az Erősít pontokat használ fel egy dobás növelésére: írd be a kívánt bónuszt, és a készlet Pont +1-enként beállítása határozza meg az árát. Ha minden +1 2 pontba kerül, a 4-es bónusz 8 pont. A Mod bejelenti a felhasználást; a bónuszt te add hozzá a dobáshoz.',
           'A rendszer elutasítja a felhasználást, ha a karakternek nincs elég pontja. A KM értesítést kap arról, ki mit használt fel, Visszavonás gombbal.',
           'Ha a Tárolás helye „A lap erőforrásmezője”, a lapnak azt az erőforrásmezőjét használja, amely a készlet nevét viseli, például egy Ihlet nevű Other Resource mezőt a 2014-es D&D lapon. Ha a lapon nincs ilyen nevű mező, vagy a beállítás „Attribútum”, a pontok egy egyszerű attribútumban tárolódnak, például: inspiration_pool. A D&D 2024 lap mindig az attribútumot használja.',
@@ -5861,6 +5876,7 @@ const InspirationTrackerMod = (() => {
           'Ha kézzel vagy TokenModdal teszed fel a jelölőt egy tokenre, a karakter ihletet kap. Ha leveszed, felhasználja.',
           'A jelölő módosítása azonnal áthelyezi minden tokenen.',
           'A D&D 2024 lap saját állapotjelölői nem szerepelnek, mert azokat a lap maga állítja be.',
+          'A Jelölő beállítás a lap ihletmezőjéhez tartozik. Minden pontkészletnek saját Jelölője van a Készletek kártyán, és kezdetben Nincs. Válaszd bármelyiknél a Nincs lehetőséget, és a tokenekre nem kerül jelölő: a csapat kártyája továbbra is mutatja, kinek van ihlete, vagy hány pontja van.',
         ],
       },
       commands: {
@@ -6014,7 +6030,7 @@ const InspirationTrackerMod = (() => {
       poolDefault:
         'La riserva predefinita, «{name}», non può essere eliminata. Può essere rinominata.',
       poolMarkerHint:
-        "Scegli dai tuoi set di segnalini un segnalino diverso da quello dell'impostazione Segnalino.",
+        "Scegli dai tuoi set di segnalini un segnalino che né l'impostazione Segnalino né le altre riserve usano.",
       poolSetHint: 'Scrivi !inspiration pools per vedere ogni riserva e le sue impostazioni.',
       denied: 'Non puoi farlo per {name}.',
       gmOnly: 'Solo il GM può usare quel comando.',
@@ -6106,7 +6122,7 @@ const InspirationTrackerMod = (() => {
       },
       marker: {
         label: 'Segnalino',
-        desc: "Segnalino mostrato sul token mentre un personaggio ha l'ispirazione. Sono elencati anche i set di segnalini personalizzati.",
+        desc: "Segnalino mostrato sul token mentre un personaggio ha l'ispirazione. Sono elencati anche i set di segnalini personalizzati. Scegli Nessuno per non mostrare alcun segnalino.",
       },
       wording: {
         label: 'Terminologia',
@@ -6249,7 +6265,7 @@ const InspirationTrackerMod = (() => {
         heading: 'Riserve di punti',
         points: [
           "Una riserva di punti è un numero che si accumula e si spende un po' alla volta: una riserva di punti ispirazione, punti eroe, fortuna, bennies e simili. Funziona con qualsiasi scheda del personaggio.",
-          'Imposta Tracciamento su Riserva di punti, e Dai, Togli e Spendi agiscono sulla riserva predefinita, chiedendo quanti punti. Il segnalino resta visibile finché un personaggio ha almeno un punto.',
+          'Imposta Tracciamento su Riserva di punti, e Dai, Togli e Spendi agiscono sulla riserva predefinita, chiedendo quanti punti.',
           'Potenzia spende punti per alzare un tiro: scrivi il bonus desiderato, e i Punti per +1 della riserva stabiliscono il costo. A 2 punti per +1, un bonus di 4 costa 8 punti. La Mod annuncia la spesa; aggiungi tu il bonus al tiro.',
           'Una spesa viene rifiutata quando il personaggio non ha abbastanza punti. Il GM viene avvisato di chi ha speso cosa, con un pulsante Annulla.',
           "Conservata in «Casella risorsa della scheda» usa la casella risorsa della scheda che ha il nome della riserva, come una casella Other Resource chiamata Ispirazione sulla scheda D&D 2014. Quando la scheda non ha una casella con quel nome, oppure con «Attributo», i punti sono conservati in un semplice attributo, come inspiration_pool. La scheda D&D 2024 usa sempre l'attributo.",
@@ -6266,6 +6282,7 @@ const InspirationTrackerMod = (() => {
           "Aggiungere il segnalino a un token a mano, o con TokenMod, dà l'ispirazione al personaggio. Toglierlo la spende.",
           'Cambiare segnalino lo sposta subito su ogni token.',
           'I segnalini di condizione della scheda D&D 2024 non sono proposti, perché è la scheda stessa a impostarli.',
+          "L'impostazione Segnalino riguarda la casella dell'ispirazione sulla scheda. Ogni riserva di punti ha un proprio Segnalino, nel riquadro Riserve, e parte da Nessuno. Scegli Nessuno per l'una o per l'altro per non mettere alcun segnalino sui token: il riquadro del gruppo mostra comunque chi ha l'ispirazione, o quanti punti.",
         ],
       },
       commands: {
@@ -6418,7 +6435,8 @@ const InspirationTrackerMod = (() => {
       poolNameHint:
         '文字、数字、スペースで 40 文字以内の、他のプールと重複しない名前を使ってください。',
       poolDefault: '既定のプール「{name}」は削除できません。名前の変更はできます。',
-      poolMarkerHint: 'マーカーセットから、「マーカー」設定とは別のマーカーを選んでください。',
+      poolMarkerHint:
+        'マーカーセットから、「マーカー」設定や他のプールが使っていないマーカーを選んでください。',
       poolSetHint: '!inspiration pools と入力すると、すべてのプールとその設定が表示されます。',
       denied: '{name} に対してその操作はできません。',
       gmOnly: 'そのコマンドは GM のみ使用できます。',
@@ -6509,7 +6527,7 @@ const InspirationTrackerMod = (() => {
       },
       marker: {
         label: 'マーカー',
-        desc: 'キャラクターがインスピレーションを持っている間に表示するトークンマーカー。カスタムマーカーセットも一覧に表示されます。',
+        desc: 'キャラクターがインスピレーションを持っている間に表示するトークンマーカー。カスタムマーカーセットも一覧に表示されます。「なし」を選ぶとマーカーは表示されません。',
       },
       wording: {
         label: '呼び方',
@@ -6652,7 +6670,7 @@ const InspirationTrackerMod = (() => {
         heading: 'ポイントプール',
         points: [
           'ポイントプールは、貯まっていき少しずつ使う数値です。インスピレーションポイント、ヒーローポイント、幸運、bennies などのプールに使えます。どのキャラクターシートでも動作します。',
-          '「管理対象」を「ポイントプール」にすると、「与える」「外す」「使用」は既定のプールに対して働き、ポイント数を尋ねます。キャラクターがポイントを持っている間はマーカーが表示されます。',
+          '「管理対象」を「ポイントプール」にすると、「与える」「外す」「使用」は既定のプールに対して働き、ポイント数を尋ねます。',
           '「ブースト」はポイントを使用してロールを上げます。欲しいボーナスを入力すると、プールの「+1 あたりのポイント」でコストが決まります。+1 あたり 2 ポイントなら、ボーナス 4 には 8 ポイントかかります。Mod は使用を通知するだけなので、ボーナスは自分でロールに加えてください。',
           'キャラクターのポイントが足りない場合、使用は拒否されます。GM には誰が何を使用したかが「元に戻す」ボタン付きで通知されます。',
           '保存先が「シートのリソース欄」の場合、シート上でプールと同じ名前を持つリソース欄を使います。たとえば 2014 D&D シートで Inspiration と名付けた Other Resource 欄です。シートにその名前の欄がない場合、または保存先が「属性」の場合、ポイントは inspiration_pool のような単純な属性に保存されます。D&D 2024 シートでは常に属性を使います。',
@@ -6669,6 +6687,7 @@ const InspirationTrackerMod = (() => {
           '手動または TokenMod でトークンにマーカーを付けると、キャラクターはインスピレーションを得ます。外すと使用したことになります。',
           'マーカーを変更すると、すべてのトークン上ですぐに置き換わります。',
           'D&D 2024 シート独自の状態マーカーはシート自身が設定するため、選択肢に含まれません。',
+          '「マーカー」設定はシートのインスピレーション欄のためのものです。各ポイントプールは「プール」カードに専用の「マーカー」を持ち、最初は「なし」です。どちらも「なし」を選ぶと、トークンにマーカーは付きません。パーティーのカードには、誰がインスピレーションを持っているか、またはポイント数が引き続き表示されます。',
         ],
       },
       commands: {
@@ -6819,7 +6838,7 @@ const InspirationTrackerMod = (() => {
       poolNameHint:
         '글자, 숫자, 공백으로 된 40자 이내의 이름 중 다른 풀이 쓰지 않는 이름을 사용하세요.',
       poolDefault: '기본 풀 "{name}"은(는) 삭제할 수 없습니다. 이름은 바꿀 수 있습니다.',
-      poolMarkerHint: '마커 세트에서 마커 설정에 쓰인 것과 다른 마커를 고르세요.',
+      poolMarkerHint: '마커 세트에서 마커 설정이나 다른 풀이 쓰지 않는 마커를 고르세요.',
       poolSetHint: '!inspiration pools를 입력하면 모든 풀과 그 설정을 볼 수 있습니다.',
       denied: '{name}에 대해서는 그 작업을 할 수 없습니다.',
       gmOnly: '그 명령어는 GM만 사용할 수 있습니다.',
@@ -6910,7 +6929,7 @@ const InspirationTrackerMod = (() => {
       },
       marker: {
         label: '마커',
-        desc: '캐릭터가 영감을 가진 동안 표시할 토큰 마커입니다. 사용자 지정 마커 세트도 목록에 나옵니다.',
+        desc: '캐릭터가 영감을 가진 동안 표시할 토큰 마커입니다. 사용자 지정 마커 세트도 목록에 나옵니다. 없음을 고르면 마커를 표시하지 않습니다.',
       },
       wording: {
         label: '용어',
@@ -7048,7 +7067,7 @@ const InspirationTrackerMod = (() => {
         heading: '포인트 풀',
         points: [
           '포인트 풀은 쌓였다가 조금씩 사용하는 숫자입니다. 영감 포인트, 히어로 포인트, 행운, bennies 같은 것들의 풀입니다. 어떤 캐릭터 시트와도 작동합니다.',
-          '추적 대상을 포인트 풀로 설정하면 주기, 회수, 사용이 기본 풀에 적용되며 포인트 수를 묻습니다. 캐릭터에게 포인트가 있는 동안 마커가 표시됩니다.',
+          '추적 대상을 포인트 풀로 설정하면 주기, 회수, 사용이 기본 풀에 적용되며 포인트 수를 묻습니다.',
           '부스트는 포인트를 사용해 굴림을 높입니다. 원하는 보너스를 입력하면 풀의 +1당 포인트에 따라 비용이 정해집니다. +1당 2포인트라면 보너스 4에는 8포인트가 듭니다. Mod는 사용을 알리기만 하므로 보너스는 직접 굴림에 더하세요.',
           '캐릭터의 포인트가 모자라면 사용이 거부됩니다. GM에게는 누가 무엇을 사용했는지 되돌리기 버튼과 함께 알림이 갑니다.',
           '저장 위치가 "시트의 자원 칸"이면 시트에서 풀과 같은 이름을 가진 자원 칸을 사용합니다. 예를 들어 2014 D&D 시트에서 Inspiration이라고 이름 붙인 Other Resource 칸입니다. 시트에 그 이름의 칸이 없거나 저장 위치가 "속성"이면 포인트는 inspiration_pool 같은 일반 속성에 저장됩니다. D&D 2024 시트는 항상 속성을 사용합니다.',
@@ -7065,6 +7084,7 @@ const InspirationTrackerMod = (() => {
           '직접 또는 TokenMod로 토큰에 마커를 붙이면 캐릭터가 영감을 얻습니다. 떼면 사용한 것으로 칩니다.',
           '마커를 바꾸면 모든 토큰에서 즉시 옮겨집니다.',
           'D&D 2024 시트 자체의 상태 마커는 시트가 직접 설정하므로 선택지에 없습니다.',
+          '마커 설정은 시트의 영감 칸을 위한 것입니다. 각 포인트 풀은 풀 카드에 자체 마커가 있으며 처음에는 없음입니다. 어느 쪽이든 없음을 고르면 토큰에 마커를 붙이지 않습니다. 파티 카드에는 누가 영감을 가졌는지, 또는 포인트가 몇 점인지 계속 표시됩니다.',
         ],
       },
       commands: {
@@ -7214,7 +7234,8 @@ const InspirationTrackerMod = (() => {
       poolFull: 'Nie ma miejsca na kolejną pulę.',
       poolNameHint: 'Użyj nazwy do 40 liter, cyfr i spacji, której nie ma żadna inna pula.',
       poolDefault: 'Domyślnej puli „{name}” nie można usunąć. Można zmienić jej nazwę.',
-      poolMarkerHint: 'Wybierz z zestawów znaczników znacznik inny niż ten z ustawienia Znacznik.',
+      poolMarkerHint:
+        'Wybierz ze swoich zestawów znaczników taki, którego nie używa ustawienie Znacznik ani inna pula.',
       poolSetHint: 'Wpisz !inspiration pools, aby zobaczyć wszystkie pule i ich ustawienia.',
       denied: 'Nie możesz tego zrobić dla postaci {name}.',
       gmOnly: 'Tylko GM może użyć tego polecenia.',
@@ -7306,7 +7327,7 @@ const InspirationTrackerMod = (() => {
       },
       marker: {
         label: 'Znacznik',
-        desc: 'Znacznik żetonu widoczny, gdy postać ma inspirację. Własne zestawy znaczników też są na liście.',
+        desc: 'Znacznik żetonu widoczny, gdy postać ma inspirację. Własne zestawy znaczników też są na liście. Wybierz Brak, aby nie pokazywać znacznika.',
       },
       wording: {
         label: 'Nazewnictwo',
@@ -7447,7 +7468,7 @@ const InspirationTrackerMod = (() => {
         heading: 'Pule punktów',
         points: [
           'Pula punktów to liczba, która rośnie i jest wydawana po kilka punktów naraz: pula punktów inspiracji, punktów bohatera, szczęścia, bennies i tym podobnych. Działa z każdą kartą postaci.',
-          'Ustaw Śledzenie na Pula punktów, a Daj, Odbierz i Wykorzystaj będą działać na domyślnej puli i pytać o liczbę punktów. Znacznik jest widoczny, dopóki postać ma jakiekolwiek punkty.',
+          'Ustaw Śledzenie na Pula punktów, a Daj, Odbierz i Wykorzystaj będą działać na domyślnej puli i pytać o liczbę punktów.',
           'Wzmocnij wydaje punkty, aby podnieść wynik rzutu: wpisz żądaną premię, a o koszcie decyduje ustawienie puli Punkty za +1. Przy 2 punktach za +1 premia 4 kosztuje 8 punktów. Mod ogłasza wydanie punktów; premię dodaj do rzutu samodzielnie.',
           'Wydanie punktów jest odrzucane, gdy postać ma ich za mało. GM dostaje informację, kto co wydał, z przyciskiem Cofnij.',
           'Miejsce zapisu „Pole zasobu na karcie” używa pola zasobu na karcie, które ma nazwę puli, na przykład pola Other Resource nazwanego Inspiration na karcie D&D 2014. Gdy karta nie ma pola o tej nazwie albo wybrano „Atrybut”, punkty są zapisywane w zwykłym atrybucie, takim jak inspiration_pool. Karta D&D 2024 zawsze używa atrybutu.',
@@ -7464,6 +7485,7 @@ const InspirationTrackerMod = (() => {
           'Dodanie znacznika do żetonu ręcznie lub przez TokenMod daje postaci inspirację. Zdjęcie go oznacza wykorzystanie.',
           'Zmiana znacznika od razu przenosi go na każdym żetonie.',
           'Własne znaczniki stanów karty D&D 2024 nie są oferowane, bo karta ustawia je sama.',
+          'Ustawienie Znacznik dotyczy pola inspiracji na karcie. Każda pula punktów ma własny Znacznik, w przeglądzie Pule, i zaczyna z opcją Brak. Wybierz Brak w jednym lub drugim miejscu, aby nie umieszczać znacznika na żetonach: przegląd drużyny nadal pokazuje, kto ma inspirację albo ile punktów.',
         ],
       },
       commands: {
@@ -7616,7 +7638,7 @@ const InspirationTrackerMod = (() => {
       poolDefault:
         'A reserva predefinida, "{name}", não pode ser eliminada. Pode mudar-lhe o nome.',
       poolMarkerHint:
-        'Escolha, nos seus conjuntos de marcadores, um marcador diferente do da definição Marcador.',
+        'Escolha, nos seus conjuntos de marcadores, um marcador que nem a definição Marcador nem as outras reservas usem.',
       poolSetHint: 'Escreva !inspiration pools para ver todas as reservas e as suas definições.',
       denied: 'Não pode fazer isso por {name}.',
       gmOnly: 'Só o Mestre pode usar esse comando.',
@@ -7708,7 +7730,7 @@ const InspirationTrackerMod = (() => {
       },
       marker: {
         label: 'Marcador',
-        desc: 'Marcador de token mostrado enquanto a personagem tem inspiração. Os conjuntos de marcadores personalizados também aparecem na lista.',
+        desc: 'Marcador de token mostrado enquanto a personagem tem inspiração. Os conjuntos de marcadores personalizados também aparecem na lista. Escolha Nenhum para não mostrar marcador.',
       },
       wording: {
         label: 'Designação',
@@ -7847,7 +7869,7 @@ const InspirationTrackerMod = (() => {
         heading: 'Reservas de Pontos',
         points: [
           'Uma reserva de pontos é um número que se vai acumulando e se gasta aos poucos: uma reserva de pontos de inspiração, pontos de herói, sorte, bennies e afins. Funciona com qualquer ficha de personagem.',
-          'Defina Controlo como Reserva de pontos, e Dar, Retirar e Gastar passam a atuar sobre a reserva predefinida, perguntando quantos pontos. O marcador fica visível enquanto a personagem tiver pontos.',
+          'Defina Controlo como Reserva de pontos, e Dar, Retirar e Gastar passam a atuar sobre a reserva predefinida, perguntando quantos pontos.',
           'Impulsionar gasta pontos para aumentar um lançamento: escreva o bónus pretendido, e o valor de Pontos por +1 da reserva determina o custo. A 2 pontos por +1, um bónus de 4 custa 8 pontos. O Mod anuncia o gasto; some o bónus ao lançamento por si.',
           'Um gasto é recusado quando a personagem não tem pontos suficientes. O Mestre é avisado de quem gastou o quê, com um botão Anular.',
           'Guardada em "Campo de recurso da ficha" usa o campo de recurso da ficha que tem o nome da reserva, como um campo Other Resource chamado Inspiration na ficha D&D 2014. Quando a ficha não tem um campo com esse nome, ou com "Atributo", os pontos são guardados num atributo simples, como inspiration_pool. A ficha D&D 2024 usa sempre o atributo.',
@@ -7864,6 +7886,7 @@ const InspirationTrackerMod = (() => {
           'Adicionar o marcador a um token à mão, ou com o TokenMod, dá inspiração à personagem. Retirá-lo conta como gastar.',
           'Mudar o marcador move-o de imediato em todos os tokens.',
           'Os marcadores de condição próprios da ficha D&D 2024 não são oferecidos, porque a ficha define-os ela própria.',
+          'A definição Marcador é para o campo de inspiração da ficha. Cada reserva de pontos tem o seu próprio Marcador, no cartão Reservas, e começa com Nenhum. Escolha Nenhum em qualquer um dos dois para não colocar marcador nos tokens: o cartão do grupo continua a mostrar quem tem inspiração, ou quantos pontos.',
         ],
       },
       commands: {
@@ -8014,7 +8037,7 @@ const InspirationTrackerMod = (() => {
         'Use um nome de até 40 letras, dígitos e espaços que nenhuma outra reserva tenha.',
       poolDefault: 'A reserva padrão, "{name}", não pode ser excluída. Ela pode ser renomeada.',
       poolMarkerHint:
-        'Escolha, nos seus conjuntos de marcadores, um marcador diferente do definido na configuração Marcador.',
+        'Escolha, nos seus conjuntos de marcadores, um marcador que nem a configuração Marcador nem as outras reservas usem.',
       poolSetHint: 'Digite !inspiration pools para ver todas as reservas e suas configurações.',
       denied: 'Você não pode fazer isso por {name}.',
       gmOnly: 'Apenas o Mestre pode usar esse comando.',
@@ -8106,7 +8129,7 @@ const InspirationTrackerMod = (() => {
       },
       marker: {
         label: 'Marcador',
-        desc: 'Marcador de token exibido enquanto o personagem tem inspiração. Conjuntos de marcadores personalizados também aparecem na lista.',
+        desc: 'Marcador de token exibido enquanto o personagem tem inspiração. Conjuntos de marcadores personalizados também aparecem na lista. Escolha Nenhum para não exibir marcador.',
       },
       wording: {
         label: 'Nomenclatura',
@@ -8245,7 +8268,7 @@ const InspirationTrackerMod = (() => {
         heading: 'Reservas de Pontos',
         points: [
           'Uma reserva de pontos é um número que se acumula e é gasto aos poucos: uma reserva de pontos de inspiração, pontos de herói, sorte, bennies e afins. Funciona com qualquer ficha de personagem.',
-          'Defina Controle como Reserva de pontos, e Dar, Remover e Gastar passam a agir sobre a reserva padrão, perguntando quantos pontos. O marcador aparece enquanto o personagem tiver algum ponto.',
+          'Defina Controle como Reserva de pontos, e Dar, Remover e Gastar passam a agir sobre a reserva padrão, perguntando quantos pontos.',
           'Impulsionar gasta pontos para aumentar uma rolagem: digite o bônus desejado, e o valor de Pontos por +1 da reserva decide o custo. A 2 pontos por +1, um bônus de 4 custa 8 pontos. O Mod anuncia o gasto; some o bônus à rolagem você mesmo.',
           'Um gasto é recusado quando o personagem não tem pontos suficientes. O Mestre é avisado de quem gastou o quê, com um botão Desfazer.',
           'Guardada em "Campo de recurso da ficha" usa o campo de recurso da ficha que tem o nome da reserva, como um campo Other Resource chamado Inspiration na ficha D&D 2014. Quando a ficha não tem um campo com esse nome, ou com "Atributo", os pontos ficam guardados em um atributo simples, como inspiration_pool. A ficha D&D 2024 sempre usa o atributo.',
@@ -8262,6 +8285,7 @@ const InspirationTrackerMod = (() => {
           'Adicionar o marcador a um token manualmente, ou com o TokenMod, dá inspiração ao personagem. Retirá-lo conta como gastar.',
           'Trocar o marcador o move em todos os tokens na hora.',
           'Os marcadores de condição próprios da ficha D&D 2024 não são oferecidos, porque a ficha os define sozinha.',
+          'A configuração Marcador é para o campo de inspiração da ficha. Cada reserva de pontos tem seu próprio Marcador, no cartão Reservas, e começa com Nenhum. Escolha Nenhum em qualquer um dos dois para não colocar marcador nos tokens: o cartão do grupo continua mostrando quem tem inspiração, ou quantos pontos.',
         ],
       },
       commands: {
@@ -8413,7 +8437,7 @@ const InspirationTrackerMod = (() => {
         'Используйте название до 40 букв, цифр и пробелов, которого нет у других пулов.',
       poolDefault: 'Пул по умолчанию, «{name}», нельзя удалить. Его можно переименовать.',
       poolMarkerHint:
-        'Выберите маркер из ваших наборов маркеров, отличный от выбранного в настройке «Маркер».',
+        'Выберите из своих наборов маркеров такой, который не используют ни настройка «Маркер», ни другие пулы.',
       poolSetHint: 'Введите !inspiration pools, чтобы увидеть все пулы и их настройки.',
       denied: 'Вы не можете сделать это для персонажа {name}.',
       gmOnly: 'Эту команду может использовать только GM.',
@@ -8505,7 +8529,7 @@ const InspirationTrackerMod = (() => {
       },
       marker: {
         label: 'Маркер',
-        desc: 'Маркер жетона, который показывается, пока у персонажа есть вдохновение. Пользовательские наборы маркеров тоже есть в списке.',
+        desc: 'Маркер жетона, который показывается, пока у персонажа есть вдохновение. Пользовательские наборы маркеров тоже есть в списке. Выберите «Нет», чтобы не показывать маркер.',
       },
       wording: {
         label: 'Название',
@@ -8646,7 +8670,7 @@ const InspirationTrackerMod = (() => {
         heading: 'Пулы очков',
         points: [
           'Пул очков — это число, которое накапливается и тратится понемногу: очки вдохновения, очки героя, удача, bennies и тому подобное. Он работает с любым листом персонажа.',
-          'Установите «Отслеживание» в «Пул очков», и кнопки «Дать», «Убрать» и «Потратить» будут работать с пулом по умолчанию, спрашивая количество очков. Маркер показывается, пока у персонажа есть хотя бы одно очко.',
+          'Установите «Отслеживание» в «Пул очков», и кнопки «Дать», «Убрать» и «Потратить» будут работать с пулом по умолчанию, спрашивая количество очков.',
           '«Усилить» тратит очки, чтобы повысить бросок: введите нужный бонус, а настройка пула «Очков за +1» определит цену. При 2 очках за +1 бонус 4 стоит 8 очков. Mod объявляет трату; бонус к броску добавьте сами.',
           'Трата отклоняется, если у персонажа не хватает очков. GM получает сообщение о том, кто и сколько потратил, с кнопкой «Отменить».',
           'Вариант «Поле ресурса на листе» в настройке «Хранится в» использует поле ресурса на листе, названное так же, как пул, например поле Other Resource с названием Inspiration на листе D&D 2014. Если на листе нет поля с таким названием или выбран вариант «Атрибут», очки хранятся в обычном атрибуте, например inspiration_pool. Лист D&D 2024 всегда использует атрибут.',
@@ -8663,6 +8687,7 @@ const InspirationTrackerMod = (() => {
           'Добавление маркера на жетон вручную или через TokenMod даёт персонажу вдохновение. Снятие маркера считается тратой.',
           'Смена маркера сразу переносит его на всех жетонах.',
           'Собственные маркеры состояний листа D&D 2024 не предлагаются, потому что лист ставит их сам.',
+          'Настройка «Маркер» относится к полю вдохновения на листе. У каждого пула очков свой «Маркер» на карточке «Пулы», и вначале он «Нет». Выберите «Нет» в любом из них, чтобы не ставить маркер на жетоны: карточка отряда по-прежнему показывает, у кого есть вдохновение или сколько очков.',
         ],
       },
       commands: {
@@ -8815,7 +8840,7 @@ const InspirationTrackerMod = (() => {
       poolDefault:
         'La reserva por defecto, "{name}", no se puede eliminar. Se puede cambiar de nombre.',
       poolMarkerHint:
-        'Elige un marcador de tus conjuntos de marcadores que no sea el del ajuste Marcador.',
+        'Elige un marcador de tus conjuntos de marcadores que no usen ni el ajuste Marcador ni las otras reservas.',
       poolSetHint: 'Escribe !inspiration pools para ver todas las reservas y sus ajustes.',
       denied: 'No puedes hacer eso con {name}.',
       gmOnly: 'Solo el GM puede usar ese comando.',
@@ -8907,7 +8932,7 @@ const InspirationTrackerMod = (() => {
       },
       marker: {
         label: 'Marcador',
-        desc: 'Marcador de ficha que se muestra mientras un personaje tiene inspiración. También aparecen los conjuntos de marcadores personalizados.',
+        desc: 'Marcador de ficha que se muestra mientras un personaje tiene inspiración. También aparecen los conjuntos de marcadores personalizados. Elige Ninguno para no mostrar ningún marcador.',
       },
       wording: {
         label: 'Denominación',
@@ -9049,7 +9074,7 @@ const InspirationTrackerMod = (() => {
         heading: 'Reservas de puntos',
         points: [
           'Una reserva de puntos es un número que se acumula y se gasta poco a poco: una reserva de puntos de inspiración, puntos de héroe, suerte, bennies y similares. Funciona con cualquier hoja de personaje.',
-          'Pon Seguimiento en Reserva de puntos, y Dar, Quitar y Gastar actúan sobre la reserva por defecto y preguntan cuántos puntos. El marcador se muestra mientras un personaje tiene algún punto.',
+          'Pon Seguimiento en Reserva de puntos, y Dar, Quitar y Gastar actúan sobre la reserva por defecto y preguntan cuántos puntos.',
           'Potenciar gasta puntos para subir una tirada: escribe el bonificador deseado, y los Puntos por +1 de la reserva deciden el coste. A 2 puntos por +1, un bonificador de 4 cuesta 8 puntos. El Mod anuncia el gasto; suma tú el bonificador a la tirada.',
           'Un gasto se rechaza cuando el personaje no tiene puntos suficientes. Se avisa al GM de quién ha gastado qué, con un botón Deshacer.',
           'Con Guardado en "Casilla de recurso de la hoja" se usa la casilla de recurso de la hoja que lleva el nombre de la reserva, como una casilla Other Resource llamada Inspiración en la hoja de D&D de 2014. Cuando la hoja no tiene una casilla con ese nombre, o con "Atributo", los puntos se guardan en un atributo normal, como inspiration_pool. La hoja de D&D 2024 siempre usa el atributo.',
@@ -9066,6 +9091,7 @@ const InspirationTrackerMod = (() => {
           'Añadir el marcador a una ficha a mano, o con TokenMod, da inspiración al personaje. Quitarlo la gasta.',
           'Cambiar el marcador lo mueve en todas las fichas al instante.',
           'No se ofrecen los marcadores de estado propios de la hoja de D&D 2024, porque la hoja los pone ella misma.',
+          'El ajuste Marcador es para la casilla de inspiración de la hoja. Cada reserva de puntos tiene su propio Marcador, en la tarjeta Reservas, y empieza con Ninguno. Elige Ninguno en cualquiera de los dos para no poner ningún marcador en las fichas: la tarjeta del grupo sigue mostrando quién tiene inspiración, o cuántos puntos.',
         ],
       },
       commands: {
@@ -9217,7 +9243,7 @@ const InspirationTrackerMod = (() => {
         'Använd ett namn på högst 40 bokstäver, siffror och mellanslag som ingen annan pott har.',
       poolDefault: 'Standardpotten, "{name}", kan inte tas bort. Den kan byta namn.',
       poolMarkerHint:
-        'Välj en markör ur dina markörsamlingar som inte är den i inställningen Markör.',
+        'Välj en markör från dina markörsamlingar som varken inställningen Markör eller de andra potterna använder.',
       poolSetHint: 'Skriv !inspiration pools för att se alla potter och deras inställningar.',
       denied: 'Du kan inte göra det för {name}.',
       gmOnly: 'Bara GM kan använda det kommandot.',
@@ -9309,7 +9335,7 @@ const InspirationTrackerMod = (() => {
       },
       marker: {
         label: 'Markör',
-        desc: 'Tokenmarkör som visas medan en rollperson har inspiration. Egna markörsamlingar listas också.',
+        desc: 'Tokenmarkör som visas medan en rollperson har inspiration. Egna markörsamlingar listas också. Välj Ingen för att inte visa någon markör.',
       },
       wording: {
         label: 'Benämning',
@@ -9451,7 +9477,7 @@ const InspirationTrackerMod = (() => {
         heading: 'Poängpotter',
         points: [
           'En poängpott är ett tal som byggs upp och används några åt gången: en pott med inspirationspoäng, hjältepoäng, tur, bennies och liknande. Den fungerar med alla rollformulär.',
-          'Sätt Spårning till Poängpott, så verkar Ge, Ta bort och Använd på standardpotten och frågar hur många poäng. Markören visas så länge rollpersonen har några poäng.',
+          'Sätt Spårning till Poängpott, så verkar Ge, Ta bort och Använd på standardpotten och frågar hur många poäng.',
           'Förstärk använder poäng för att höja ett slag: skriv den bonus du vill ha, så avgör pottens Poäng per +1 kostnaden. Med 2 poäng per +1 kostar en bonus på 4 alltså 8 poäng. Mod meddelar användningen; lägg själv bonusen på slaget.',
           'En användning nekas när rollpersonen inte har tillräckligt med poäng. GM får veta vem som använde vad, med en Ångra-knapp.',
           'Sparas i "Formulärets resursruta" använder den resursruta på formuläret som har pottens namn, till exempel en Other Resource-ruta med namnet Inspiration på D&D 2014-formuläret. När formuläret inte har någon ruta med det namnet, eller med "Attribut", sparas poängen i ett vanligt attribut, till exempel inspiration_pool. D&D 2024-formuläret använder alltid attributet.',
@@ -9468,6 +9494,7 @@ const InspirationTrackerMod = (() => {
           'Att lägga till markören på en token för hand, eller med TokenMod, ger rollpersonen inspiration. Att ta bort den använder den.',
           'Att byta markör flyttar den på alla tokens direkt.',
           'D&D 2024-formulärets egna tillståndsmarkörer erbjuds inte, eftersom formuläret sätter dem själv.',
+          'Inställningen Markör gäller formulärets inspirationsruta. Varje poängpott har en egen Markör på Potter-kortet och börjar med Ingen. Välj Ingen för någon av dem för att inte sätta någon markör på tokens: gruppkortet visar fortfarande vem som har inspiration, eller hur många poäng.',
         ],
       },
       commands: {
@@ -9618,7 +9645,8 @@ const InspirationTrackerMod = (() => {
       poolNameHint:
         'Başka hiçbir havuzda olmayan, en fazla 40 harf, rakam ve boşluktan oluşan bir ad kullan.',
       poolDefault: 'Varsayılan havuz "{name}" silinemez. Yeniden adlandırılabilir.',
-      poolMarkerHint: 'İşaretçi setlerinden, İşaretçi ayarındakinden farklı bir işaretçi seç.',
+      poolMarkerHint:
+        'İşaretçi setlerinden, İşaretçi ayarının ve diğer havuzların kullanmadığı bir işaretçi seç.',
       poolSetHint: 'Tüm havuzları ve ayarlarını görmek için !inspiration pools yaz.',
       denied: '{name} için bunu yapamazsın.',
       gmOnly: 'Bu komutu yalnızca GM kullanabilir.',
@@ -9710,7 +9738,7 @@ const InspirationTrackerMod = (() => {
       },
       marker: {
         label: 'İşaretçi',
-        desc: 'Bir karakterde ilham varken gösterilen jeton işaretçisi. Özel işaretçi setleri de listelenir.',
+        desc: 'Bir karakterde ilham varken gösterilen jeton işaretçisi. Özel işaretçi setleri de listelenir. İşaretçi gösterilmemesi için Yok seçeneğini seç.',
       },
       wording: {
         label: 'Adlandırma',
@@ -9849,7 +9877,7 @@ const InspirationTrackerMod = (() => {
         heading: 'Puan Havuzları',
         points: [
           'Puan havuzu, birikip azar azar harcanan bir sayıdır: ilham puanları, kahraman puanları, şans, bennies ve benzeri. Her karakter sayfasıyla çalışır.',
-          'Takip ayarını Puan havuzu yap; Ver, Kaldır ve Harca varsayılan havuz üzerinde çalışır ve kaç puan olduğunu sorar. Karakterin puanı olduğu sürece işaretçi görünür.',
+          'Takip ayarını Puan havuzu yap; Ver, Kaldır ve Harca varsayılan havuz üzerinde çalışır ve kaç puan olduğunu sorar.',
           'Güçlendir, bir zarı yükseltmek için puan harcar: istediğin bonusu yaz, bedeli havuzun +1 başına puan ayarı belirler. +1 başına 2 puanda, 4 bonus 8 puana mal olur. Mod harcamayı duyurur; bonusu zara kendin ekle.',
           "Karakterin yeterli puanı yoksa harcama reddedilir. GM'e kimin ne harcadığı bir Geri Al düğmesiyle bildirilir.",
           'Tutulduğu yer ayarındaki "Sayfadaki kaynak kutusu", sayfada havuzun adını taşıyan kaynak kutusunu kullanır; örneğin 2014 D&D sayfasında Inspiration adlı bir Other Resource kutusu. Sayfada bu adda bir kutu yoksa veya "Özellik" seçiliyse puanlar inspiration_pool gibi düz bir özellikte tutulur. D&D 2024 sayfası her zaman özelliği kullanır.',
@@ -9866,6 +9894,7 @@ const InspirationTrackerMod = (() => {
           'İşaretçiyi bir jetona elle veya TokenMod ile eklemek karaktere ilham verir. Kaldırmak ilhamı harcar.',
           'İşaretçiyi değiştirmek onu tüm jetonlarda hemen taşır.',
           'D&D 2024 sayfasının kendi durum işaretçileri sunulmaz, çünkü sayfa onları kendisi ayarlar.',
+          'İşaretçi ayarı sayfadaki ilham kutusu içindir. Her puan havuzunun Havuzlar kartında kendi İşaretçisi vardır ve başlangıçta Yok olarak gelir. Jetonlara işaretçi konmaması için ikisinden birinde Yok seçeneğini seç: Grup kartı kimde ilham olduğunu veya kaç puan olduğunu göstermeye devam eder.',
         ],
       },
       commands: {
@@ -10017,7 +10046,7 @@ const InspirationTrackerMod = (() => {
         'Використовуйте назву до 40 літер, цифр і пробілів, якої не має жоден інший пул.',
       poolDefault: 'Типовий пул, "{name}", не можна видалити. Його можна перейменувати.',
       poolMarkerHint:
-        'Оберіть маркер з ваших наборів маркерів, інший, ніж у налаштуванні «Маркер».',
+        'Виберіть зі своїх наборів маркерів такий, який не використовують ні налаштування «Маркер», ні інші пули.',
       poolSetHint: 'Введіть !inspiration pools, щоб побачити всі пули та їхні налаштування.',
       denied: 'Ви не можете зробити це для {name}.',
       gmOnly: 'Цю команду може використовувати лише GM.',
@@ -10109,7 +10138,7 @@ const InspirationTrackerMod = (() => {
       },
       marker: {
         label: 'Маркер',
-        desc: 'Маркер токена, який показується, поки персонаж має натхнення. Власні набори маркерів теж є в списку.',
+        desc: 'Маркер токена, який показується, поки персонаж має натхнення. Власні набори маркерів теж є в списку. Виберіть «Немає», щоб не показувати маркер.',
       },
       wording: {
         label: 'Назва',
@@ -10249,7 +10278,7 @@ const InspirationTrackerMod = (() => {
         heading: 'Пули очок',
         points: [
           'Пул очок — це число, яке накопичується і витрачається потроху: очки натхнення, очки героя, удача, bennies тощо. Він працює з будь-яким аркушем персонажа.',
-          'Установіть для «Відстеження» значення «Пул очок», і кнопки «Дати», «Забрати» і «Витратити» працюватимуть з типовим пулом, запитуючи кількість очок. Маркер показується, поки персонаж має хоча б одне очко.',
+          'Установіть для «Відстеження» значення «Пул очок», і кнопки «Дати», «Забрати» і «Витратити» працюватимуть з типовим пулом, запитуючи кількість очок.',
           '«Підсилити» витрачає очки, щоб підвищити кидок: введіть потрібний бонус, а налаштування пулу «Очок за +1» визначить ціну. При 2 очках за +1 бонус 4 коштує 8 очок. Mod оголошує витрату; бонус до кидка додайте самі.',
           'Витрату буде відхилено, якщо персонаж не має достатньо очок. GM отримує повідомлення про те, хто і скільки витратив, з кнопкою «Скасувати».',
           'Варіант «Поле ресурсу на аркуші» в налаштуванні «Зберігається в» використовує поле ресурсу на аркуші, назване так само, як пул, наприклад поле Other Resource з назвою Inspiration на аркуші D&D 2014. Якщо на аркуші немає поля з такою назвою або вибрано «Атрибут», очки зберігаються у звичайному атрибуті, наприклад inspiration_pool. Аркуш D&D 2024 завжди використовує атрибут.',
@@ -10266,6 +10295,7 @@ const InspirationTrackerMod = (() => {
           'Додавання маркера на токен вручну або через TokenMod дає персонажу натхнення. Зняття маркера витрачає його.',
           'Зміна маркера одразу переносить його на всіх токенах.',
           'Власні маркери станів аркуша D&D 2024 не пропонуються, бо аркуш встановлює їх сам.',
+          'Налаштування «Маркер» стосується поля натхнення на аркуші. Кожен пул очок має власний «Маркер» на картці «Пули», і спершу це «Немає». Виберіть «Немає» в будь-якому з них, щоб не ставити маркер на токени: картка групи й далі показує, хто має натхнення або скільки очок.',
         ],
       },
       commands: {
@@ -10751,8 +10781,9 @@ const InspirationTrackerMod = (() => {
         return lang ? ok(lang) : bad;
       }
       case 'marker': {
+        // An empty marker means the GM chose None: no marker is put on tokens.
         const text = toText(raw);
-        return /^[^,@\s][^,@]{0,99}$/.test(text) ? ok(text) : bad;
+        return text === '' || /^[^,@\s][^,@]{0,99}$/.test(text) ? ok(text) : bad;
       }
       case 'tracking':
         return option(TRACKING_OPTIONS);
@@ -11731,13 +11762,18 @@ const InspirationTrackerMod = (() => {
   }
 
   /**
-   * Shows or hides the inspiration marker on every token for a character.
+   * Shows or hides the inspiration marker on every token for a character. The
+   * Marker setting belongs to the sheet's inspiration box, so nothing is done
+   * while a points pool is tracked instead: the pool has a marker of its own.
    *
    * @param {string} charId Character ID.
    * @param {boolean} inspired Whether to show it.
    * @returns {void}
    */
   function syncTokens(charId, inspired) {
+    if (activePool()) {
+      return;
+    }
     applyMarker(charId, getConfig().marker, inspired);
   }
 
@@ -11753,18 +11789,30 @@ const InspirationTrackerMod = (() => {
   }
 
   /**
-   * Returns the marker shown while a character has points in a pool. The
-   * default pool uses the Marker setting while it is the one being tracked;
-   * other pools use their own marker, if they have one.
+   * Returns the marker shown while a character has points in a pool: the
+   * pool's own marker, if it has one. The default pool only shows its marker
+   * while it is the one being tracked. Another pool never shows the Marker
+   * setting's marker, which belongs to the sheet's inspiration box.
    *
    * @param {object} pool Pool.
    * @returns {string} Marker tag, or an empty string for none.
    */
   function poolMarker(pool) {
     if (pool === defaultPool()) {
-      return getConfig().tracking === 'pool' ? getConfig().marker : '';
+      return getConfig().tracking === 'pool' ? pool.marker : '';
     }
     return pool.marker === getConfig().marker ? '' : pool.marker;
+  }
+
+  /**
+   * Returns the marker of whatever is tracked: the Marker setting for the
+   * sheet's inspiration box, or the default pool's own marker.
+   *
+   * @returns {string} Marker tag, or an empty string for none.
+   */
+  function trackedMarker() {
+    const pool = activePool();
+    return pool ? poolMarker(pool) : getConfig().marker;
   }
 
   /**
@@ -12885,10 +12933,10 @@ const InspirationTrackerMod = (() => {
           TRACKING_OPTIONS.map((o) => ({ label: t(`values.tracking.${o}`, lang), value: o }))
         );
       case 'marker':
-        return set(
-          markerName(value),
-          listMarkers().map((m) => ({ label: m.name, value: m.tag }))
-        );
+        return set(value ? markerName(value) : t('values.none', lang), [
+          { label: t('values.none', lang), value: 'none' },
+          ...listMarkers().map((m) => ({ label: m.name, value: m.tag })),
+        ]);
       case 'wording':
         return set(
           t(`values.wording.${value}`, lang),
@@ -12982,20 +13030,24 @@ const InspirationTrackerMod = (() => {
           `?{${queryText(t('prompts.max', lang))}|${pool.max}}`
         )
       );
-      if (!isDefault) {
-        body.push(
-          set(
-            'marker',
-            pool.marker ? markerName(pool.marker) : t('values.none', lang),
-            query(t('pools.marker', lang), [
-              { label: t('values.none', lang), value: 'none' },
-              ...listMarkers()
-                .filter((m) => m.tag !== getConfig().marker)
-                .map((m) => ({ label: m.name, value: m.tag })),
-            ])
-          )
-        );
-      }
+      // Markers another pool uses are left out, and for a pool used beside the sheet's
+      // inspiration box, so is the Marker setting's.
+      const taken = getPools()
+        .filter((p) => p !== pool)
+        .map((p) => p.marker)
+        .concat(isDefault ? [] : [getConfig().marker]);
+      body.push(
+        set(
+          'marker',
+          pool.marker ? markerName(pool.marker) : t('values.none', lang),
+          query(t('pools.marker', lang), [
+            { label: t('values.none', lang), value: 'none' },
+            ...listMarkers()
+              .filter((m) => !taken.includes(m.tag))
+              .map((m) => ({ label: m.name, value: m.tag })),
+          ])
+        )
+      );
       body.push(buildNote(t('pools.attribute', lang, { attribute: poolAttributeName(pool) })));
       if (!isDefault) {
         body.push(
@@ -13365,7 +13417,7 @@ const InspirationTrackerMod = (() => {
           .map((p) => p.name)
           .join(', ')
       ),
-      row('marker', markerName(config.marker)),
+      row('marker', config.marker ? markerName(config.marker) : t('values.none', lang)),
       row('fx', config.fx ? config.fxType : onOff(false, lang)),
       legacyCommand ? row('legacyCommand', `!${legacyCommand}`) : '',
     ]);
@@ -13599,7 +13651,7 @@ const InspirationTrackerMod = (() => {
    */
   function poolMarkerOf(pool) {
     if (pool === defaultPool()) {
-      return activePool() ? getConfig().marker : '';
+      return activePool() ? pool.marker : '';
     }
     return pool.marker;
   }
@@ -13659,7 +13711,13 @@ const InspirationTrackerMod = (() => {
             value = '';
           } else {
             const marker = resolveMarker(value);
-            if (!marker || marker.tag === getConfig().marker) {
+            // A marker means one thing: not another pool's, and for a pool that is used beside
+            // the sheet's inspiration box, not the Marker setting's either.
+            const taken =
+              marker &&
+              (getPools().some((p) => p !== pool && p.marker === marker.tag) ||
+                (pool !== defaultPool() && marker.tag === getConfig().marker));
+            if (!marker || taken) {
               whisperError(
                 who,
                 t('errors.unknownMarker', lang, { value }),
@@ -13672,11 +13730,7 @@ const InspirationTrackerMod = (() => {
         }
         const result = validatePoolField(field, value);
         const other = field === 'name' && result.valid ? findPool(value) : undefined;
-        if (
-          !result.valid ||
-          (other && other !== pool) ||
-          (field === 'marker' && pool === defaultPool())
-        ) {
+        if (!result.valid || (other && other !== pool)) {
           whisperError(
             who,
             t('errors.badSetting', lang, { key: rawField, value }),
@@ -13761,7 +13815,10 @@ const InspirationTrackerMod = (() => {
     const [rawKey, ...rest] = args;
     const key = Object.keys(getConfig()).find((k) => k.toLowerCase() === rawKey.toLowerCase());
     let value = rest.join(' ');
-    if (key === 'marker') {
+    if (key === 'marker' && ['none', 'off'].includes(value.trim().toLowerCase())) {
+      // No marker at all: the old one is taken off every token below.
+      value = '';
+    } else if (key === 'marker') {
       const marker = resolveMarker(value);
       if (!marker) {
         whisperError(
@@ -13787,6 +13844,9 @@ const InspirationTrackerMod = (() => {
       // The marker follows what is tracked: taken off everywhere, then put back
       // on the characters who have inspiration (or points) now.
       stripMarker(oldMarker);
+      if (key === 'tracking') {
+        stripMarker(defaultPool().marker);
+      }
       await syncAll();
     }
     if (key === 'language') {
@@ -14045,6 +14105,7 @@ const InspirationTrackerMod = (() => {
         resetConfig();
         if (marker !== getConfig().marker || tracked !== getConfig().tracking) {
           stripMarker(marker);
+          stripMarker(defaultPool().marker);
           await syncAll();
         }
         showSettings(who);
@@ -14170,7 +14231,7 @@ const InspirationTrackerMod = (() => {
       await markNewToken(token);
       return;
     }
-    const marker = getConfig().marker;
+    const marker = trackedMarker();
     const now = hasMarker(token.get('statusmarkers'), marker);
     const before = hasMarker(prev?.statusmarkers, marker);
     if (now !== before) {
