@@ -66,6 +66,9 @@ const TRANSLATION = {
     marker: 'Marcador',
     attribute: 'Atributo cuando la hoja no tiene una casilla con este nombre: {attribute}',
     partyTotal: 'Total del grupo: {total} {term}.',
+    keptBox: 'Casilla de la hoja: {name}',
+    keptAttribute: 'Atributo: {attribute}',
+    keptNote: 'Un atributo no se muestra en la hoja de personaje.',
   },
   prompts: {
     points: 'Puntos',
@@ -323,8 +326,10 @@ const TRANSLATION = {
         'Potenciar gasta puntos para subir una tirada: escribe el bonificador deseado, y los Puntos por +1 de la reserva deciden el coste. A 2 puntos por +1, un bonificador de 4 cuesta 8 puntos. El Mod anuncia el gasto; suma tú el bonificador a la tirada.',
         'Un gasto se rechaza cuando el personaje no tiene puntos suficientes. Se avisa al GM de quién ha gastado qué, con un botón Deshacer.',
         'Con Guardado en "Casilla de recurso de la hoja" se usa la casilla de recurso de la hoja que lleva el nombre de la reserva, como una casilla Other Resource llamada Inspiración en la hoja de D&D de 2014. Cuando la hoja no tiene una casilla con ese nombre, o con "Atributo", los puntos se guardan en un atributo normal, como inspiration_pool. La hoja de D&D 2024 siempre usa el atributo.',
+        'La tarjeta del grupo y la tarjeta propia de un jugador dicen dónde se guardan los puntos de cada personaje: el nombre de la casilla de la hoja, o el atributo. Un atributo no se muestra en la hoja de personaje.',
         'Cambiar el número en la hoja a mano no da problemas: el marcador lo sigue.',
         'Pulsa Reservas para cambiar el nombre de la reserva por defecto, fijar su coste y su máximo, o añadir más reservas. Las demás reservas se usan desde su botón Grupo, o añadiendo --pool y el nombre de la reserva a un comando.',
+        'Bardic Inspiration funciona como una reserva propia: pulsa Añadir reserva y llámala Bardic Inspiration, pon su Máximo en 1 y elige su Marcador. El GM da 1 desde la tarjeta Grupo de esa reserva cuando el bardo reparte un dado, y quien lo tiene pulsa Gastar cuando lo usa. El Mod marca quién tiene un dado; el jugador lo tira.',
       ],
     },
     markers: {

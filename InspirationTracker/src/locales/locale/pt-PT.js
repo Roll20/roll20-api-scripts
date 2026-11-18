@@ -66,6 +66,9 @@ const TRANSLATION = {
     marker: 'Marcador',
     attribute: 'Atributo quando a ficha não tem um campo com este nome: {attribute}',
     partyTotal: 'Total do grupo: {total} de {term}.',
+    keptBox: 'Campo da ficha: {name}',
+    keptAttribute: 'Atributo: {attribute}',
+    keptNote: 'Um atributo não é mostrado na ficha da personagem.',
   },
   prompts: {
     points: 'Pontos',
@@ -320,8 +323,10 @@ const TRANSLATION = {
         'Impulsionar gasta pontos para aumentar um lançamento: escreva o bónus pretendido, e o valor de Pontos por +1 da reserva determina o custo. A 2 pontos por +1, um bónus de 4 custa 8 pontos. O Mod anuncia o gasto; some o bónus ao lançamento por si.',
         'Um gasto é recusado quando a personagem não tem pontos suficientes. O Mestre é avisado de quem gastou o quê, com um botão Anular.',
         'Guardada em "Campo de recurso da ficha" usa o campo de recurso da ficha que tem o nome da reserva, como um campo Other Resource chamado Inspiration na ficha D&D 2014. Quando a ficha não tem um campo com esse nome, ou com "Atributo", os pontos são guardados num atributo simples, como inspiration_pool. A ficha D&D 2024 usa sempre o atributo.',
+        'O cartão do grupo e o cartão do próprio jogador dizem onde ficam guardados os pontos de cada personagem: o nome do campo da ficha, ou o atributo. Um atributo não é mostrado na ficha da personagem.',
         'Não há problema em alterar à mão o número na ficha: o marcador acompanha.',
         'Clique em Reservas para mudar o nome da reserva predefinida, definir o seu custo e o seu máximo, ou acrescentar mais reservas. As outras reservas usam-se a partir do respetivo botão Grupo, ou acrescentando --pool e o nome da reserva a um comando.',
+        'Bardic Inspiration funciona como uma reserva própria: clique em Adicionar Reserva e dê-lhe o nome Bardic Inspiration, defina o Máximo como 1 e escolha o Marcador. O GM dá 1 a partir do cartão Grupo dessa reserva quando o bardo distribui um dado, e quem o tem clica em Gastar quando o usa. O Mod marca quem tem um dado; o jogador lança-o por si.',
       ],
     },
     markers: {

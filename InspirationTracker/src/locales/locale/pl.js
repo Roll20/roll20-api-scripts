@@ -67,6 +67,9 @@ const TRANSLATION = {
     marker: 'Znacznik',
     attribute: 'Atrybut, gdy karta nie ma pola o tej nazwie: {attribute}',
     partyTotal: 'Suma drużyny: {term} × {total}.',
+    keptBox: 'Pole na karcie: {name}',
+    keptAttribute: 'Atrybut: {attribute}',
+    keptNote: 'Atrybut nie jest pokazywany na karcie postaci.',
   },
   prompts: {
     points: 'Punkty',
@@ -321,8 +324,10 @@ const TRANSLATION = {
         'Wzmocnij wydaje punkty, aby podnieść wynik rzutu: wpisz żądaną premię, a o koszcie decyduje ustawienie puli Punkty za +1. Przy 2 punktach za +1 premia 4 kosztuje 8 punktów. Mod ogłasza wydanie punktów; premię dodaj do rzutu samodzielnie.',
         'Wydanie punktów jest odrzucane, gdy postać ma ich za mało. GM dostaje informację, kto co wydał, z przyciskiem Cofnij.',
         'Miejsce zapisu „Pole zasobu na karcie” używa pola zasobu na karcie, które ma nazwę puli, na przykład pola Other Resource nazwanego Inspiration na karcie D&D 2014. Gdy karta nie ma pola o tej nazwie albo wybrano „Atrybut”, punkty są zapisywane w zwykłym atrybucie, takim jak inspiration_pool. Karta D&D 2024 zawsze używa atrybutu.',
+        'Przegląd drużyny i własny przegląd gracza podają, gdzie zapisane są punkty każdej postaci: nazwa pola na karcie albo atrybut. Atrybut nie jest pokazywany na karcie postaci.',
         'Liczbę na karcie można zmieniać ręcznie: znacznik podąża za nią.',
         'Kliknij Pule, aby zmienić nazwę domyślnej puli, ustawić jej koszt i maksimum albo dodać kolejne pule. Innych pul używa się przyciskiem Drużyna danej puli albo przez dodanie do polecenia --pool i nazwy puli.',
+        'Bardic Inspiration działa jako osobna pula: kliknij Dodaj pulę i nazwij ją Bardic Inspiration, ustaw jej Maksimum na 1 i wybierz jej Znacznik. GM daje 1 z przeglądu Drużyna tej puli, gdy bard rozdaje kość, a jej posiadacz klika Wykorzystaj, gdy jej używa. Mod oznacza, kto ma kość; gracz rzuca nią sam.',
       ],
     },
     markers: {

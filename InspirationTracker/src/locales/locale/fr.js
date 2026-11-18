@@ -66,6 +66,9 @@ const TRANSLATION = {
     marker: 'Marqueur',
     attribute: "Attribut quand la fiche n'a pas de case portant ce nom : {attribute}",
     partyTotal: 'Total du groupe : {total} {term}.',
+    keptBox: 'Case de la fiche : {name}',
+    keptAttribute: 'Attribut : {attribute}',
+    keptNote: "Un attribut n'est pas affiché sur la fiche de personnage.",
   },
   prompts: {
     points: 'Points',
@@ -324,8 +327,10 @@ const TRANSLATION = {
         'Renforcer dépense des points pour augmenter un jet : tapez le bonus voulu, et les Points par +1 de la réserve fixent le coût. À 2 points par +1, un bonus de 4 coûte 8 points. Le Mod annonce la dépense ; ajoutez vous-même le bonus au jet.',
         "Une dépense est refusée quand le personnage n'a pas assez de points. Le MJ est informé de qui a dépensé quoi, avec un bouton Annuler.",
         "Conservé dans « Case de ressource de la fiche » utilise la case de ressource de la fiche qui porte le nom de la réserve, par exemple une case Other Resource nommée Inspiration sur la fiche D&D 2014. Quand la fiche n'a pas de case portant ce nom, ou avec « Attribut », les points sont conservés dans un simple attribut, par exemple inspiration_pool. La fiche D&D 2024 utilise toujours l'attribut.",
+        "La carte du groupe et la carte personnelle d'un joueur indiquent où sont conservés les points de chaque personnage : le nom de la case de la fiche, ou l'attribut. Un attribut n'est pas affiché sur la fiche de personnage.",
         'Modifier le nombre à la main sur la fiche ne pose aucun problème : le marqueur suit.',
         "Cliquez sur Réserves pour renommer la réserve par défaut, régler son coût et son maximum, ou ajouter d'autres réserves. Les autres réserves s'utilisent depuis leur bouton Groupe, ou en ajoutant --pool et le nom de la réserve à une commande.",
+        "Bardic Inspiration fonctionne comme une réserve à part : cliquez sur Ajouter une réserve et nommez-la Bardic Inspiration, réglez son Maximum sur 1 et choisissez son Marqueur. Le MJ donne 1 depuis la carte Groupe de cette réserve quand le barde distribue un dé, et son détenteur clique sur Dépenser quand il l'utilise. Le Mod indique qui détient un dé ; le joueur le lance lui-même.",
       ],
     },
     markers: {

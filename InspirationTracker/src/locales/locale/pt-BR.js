@@ -66,6 +66,9 @@ const TRANSLATION = {
     marker: 'Marcador',
     attribute: 'Atributo quando a ficha não tem um campo com este nome: {attribute}',
     partyTotal: 'Total do grupo: {total} de {term}.',
+    keptBox: 'Campo da ficha: {name}',
+    keptAttribute: 'Atributo: {attribute}',
+    keptNote: 'Um atributo não aparece na ficha do personagem.',
   },
   prompts: {
     points: 'Pontos',
@@ -320,8 +323,10 @@ const TRANSLATION = {
         'Impulsionar gasta pontos para aumentar uma rolagem: digite o bônus desejado, e o valor de Pontos por +1 da reserva decide o custo. A 2 pontos por +1, um bônus de 4 custa 8 pontos. O Mod anuncia o gasto; some o bônus à rolagem você mesmo.',
         'Um gasto é recusado quando o personagem não tem pontos suficientes. O Mestre é avisado de quem gastou o quê, com um botão Desfazer.',
         'Guardada em "Campo de recurso da ficha" usa o campo de recurso da ficha que tem o nome da reserva, como um campo Other Resource chamado Inspiration na ficha D&D 2014. Quando a ficha não tem um campo com esse nome, ou com "Atributo", os pontos ficam guardados em um atributo simples, como inspiration_pool. A ficha D&D 2024 sempre usa o atributo.',
+        'O cartão do grupo e o cartão do próprio jogador dizem onde os pontos de cada personagem ficam guardados: o nome do campo da ficha, ou o atributo. Um atributo não aparece na ficha do personagem.',
         'Alterar o número na ficha manualmente não tem problema: o marcador acompanha.',
         'Clique em Reservas para renomear a reserva padrão, definir seu custo e seu máximo, ou adicionar mais reservas. As outras reservas são usadas pelo botão Grupo de cada uma, ou adicionando --pool e o nome da reserva a um comando.',
+        'Bardic Inspiration funciona como uma reserva própria: clique em Adicionar Reserva e dê a ela o nome Bardic Inspiration, defina o Máximo como 1 e escolha o Marcador. O GM dá 1 pelo cartão Grupo dessa reserva quando o bardo distribui um dado, e quem o tem clica em Gastar quando o usa. O Mod marca quem tem um dado; o jogador o rola por conta própria.',
       ],
     },
     markers: {

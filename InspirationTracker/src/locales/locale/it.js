@@ -66,6 +66,9 @@ const TRANSLATION = {
     marker: 'Segnalino',
     attribute: 'Attributo quando la scheda non ha una casella con questo nome: {attribute}',
     partyTotal: 'Totale del gruppo: {total} {term}.',
+    keptBox: 'Casella della scheda: {name}',
+    keptAttribute: 'Attributo: {attribute}',
+    keptNote: 'Un attributo non è mostrato sulla scheda del personaggio.',
   },
   prompts: {
     points: 'Punti',
@@ -323,8 +326,10 @@ const TRANSLATION = {
         'Potenzia spende punti per alzare un tiro: scrivi il bonus desiderato, e i Punti per +1 della riserva stabiliscono il costo. A 2 punti per +1, un bonus di 4 costa 8 punti. La Mod annuncia la spesa; aggiungi tu il bonus al tiro.',
         'Una spesa viene rifiutata quando il personaggio non ha abbastanza punti. Il GM viene avvisato di chi ha speso cosa, con un pulsante Annulla.',
         "Conservata in «Casella risorsa della scheda» usa la casella risorsa della scheda che ha il nome della riserva, come una casella Other Resource chiamata Ispirazione sulla scheda D&D 2014. Quando la scheda non ha una casella con quel nome, oppure con «Attributo», i punti sono conservati in un semplice attributo, come inspiration_pool. La scheda D&D 2024 usa sempre l'attributo.",
+        "Il riquadro del gruppo in chat e quello personale di un giocatore dicono dove sono conservati i punti di ogni personaggio: il nome della casella della scheda, oppure l'attributo. Un attributo non è mostrato sulla scheda del personaggio.",
         'Cambiare a mano il numero sulla scheda va benissimo: il segnalino lo segue.',
         'Fai clic su Riserve per rinominare la riserva predefinita, impostarne costo e massimo, o aggiungere altre riserve. Le altre riserve si usano dal loro pulsante Gruppo, oppure aggiungendo --pool e il nome della riserva a un comando.',
+        'Bardic Inspiration funziona come una riserva a sé: fai clic su Aggiungi riserva e chiamala Bardic Inspiration, imposta il Massimo a 1 e scegli il Segnalino. Il GM dà 1 dal riquadro Gruppo di quella riserva quando il bardo assegna un dado, e chi lo possiede fa clic su Spendi quando lo usa. Il Mod segna chi possiede un dado; il giocatore lo tira da sé.',
       ],
     },
     markers: {

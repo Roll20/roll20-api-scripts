@@ -66,6 +66,9 @@ const TRANSLATION = {
     marker: 'İşaretçi',
     attribute: 'Sayfada bu adda bir kutu yoksa kullanılan özellik: {attribute}',
     partyTotal: 'Grup toplamı: {total} {term}.',
+    keptBox: 'Sayfadaki kutu: {name}',
+    keptAttribute: 'Özellik: {attribute}',
+    keptNote: 'Bir özellik karakter sayfasında gösterilmez.',
   },
   prompts: {
     points: 'Puan',
@@ -319,8 +322,10 @@ const TRANSLATION = {
         'Güçlendir, bir zarı yükseltmek için puan harcar: istediğin bonusu yaz, bedeli havuzun +1 başına puan ayarı belirler. +1 başına 2 puanda, 4 bonus 8 puana mal olur. Mod harcamayı duyurur; bonusu zara kendin ekle.',
         "Karakterin yeterli puanı yoksa harcama reddedilir. GM'e kimin ne harcadığı bir Geri Al düğmesiyle bildirilir.",
         'Tutulduğu yer ayarındaki "Sayfadaki kaynak kutusu", sayfada havuzun adını taşıyan kaynak kutusunu kullanır; örneğin 2014 D&D sayfasında Inspiration adlı bir Other Resource kutusu. Sayfada bu adda bir kutu yoksa veya "Özellik" seçiliyse puanlar inspiration_pool gibi düz bir özellikte tutulur. D&D 2024 sayfası her zaman özelliği kullanır.',
+        'Grup kartı ve oyuncunun kendi kartı, her karakterin puanlarının nerede tutulduğunu söyler: sayfadaki kutunun adı ya da özellik. Bir özellik karakter sayfasında gösterilmez.',
         'Sayfadaki sayıyı elle değiştirmek sorun olmaz: işaretçi buna uyar.',
         'Varsayılan havuzu yeniden adlandırmak, bedelini ve üst sınırını ayarlamak veya başka havuzlar eklemek için Havuzlar düğmesine tıkla. Diğer havuzlar kendi Grup düğmelerinden veya bir komuta --pool ve havuzun adı eklenerek kullanılır.',
+        'Bardic Inspiration ayrı bir havuz olarak çalışır: Havuz Ekle düğmesine tıkla ve adını Bardic Inspiration koy, En fazla değerini 1 yap ve İşaretçisini seç. Ozan bir zar verdiğinde GM o havuzun Grup kartından 1 verir, zarı elinde tutan da kullanırken Harca düğmesine tıklar. Mod kimin zar tuttuğunu işaretler; zarı oyuncu kendisi atar.',
       ],
     },
     markers: {

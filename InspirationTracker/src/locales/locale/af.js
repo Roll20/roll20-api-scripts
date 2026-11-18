@@ -66,6 +66,9 @@ const TRANSLATION = {
     marker: 'Merker',
     attribute: 'Eienskap wanneer die blad geen blokkie met hierdie naam het nie: {attribute}',
     partyTotal: 'Groeptotaal: {total} {term}.',
+    keptBox: 'Blokkie op blad: {name}',
+    keptAttribute: 'Eienskap: {attribute}',
+    keptNote: '’n Eienskap word nie op die karakterblad gewys nie.',
   },
   prompts: {
     points: 'Punte',
@@ -321,8 +324,10 @@ const TRANSLATION = {
         'Versterk gebruik punte om ’n worp te verhoog: tik die bonus wat jy wil hê, en die poel se Punte per +1 bepaal die koste. Teen 2 punte per +1 kos ’n bonus van 4 dus 8 punte. Die Mod kondig die gebruik aan; voeg self die bonus by die worp.',
         '’n Gebruik word geweier wanneer die karakter nie genoeg punte het nie. Die GM word ingelig wie wat gebruik het, met ’n Ontdoen-knoppie.',
         'Gehou in "Blad se hulpbronblokkie" gebruik die hulpbronblokkie op die blad wat die poel se naam het, soos ’n Other Resource-blokkie genaamd Inspiration op die 2014 D&D-blad. Wanneer die blad geen blokkie met daardie naam het nie, of met "Eienskap", word die punte in ’n gewone eienskap gehou, soos inspiration_pool. Die D&D 2024-blad gebruik altyd die eienskap.',
+        'Die groepkaart en ’n speler se eie kaart sê waar elke karakter se punte gehou word: die naam van die blokkie op die blad, of die eienskap. ’n Eienskap word nie op die karakterblad gewys nie.',
         'Om die getal met die hand op die blad te verander is in orde: die merker volg.',
         'Klik Poele om die verstekpoel te hernoem, sy koste en maksimum te stel, of nog poele by te voeg. Ander poele word vanaf hul Groep-knoppie gebruik, of deur --pool en die poel se naam by ’n opdrag te voeg.',
+        'Bardic Inspiration werk as ’n poel van sy eie: klik Voeg poel by en noem dit Bardic Inspiration, stel sy Maksimum op 1 en kies sy Merker. Die GM gee 1 vanaf daardie poel se Groep-kaart wanneer die bard ’n dobbelsteen uitdeel, en die houer klik Gebruik wanneer hy dit gebruik. Die Mod merk wie ’n dobbelsteen hou; die speler gooi dit self.',
       ],
     },
     markers: {

@@ -66,6 +66,9 @@ const TRANSLATION = {
     marker: 'Markör',
     attribute: 'Attribut när formuläret saknar en ruta med det namnet: {attribute}',
     partyTotal: 'Gruppen har totalt: {total} {term}.',
+    keptBox: 'Ruta på formuläret: {name}',
+    keptAttribute: 'Attribut: {attribute}',
+    keptNote: 'Ett attribut visas inte på rollformuläret.',
   },
   prompts: {
     points: 'Poäng',
@@ -322,8 +325,10 @@ const TRANSLATION = {
         'Förstärk använder poäng för att höja ett slag: skriv den bonus du vill ha, så avgör pottens Poäng per +1 kostnaden. Med 2 poäng per +1 kostar en bonus på 4 alltså 8 poäng. Mod meddelar användningen; lägg själv bonusen på slaget.',
         'En användning nekas när rollpersonen inte har tillräckligt med poäng. GM får veta vem som använde vad, med en Ångra-knapp.',
         'Sparas i "Formulärets resursruta" använder den resursruta på formuläret som har pottens namn, till exempel en Other Resource-ruta med namnet Inspiration på D&D 2014-formuläret. När formuläret inte har någon ruta med det namnet, eller med "Attribut", sparas poängen i ett vanligt attribut, till exempel inspiration_pool. D&D 2024-formuläret använder alltid attributet.',
+        'Gruppkortet och en spelares eget kort säger var varje rollpersons poäng sparas: namnet på rutan på formuläret, eller attributet. Ett attribut visas inte på rollformuläret.',
         'Det går bra att ändra talet på formuläret för hand: markören följer med.',
         'Klicka på Potter för att byta namn på standardpotten, sätta dess kostnad och maximum, eller lägga till fler potter. Andra potter används från sin Grupp-knapp, eller genom att lägga till --pool och pottens namn i ett kommando.',
+        'Bardic Inspiration fungerar som en egen pott: klicka på Lägg till pott och döp den till Bardic Inspiration, sätt dess Maximum till 1 och välj dess Markör. GM ger 1 från den pottens Grupp-kort när barden delar ut en tärning, och den som har tärningen klickar på Använd när den används. Mod:en markerar vem som har en tärning; spelaren slår den själv.',
       ],
     },
     markers: {

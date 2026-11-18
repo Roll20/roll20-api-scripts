@@ -66,6 +66,9 @@ const TRANSLATION = {
     marker: 'Marker',
     attribute: 'Attribut, wenn der Bogen kein Feld mit diesem Namen hat: {attribute}',
     partyTotal: 'Gruppe gesamt: {total} {term}.',
+    keptBox: 'Feld auf dem Bogen: {name}',
+    keptAttribute: 'Attribut: {attribute}',
+    keptNote: 'Ein Attribut wird auf dem Charakterbogen nicht angezeigt.',
   },
   prompts: {
     points: 'Punkte',
@@ -323,8 +326,10 @@ const TRANSLATION = {
         'Verstärken gibt Punkte aus, um einen Wurf zu erhöhen: Gib den gewünschten Bonus ein, und Punkte pro +1 des Pools bestimmt die Kosten. Bei 2 Punkten pro +1 kostet ein Bonus von 4 also 8 Punkte. Die Mod kündigt die Ausgabe an; den Bonus addierst du selbst zum Wurf.',
         'Eine Ausgabe wird abgelehnt, wenn der Charakter nicht genug Punkte hat. Die SL erfährt, wer was ausgegeben hat, mit einem Rückgängig-Button.',
         'Gespeichert in „Ressourcenfeld des Bogens“ nutzt das Ressourcenfeld auf dem Bogen, das den Namen des Pools trägt, etwa ein Feld Other Resource namens Inspiration auf dem D&D-Bogen von 2014. Hat der Bogen kein Feld mit diesem Namen, oder bei „Attribut“, werden die Punkte in einem einfachen Attribut gespeichert, etwa inspiration_pool. Der D&D-2024-Bogen nutzt immer das Attribut.',
+        'Die Gruppenkarte und die eigene Karte eines Spielers nennen, wo die Punkte jedes Charakters gespeichert sind: der Name des Feldes auf dem Bogen oder das Attribut. Ein Attribut wird auf dem Charakterbogen nicht angezeigt.',
         'Die Zahl von Hand auf dem Bogen zu ändern ist in Ordnung: Der Marker folgt.',
         'Klicke auf Pools, um den Standardpool umzubenennen, seine Kosten und sein Maximum festzulegen oder weitere Pools hinzuzufügen. Andere Pools nutzt du über ihren Gruppe-Button oder indem du --pool und den Namen des Pools an einen Befehl anhängst.',
+        'Bardic Inspiration funktioniert als eigener Pool: Klicke auf Pool hinzufügen und nenne ihn Bardic Inspiration, setze sein Maximum auf 1 und wähle seinen Marker. Der GM gibt 1 über die Gruppe-Karte dieses Pools, wenn der Barde einen Würfel vergibt, und wer ihn hält, klickt auf Ausgeben, wenn er ihn einsetzt. Der Mod markiert, wer einen Würfel hält; der Spieler würfelt ihn selbst.',
       ],
     },
     markers: {

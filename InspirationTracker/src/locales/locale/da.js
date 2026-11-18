@@ -66,6 +66,9 @@ const TRANSLATION = {
     marker: 'Markør',
     attribute: 'Attribut, når arket ikke har et felt med dette navn: {attribute}',
     partyTotal: 'Gruppen i alt: {total} {term}.',
+    keptBox: 'Felt på arket: {name}',
+    keptAttribute: 'Attribut: {attribute}',
+    keptNote: 'Et attribut vises ikke på figurarket.',
   },
   prompts: {
     points: 'Point',
@@ -319,8 +322,10 @@ const TRANSLATION = {
         'Boost bruger point på at hæve et slag: skriv den ønskede bonus, og puljens Point pr. +1 afgør prisen. Ved 2 point pr. +1 koster en bonus på 4 i alt 8 point. Mod’en meddeler forbruget; læg selv bonussen til slaget.',
         'Et forbrug afvises, når figuren ikke har point nok. GM får besked om, hvem der brugte hvad, med en Fortryd-knap.',
         'Gemmes i "Arkets ressourcefelt" bruger det ressourcefelt på arket, der har puljens navn, fx et Other Resource-felt ved navn Inspiration på 2014 D&D-arket. Når arket ikke har et felt med det navn, eller med "Attribut", gemmes pointene i en almindelig attribut, fx inspiration_pool. D&D 2024-arket bruger altid attributten.',
+        'Gruppekortet og en spillers eget kort fortæller, hvor hver figurs point gemmes: navnet på feltet på arket eller attributtet. Et attribut vises ikke på figurarket.',
         'Det er fint at ændre tallet på arket i hånden: markøren følger med.',
         'Klik på Puljer for at omdøbe standardpuljen, sætte dens pris og maksimum eller tilføje flere puljer. Andre puljer bruges fra deres Gruppe-knap eller ved at føje --pool og puljens navn til en kommando.',
+        "Bardic Inspiration fungerer som sin egen pulje: klik på Tilføj pulje og kald den Bardic Inspiration, sæt dens Maksimum til 1 og vælg dens Markør. GM'en giver 1 fra den puljes Gruppe-kort, når barden deler en terning ud, og indehaveren klikker på Brug, når den bruges. Mod'et markerer, hvem der har en terning; spilleren slår den selv.",
       ],
     },
     markers: {

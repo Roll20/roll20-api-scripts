@@ -66,6 +66,9 @@ const TRANSLATION = {
     marker: 'Marker',
     attribute: 'Attribuut als het blad geen vakje met deze naam heeft: {attribute}',
     partyTotal: 'Totaal van de groep: {total} {term}.',
+    keptBox: 'Vakje op het blad: {name}',
+    keptAttribute: 'Attribuut: {attribute}',
+    keptNote: 'Een attribuut wordt niet op het personageblad getoond.',
   },
   prompts: {
     points: 'Punten',
@@ -326,8 +329,10 @@ const TRANSLATION = {
         'Boost gebruikt punten om een worp te verhogen: typ de gewenste bonus, en Punten per +1 van de pool bepaalt de kosten. Bij 2 punten per +1 kost een bonus van 4 dus 8 punten. De Mod kondigt het gebruik aan; tel de bonus zelf bij de worp op.',
         'Gebruik wordt geweigerd als het personage niet genoeg punten heeft. De GM krijgt te horen wie wat heeft gebruikt, met een knop Ongedaan maken.',
         'Bewaard in "Resourcevakje op het blad" gebruikt het resourcevakje op het blad dat de naam van de pool heeft, zoals een vakje Other Resource met de naam Inspiration op het 2014 D&D-blad. Heeft het blad geen vakje met die naam, of staat er "Attribuut", dan worden de punten bewaard in een gewoon attribuut, zoals inspiration_pool. Het D&D 2024-blad gebruikt altijd het attribuut.',
+        'De groepskaart en de eigen kaart van een speler zeggen waar de punten van elk personage worden bewaard: de naam van het vakje op het blad, of het attribuut. Een attribuut wordt niet op het personageblad getoond.',
         'Het getal op het blad met de hand wijzigen kan gewoon: de marker volgt.',
         'Klik op Pools om de standaardpool te hernoemen, de kosten en het maximum in te stellen, of meer pools toe te voegen. Andere pools gebruik je met hun knop Groep, of door --pool en de naam van de pool aan een commando toe te voegen.',
+        'Bardic Inspiration werkt als een eigen pool: klik op Pool toevoegen en noem hem Bardic Inspiration, zet het Maximum op 1 en kies de Marker. De GM geeft 1 vanaf de Groep-kaart van die pool wanneer de bard een dobbelsteen uitdeelt, en de houder klikt op Gebruiken wanneer hij hem inzet. De Mod markeert wie een dobbelsteen heeft; de speler gooit hem zelf.',
       ],
     },
     markers: {

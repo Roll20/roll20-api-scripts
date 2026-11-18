@@ -66,6 +66,9 @@ const TRANSLATION = {
     marker: 'Jelölő',
     attribute: 'Attribútum, ha a lapon nincs ilyen nevű mező: {attribute}',
     partyTotal: 'A csapat összesen: {total} {term}.',
+    keptBox: 'Mező a lapon: {name}',
+    keptAttribute: 'Attribútum: {attribute}',
+    keptNote: 'Az attribútum nem látszik a karakterlapon.',
   },
   prompts: {
     points: 'Pontok',
@@ -322,8 +325,10 @@ const TRANSLATION = {
         'Az Erősít pontokat használ fel egy dobás növelésére: írd be a kívánt bónuszt, és a készlet Pont +1-enként beállítása határozza meg az árát. Ha minden +1 2 pontba kerül, a 4-es bónusz 8 pont. A Mod bejelenti a felhasználást; a bónuszt te add hozzá a dobáshoz.',
         'A rendszer elutasítja a felhasználást, ha a karakternek nincs elég pontja. A KM értesítést kap arról, ki mit használt fel, Visszavonás gombbal.',
         'Ha a Tárolás helye „A lap erőforrásmezője”, a lapnak azt az erőforrásmezőjét használja, amely a készlet nevét viseli, például egy Ihlet nevű Other Resource mezőt a 2014-es D&D lapon. Ha a lapon nincs ilyen nevű mező, vagy a beállítás „Attribútum”, a pontok egy egyszerű attribútumban tárolódnak, például: inspiration_pool. A D&D 2024 lap mindig az attribútumot használja.',
+        'A csapat kártyája és a játékos saját kártyája megmutatja, hol tárolódnak az egyes karakterek pontjai: a lapon lévő mező neve vagy az attribútum. Az attribútum nem látszik a karakterlapon.',
         'A számot nyugodtan átírhatod kézzel a lapon: a jelölő követi.',
         'Kattints a Készletek gombra az alapértelmezett készlet átnevezéséhez, árának és maximumának beállításához vagy további készletek hozzáadásához. A többi készlet a saját Csapat gombjáról használható, vagy úgy, hogy a parancshoz hozzáadod a --pool kapcsolót és a készlet nevét.',
+        'A Bardic Inspiration saját készletként működik: kattints a Készlet hozzáadása gombra, és nevezd el Bardic Inspiration néven, állítsd a Maximum értékét 1-re, és válaszd ki a Jelölőt. A GM 1 pontot ad a készlet Csapat kártyájáról, amikor a bárd kockát oszt, a birtokosa pedig a Felhasznál gombra kattint, amikor él vele. A Mod jelöli, kinél van kocka; a játékos maga dobja el.',
       ],
     },
     markers: {

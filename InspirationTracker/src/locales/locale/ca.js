@@ -66,6 +66,9 @@ const TRANSLATION = {
     marker: 'Marcador',
     attribute: 'Atribut quan la fitxa no té cap casella amb aquest nom: {attribute}',
     partyTotal: 'Total del grup: {total} {term}.',
+    keptBox: 'Casella de la fitxa: {name}',
+    keptAttribute: 'Atribut: {attribute}',
+    keptNote: 'Un atribut no es mostra a la fitxa del personatge.',
   },
   prompts: {
     points: 'Punts',
@@ -323,8 +326,10 @@ const TRANSLATION = {
         'Potencia gasta punts per apujar una tirada: escriu la bonificació que vols, i l’opció Punts per +1 de la reserva en decideix el cost. A 2 punts per +1, una bonificació de 4 costa 8 punts. El Mod anuncia la despesa; afegeix tu mateix la bonificació a la tirada.',
         'Una despesa es rebutja quan el personatge no té prou punts. S’avisa el GM de qui ha gastat què, amb un botó Desfés.',
         'Es guarda a "Casella de recurs de la fitxa" fa servir la casella de recurs de la fitxa que té el nom de la reserva, com ara una casella Other Resource anomenada Inspiration a la fitxa de D&D de 2014. Quan la fitxa no té cap casella amb aquest nom, o amb "Atribut", els punts es guarden en un atribut senzill, com ara inspiration_pool. La fitxa de D&D 2024 sempre fa servir l’atribut.',
+        "La targeta del grup i la targeta pròpia d'un jugador diuen on es guarden els punts de cada personatge: el nom de la casella de la fitxa, o l'atribut. Un atribut no es mostra a la fitxa del personatge.",
         'Canviar el nombre a la fitxa a mà no és cap problema: el marcador el segueix.',
         'Fes clic a Reserves per canviar el nom de la reserva per defecte, posar-ne el cost i el màxim, o afegir més reserves. Les altres reserves es fan servir des del seu botó Grup, o afegint --pool i el nom de la reserva a una ordre.',
+        "Bardic Inspiration funciona com una reserva pròpia: fes clic a Afegeix reserva i anomena-la Bardic Inspiration, posa-hi el Màxim a 1 i tria'n el Marcador. El GM dona 1 des de la targeta Grup d'aquesta reserva quan el bard reparteix un dau, i qui el té fa clic a Gasta quan el fa servir. El Mod marca qui té un dau; el jugador el tira.",
       ],
     },
     markers: {

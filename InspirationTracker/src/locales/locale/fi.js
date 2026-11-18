@@ -66,6 +66,9 @@ const TRANSLATION = {
     marker: 'Tunnus',
     attribute: 'Attribuutti, kun lomakkeella ei ole tämän nimistä ruutua: {attribute}',
     partyTotal: 'Seurueella yhteensä: {total} {term}.',
+    keptBox: 'Lomakkeen ruutu: {name}',
+    keptAttribute: 'Attribuutti: {attribute}',
+    keptNote: 'Attribuuttia ei näytetä hahmolomakkeella.',
   },
   prompts: {
     points: 'Pisteet',
@@ -321,8 +324,10 @@ const TRANSLATION = {
         'Tehosta käyttää pisteitä heiton korottamiseen: kirjoita haluamasi bonus, ja varannon Pisteitä per +1 -asetus ratkaisee hinnan. Kun +1 maksaa 2 pistettä, bonus 4 maksaa 8 pistettä. Mod ilmoittaa käytöstä; lisää bonus heittoon itse.',
         'Käyttö hylätään, jos hahmolla ei ole tarpeeksi pisteitä. GM saa tiedon siitä, kuka käytti ja mitä, sekä Kumoa-painikkeen.',
         'Säilytyspaikka "Lomakkeen resurssiruutu" käyttää lomakkeen resurssiruutua, jolla on varannon nimi, esimerkiksi Inspiraatio-nimistä Other Resource -ruutua vuoden 2014 D&D-lomakkeella. Jos lomakkeella ei ole sen nimistä ruutua tai valittuna on "Attribuutti", pisteet säilytetään tavallisessa attribuutissa, esimerkiksi inspiration_pool. D&D 2024 -lomake käyttää aina attribuuttia.',
+        'Seurueen kortti ja pelaajan oma kortti kertovat, missä kunkin hahmon pisteet säilytetään: lomakkeen ruudun nimi tai attribuutti. Attribuuttia ei näytetä hahmolomakkeella.',
         'Luvun voi hyvin muuttaa lomakkeella käsin: tunnus seuraa perässä.',
         'Napsauta Varannot nimetäksesi oletusvarannon uudelleen, asettaaksesi sen hinnan ja enimmäismäärän tai lisätäksesi varantoja. Muita varantoja käytetään niiden Seurue-painikkeesta tai lisäämällä komentoon --pool ja varannon nimi.',
+        'Bardic Inspiration toimii omana varantonaan: napsauta Lisää varanto ja anna nimeksi Bardic Inspiration, aseta Enimmäismäärä arvoon 1 ja valitse Tunnus. GM antaa 1 pisteen kyseisen varannon Seurue-kortista, kun bardi jakaa nopan, ja nopan haltija napsauttaa Käytä, kun käyttää sen. Mod merkitsee, kenellä on noppa; pelaaja heittää sen itse.',
       ],
     },
     markers: {

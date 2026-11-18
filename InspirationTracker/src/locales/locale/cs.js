@@ -66,6 +66,9 @@ const TRANSLATION = {
     marker: 'Značka',
     attribute: 'Atribut, když deník nemá políčko s tímto názvem: {attribute}',
     partyTotal: 'Družina celkem: {total} ({term}).',
+    keptBox: 'Políčko v deníku: {name}',
+    keptAttribute: 'Atribut: {attribute}',
+    keptNote: 'Atribut se v deníku postavy nezobrazuje.',
   },
   prompts: {
     points: 'Body',
@@ -317,8 +320,10 @@ const TRANSLATION = {
         'Posílit utrácí body za zvýšení hodu: napiš požadovaný bonus a cenu určí Body za +1 dané zásoby. Při 2 bodech za +1 stojí bonus 4 celkem 8 bodů. Mod útratu oznámí; bonus si k hodu přičti sám.',
         'Útrata je odmítnuta, když postava nemá dost bodů. GM dostane zprávu, kdo co utratil, s tlačítkem Vrátit.',
         'Uloženo v „Políčko zdroje v deníku“ používá políčko zdroje v deníku, které nese název zásoby, například políčko Other Resource pojmenované Inspiration v deníku D&D 2014. Když deník políčko s tímto názvem nemá, nebo při volbě „Atribut“, jsou body uloženy v obyčejném atributu, například inspiration_pool. Deník D&D 2024 používá atribut vždy.',
+        'Karta družiny i hráčova vlastní karta uvádějí, kde jsou body každé postavy uloženy: název políčka v deníku, nebo atribut. Atribut se v deníku postavy nezobrazuje.',
         'Ruční změna čísla v deníku nevadí: značka ji následuje.',
         'Klikni na Zásoby, chceš-li přejmenovat výchozí zásobu, nastavit její cenu a maximum, nebo přidat další zásoby. Ostatní zásoby se používají jejich tlačítkem Družina, nebo přidáním --pool a názvu zásoby k příkazu.',
+        'Bardic Inspiration funguje jako samostatná zásoba: klikni na Přidat zásobu a pojmenuj ji Bardic Inspiration, nastav její Maximum na 1 a vyber její Značku. GM dá 1 z karty Družina této zásoby, když bard rozdá kostku, a její držitel klikne na Využít, když ji použije. Mod označuje, kdo kostku drží; hráč si jí hodí sám.',
       ],
     },
     markers: {
