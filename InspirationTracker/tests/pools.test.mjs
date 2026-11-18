@@ -128,6 +128,22 @@ test('a sheet with no box of that name, and the 2024 sheet, use a plain attribut
   assert.match(api.allChat(), /Seraphina gains 4 Inspiration \(0 → 4\)/);
 });
 
+test('the cards say where each character keeps its points', async () => {
+  const { api } = await game();
+  await api.command('!inspiration party');
+  const card = api.lastChat();
+  assert.match(
+    card,
+    /Nox<[\s\S]*?Sheet box: Inspiration[\s\S]*?Seraphina<[\s\S]*?Attribute: inspiration_pool/,
+    'the 2014 sheet has the box, the 2024 sheet uses the attribute'
+  );
+  assert.match(card, /An attribute is not shown on the character sheet\./);
+  await api.command('!inspiration', [], 'p1');
+  const own = api.lastChat();
+  assert.match(own, /Sheet box: Inspiration/);
+  assert.doesNotMatch(own, /An attribute is not shown/, 'nothing of theirs is in an attribute');
+});
+
 test('"Kept in: Attribute" ignores the resource box', async () => {
   const { api, nox, box, nTok } = await game();
   await api.command('!inspiration pool set inspiration source attribute');
@@ -217,6 +233,26 @@ test('the GM adds a second pool and uses it with --pool, beside the sheet box', 
   assert.match(api.lastChat(), /Party Hero Points/);
   await api.command('!inspiration give --pool nonsense', [sTok]);
   assert.match(api.lastChat(), /There is no pool called "nonsense"/);
+});
+
+test('the Bardic Inspiration recipe: a pool with a maximum of 1 and its own marker', async () => {
+  const { api, sera, sTok } = await game({ tracking: false });
+  await api.command('!inspiration pool add Bardic Inspiration');
+  await api.command('!inspiration pool set bardic-inspiration max 1');
+  await api.command('!inspiration pool set bardic-inspiration marker green');
+  await api.command(`!inspiration give 1 --ids ${sera.id} --pool bardic-inspiration`);
+  assert.equal(sTok.get('statusmarkers'), 'green', 'the holder shows the marker');
+  await api.command(`!inspiration give 1 --ids ${sera.id} --pool bardic-inspiration`);
+  assert.match(api.lastChat(), /already has the most Bardic Inspiration allowed \(1\)/);
+  // The holder finds it on their own card, and spends it there
+  await api.command('!inspiration', [], 'p2');
+  assert.match(
+    api.lastChat(),
+    /Bardic Inspiration[\s\S]*Seraphina[\s\S]*--pool bardic-inspiration/
+  );
+  await api.command(`!inspiration spend 1 --ids ${sera.id} --pool bardic-inspiration`, [], 'p2');
+  assert.equal(sTok.get('statusmarkers'), '', 'the marker goes when the die is used');
+  assert.match(api.allChat(), /Seraphina spends 1 Bardic Inspiration \(1 → 0\)/);
 });
 
 test('pools can be renamed and deleted, but the default pool stays', async () => {
