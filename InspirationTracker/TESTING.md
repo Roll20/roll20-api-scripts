@@ -52,7 +52,7 @@ Use **Mod Test Lab - InspirationTracker** (a copy of Mod Test Lab): Jumpgate, D&
 
 The Node tests in `tests/pools.test.mjs` cover pools on both kinds of sheet. By hand, on a D&D 5E by Roll20 (2014 OGL) character with an Other Resource box named Inspiration holding 52:
 
-1. `!inspiration set tracking pool`: the character's tokens show the marker.
+1. `!inspiration set tracking pool`: the character's tokens show no marker. `!inspiration pool set inspiration marker black-flag` (or **Pools**, then **Marker**): the tokens show it.
 2. `!inspiration pool set inspiration cost 2`, select the token, **Boost**, type 4: the box reads 44 and chat says "spends 8 Inspiration for +4 to the roll (52 → 44)". **Undo** in the GM whisper puts 52 back.
 3. `!inspiration spend 60`: refused, the box is unchanged.
 4. Type 0 into the box on the sheet: the marker goes. Type 5: it comes back.
@@ -68,6 +68,8 @@ Look at each card in a chat panel of ordinary width: `!inspiration`, `!inspirati
 ## Markers and Settings
 
 - [ ] Choose a custom marker from the **Marker** drop-down: it moves on every inspired token.
+- [ ] Choose **None** from the **Marker** drop-down: the marker comes off every token, giving inspiration puts none on, and the Party card still shows who has it. Choose a marker again: it goes back on everyone who has inspiration.
+- [ ] With Tracking on Points pool, change the **Marker** setting: the tokens do not change, because the pool has its own marker. On the **Pools** card set the pool's **Marker** to **None**: it comes off every token.
 - [ ] Change **Announce** to GM and owners, and Nobody.
 - [ ] Change **Language**: handouts and menus change; check a right-to-left language (Hebrew).
 

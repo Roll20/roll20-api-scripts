@@ -48,7 +48,8 @@ The party is every character a player controls. Select tokens and click **Add to
 
 Some tables award inspiration as points that build up and are spent a few at a time, and other games have hero points, luck, bennies and the like. A points pool tracks a number like that, on any character sheet.
 
-- Set **Tracking** to **Points pool**. **Give**, **Remove** and **Spend** then work on the default pool, called Inspiration, and ask how many points. The marker shows while a character has any points.
+- Set **Tracking** to **Points pool**. **Give**, **Remove** and **Spend** then work on the default pool, called Inspiration, and ask how many points.
+- A pool starts with no token marker, so tokens are not marked all the time. To have one, click **Pools** and choose the pool's **Marker**: it shows while a character has any points.
 - **Boost** spends points to raise a roll. Type the bonus wanted, and the pool's **Points per +1** decides the cost: at 2 points per +1, a bonus of 4 costs 8 points. The Mod announces the spend with the old and new totals; add the bonus to the roll yourself.
 - A spend is refused when the character does not have enough points. The GM is told who spent what, with an **Undo** button.
 - Players see their points with `!inspiration`, with **Spend** and **Boost** buttons for their own characters.
@@ -86,6 +87,8 @@ The Mod marks who holds a die. It does not roll it, count the bard's uses or end
 - Adding the marker to a token by hand, or with TokenMod, gives the character inspiration; taking it off spends it.
 - Changing the marker setting moves the marker on every token straight away.
 - The D&D 2024 sheet's own condition markers are not offered, because the sheet sets them itself.
+- The **Marker** setting is for the sheet's inspiration box. Each points pool has a **Marker** of its own on the **Pools** card (`!inspiration pool set <name> marker <marker>`), and starts with **None**. Two pools cannot share a marker.
+- Choose **None** for either (`!inspiration set marker none`, `!inspiration pool set <name> marker none`) to put no marker on tokens. The Party card still shows who has inspiration, or how many points.
 
 ## Commands
 
@@ -123,7 +126,7 @@ Players can use `!inspiration`, `spend`, `boost`, `party` and `help`.
 | ---------------- | ------------ | ------------------------------------------------------------------------------------------------- |
 | `language`       | `en-US`      | Language for menus, messages and handouts (24 languages).                                         |
 | `tracking`       | `flag`       | `flag` uses the inspiration box on the D&D sheets; `pool` uses the default points pool.           |
-| `marker`         | `black-flag` | Token marker shown while a character has inspiration.                                             |
+| `marker`         | `black-flag` | Token marker shown while a character has inspiration, or `none`.                                  |
 | `wording`        | `auto`       | `auto` follows each sheet; `2014` always says Inspiration; `2024` always says Heroic Inspiration. |
 | `announce`       | `public`     | Who sees gains and spends: `public`, `gm` (the GM and the character's players) or `off`.          |
 | `fx`             | `on`         | Play a special effect on the token when it gains inspiration.                                     |

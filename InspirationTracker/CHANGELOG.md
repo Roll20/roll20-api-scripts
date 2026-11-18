@@ -18,7 +18,7 @@ A rewrite by MidNiteShadow7 of Robin Kuiper's InspirationTracker, which was repo
 - **Passing it on (2024 rules)**: a character who would gain Heroic Inspiration while having it can give it to a party member who does not have it.
 - **Party overview** (`!inspiration party`) with Give, Remove and Spend buttons, and `party add` / `party remove` to change who is in it. Players can be allowed to see it.
 - **Points pools**: set **Tracking** to **Points pool** to track inspiration as points that build up and are spent a few at a time, with `give`, `remove` and `spend <points>`, and **Boost** (`boost <bonus>`) to spend points for a bonus to a roll at the pool's cost per +1. The points are kept in the sheet's resource box that has the pool's name, or in a plain attribute, so pools work on any sheet; the Party card says which for each character. The GM can rename the default pool and add more (`!inspiration pools`), for hero points, luck and the like, used with `--pool <name>`.
-- **Custom token markers**: any marker from the game's marker sets, stored by tag.
+- **Custom token markers**: any marker from the game's marker sets, stored by tag, or **None** for no marker on tokens. The sheet's inspiration box and each points pool have a marker of their own; a pool starts with none.
 - `give`, `remove`, `toggle`, `spend`, `undo`, `sync`, `status`, `set`, `reset`, `help` and `journal rebuild` commands, and `--ids` to act on tokens or characters by ID.
 - Settings for who sees announcements, player spending, the player overview and passing on.
 - Help and Command Deck handouts, and menus, messages and handouts in 24 languages.
