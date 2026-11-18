@@ -357,6 +357,8 @@ export default {
         'Seiteneinstellungen wie Beleuchtung, Raster und Größe, sofern nicht ausgeschaltet oder pro Seite behalten.',
         'Ebenen lassen sich pro Gruppe ausschließen, und Token-Eigenschaften wie die Sicht lassen sich pro Seite behalten.',
         'Änderungen, die andere Mods über TokenMod vornehmen, werden ebenfalls gespiegelt. Andere Mods können SyncPage.notify aufrufen; die Reparatur erfasst den Rest.',
+        'Steht „Wenn ein Objekt gelöscht wird“ auf Fragen, flüstert SyncPage eine Karte, wenn auf einer Seite etwas gelöscht wird: Überall löschen, Andere behalten oder Rückgängig.',
+        'Objekte auf einer neu zur Gruppe hinzugefügten Seite, die zu nichts passen, folgen „Objekte ohne Gegenstück“. Bei Fragen bietet eine Karte für jedes Objekt Kopieren oder Hier behalten an, oder Alle kopieren und Alle hier behalten.',
       ],
     },
     visibility: {
@@ -372,6 +374,8 @@ export default {
       points: [
         'Die Spielerkarte listet jeden Spieler und seine Seite auf, mit einer Schaltfläche pro Seite zum Verschieben (Gruppe aufteilen).',
         '„Alle nach“ versammelt die Spieler auf einer Seite und merkt sich, wo sie waren; „Aufteilung wiederherstellen“ bringt sie zurück.',
+        'Wähle Tokens aus, bevor du die Karte öffnest, um ein Raster ihrer Kopien zu sehen: Klicke auf eine Seite, um den Token dort zu verbergen oder zu zeigen.',
+        'Steht „Wer die Spielerkarte öffnen darf“ auf Auch Spieler, erfährt ein Spieler, der !syncpage eingibt, auf welcher Seite er ist.',
       ],
     },
     repair: {

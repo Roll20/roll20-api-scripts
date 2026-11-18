@@ -358,6 +358,8 @@ export default {
         'Aydınlatma, ızgara ve boyut gibi sayfa ayarları; kapatılmadıkça veya sayfaya özel tutulmadıkça.',
         'Katmanlar grup başına hariç tutulabilir; görüş gibi token özellikleri sayfaya özel tutulabilir.',
         "Diğer Mod'ların TokenMod üzerinden yaptığı değişiklikler de yansıtılır. Diğer Mod'lar SyncPage.notify çağırabilir; gerisini onarım yakalar.",
+        '"Bir nesne silindiğinde" ayarı Sor olduğunda, bir sayfada bir şey silinince SyncPage bir kart fısıldar: Her yerde sil, Diğerlerini tut veya Geri al.',
+        'Gruba eklenen bir sayfada hiçbir şeyle eşleşmeyen nesneler "Eşi olmayan nesneler" ayarını izler. Sor seçiliyse bir kart her nesne için Kopyala veya Burada tut, ya da Hepsini kopyala ve Hepsini burada tut seçeneklerini sunar.',
       ],
     },
     visibility: {
@@ -373,6 +375,8 @@ export default {
       points: [
         'Oyuncular kartı her oyuncuyu ve bulunduğu sayfayı listeler; onu taşımak için her sayfaya bir düğme vardır (ekibi bölme).',
         '"Herkes" düğmesi oyuncuları tek bir sayfada toplar ve nerede olduklarını hatırlar; "Düzeni geri yükle" onları geri götürür.',
+        'Kartı açmadan önce token seçerseniz kopyalarının bir tablosu görünür: tokenı orada gizlemek veya göstermek için bir sayfaya tıklayın.',
+        '"Oyuncu kartını kim açabilir" ayarı Oyuncular da olduğunda, !syncpage yazan oyuncuya hangi sayfada olduğu söylenir.',
       ],
     },
     repair: {

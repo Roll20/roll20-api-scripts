@@ -352,6 +352,8 @@ export default {
         'Bladsy-instellings soos beligting, rooster en grootte, tensy afgeskakel of per bladsy gehou.',
         'Lae kan per groep uitgesluit word, en token-eienskappe soos visie kan per bladsy gehou word.',
         'Veranderinge wat ander Mods deur TokenMod maak, word ook weerspieël. Ander Mods kan SyncPage.notify roep; herstel vang die res.',
+        'Met "Wanneer ’n objek geskrap word" op Vra gestel, fluister SyncPage ’n kaart wanneer iets op een bladsy geskrap word: Skrap oral, Hou die ander of Ontdoen.',
+        'Objekte op ’n bladsy wat by die groep aansluit en met niks ooreenstem nie, volg "Objekte sonder eweknie". Met Vra bied ’n kaart Kopieer of Hou hier vir elke objek, of Kopieer alles en Hou alles hier.',
       ],
     },
     visibility: {
@@ -367,6 +369,8 @@ export default {
       points: [
         'Die Spelers-kaart lys elke speler en die bladsy waarop hulle is, met ’n knoppie per bladsy om hulle te skuif (verdeel die groep).',
         '“Almal na” bring die spelers op een bladsy bymekaar en onthou waar hulle was; “Herstel uitleg” sit hulle terug.',
+        'Kies tokens voordat jy die kaart oopmaak om ’n rooster van hul kopieë te kry: klik op ’n bladsy om die token daar te versteek of te wys.',
+        'Met "Wie die spelerskaart mag oopmaak" op Spelers ook gestel, hoor ’n speler wat !syncpage tik op watter bladsy hulle is.',
       ],
     },
     repair: {

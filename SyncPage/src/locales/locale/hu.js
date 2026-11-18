@@ -362,6 +362,8 @@ export default {
         'Oldalbeállítások, például megvilágítás, rács és méret, hacsak nincsenek kikapcsolva vagy oldalanként külön tartva.',
         'Rétegek csoportonként kihagyhatók, és a tokentulajdonságok, például a látás, oldalanként külön tarthatók.',
         'A más Modok által a TokenMod segítségével végzett változások is tükröződnek. Más Modok meghívhatják a SyncPage.notify függvényt; a többit a javítás elkapja.',
+        'Ha a(z) „Objektum törlésekor” értéke Kérdezés, a SyncPage suttogva küld egy kártyát, amikor egy oldalon valami törlődik: Törlés mindenhol, A többi marad vagy Visszavonás.',
+        'A csoporthoz hozzáadott oldal semmivel sem egyező objektumai a(z) „Párosítatlan objektumok” beállítást követik. Kérdezés értéknél egy kártya minden objektumhoz felkínálja: Másolás vagy Marad itt, illetve Összes másolása és Mind marad itt.',
       ],
     },
     visibility: {
@@ -377,6 +379,8 @@ export default {
       points: [
         'A Játékosok kártya felsorolja a játékosokat és az oldalt, amelyen vannak, oldalanként egy gombbal az áthelyezésükhöz (csapat szétválasztása).',
         'A „Mindenki ide” egy oldalra gyűjti a játékosokat, és megjegyzi, hol voltak; az „Elrendezés visszaállítása” visszaviszi őket.',
+        'Jelölj ki tokeneket a kártya megnyitása előtt, és megjelenik a másolataik rácsa: egy oldalra kattintva ott elrejted vagy megjeleníted a tokent.',
+        'Ha a(z) „Ki nyithatja meg a játékoskártyát” értéke Játékosok is, a !syncpage parancsot beíró játékos megtudja, melyik oldalon van.',
       ],
     },
     repair: {

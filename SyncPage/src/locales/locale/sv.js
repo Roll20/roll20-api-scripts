@@ -352,6 +352,8 @@ export default {
         'Sidinställningar som belysning, rutnät och storlek, om de inte är avstängda eller behålls per sida.',
         'Lager kan undantas per grupp, och token-egenskaper som syn kan behållas per sida.',
         'Ändringar som andra Mods gör via TokenMod speglas också. Andra Mods kan anropa SyncPage.notify; reparation fångar resten.',
+        'När "När ett objekt raderas" är Fråga viskar SyncPage ett kort när något raderas på en sida: Radera överallt, Behåll de andra eller Ångra.',
+        'Objekt på en sida som läggs till i gruppen och inte matchar något följer "Objekt utan motsvarighet". Med Fråga erbjuder ett kort Kopiera eller Behåll här för varje objekt, eller Kopiera alla och Behåll alla här.',
       ],
     },
     visibility: {
@@ -367,6 +369,8 @@ export default {
       points: [
         'Spelare-kortet listar varje spelare och sidan de är på, med en knapp per sida för att flytta dem (dela upp gruppen).',
         '"Alla till" samlar spelarna på en sida och kommer ihåg var de var; "Återställ fördelning" flyttar tillbaka dem.',
+        'Markera tokens innan du öppnar kortet för att se ett rutnät med deras kopior: klicka på en sida för att dölja eller visa token där.',
+        'När "Vem får öppna spelarkortet" är Även spelare får en spelare som skriver !syncpage veta vilken sida hen är på.',
       ],
     },
     repair: {

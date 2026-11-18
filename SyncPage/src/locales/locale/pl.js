@@ -358,6 +358,8 @@ export default {
         'Ustawienia strony, takie jak oświetlenie, siatka i rozmiar, chyba że są wyłączone lub zachowane osobno dla strony.',
         'Warstwy można wyłączyć dla grupy, a właściwości tokenów, takie jak widzenie, można zachować osobno dla każdej strony.',
         'Zmiany, które inne Mody wprowadzają przez TokenMod, też są odzwierciedlane. Inne Mody mogą wywołać SyncPage.notify; naprawa wyłapie resztę.',
+        'Gdy „Gdy obiekt zostanie usunięty” ma wartość „Pytaj”, SyncPage szepcze kartę, gdy coś zostanie usunięte na jednej stronie: Usuń wszędzie, Zostaw pozostałe lub Cofnij.',
+        'Obiekty na stronie dołączanej do grupy, które do niczego nie pasują, podlegają ustawieniu „Obiekty bez dopasowania”. Przy wartości „Pytaj” karta proponuje dla każdego obiektu: Kopiuj lub Zostaw tutaj, albo Kopiuj wszystkie i Zostaw wszystkie tutaj.',
       ],
     },
     visibility: {
@@ -373,6 +375,8 @@ export default {
       points: [
         'Karta Gracze wymienia każdego gracza i stronę, na której jest, z przyciskiem dla każdej strony, aby go przenieść (rozdzielenie drużyny).',
         '„Wszyscy na” zbiera graczy na jednej stronie i zapamiętuje, gdzie byli; „Przywróć układ” odsyła ich z powrotem.',
+        'Zaznacz tokeny przed otwarciem karty, aby zobaczyć siatkę ich kopii: kliknij stronę, aby ukryć lub pokazać na niej token.',
+        'Gdy „Kto może otworzyć kartę graczy” ma wartość „Też gracze”, gracz, który wpisze !syncpage, dowie się, na której stronie jest.',
       ],
     },
     repair: {

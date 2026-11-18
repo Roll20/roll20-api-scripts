@@ -363,6 +363,8 @@ export default {
         'Impostazioni di pagina come illuminazione, griglia e dimensioni, a meno che non siano disattivate o tenute per pagina.',
         'Si possono escludere dei livelli per gruppo, e proprietà dei token come la visione possono essere tenute per pagina.',
         'Anche le modifiche che altre Mod fanno tramite TokenMod vengono rispecchiate. Le altre Mod possono chiamare SyncPage.notify; la riparazione sistema il resto.',
+        'Con «Quando un oggetto è eliminato» su Chiedi, SyncPage sussurra una scheda quando qualcosa viene eliminato su una pagina: Elimina ovunque, Tieni le altre o Annulla.',
+        'Gli oggetti di una pagina aggiunta al gruppo che non corrispondono a nulla seguono «Oggetti senza corrispondenza». Con Chiedi, una scheda offre Copia o Tieni qui per ogni oggetto, oppure Copia tutti e Tieni tutti qui.',
       ],
     },
     visibility: {
@@ -378,6 +380,8 @@ export default {
       points: [
         'La scheda Giocatori elenca ogni giocatore e la pagina in cui si trova, con un pulsante per pagina per spostarlo (party diviso).',
         '«Tutti su» riunisce i giocatori su una pagina e ricorda dove si trovavano; «Ripristina disposizione» li riporta indietro.',
+        'Seleziona dei token prima di aprire la scheda per vedere una griglia delle loro copie: fai clic su una pagina per nascondere o mostrare lì il token.',
+        'Con «Chi può aprire la scheda giocatori» su Anche i giocatori, un giocatore che digita !syncpage scopre su quale pagina si trova.',
       ],
     },
     repair: {

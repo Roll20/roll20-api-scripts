@@ -359,6 +359,8 @@ export default {
         'Nastavení stránky, jako osvětlení, mřížka a velikost, pokud nejsou vypnutá nebo vlastní pro stránku.',
         'Vrstvy lze pro skupinu vynechat a vlastnosti tokenů, jako vidění, lze držet zvlášť pro každou stránku.',
         'Zrcadlí se i změny, které jiné Mody provedou přes TokenMod. Jiné Mody mohou volat SyncPage.notify; zbytek zachytí oprava.',
+        'Když je „Při smazání objektu“ nastaveno na Zeptat se, SyncPage pošle šeptem kartu, jakmile se na jedné stránce něco smaže: Smazat všude, Ponechat ostatní nebo Zpět.',
+        'Objekty na stránce přidávané do skupiny, které ničemu neodpovídají, se řídí nastavením „Objekty bez protějšku“. Při hodnotě Zeptat se karta nabídne u každého objektu Kopírovat nebo Ponechat zde, případně Kopírovat vše a Ponechat vše zde.',
       ],
     },
     visibility: {
@@ -374,6 +376,8 @@ export default {
       points: [
         'Karta Hráči uvádí každého hráče a stránku, na které je, s tlačítkem pro každou stránku k jeho přesunu (rozdělení družiny).',
         '„Všichni na“ shromáždí hráče na jedné stránce a zapamatuje si, kde byli; „Obnovit rozložení“ je vrátí zpět.',
+        'Před otevřením karty vyberte tokeny a uvidíte mřížku jejich kopií: kliknutím na stránku token na ní skryjete nebo zobrazíte.',
+        'Když je „Kdo smí otevřít kartu hráčů“ nastaveno na I hráči, hráč, který napíše !syncpage, se dozví, na které stránce je.',
       ],
     },
     repair: {

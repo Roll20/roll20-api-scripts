@@ -357,6 +357,8 @@ export default {
         'Sivun asetukset, kuten valaistus, ruudukko ja koko, ellei niitä ole kytketty pois tai pidetä sivukohtaisina.',
         'Tasoja voi jättää pois ryhmäkohtaisesti, ja tokenin ominaisuudet, kuten näkö, voi pitää sivukohtaisina.',
         'Myös muiden Modien TokenModin kautta tekemät muutokset peilataan. Muut Modit voivat kutsua SyncPage.notify; korjaus hoitaa loput.',
+        'Kun "Kun objekti poistetaan" on Kysy, SyncPage kuiskaa kortin, kun jotain poistetaan yhdeltä sivulta: Poista kaikkialta, Pidä muut tai Kumoa.',
+        'Ryhmään lisättävän sivun objektit, jotka eivät vastaa mitään, noudattavat asetusta "Objektit ilman vastinetta". Arvolla Kysy kortti tarjoaa jokaiselle objektille Kopioi tai Pidä tässä, tai Kopioi kaikki ja Pidä kaikki tässä.',
       ],
     },
     visibility: {
@@ -372,6 +374,8 @@ export default {
       points: [
         'Pelaajat-kortti luettelee jokaisen pelaajan ja sivun, jolla hän on, sekä painikkeen sivua kohden hänen siirtämiseensä (ryhmän jakaminen).',
         '"Kaikki sivulle" kokoaa pelaajat yhdelle sivulle ja muistaa, missä he olivat; "Palauta sijoittelu" siirtää heidät takaisin.',
+        'Valitse tokenit ennen kortin avaamista, niin näet ruudukon niiden kopioista: napsauta sivua piilottaaksesi tai näyttääksesi tokenin siellä.',
+        'Kun "Kuka saa avata pelaajakortin" on Myös pelaajat, pelaaja, joka kirjoittaa !syncpage, näkee, millä sivulla hän on.',
       ],
     },
     repair: {

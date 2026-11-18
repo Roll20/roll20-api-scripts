@@ -361,6 +361,8 @@ export default {
         'Paràmetres de pàgina com la il·luminació, la quadrícula i la mida, tret que es desactivin o es mantinguin per pàgina.',
         'Es poden excloure capes per grup, i les propietats de fitxa com la visió es poden mantenir per pàgina.',
         "També es repliquen els canvis que altres Mods fan mitjançant TokenMod. Altres Mods poden cridar SyncPage.notify; la reparació s'encarrega de la resta.",
+        'Amb «Quan se suprimeix un objecte» a Preguntar, SyncPage xiuxiueja una targeta quan se suprimeix alguna cosa en una pàgina: Suprimeix a totes, Conserva les altres o Desfés.',
+        "Els objectes d'una pàgina que s'afegeix al grup i que no coincideixen amb res segueixen «Objectes sense parella». Amb Preguntar, una targeta ofereix Copia o Deixa aquí per a cada objecte, o Copia-ho tot i Deixa-ho tot aquí.",
       ],
     },
     visibility: {
@@ -376,6 +378,8 @@ export default {
       points: [
         "La targeta de Jugadors mostra cada jugador i la pàgina on és, amb un botó per pàgina per moure'l (dividir el grup).",
         '«Tothom a» reuneix els jugadors en una pàgina i recorda on eren; «Restaura la distribució» els torna on eren.',
+        "Selecciona fitxes abans d'obrir la targeta per veure una graella de les seves còpies: fes clic a una pàgina per amagar-hi o mostrar-hi la fitxa.",
+        'Amb «Qui pot obrir la targeta de jugadors» a També jugadors, un jugador que escriu !syncpage sap a quina pàgina és.',
       ],
     },
     repair: {

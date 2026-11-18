@@ -358,6 +358,8 @@ export default {
         "Les paramètres de page comme l'éclairage, la grille et la taille, sauf s'ils sont désactivés ou propres à chaque page.",
         'Des calques peuvent être exclus par groupe, et des propriétés de jeton comme la vision peuvent rester propres à chaque page.',
         "Les modifications que d'autres Mods font via TokenMod sont aussi répliquées. D'autres Mods peuvent appeler SyncPage.notify ; la réparation rattrape le reste.",
+        'Avec « Quand un objet est supprimé » sur Demander, SyncPage chuchote une carte quand quelque chose est supprimé sur une page : Supprimer partout, Garder les autres ou Annuler.',
+        "Les objets d'une page ajoutée au groupe qui ne correspondent à rien suivent « Objets sans correspondance ». Avec Demander, une carte propose Copier ou Garder ici pour chaque objet, ou Tout copier et Tout garder ici.",
       ],
     },
     visibility: {
@@ -373,6 +375,8 @@ export default {
       points: [
         'La carte Joueurs liste chaque joueur et la page où il se trouve, avec un bouton par page pour le déplacer (séparation du groupe).',
         '« Tous vers » rassemble les joueurs sur une page et mémorise où ils étaient ; « Rétablir la disposition » les remet en place.',
+        "Sélectionnez des jetons avant d'ouvrir la carte pour voir une grille de leurs copies : cliquez sur une page pour y masquer ou afficher le jeton.",
+        'Avec « Qui peut ouvrir la carte des joueurs » sur Joueurs aussi, un joueur qui tape !syncpage apprend sur quelle page il se trouve.',
       ],
     },
     repair: {

@@ -360,6 +360,8 @@ export default {
         'Definições da página como a iluminação, a grelha e o tamanho, a não ser que sejam desativadas ou mantidas por página.',
         'É possível excluir camadas por grupo, e propriedades dos tokens como a visão podem ser mantidas por página.',
         'As alterações que outros Mods fazem através do TokenMod também são espelhadas. Outros Mods podem chamar SyncPage.notify; a reparação trata do resto.',
+        'Com "Quando um objeto é eliminado" em Perguntar, o SyncPage sussurra um cartão quando algo é eliminado numa página: Eliminar em todas, Manter as outras ou Anular.',
+        'Os objetos de uma página adicionada ao grupo que não correspondem a nada seguem "Objetos sem correspondência". Com Perguntar, um cartão oferece Copiar ou Manter aqui para cada objeto, ou Copiar tudo e Manter tudo aqui.',
       ],
     },
     visibility: {
@@ -375,6 +377,8 @@ export default {
       points: [
         'O cartão Jogadores lista cada jogador e a página em que está, com um botão por página para o mover (dividir o grupo).',
         '«Todos para» reúne os jogadores numa página e memoriza onde estavam; «Repor disposição» volta a colocá-los onde estavam.',
+        'Selecione tokens antes de abrir o cartão para ver uma grelha das suas cópias: clique numa página para ocultar ou mostrar lá o token.',
+        'Com "Quem pode abrir o cartão de jogadores" em Jogadores também, um jogador que escreve !syncpage fica a saber em que página está.',
       ],
     },
     repair: {

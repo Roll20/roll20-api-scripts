@@ -359,6 +359,8 @@ export default {
         'Pagina-instellingen zoals belichting, raster en grootte, tenzij uitgeschakeld of per pagina behouden.',
         'Lagen kunnen per groep worden uitgesloten, en token-eigenschappen zoals zicht kunnen per pagina worden behouden.',
         'Wijzigingen die andere Mods via TokenMod maken, worden ook gespiegeld. Andere Mods kunnen SyncPage.notify aanroepen; herstel vangt de rest op.',
+        'Met "Als een object wordt verwijderd" op Vragen fluistert SyncPage een kaart wanneer er op één pagina iets wordt verwijderd: Overal verwijderen, Andere houden of Ongedaan maken.',
+        'Objecten op een pagina die bij de groep komt en nergens mee overeenkomen, volgen "Objecten zonder tegenhanger". Met Vragen biedt een kaart per object Kopiëren of Hier houden, of Alles kopiëren en Alles hier houden.',
       ],
     },
     visibility: {
@@ -374,6 +376,8 @@ export default {
       points: [
         'De spelerskaart toont elke speler en de pagina waarop die is, met een knop per pagina om hem te verplaatsen (groep splitsen).',
         '"Iedereen naar" brengt de spelers samen op één pagina en onthoudt waar ze waren; "Indeling herstellen" zet ze terug.',
+        'Selecteer tokens voordat je de kaart opent om een raster van hun kopieën te zien: klik op een pagina om het token daar te verbergen of te tonen.',
+        'Met "Wie de spelerskaart mag openen" op Ook spelers hoort een speler die !syncpage typt op welke pagina hij is.',
       ],
     },
     repair: {

@@ -350,6 +350,8 @@ export default {
         'Sideindstillinger som lys, gitter og størrelse, medmindre de er slået fra eller beholdes pr. side.',
         'Lag kan udelades pr. gruppe, og token-egenskaber som syn kan beholdes pr. side.',
         'Ændringer, som andre Mods laver via TokenMod, spejles også. Andre Mods kan kalde SyncPage.notify; reparation fanger resten.',
+        'Når "Når et objekt slettes" står på Spørg, hvisker SyncPage et kort, når noget slettes på én side: Slet overalt, Behold de andre eller Fortryd.',
+        'Objekter på en side, der føjes til gruppen, og som ikke matcher noget, følger "Objekter uden modstykke". Med Spørg tilbyder et kort Kopier eller Behold her for hvert objekt, eller Kopier alle og Behold alle her.',
       ],
     },
     visibility: {
@@ -365,6 +367,8 @@ export default {
       points: [
         'Spillere-kortet viser hver spiller og den side, de er på, med en knap pr. side til at flytte dem (del gruppen).',
         '"Alle til" samler spillerne på én side og husker, hvor de var; "Gendan fordeling" flytter dem tilbage.',
+        'Vælg tokens, før du åbner kortet, for at få et gitter med deres kopier: klik på en side for at skjule eller vise tokenet der.',
+        'Når "Hvem må åbne spillerkortet" står på Også spillere, får en spiller, der skriver !syncpage, at vide, hvilken side vedkommende er på.',
       ],
     },
     repair: {

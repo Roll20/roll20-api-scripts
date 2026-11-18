@@ -361,6 +361,8 @@ export default {
         'Ajustes de página como la iluminación, la cuadrícula y el tamaño, salvo que se desactiven o se mantengan por página.',
         'Se pueden excluir capas por grupo, y propiedades de ficha como la visión se pueden mantener por página.',
         'También se replican los cambios que otros Mods hacen mediante TokenMod. Otros Mods pueden llamar a SyncPage.notify; la reparación se encarga del resto.',
+        'Con «Al eliminar un objeto» en Preguntar, SyncPage susurra una tarjeta cuando se elimina algo en una página: Eliminar en todas, Conservar las demás o Deshacer.',
+        'Los objetos de una página que se añade al grupo y que no coinciden con nada siguen «Objetos sin pareja». Con Preguntar, una tarjeta ofrece Copiar o Dejar aquí para cada objeto, o Copiar todo y Dejar todo aquí.',
       ],
     },
     visibility: {
@@ -376,6 +378,8 @@ export default {
       points: [
         'La tarjeta de Jugadores muestra cada jugador y la página en la que está, con un botón por página para moverlo (dividir el grupo).',
         '«Todos a» reúne a los jugadores en una página y recuerda dónde estaban; «Restaurar distribución» los devuelve.',
+        'Selecciona fichas antes de abrir la tarjeta para ver una cuadrícula de sus copias: haz clic en una página para ocultar o mostrar allí la ficha.',
+        'Con «Quién puede abrir la tarjeta de jugadores» en También jugadores, un jugador que escribe !syncpage sabe en qué página está.',
       ],
     },
     repair: {
