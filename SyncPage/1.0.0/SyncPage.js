@@ -5,7 +5,7 @@
  * Name: SyncPage
  * Script: SyncPage.js
  * Version: 1.0.0
- * Built: 2026-11-17T22:45:41.878Z
+ * Built: 2026-11-18T00:32:52.125Z
  */
 const SyncPageMod = (() => {
   'use strict';
@@ -13,7 +13,7 @@ const SyncPageMod = (() => {
   // Build-time placeholders replaced by rollup.config.js inject-build-metadata plugin.
   const SCRIPT_NAME = 'SyncPage';
   const SCRIPT_VERSION = '1.0.0';
-  const SCRIPT_LAST_UPDATED = '2026-11-17T22:45:41.878Z';
+  const SCRIPT_LAST_UPDATED = '2026-11-18T00:32:52.125Z';
 
   const DEFAULT_LOCALE$1 = 'en-US';
 
@@ -1082,6 +1082,8 @@ const SyncPageMod = (() => {
           'Bladsy-instellings soos beligting, rooster en grootte, tensy afgeskakel of per bladsy gehou.',
           'Lae kan per groep uitgesluit word, en token-eienskappe soos visie kan per bladsy gehou word.',
           'Veranderinge wat ander Mods deur TokenMod maak, word ook weerspieël. Ander Mods kan SyncPage.notify roep; herstel vang die res.',
+          'Met "Wanneer ’n objek geskrap word" op Vra gestel, fluister SyncPage ’n kaart wanneer iets op een bladsy geskrap word: Skrap oral, Hou die ander of Ontdoen.',
+          'Objekte op ’n bladsy wat by die groep aansluit en met niks ooreenstem nie, volg "Objekte sonder eweknie". Met Vra bied ’n kaart Kopieer of Hou hier vir elke objek, of Kopieer alles en Hou alles hier.',
         ],
       },
       visibility: {
@@ -1097,6 +1099,8 @@ const SyncPageMod = (() => {
         points: [
           'Die Spelers-kaart lys elke speler en die bladsy waarop hulle is, met ’n knoppie per bladsy om hulle te skuif (verdeel die groep).',
           '“Almal na” bring die spelers op een bladsy bymekaar en onthou waar hulle was; “Herstel uitleg” sit hulle terug.',
+          'Kies tokens voordat jy die kaart oopmaak om ’n rooster van hul kopieë te kry: klik op ’n bladsy om die token daar te versteek of te wys.',
+          'Met "Wie die spelerskaart mag oopmaak" op Spelers ook gestel, hoor ’n speler wat !syncpage tik op watter bladsy hulle is.',
         ],
       },
       repair: {
@@ -1544,6 +1548,8 @@ const SyncPageMod = (() => {
           'Paràmetres de pàgina com la il·luminació, la quadrícula i la mida, tret que es desactivin o es mantinguin per pàgina.',
           'Es poden excloure capes per grup, i les propietats de fitxa com la visió es poden mantenir per pàgina.',
           "També es repliquen els canvis que altres Mods fan mitjançant TokenMod. Altres Mods poden cridar SyncPage.notify; la reparació s'encarrega de la resta.",
+          'Amb «Quan se suprimeix un objecte» a Preguntar, SyncPage xiuxiueja una targeta quan se suprimeix alguna cosa en una pàgina: Suprimeix a totes, Conserva les altres o Desfés.',
+          "Els objectes d'una pàgina que s'afegeix al grup i que no coincideixen amb res segueixen «Objectes sense parella». Amb Preguntar, una targeta ofereix Copia o Deixa aquí per a cada objecte, o Copia-ho tot i Deixa-ho tot aquí.",
         ],
       },
       visibility: {
@@ -1559,6 +1565,8 @@ const SyncPageMod = (() => {
         points: [
           "La targeta de Jugadors mostra cada jugador i la pàgina on és, amb un botó per pàgina per moure'l (dividir el grup).",
           '«Tothom a» reuneix els jugadors en una pàgina i recorda on eren; «Restaura la distribució» els torna on eren.',
+          "Selecciona fitxes abans d'obrir la targeta per veure una graella de les seves còpies: fes clic a una pàgina per amagar-hi o mostrar-hi la fitxa.",
+          'Amb «Qui pot obrir la targeta de jugadors» a També jugadors, un jugador que escriu !syncpage sap a quina pàgina és.',
         ],
       },
       repair: {
@@ -1989,6 +1997,8 @@ const SyncPageMod = (() => {
           '照明、格線和尺寸等頁面設定，除非已關閉或設為每頁各自保留。',
           '可以依群組排除圖層，也可以讓視野等標記屬性每頁各自保留。',
           '其他 Mod 透過 TokenMod 所做的變更也會鏡像同步。其他 Mod 可以呼叫 SyncPage.notify；其餘的由修復處理。',
+          '當「刪除物件時」設為詢問時，在某一頁刪除東西，SyncPage 會密語一張卡片：全部刪除、保留其他或復原。',
+          '加入群組的頁面上沒有任何對應的物件，會依照「沒有對應的物件」處理。設為詢問時，卡片會為每個物件提供複製或保留在此，或一次全部複製或全部保留在此。',
         ],
       },
       visibility: {
@@ -2004,6 +2014,8 @@ const SyncPageMod = (() => {
         points: [
           '玩家卡片列出每位玩家和他們所在的頁面，每個頁面都有一個按鈕可移動他們（分隊）。',
           '「全員到…」會把玩家集合到同一個頁面，並記住他們原本的位置；「還原配置」可以把他們移回去。',
+          '開啟卡片前先選取標記，就會看到它們副本的表格：點擊某一頁即可在該頁隱藏或顯示標記。',
+          '當「誰可以開啟玩家卡片」設為玩家也可時，輸入 !syncpage 的玩家會得知自己在哪一頁。',
         ],
       },
       repair: {
@@ -2448,6 +2460,8 @@ const SyncPageMod = (() => {
           'Nastavení stránky, jako osvětlení, mřížka a velikost, pokud nejsou vypnutá nebo vlastní pro stránku.',
           'Vrstvy lze pro skupinu vynechat a vlastnosti tokenů, jako vidění, lze držet zvlášť pro každou stránku.',
           'Zrcadlí se i změny, které jiné Mody provedou přes TokenMod. Jiné Mody mohou volat SyncPage.notify; zbytek zachytí oprava.',
+          'Když je „Při smazání objektu“ nastaveno na Zeptat se, SyncPage pošle šeptem kartu, jakmile se na jedné stránce něco smaže: Smazat všude, Ponechat ostatní nebo Zpět.',
+          'Objekty na stránce přidávané do skupiny, které ničemu neodpovídají, se řídí nastavením „Objekty bez protějšku“. Při hodnotě Zeptat se karta nabídne u každého objektu Kopírovat nebo Ponechat zde, případně Kopírovat vše a Ponechat vše zde.',
         ],
       },
       visibility: {
@@ -2463,6 +2477,8 @@ const SyncPageMod = (() => {
         points: [
           'Karta Hráči uvádí každého hráče a stránku, na které je, s tlačítkem pro každou stránku k jeho přesunu (rozdělení družiny).',
           '„Všichni na“ shromáždí hráče na jedné stránce a zapamatuje si, kde byli; „Obnovit rozložení“ je vrátí zpět.',
+          'Před otevřením karty vyberte tokeny a uvidíte mřížku jejich kopií: kliknutím na stránku token na ní skryjete nebo zobrazíte.',
+          'Když je „Kdo smí otevřít kartu hráčů“ nastaveno na I hráči, hráč, který napíše !syncpage, se dozví, na které stránce je.',
         ],
       },
       repair: {
@@ -2900,6 +2916,8 @@ const SyncPageMod = (() => {
           'Sideindstillinger som lys, gitter og størrelse, medmindre de er slået fra eller beholdes pr. side.',
           'Lag kan udelades pr. gruppe, og token-egenskaber som syn kan beholdes pr. side.',
           'Ændringer, som andre Mods laver via TokenMod, spejles også. Andre Mods kan kalde SyncPage.notify; reparation fanger resten.',
+          'Når "Når et objekt slettes" står på Spørg, hvisker SyncPage et kort, når noget slettes på én side: Slet overalt, Behold de andre eller Fortryd.',
+          'Objekter på en side, der føjes til gruppen, og som ikke matcher noget, følger "Objekter uden modstykke". Med Spørg tilbyder et kort Kopier eller Behold her for hvert objekt, eller Kopier alle og Behold alle her.',
         ],
       },
       visibility: {
@@ -2915,6 +2933,8 @@ const SyncPageMod = (() => {
         points: [
           'Spillere-kortet viser hver spiller og den side, de er på, med en knap pr. side til at flytte dem (del gruppen).',
           '"Alle til" samler spillerne på én side og husker, hvor de var; "Gendan fordeling" flytter dem tilbage.',
+          'Vælg tokens, før du åbner kortet, for at få et gitter med deres kopier: klik på en side for at skjule eller vise tokenet der.',
+          'Når "Hvem må åbne spillerkortet" står på Også spillere, får en spiller, der skriver !syncpage, at vide, hvilken side vedkommende er på.',
         ],
       },
       repair: {
@@ -3360,6 +3380,8 @@ const SyncPageMod = (() => {
           'Pagina-instellingen zoals belichting, raster en grootte, tenzij uitgeschakeld of per pagina behouden.',
           'Lagen kunnen per groep worden uitgesloten, en token-eigenschappen zoals zicht kunnen per pagina worden behouden.',
           'Wijzigingen die andere Mods via TokenMod maken, worden ook gespiegeld. Andere Mods kunnen SyncPage.notify aanroepen; herstel vangt de rest op.',
+          'Met "Als een object wordt verwijderd" op Vragen fluistert SyncPage een kaart wanneer er op één pagina iets wordt verwijderd: Overal verwijderen, Andere houden of Ongedaan maken.',
+          'Objecten op een pagina die bij de groep komt en nergens mee overeenkomen, volgen "Objecten zonder tegenhanger". Met Vragen biedt een kaart per object Kopiëren of Hier houden, of Alles kopiëren en Alles hier houden.',
         ],
       },
       visibility: {
@@ -3375,6 +3397,8 @@ const SyncPageMod = (() => {
         points: [
           'De spelerskaart toont elke speler en de pagina waarop die is, met een knop per pagina om hem te verplaatsen (groep splitsen).',
           '"Iedereen naar" brengt de spelers samen op één pagina en onthoudt waar ze waren; "Indeling herstellen" zet ze terug.',
+          'Selecteer tokens voordat je de kaart opent om een raster van hun kopieën te zien: klik op een pagina om het token daar te verbergen of te tonen.',
+          'Met "Wie de spelerskaart mag openen" op Ook spelers hoort een speler die !syncpage typt op welke pagina hij is.',
         ],
       },
       repair: {
@@ -3810,6 +3834,8 @@ const SyncPageMod = (() => {
           'Page settings such as lighting, grid and size, unless switched off or kept per page.',
           'Layers can be left out per group, and token properties such as vision can be kept per page.',
           'Changes other Mods make through TokenMod are mirrored too. Other Mods can call SyncPage.notify; repair catches the rest.',
+          'With "When an object is deleted" set to Ask, SyncPage whispers a card when something is deleted on one page: Delete everywhere, Keep the others or Undo.',
+          'Objects on a page joining the group that match nothing follow "Objects that match nothing". With Ask, a card offers Copy or Keep here for each object, or Copy all and Keep all here.',
         ],
       },
       visibility: {
@@ -3825,6 +3851,8 @@ const SyncPageMod = (() => {
         points: [
           'The Players card lists each player and the page they are on, with a button per page to move them (split party).',
           '"Everyone to" gathers the players on one page and remembers where they were; "Restore layout" puts them back.',
+          'Select tokens before opening the card to get a grid of their copies: click a page to hide or show the token there.',
+          'With "Who may open the player card" set to Players too, a player who types !syncpage is told which page they are on.',
         ],
       },
       repair: {
@@ -4269,6 +4297,8 @@ const SyncPageMod = (() => {
           'Sivun asetukset, kuten valaistus, ruudukko ja koko, ellei niitä ole kytketty pois tai pidetä sivukohtaisina.',
           'Tasoja voi jättää pois ryhmäkohtaisesti, ja tokenin ominaisuudet, kuten näkö, voi pitää sivukohtaisina.',
           'Myös muiden Modien TokenModin kautta tekemät muutokset peilataan. Muut Modit voivat kutsua SyncPage.notify; korjaus hoitaa loput.',
+          'Kun "Kun objekti poistetaan" on Kysy, SyncPage kuiskaa kortin, kun jotain poistetaan yhdeltä sivulta: Poista kaikkialta, Pidä muut tai Kumoa.',
+          'Ryhmään lisättävän sivun objektit, jotka eivät vastaa mitään, noudattavat asetusta "Objektit ilman vastinetta". Arvolla Kysy kortti tarjoaa jokaiselle objektille Kopioi tai Pidä tässä, tai Kopioi kaikki ja Pidä kaikki tässä.',
         ],
       },
       visibility: {
@@ -4284,6 +4314,8 @@ const SyncPageMod = (() => {
         points: [
           'Pelaajat-kortti luettelee jokaisen pelaajan ja sivun, jolla hän on, sekä painikkeen sivua kohden hänen siirtämiseensä (ryhmän jakaminen).',
           '"Kaikki sivulle" kokoaa pelaajat yhdelle sivulle ja muistaa, missä he olivat; "Palauta sijoittelu" siirtää heidät takaisin.',
+          'Valitse tokenit ennen kortin avaamista, niin näet ruudukon niiden kopioista: napsauta sivua piilottaaksesi tai näyttääksesi tokenin siellä.',
+          'Kun "Kuka saa avata pelaajakortin" on Myös pelaajat, pelaaja, joka kirjoittaa !syncpage, näkee, millä sivulla hän on.',
         ],
       },
       repair: {
@@ -4732,6 +4764,8 @@ const SyncPageMod = (() => {
           "Les paramètres de page comme l'éclairage, la grille et la taille, sauf s'ils sont désactivés ou propres à chaque page.",
           'Des calques peuvent être exclus par groupe, et des propriétés de jeton comme la vision peuvent rester propres à chaque page.',
           "Les modifications que d'autres Mods font via TokenMod sont aussi répliquées. D'autres Mods peuvent appeler SyncPage.notify ; la réparation rattrape le reste.",
+          'Avec « Quand un objet est supprimé » sur Demander, SyncPage chuchote une carte quand quelque chose est supprimé sur une page : Supprimer partout, Garder les autres ou Annuler.',
+          "Les objets d'une page ajoutée au groupe qui ne correspondent à rien suivent « Objets sans correspondance ». Avec Demander, une carte propose Copier ou Garder ici pour chaque objet, ou Tout copier et Tout garder ici.",
         ],
       },
       visibility: {
@@ -4747,6 +4781,8 @@ const SyncPageMod = (() => {
         points: [
           'La carte Joueurs liste chaque joueur et la page où il se trouve, avec un bouton par page pour le déplacer (séparation du groupe).',
           '« Tous vers » rassemble les joueurs sur une page et mémorise où ils étaient ; « Rétablir la disposition » les remet en place.',
+          "Sélectionnez des jetons avant d'ouvrir la carte pour voir une grille de leurs copies : cliquez sur une page pour y masquer ou afficher le jeton.",
+          'Avec « Qui peut ouvrir la carte des joueurs » sur Joueurs aussi, un joueur qui tape !syncpage apprend sur quelle page il se trouve.',
         ],
       },
       repair: {
@@ -5191,6 +5227,8 @@ const SyncPageMod = (() => {
           'Seiteneinstellungen wie Beleuchtung, Raster und Größe, sofern nicht ausgeschaltet oder pro Seite behalten.',
           'Ebenen lassen sich pro Gruppe ausschließen, und Token-Eigenschaften wie die Sicht lassen sich pro Seite behalten.',
           'Änderungen, die andere Mods über TokenMod vornehmen, werden ebenfalls gespiegelt. Andere Mods können SyncPage.notify aufrufen; die Reparatur erfasst den Rest.',
+          'Steht „Wenn ein Objekt gelöscht wird“ auf Fragen, flüstert SyncPage eine Karte, wenn auf einer Seite etwas gelöscht wird: Überall löschen, Andere behalten oder Rückgängig.',
+          'Objekte auf einer neu zur Gruppe hinzugefügten Seite, die zu nichts passen, folgen „Objekte ohne Gegenstück“. Bei Fragen bietet eine Karte für jedes Objekt Kopieren oder Hier behalten an, oder Alle kopieren und Alle hier behalten.',
         ],
       },
       visibility: {
@@ -5206,6 +5244,8 @@ const SyncPageMod = (() => {
         points: [
           'Die Spielerkarte listet jeden Spieler und seine Seite auf, mit einer Schaltfläche pro Seite zum Verschieben (Gruppe aufteilen).',
           '„Alle nach“ versammelt die Spieler auf einer Seite und merkt sich, wo sie waren; „Aufteilung wiederherstellen“ bringt sie zurück.',
+          'Wähle Tokens aus, bevor du die Karte öffnest, um ein Raster ihrer Kopien zu sehen: Klicke auf eine Seite, um den Token dort zu verbergen oder zu zeigen.',
+          'Steht „Wer die Spielerkarte öffnen darf“ auf Auch Spieler, erfährt ein Spieler, der !syncpage eingibt, auf welcher Seite er ist.',
         ],
       },
       repair: {
@@ -5658,6 +5698,8 @@ const SyncPageMod = (() => {
           'Ρυθμίσεις σελίδας όπως φωτισμός, πλέγμα και μέγεθος, εκτός αν είναι απενεργοποιημένες ή κρατούνται ανά σελίδα.',
           'Επίπεδα μπορούν να εξαιρεθούν ανά ομάδα, και ιδιότητες πιονιών όπως η όραση μπορούν να κρατηθούν ανά σελίδα.',
           'Οι αλλαγές που κάνουν άλλα Mod μέσω του TokenMod κατοπτρίζονται κι αυτές. Άλλα Mod μπορούν να καλούν το SyncPage.notify· η επιδιόρθωση πιάνει τα υπόλοιπα.',
+          'Με το «Όταν διαγράφεται αντικείμενο» στο Ερώτηση, το SyncPage στέλνει ψιθυριστά μια κάρτα όταν διαγράφεται κάτι σε μία σελίδα: Διαγραφή παντού, Κράτα τα άλλα ή Αναίρεση.',
+          'Τα αντικείμενα μιας σελίδας που προστίθεται στην ομάδα και δεν ταιριάζουν με τίποτα ακολουθούν το «Αντικείμενα χωρίς ταίρι». Με Ερώτηση, μια κάρτα προσφέρει Αντιγραφή ή Κράτα εδώ για κάθε αντικείμενο, ή Αντιγραφή όλων και Κράτα όλα εδώ.',
         ],
       },
       visibility: {
@@ -5673,6 +5715,8 @@ const SyncPageMod = (() => {
         points: [
           'Η κάρτα Παικτών δείχνει κάθε παίκτη και τη σελίδα του, με ένα κουμπί ανά σελίδα για να τον μετακινήσετε (χωρισμός της παρέας).',
           'Το «Όλοι σε» μαζεύει τους παίκτες σε μία σελίδα και θυμάται πού ήταν· το «Επαναφορά διάταξης» τους γυρίζει πίσω.',
+          'Επιλέξτε πιόνια πριν ανοίξετε την κάρτα για να δείτε ένα πλέγμα με τα αντίγραφά τους: κάντε κλικ σε μια σελίδα για να κρύψετε ή να εμφανίσετε εκεί το πιόνι.',
+          'Με το «Ποιος ανοίγει την κάρτα παικτών» στο Και οι παίκτες, ένας παίκτης που πληκτρολογεί !syncpage μαθαίνει σε ποια σελίδα βρίσκεται.',
         ],
       },
       repair: {
@@ -6105,6 +6149,8 @@ const SyncPageMod = (() => {
           'הגדרות דף כמו תאורה, רשת וגודל, אלא אם כובו או נשמרו לכל דף.',
           'אפשר להחריג שכבות לכל קבוצה, ולשמור מאפייני טוקן כמו ראייה לכל דף.',
           'שינויים שמודים אחרים עושים דרך TokenMod משוקפים גם הם. מודים אחרים יכולים לקרוא ל-SyncPage.notify; התיקון תופס את השאר.',
+          'כאשר "כשאובייקט נמחק" מוגדר ל-שאלה, SyncPage שולח בלחישה כרטיס כשמשהו נמחק בעמוד אחד: מחיקה בכל מקום, השארת האחרים או ביטול.',
+          'אובייקטים בעמוד שמצטרף לקבוצה ואינם תואמים לשום דבר פועלים לפי "אובייקטים ללא התאמה". עם שאלה, כרטיס מציע העתקה או השארה כאן לכל אובייקט, או העתקת הכול ו-השארת הכול כאן.',
         ],
       },
       visibility: {
@@ -6120,6 +6166,8 @@ const SyncPageMod = (() => {
         points: [
           'כרטיס השחקנים מציג כל שחקן ואת הדף שבו הוא נמצא, עם כפתור לכל דף כדי להעביר אותו (פיצול החבורה).',
           '"כולם אל…" מאסף את השחקנים בדף אחד ושומר היכן היו; "שחזור פריסה" מחזיר אותם.',
+          'בחרו טוקנים לפני פתיחת הכרטיס כדי לקבל רשת של העותקים שלהם: לחצו על עמוד כדי להסתיר או להציג שם את הטוקן.',
+          'כאשר "מי רשאי לפתוח את כרטיס השחקנים" מוגדר ל-גם שחקנים, שחקן שמקליד !syncpage מקבל הודעה באיזה עמוד הוא נמצא.',
         ],
       },
       repair: {
@@ -6568,6 +6616,8 @@ const SyncPageMod = (() => {
           'Oldalbeállítások, például megvilágítás, rács és méret, hacsak nincsenek kikapcsolva vagy oldalanként külön tartva.',
           'Rétegek csoportonként kihagyhatók, és a tokentulajdonságok, például a látás, oldalanként külön tarthatók.',
           'A más Modok által a TokenMod segítségével végzett változások is tükröződnek. Más Modok meghívhatják a SyncPage.notify függvényt; a többit a javítás elkapja.',
+          'Ha a(z) „Objektum törlésekor” értéke Kérdezés, a SyncPage suttogva küld egy kártyát, amikor egy oldalon valami törlődik: Törlés mindenhol, A többi marad vagy Visszavonás.',
+          'A csoporthoz hozzáadott oldal semmivel sem egyező objektumai a(z) „Párosítatlan objektumok” beállítást követik. Kérdezés értéknél egy kártya minden objektumhoz felkínálja: Másolás vagy Marad itt, illetve Összes másolása és Mind marad itt.',
         ],
       },
       visibility: {
@@ -6583,6 +6633,8 @@ const SyncPageMod = (() => {
         points: [
           'A Játékosok kártya felsorolja a játékosokat és az oldalt, amelyen vannak, oldalanként egy gombbal az áthelyezésükhöz (csapat szétválasztása).',
           'A „Mindenki ide” egy oldalra gyűjti a játékosokat, és megjegyzi, hol voltak; az „Elrendezés visszaállítása” visszaviszi őket.',
+          'Jelölj ki tokeneket a kártya megnyitása előtt, és megjelenik a másolataik rácsa: egy oldalra kattintva ott elrejted vagy megjeleníted a tokent.',
+          'Ha a(z) „Ki nyithatja meg a játékoskártyát” értéke Játékosok is, a !syncpage parancsot beíró játékos megtudja, melyik oldalon van.',
         ],
       },
       repair: {
@@ -7032,6 +7084,8 @@ const SyncPageMod = (() => {
           'Impostazioni di pagina come illuminazione, griglia e dimensioni, a meno che non siano disattivate o tenute per pagina.',
           'Si possono escludere dei livelli per gruppo, e proprietà dei token come la visione possono essere tenute per pagina.',
           'Anche le modifiche che altre Mod fanno tramite TokenMod vengono rispecchiate. Le altre Mod possono chiamare SyncPage.notify; la riparazione sistema il resto.',
+          'Con «Quando un oggetto è eliminato» su Chiedi, SyncPage sussurra una scheda quando qualcosa viene eliminato su una pagina: Elimina ovunque, Tieni le altre o Annulla.',
+          'Gli oggetti di una pagina aggiunta al gruppo che non corrispondono a nulla seguono «Oggetti senza corrispondenza». Con Chiedi, una scheda offre Copia o Tieni qui per ogni oggetto, oppure Copia tutti e Tieni tutti qui.',
         ],
       },
       visibility: {
@@ -7047,6 +7101,8 @@ const SyncPageMod = (() => {
         points: [
           'La scheda Giocatori elenca ogni giocatore e la pagina in cui si trova, con un pulsante per pagina per spostarlo (party diviso).',
           '«Tutti su» riunisce i giocatori su una pagina e ricorda dove si trovavano; «Ripristina disposizione» li riporta indietro.',
+          'Seleziona dei token prima di aprire la scheda per vedere una griglia delle loro copie: fai clic su una pagina per nascondere o mostrare lì il token.',
+          'Con «Chi può aprire la scheda giocatori» su Anche i giocatori, un giocatore che digita !syncpage scopre su quale pagina si trova.',
         ],
       },
       repair: {
@@ -7485,6 +7541,8 @@ const SyncPageMod = (() => {
           '照明、グリッド、サイズなどのページ設定（オフにした場合やページごとに保持する場合を除く）。',
           'レイヤーはグループごとに除外でき、視界などのトークンのプロパティはページごとに保持できます。',
           'ほかの Mod が TokenMod を通して行った変更もミラーリングされます。ほかの Mod は SyncPage.notify を呼び出せます。それ以外は修復で補えます。',
+          '「オブジェクトが削除されたとき」が確認のとき、あるページで何かが削除されると、SyncPage がカードをささやきます：すべて削除、ほかは残す、元に戻す。',
+          'グループに加わるページで何にも一致しないオブジェクトは「対応するもののないオブジェクト」に従います。確認の場合、カードでオブジェクトごとにコピーかここに残す、またはまとめてすべてコピーかすべてここに残すを選べます。',
         ],
       },
       visibility: {
@@ -7500,6 +7558,8 @@ const SyncPageMod = (() => {
         points: [
           'プレイヤーカードには、各プレイヤーと今いるページが表示され、ページごとに移動用のボタンがあります（パーティー分割）。',
           '「全員を…へ」はプレイヤーを1つのページに集め、元の位置を記録します。「配置を復元」で元に戻せます。',
+          'カードを開く前にトークンを選択すると、そのコピーの一覧が表示されます。ページをクリックすると、そのページでトークンを隠したり表示したりできます。',
+          '「プレイヤーカードを開ける人」がプレイヤーものとき、!syncpage と入力したプレイヤーには自分がいるページが伝えられます。',
         ],
       },
       repair: {
@@ -7936,6 +7996,8 @@ const SyncPageMod = (() => {
           '조명, 격자, 크기 같은 페이지 설정. 꺼 두거나 페이지별로 유지하는 경우는 제외합니다.',
           '레이어는 그룹별로 제외할 수 있고, 시야 같은 토큰 속성은 페이지별로 유지할 수 있습니다.',
           '다른 Mod가 TokenMod를 통해 한 변경도 미러링됩니다. 다른 Mod는 SyncPage.notify를 호출할 수 있고, 나머지는 복구가 잡아냅니다.',
+          '"오브젝트가 삭제될 때"이(가) 묻기(으)로 설정되어 있으면, 한 페이지에서 무언가를 삭제할 때 SyncPage가 카드를 귓속말로 보냅니다: 모두 삭제, 나머지 유지 또는 실행 취소.',
+          '그룹에 추가되는 페이지에서 아무것과도 일치하지 않는 오브젝트는 "짝이 없는 오브젝트"을(를) 따릅니다. 묻기(이)면 카드가 오브젝트마다 복사 또는 여기에 두기, 또는 모두 복사과 모두 여기에 두기을 제안합니다.',
         ],
       },
       visibility: {
@@ -7951,6 +8013,8 @@ const SyncPageMod = (() => {
         points: [
           '플레이어 카드는 각 플레이어와 그가 있는 페이지를 보여 주며, 페이지마다 옮기는 버튼이 있습니다(파티 분할).',
           '"모두 …(으)로" 버튼은 플레이어를 한 페이지에 모으고 원래 위치를 기억합니다. "배치 복원"으로 되돌릴 수 있습니다.',
+          '카드를 열기 전에 토큰을 선택하면 사본 표가 나타납니다. 페이지를 클릭하면 그 페이지에서 토큰을 숨기거나 표시합니다.',
+          '"플레이어 카드를 열 수 있는 사람"이(가) 플레이어도(으)로 설정되어 있으면, !syncpage를 입력한 플레이어에게 자신이 있는 페이지를 알려 줍니다.',
         ],
       },
       repair: {
@@ -8395,6 +8459,8 @@ const SyncPageMod = (() => {
           'Ustawienia strony, takie jak oświetlenie, siatka i rozmiar, chyba że są wyłączone lub zachowane osobno dla strony.',
           'Warstwy można wyłączyć dla grupy, a właściwości tokenów, takie jak widzenie, można zachować osobno dla każdej strony.',
           'Zmiany, które inne Mody wprowadzają przez TokenMod, też są odzwierciedlane. Inne Mody mogą wywołać SyncPage.notify; naprawa wyłapie resztę.',
+          'Gdy „Gdy obiekt zostanie usunięty” ma wartość „Pytaj”, SyncPage szepcze kartę, gdy coś zostanie usunięte na jednej stronie: Usuń wszędzie, Zostaw pozostałe lub Cofnij.',
+          'Obiekty na stronie dołączanej do grupy, które do niczego nie pasują, podlegają ustawieniu „Obiekty bez dopasowania”. Przy wartości „Pytaj” karta proponuje dla każdego obiektu: Kopiuj lub Zostaw tutaj, albo Kopiuj wszystkie i Zostaw wszystkie tutaj.',
         ],
       },
       visibility: {
@@ -8410,6 +8476,8 @@ const SyncPageMod = (() => {
         points: [
           'Karta Gracze wymienia każdego gracza i stronę, na której jest, z przyciskiem dla każdej strony, aby go przenieść (rozdzielenie drużyny).',
           '„Wszyscy na” zbiera graczy na jednej stronie i zapamiętuje, gdzie byli; „Przywróć układ” odsyła ich z powrotem.',
+          'Zaznacz tokeny przed otwarciem karty, aby zobaczyć siatkę ich kopii: kliknij stronę, aby ukryć lub pokazać na niej token.',
+          'Gdy „Kto może otworzyć kartę graczy” ma wartość „Też gracze”, gracz, który wpisze !syncpage, dowie się, na której stronie jest.',
         ],
       },
       repair: {
@@ -8857,6 +8925,8 @@ const SyncPageMod = (() => {
           'Definições da página como a iluminação, a grelha e o tamanho, a não ser que sejam desativadas ou mantidas por página.',
           'É possível excluir camadas por grupo, e propriedades dos tokens como a visão podem ser mantidas por página.',
           'As alterações que outros Mods fazem através do TokenMod também são espelhadas. Outros Mods podem chamar SyncPage.notify; a reparação trata do resto.',
+          'Com "Quando um objeto é eliminado" em Perguntar, o SyncPage sussurra um cartão quando algo é eliminado numa página: Eliminar em todas, Manter as outras ou Anular.',
+          'Os objetos de uma página adicionada ao grupo que não correspondem a nada seguem "Objetos sem correspondência". Com Perguntar, um cartão oferece Copiar ou Manter aqui para cada objeto, ou Copiar tudo e Manter tudo aqui.',
         ],
       },
       visibility: {
@@ -8872,6 +8942,8 @@ const SyncPageMod = (() => {
         points: [
           'O cartão Jogadores lista cada jogador e a página em que está, com um botão por página para o mover (dividir o grupo).',
           '«Todos para» reúne os jogadores numa página e memoriza onde estavam; «Repor disposição» volta a colocá-los onde estavam.',
+          'Selecione tokens antes de abrir o cartão para ver uma grelha das suas cópias: clique numa página para ocultar ou mostrar lá o token.',
+          'Com "Quem pode abrir o cartão de jogadores" em Jogadores também, um jogador que escreve !syncpage fica a saber em que página está.',
         ],
       },
       repair: {
@@ -9319,6 +9391,8 @@ const SyncPageMod = (() => {
           'Configurações da página como iluminação, grade e tamanho, a menos que estejam desligadas ou mantidas por página.',
           'Dá para deixar camadas de fora por grupo, e propriedades de token como a visão podem ser mantidas por página.',
           'Alterações que outros Mods fazem pelo TokenMod também são espelhadas. Outros Mods podem chamar SyncPage.notify; o reparo cuida do resto.',
+          'Com "Quando um objeto é excluído" em Perguntar, o SyncPage sussurra um cartão quando algo é excluído em uma página: Excluir em todas, Manter as outras ou Desfazer.',
+          'Objetos de uma página adicionada ao grupo que não correspondem a nada seguem "Objetos sem correspondência". Com Perguntar, um cartão oferece Copiar ou Manter aqui para cada objeto, ou Copiar tudo e Manter tudo aqui.',
         ],
       },
       visibility: {
@@ -9334,6 +9408,8 @@ const SyncPageMod = (() => {
         points: [
           'O cartão Jogadores lista cada jogador e a página em que ele está, com um botão por página para movê-lo (dividir o grupo).',
           '“Todos para” reúne os jogadores em uma página e guarda onde eles estavam; “Restaurar posições” leva todos de volta.',
+          'Selecione tokens antes de abrir o cartão para ver uma grade das cópias deles: clique em uma página para ocultar ou mostrar o token lá.',
+          'Com "Quem pode abrir o cartão de jogadores" em Jogadores também, um jogador que digita !syncpage fica sabendo em qual página está.',
         ],
       },
       repair: {
@@ -9775,6 +9851,8 @@ const SyncPageMod = (() => {
           'Настройки страницы, например освещение, сетка и размер, если они не отключены и не хранятся для каждой страницы отдельно.',
           'Слои можно исключить для группы, а свойства токенов, например зрение, хранить для каждой страницы отдельно.',
           'Изменения, которые другие моды делают через TokenMod, тоже зеркалируются. Другие моды могут вызывать SyncPage.notify; остальное поймает исправление.',
+          'Если для «При удалении объекта» выбрано «Спросить», SyncPage шепчет карточку, когда что-то удаляется на одной странице: Удалить везде, Оставить остальные или Отменить.',
+          'Объекты на добавляемой в группу странице, которым ничего не соответствует, обрабатываются по параметру «Объекты без пары». При значении «Спросить» карточка предлагает для каждого объекта: Копировать или Оставить здесь, либо Копировать все и Оставить все здесь.',
         ],
       },
       visibility: {
@@ -9790,6 +9868,8 @@ const SyncPageMod = (() => {
         points: [
           'Карточка «Игроки» показывает каждого игрока и его страницу, а также кнопку для каждой страницы, чтобы переместить игрока (разделение отряда).',
           '«Все на» собирает игроков на одной странице и запоминает, где они были; «Вернуть расстановку» возвращает их обратно.',
+          'Выделите токены перед открытием карточки, чтобы увидеть сетку их копий: нажмите на страницу, чтобы скрыть или показать там токен.',
+          'Если для «Кто может открыть карточку игроков» выбрано «И игроки», игрок, набравший !syncpage, узнаёт, на какой он странице.',
         ],
       },
       repair: {
@@ -10237,6 +10317,8 @@ const SyncPageMod = (() => {
           'Ajustes de página como la iluminación, la cuadrícula y el tamaño, salvo que se desactiven o se mantengan por página.',
           'Se pueden excluir capas por grupo, y propiedades de ficha como la visión se pueden mantener por página.',
           'También se replican los cambios que otros Mods hacen mediante TokenMod. Otros Mods pueden llamar a SyncPage.notify; la reparación se encarga del resto.',
+          'Con «Al eliminar un objeto» en Preguntar, SyncPage susurra una tarjeta cuando se elimina algo en una página: Eliminar en todas, Conservar las demás o Deshacer.',
+          'Los objetos de una página que se añade al grupo y que no coinciden con nada siguen «Objetos sin pareja». Con Preguntar, una tarjeta ofrece Copiar o Dejar aquí para cada objeto, o Copiar todo y Dejar todo aquí.',
         ],
       },
       visibility: {
@@ -10252,6 +10334,8 @@ const SyncPageMod = (() => {
         points: [
           'La tarjeta de Jugadores muestra cada jugador y la página en la que está, con un botón por página para moverlo (dividir el grupo).',
           '«Todos a» reúne a los jugadores en una página y recuerda dónde estaban; «Restaurar distribución» los devuelve.',
+          'Selecciona fichas antes de abrir la tarjeta para ver una cuadrícula de sus copias: haz clic en una página para ocultar o mostrar allí la ficha.',
+          'Con «Quién puede abrir la tarjeta de jugadores» en También jugadores, un jugador que escribe !syncpage sabe en qué página está.',
         ],
       },
       repair: {
@@ -10692,6 +10776,8 @@ const SyncPageMod = (() => {
           'Sidinställningar som belysning, rutnät och storlek, om de inte är avstängda eller behålls per sida.',
           'Lager kan undantas per grupp, och token-egenskaper som syn kan behållas per sida.',
           'Ändringar som andra Mods gör via TokenMod speglas också. Andra Mods kan anropa SyncPage.notify; reparation fångar resten.',
+          'När "När ett objekt raderas" är Fråga viskar SyncPage ett kort när något raderas på en sida: Radera överallt, Behåll de andra eller Ångra.',
+          'Objekt på en sida som läggs till i gruppen och inte matchar något följer "Objekt utan motsvarighet". Med Fråga erbjuder ett kort Kopiera eller Behåll här för varje objekt, eller Kopiera alla och Behåll alla här.',
         ],
       },
       visibility: {
@@ -10707,6 +10793,8 @@ const SyncPageMod = (() => {
         points: [
           'Spelare-kortet listar varje spelare och sidan de är på, med en knapp per sida för att flytta dem (dela upp gruppen).',
           '"Alla till" samlar spelarna på en sida och kommer ihåg var de var; "Återställ fördelning" flyttar tillbaka dem.',
+          'Markera tokens innan du öppnar kortet för att se ett rutnät med deras kopior: klicka på en sida för att dölja eller visa token där.',
+          'När "Vem får öppna spelarkortet" är Även spelare får en spelare som skriver !syncpage veta vilken sida hen är på.',
         ],
       },
       repair: {
@@ -11151,6 +11239,8 @@ const SyncPageMod = (() => {
           'Aydınlatma, ızgara ve boyut gibi sayfa ayarları; kapatılmadıkça veya sayfaya özel tutulmadıkça.',
           'Katmanlar grup başına hariç tutulabilir; görüş gibi token özellikleri sayfaya özel tutulabilir.',
           "Diğer Mod'ların TokenMod üzerinden yaptığı değişiklikler de yansıtılır. Diğer Mod'lar SyncPage.notify çağırabilir; gerisini onarım yakalar.",
+          '"Bir nesne silindiğinde" ayarı Sor olduğunda, bir sayfada bir şey silinince SyncPage bir kart fısıldar: Her yerde sil, Diğerlerini tut veya Geri al.',
+          'Gruba eklenen bir sayfada hiçbir şeyle eşleşmeyen nesneler "Eşi olmayan nesneler" ayarını izler. Sor seçiliyse bir kart her nesne için Kopyala veya Burada tut, ya da Hepsini kopyala ve Hepsini burada tut seçeneklerini sunar.',
         ],
       },
       visibility: {
@@ -11166,6 +11256,8 @@ const SyncPageMod = (() => {
         points: [
           'Oyuncular kartı her oyuncuyu ve bulunduğu sayfayı listeler; onu taşımak için her sayfaya bir düğme vardır (ekibi bölme).',
           '"Herkes" düğmesi oyuncuları tek bir sayfada toplar ve nerede olduklarını hatırlar; "Düzeni geri yükle" onları geri götürür.',
+          'Kartı açmadan önce token seçerseniz kopyalarının bir tablosu görünür: tokenı orada gizlemek veya göstermek için bir sayfaya tıklayın.',
+          '"Oyuncu kartını kim açabilir" ayarı Oyuncular da olduğunda, !syncpage yazan oyuncuya hangi sayfada olduğu söylenir.',
         ],
       },
       repair: {
@@ -11606,6 +11698,8 @@ const SyncPageMod = (() => {
           'Налаштування сторінки, як-от освітлення, сітка і розмір, якщо їх не вимкнено і не зберігають окремо для кожної сторінки.',
           'Шари можна виключити для групи, а властивості токенів, як-от зір, зберігати окремо для кожної сторінки.',
           'Зміни, які інші моди роблять через TokenMod, теж дзеркаляться. Інші моди можуть викликати SyncPage.notify; решту виловить виправлення.',
+          'Якщо для «Коли обʼєкт видалено» вибрано «Запитати», SyncPage шепоче картку, коли щось видаляється на одній сторінці: Видалити всюди, Залишити інші або Скасувати.',
+          'Обʼєкти на сторінці, що додається до групи, яким нічого не відповідає, обробляються за параметром «Обʼєкти без пари». Якщо вибрано «Запитати», картка пропонує для кожного обʼєкта: Копіювати або Залишити тут, або Копіювати всі і Залишити всі тут.',
         ],
       },
       visibility: {
@@ -11621,6 +11715,8 @@ const SyncPageMod = (() => {
         points: [
           'Картка «Гравці» показує кожного гравця і його сторінку, а також кнопку для кожної сторінки, щоб перемістити гравця (розділення загону).',
           '«Усі на» збирає гравців на одній сторінці і запамʼятовує, де вони були; «Повернути розстановку» повертає їх назад.',
+          'Виділіть токени перед відкриттям картки, щоб побачити сітку їхніх копій: натисніть на сторінку, щоб сховати або показати там токен.',
+          'Якщо для «Хто може відкрити картку гравців» вибрано «І гравці», гравець, який набрав !syncpage, дізнається, на якій він сторінці.',
         ],
       },
       repair: {
