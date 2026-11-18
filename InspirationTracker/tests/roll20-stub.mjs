@@ -251,6 +251,31 @@ export function createSandbox({ state = {}, globalconfig = {}, markers, setup } 
       );
       return attr ? attr.attrs.current === 'on' : false;
     },
+    /** A character's attribute by name. */
+    attribute(character, name) {
+      return [...objects.values()].find(
+        (o) =>
+          o.attrs._type === 'attribute' &&
+          o.attrs._characterid === character.id &&
+          o.attrs.name === name
+      );
+    },
+    /** A 2014 sheet resource box: the box's attribute and the one holding its name. */
+    resourceBox(character, attribute, label, value) {
+      api.add('attribute', {
+        _characterid: character.id,
+        name: `${attribute}_name`,
+        current: label,
+      });
+      return api.add('attribute', { _characterid: character.id, name: attribute, current: value });
+    },
+    /** A person typing a new value into an attribute on the sheet. */
+    async editAttribute(attr, current) {
+      const prev = { ...attr.attrs };
+      attr.attrs.current = current;
+      fire('change:attribute', attr, prev);
+      await settle();
+    },
     /** A person ticking or clearing the box on the sheet. */
     async tickSheet(character, on) {
       const store = findStore(character.id);
