@@ -18,7 +18,7 @@ async function game(options) {
 
 test('starts, installs handouts and answers !lazyxp', async () => {
   const g = await game();
-  assert.match(g.logs.join('\n'), /LazyExperience v1\.0\.0/);
+  assert.match(g.logs.join('\n'), /LazyExperience v1\.1\.0/);
   const names = g.sandbox.findObjs({ _type: 'handout' }).map((h) => h.get('name'));
   assert.deepEqual(names.sort(), ['LazyExperience - Command Deck', 'LazyExperience - Help']);
   await g.command('!lazyxp');
