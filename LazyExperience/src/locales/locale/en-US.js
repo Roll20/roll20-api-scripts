@@ -61,12 +61,14 @@ export default {
     addKill: 'Add {xp} XP',
     otherXp: 'Other Amount',
     ignore: 'Ignore',
+    trackPlan: 'Mixed',
   },
   prompts: {
     xp: 'XP',
     reason: 'Reason (optional)',
     share: 'Share (1 = full, 0.5 = half)',
     confirmEnd: 'End the session and hand out the XP?',
+    trackPlan: 'Tracks and the level each starts at',
   },
   options: {
     yesNo: { yes: 'Yes', no: 'No' },
@@ -86,6 +88,7 @@ export default {
       off: 'Off',
     },
     system: { auto: 'Detect from the sheet' },
+    pf1Track: { fast: 'Fast', medium: 'Medium', slow: 'Slow', sheet: 'Sheet box as typed' },
   },
   settings: {
     language: { label: 'Language', desc: 'Language for chat cards and handouts.' },
@@ -100,6 +103,10 @@ export default {
     system: {
       label: 'Game system',
       desc: 'Which sheet fields hold XP and level. auto picks the profile from each character’s sheet; custom uses the custom field settings.',
+    },
+    pf1Track: {
+      label: 'Pathfinder 1E track',
+      desc: 'The XP track for Pathfinder 1E level-ups: fast, medium or slow, or tracks that change by level, such as fast 1-3, medium 4-13, slow 14+. The XP for the next level is written to the sheet’s box. sheet: use the box as the GM types it.',
     },
     roster: {
       label: 'Party from',
@@ -395,7 +402,7 @@ export default {
         'Pick the sheet by its name in the game’s Settings. Sheets not listed use the common field names experience, xp and level, or set Game system to custom.',
         'Tested in Roll20 means XP was written to that sheet in a Jumpgate game, the sheet’s own calculations ran, and defeated creatures and level-up notices were checked.',
         'Beacon sheets such as D&D 2024 need Mod sandbox v1.5, and a Mod cannot set them to 0 XP.',
-        'Pathfinder 1E and Starfinder use the sheet’s XP-for-next-level box for level-up notices. When it is blank, Pathfinder uses the medium track and Starfinder its own table.',
+        'Pathfinder 1E follows the Pathfinder 1E track setting (medium unless you change it) and writes the XP for the next level to the sheet’s box. The track can change by level, such as fast for levels 1 to 3, medium to 13 and slow after. Starfinder uses the sheet’s XP-for-next-level box, or its own table when the box is blank.',
         'WFRP 4E: each award is added as a row in the sheet’s Experience list, but the sheet did not recalculate its XP totals in testing, so check them on the sheet.',
         'Savage Worlds, 13th Age, Cosmere and Call of Cthulhu have no XP for a Mod to write.',
       ],

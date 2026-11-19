@@ -24,7 +24,7 @@ import { getRoster, rosterSource, shareOf } from './roster.js';
 import { previewPayout } from './session.js';
 import { getProfile } from './sheets.js';
 import { getCharacterRecord, getConfig, getSession, getState } from './state.js';
-import { getProfileById, systemIds } from './systems.js';
+import { TRACK_SHEET, getProfileById, parseTrackPlan, systemIds } from './systems.js';
 import { canUseBeacon, escapeForChat, formatNumber, getSandboxVersion } from './utils.js';
 
 /**
@@ -158,6 +158,28 @@ export function showRoster(playerId) {
 }
 
 /**
+ * Describes the Pathfinder 1E track setting for the settings card, such as
+ * "Fast 1–3 · Medium 4–13 · Slow 14+".
+ *
+ * @param {string} value Setting value.
+ * @param {Function} tr Translate shortcut.
+ * @returns {string} Label.
+ */
+export function trackLabel(value, tr) {
+  if (value === TRACK_SHEET) return tr('options.pf1Track.sheet');
+  const plan = parseTrackPlan(value);
+  if (!plan) return String(value);
+  if (plan.length === 1) return tr(`options.pf1Track.${plan[0].track}`);
+  return plan
+    .map((p, i) => {
+      const to = plan[i + 1] ? plan[i + 1].from - 1 : null;
+      const range = to === null ? `${p.from}+` : to === p.from ? `${p.from}` : `${p.from}–${to}`;
+      return `${tr(`options.pf1Track.${p.track}`)} ${range}`;
+    })
+    .join(' · ');
+}
+
+/**
  * Builds the edit button for one setting.
  *
  * @param {string} key Setting name.
@@ -197,6 +219,20 @@ function settingButton(key) {
       value === 'auto' ? tr('options.system.auto') : getProfileById(value)?.label || value;
     return buildSecondaryButton(label, cmd(`?{${tr('settings.system.label')}|${query}}`));
   }
+  if (type === 'track') {
+    const query = ['fast', 'medium', 'slow', TRACK_SHEET]
+      .map((v) => `${tr(`options.pf1Track.${v}`).replace(/[,|}]/g, ' ')},${v}`)
+      .join('|');
+    const plan =
+      value === TRACK_SHEET || !value.includes(',') ? 'fast 1, medium 4, slow 14' : value;
+    return (
+      buildSecondaryButton(
+        trackLabel(value, tr),
+        cmd(`?{${tr('settings.pf1Track.label')}|${query}}`)
+      ) +
+      buildSecondaryButton(tr('buttons.trackPlan'), cmd(`?{${tr('prompts.trackPlan')}|${plan}}`))
+    );
+  }
   if (type === 'locale') {
     const locale = LOCALE_DEFINITIONS.find((d) => d.code === getLocale(value));
     return buildSecondaryButton(
@@ -233,6 +269,9 @@ export function showSettings(playerId) {
     ],
     ['menu.groupSheet', ['system']],
   ];
+  if (['auto', 'pf1', 'pf1community'].includes(config.system)) {
+    groups[3][1].push('pf1Track');
+  }
   if (config.system === 'custom') {
     groups[3][1].push('customXp', 'customLevel', 'customNpcXp', 'customNpcCr', 'customLevels');
   }

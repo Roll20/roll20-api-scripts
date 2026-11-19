@@ -155,6 +155,31 @@ async function writeXp(character, profile, field, value, amount) {
 }
 
 /**
+ * Writes the XP for the next level into the sheet's next-level box, for profiles whose
+ * track comes from the pf1Track setting (Pathfinder 1E). The box is the max of the XP
+ * attribute, so the sheet shows the same goal the level-up notices use.
+ *
+ * @param {object} character Roll20 character.
+ * @param {object} profile Profile.
+ * @param {number|null} level Level on the sheet.
+ * @returns {void}
+ */
+function writeNextBox(character, profile, level) {
+  if (!profile.trackPlan || !/_max$/i.test(profile.nextBox || '')) return;
+  const next = profile.nextXp(level);
+  if (!Number.isFinite(next)) return;
+  const name = profile.nextBox.slice(0, -4);
+  const attr = findAttribute(character.id, name);
+  if (!attr || parseXpText(attr.get('max')) === next) return;
+  const text = String(next);
+  if (typeof attr.setWithWorker === 'function') {
+    attr.setWithWorker({ max: text });
+  } else {
+    attr.set('max', text);
+  }
+}
+
+/**
  * Sets a legacy attribute through the sheet workers, creating it when missing.
  *
  * @param {object} character Roll20 character.
@@ -247,6 +272,7 @@ export function addXp(character, amount) {
       after,
       after - before
     );
+    if (result.ok) writeNextBox(character, progress.profile, progress.level);
     return {
       ...result,
       before,

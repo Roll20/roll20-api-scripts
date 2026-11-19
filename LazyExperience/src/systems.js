@@ -68,6 +68,93 @@ export const PF1_LEVELS = {
   ],
 };
 
+// The Pathfinder 1E track setting: one of these, a plan that changes track by level,
+// or 'sheet' for the XP-for-next-level box as the GM types it.
+export const PF1_TRACKS = ['fast', 'medium', 'slow'];
+export const TRACK_SHEET = 'sheet';
+
+/**
+ * Parses the Pathfinder 1E track setting. A plan lists tracks with the level each
+ * starts at, such as "fast 1-3, medium 4-13, slow 14+" or "fast 1, medium 4, slow 14";
+ * only the first number of each part counts. A track without a level starts at 1.
+ *
+ * @param {string} text Setting text.
+ * @returns {{from: number, track: string}[]|null} Parts from level 1, or null when invalid.
+ */
+export function parseTrackPlan(text) {
+  const parts = toText(text)
+    .toLowerCase()
+    .split(/[,;]/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+  if (parts.length === 0) return null;
+  const plan = [];
+  for (const part of parts) {
+    const m = /^([a-z]+)\s*(?:(?:from\s+)?(\d+)\s*(?:[-–]\s*\d+|\+)?)?$/.exec(part);
+    if (!m || !PF1_TRACKS.includes(m[1])) return null;
+    const from = m[2] === undefined ? 1 : Number(m[2]);
+    if (from < 1 || from > 20) return null;
+    plan.push({ from, track: m[1] });
+  }
+  plan.sort((a, b) => a.from - b.from);
+  if (plan[0].from !== 1 || plan.some((p, i) => i > 0 && p.from === plan[i - 1].from)) {
+    return null;
+  }
+  return plan;
+}
+
+/**
+ * Writes a track plan the way the setting stores it ("medium", "fast 1, medium 4").
+ *
+ * @param {{from: number, track: string}[]} plan Parsed plan.
+ * @returns {string} Setting text.
+ */
+export function formatTrackPlan(plan) {
+  if (plan.length === 1) return plan[0].track;
+  return plan.map((p) => `${p.track} ${p.from}`).join(', ');
+}
+
+/**
+ * The track a character on a level advances on.
+ *
+ * @param {{from: number, track: string}[]} plan Parsed plan.
+ * @param {number} level Current level.
+ * @returns {string} Track.
+ */
+export function trackForLevel(plan, level) {
+  let track = plan[0].track;
+  for (const p of plan) {
+    if (level >= p.from) track = p.track;
+  }
+  return track;
+}
+
+/**
+ * XP a Pathfinder 1E character needs for the next level: the total on the table of
+ * the track for the level they are on now.
+ *
+ * @param {{from: number, track: string}[]} plan Parsed plan.
+ * @param {number} level Current level.
+ * @returns {number|null} XP, or null at level 20 and above.
+ */
+export function trackNextXp(plan, level) {
+  if (!Number.isInteger(level) || level < 1 || level >= 20) return null;
+  return PF1_LEVELS[trackForLevel(plan, level)][level];
+}
+
+/**
+ * The level a total XP reaches when following a track plan from level 1.
+ *
+ * @param {{from: number, track: string}[]} plan Parsed plan.
+ * @param {number} xp Total XP.
+ * @returns {number} Level.
+ */
+export function trackLevelForXp(plan, xp) {
+  let level = 1;
+  while (level < 20 && xp >= trackNextXp(plan, level)) level += 1;
+  return level;
+}
+
 // Pathfinder 1e XP by CR (also used by Starfinder 1e).
 const PF1_CR_XP = {
   0.125: 50,
@@ -204,8 +291,10 @@ export const PROFILES = [
     access: 'legacy',
     pc: { xp: ['xp'], level: ['level'], next: ['xp_max'] },
     npc: { xp: ['xp'], cr: ['npc_cr'] },
-    // The sheet has no track setting, so the medium track is the fallback when xp_max is blank.
+    // The sheet has no track of its own: the next-level box (the max of xp) is typed by
+    // hand. The pf1Track setting picks the track, or 'sheet' reads that box.
     levels: PF1_LEVELS.medium,
+    tracks: true,
     crXp: (cr) => lookupCr(PF1_CR_XP, cr),
     verified: 'live',
   },
@@ -219,6 +308,7 @@ export const PROFILES = [
     pc: { xp: ['experience'], level: ['level'], next: ['experience_max'] },
     npc: { xp: ['npc-xp'], cr: ['npc-cr'] },
     levels: PF1_LEVELS.medium,
+    tracks: true,
     crXp: (cr) => lookupCr(PF1_CR_XP, cr),
     verified: 'live',
   },
@@ -506,10 +596,37 @@ export function profileForCharacter(character, config, beaconAvailable) {
     const beaconSheet = detectProfile(sheetName, character).access === 'beacon';
     return customProfile(config, beaconSheet && beaconAvailable ? 'beacon' : 'legacy');
   }
-  if (config.system && config.system !== 'auto') {
-    return getProfileById(config.system) || detectProfile(sheetName, character);
-  }
-  return detectProfile(sheetName, character);
+  const profile =
+    config.system && config.system !== 'auto'
+      ? getProfileById(config.system) || detectProfile(sheetName, character)
+      : detectProfile(sheetName, character);
+  return withTrack(profile, config.pf1Track);
+}
+
+/**
+ * Applies the Pathfinder 1E track setting to a profile that has tracks. With a track
+ * or plan, the level table and the XP for the next level come from it, and the sheet's
+ * next-level box is written rather than read. 'sheet' (or an unusable value) leaves
+ * the profile reading that box, with the medium track when it is blank.
+ *
+ * @param {object} profile Profile.
+ * @param {string} setting The pf1Track setting.
+ * @returns {object} Profile.
+ */
+export function withTrack(profile, setting) {
+  if (!profile?.tracks || toText(setting).toLowerCase() === TRACK_SHEET) return profile;
+  const plan = parseTrackPlan(setting);
+  if (!plan) return profile;
+  const levels = [0];
+  for (let level = 1; level < 20; level++) levels.push(trackNextXp(plan, level));
+  return {
+    ...profile,
+    pc: { ...profile.pc, next: [] },
+    levels,
+    nextXp: (level) => trackNextXp(plan, level),
+    trackPlan: plan,
+    nextBox: toText(profile.pc?.next?.[0]),
+  };
 }
 
 /**

@@ -32,7 +32,15 @@ import {
 } from './session.js';
 import { readProgress } from './sheets.js';
 import { coerceSetting, getCharacterRecord, getConfig, getSession, getState } from './state.js';
-import { levelForXp, parseLevelTable, systemIds, xpForNextLevel } from './systems.js';
+import {
+  TRACK_SHEET,
+  formatTrackPlan,
+  levelForXp,
+  parseLevelTable,
+  parseTrackPlan,
+  systemIds,
+  xpForNextLevel,
+} from './systems.js';
 import {
   escapeForChat,
   formatNumber,
@@ -188,6 +196,12 @@ export function validateSetting(key, value) {
     return Number.isInteger(n) && n >= 0 && n <= MAX_EXTRA_SHARES ? n : undefined;
   }
   if (type === 'marker') return resolveMarker(value);
+  if (type === 'track') {
+    const text = toText(value).toLowerCase();
+    if (text === TRACK_SHEET) return TRACK_SHEET;
+    const plan = parseTrackPlan(text);
+    return plan ? formatTrackPlan(plan) : undefined;
+  }
   if (type === 'levels') {
     const text = toText(value);
     return text === '' || parseLevelTable(text) ? text : undefined;
@@ -280,7 +294,7 @@ async function showXp(who) {
   for (const c of roster) {
     const p = await readProgress(c);
     const level = p.level ?? levelForXp(p.profile.levels, p.xp ?? 0);
-    const next = level ? xpForNextLevel(p.profile.levels, level) : null;
+    const next = p.next ?? (level ? xpForNextLevel(p.profile.levels, level) : null);
     const parts = [
       p.xp === null ? t('show.noXp', lang) : `${formatNumber(p.xp)} XP`,
       level ? t('menu.levelTag', lang, { level }) : '',
