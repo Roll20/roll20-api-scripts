@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.0.0 (2026-11-04)
+## 1.0.0 (2026-11-19)
 
 A rewrite by MidNiteShadow7 of Robin Kuiper's InspirationTracker, which was reported as not working with the D&D 2024 sheet.
 
