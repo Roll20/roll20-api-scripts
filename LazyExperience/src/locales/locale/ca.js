@@ -61,12 +61,14 @@ export default {
     addKill: 'Afegeix {xp} XP',
     otherXp: 'Una altra quantitat',
     ignore: 'Ignora',
+    trackPlan: 'Mixta',
   },
   prompts: {
     xp: 'XP',
     reason: 'Motiu (opcional)',
     share: 'Part (1 = completa, 0,5 = meitat)',
     confirmEnd: "Vols acabar la sessió i repartir l'XP?",
+    trackPlan: 'Progressions i el nivell on comença cadascuna',
   },
   options: {
     yesNo: { yes: 'Sí', no: 'No' },
@@ -91,6 +93,12 @@ export default {
       off: 'Desactivat',
     },
     system: { auto: 'Detecta-ho per la fitxa' },
+    pf1Track: {
+      fast: 'Ràpida',
+      medium: 'Mitjana',
+      slow: 'Lenta',
+      sheet: "Casella de la fitxa tal com s'escriu",
+    },
   },
   settings: {
     language: { label: 'Llengua', desc: 'Llengua de les targetes del xat i dels handouts.' },
@@ -105,6 +113,10 @@ export default {
     system: {
       label: 'Sistema de joc',
       desc: "Quins camps de la fitxa contenen l'XP i el nivell. auto tria el perfil segons la fitxa de cada personatge; custom fa servir la configuració dels camps personalitzats.",
+    },
+    pf1Track: {
+      label: 'Progressió de Pathfinder 1E',
+      desc: "La progressió d'XP per als nivells de Pathfinder 1E: fast, medium o slow, o progressions que canvien segons el nivell, com fast 1-3, medium 4-13, slow 14+. Les XP per al nivell següent s'escriuen a la casella de la fitxa. sheet: fa servir la casella tal com l'escriu el DJ.",
     },
     roster: {
       label: 'Grup de',
@@ -408,7 +420,7 @@ export default {
         'Tria la fitxa pel seu nom a la Configuració de la partida. Les fitxes que no surten a la llista fan servir els noms de camp habituals experience, xp i level, o defineix el Sistema de joc com a custom.',
         "Provat a Roll20 vol dir que s'ha escrit XP en aquesta fitxa en una partida Jumpgate, que s'han executat els càlculs propis de la fitxa, i que s'han comprovat les criatures derrotades i els avisos de nivell.",
         'Les fitxes Beacon com la de D&D 2024 necessiten el Mod sandbox v1.5, i un Mod no les pot posar a 0 XP.',
-        "Pathfinder 1E i Starfinder fan servir la casella d'XP per al nivell següent de la fitxa per als avisos de nivell. Si està en blanc, Pathfinder usa la progressió mitjana i Starfinder la seva pròpia taula.",
+        "Pathfinder 1E segueix el paràmetre de progressió de Pathfinder 1E (mitjana si no el canvies) i escriu les XP per al nivell següent a la casella de la fitxa. La progressió pot canviar segons el nivell, per exemple ràpida per als nivells 1 a 3, mitjana fins al 13 i lenta després. Starfinder fa servir la casella d'XP per al nivell següent de la fitxa, o la seva pròpia taula si està en blanc.",
         "WFRP 4E: cada atorgament s'afegeix com a fila a la llista Experience de la fitxa, però en les proves la fitxa no va recalcular els seus totals d'XP, així que comprova'ls a la fitxa.",
         'Savage Worlds, 13th Age, Cosmere i Call of Cthulhu no tenen XP que un Mod pugui escriure.',
       ],

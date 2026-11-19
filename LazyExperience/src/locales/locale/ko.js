@@ -61,12 +61,14 @@ export default {
     addKill: '{xp} XP 추가',
     otherXp: '다른 수치',
     ignore: '무시',
+    trackPlan: '혼합',
   },
   prompts: {
     xp: 'XP',
     reason: '사유 (선택)',
     share: '몫 (1 = 전체, 0.5 = 절반)',
     confirmEnd: '세션을 종료하고 XP를 나눠 줄까요?',
+    trackPlan: '진행 속도와 각각 시작하는 레벨',
   },
   options: {
     yesNo: { yes: '예', no: '아니요' },
@@ -86,6 +88,12 @@ export default {
       off: '끔',
     },
     system: { auto: '시트에서 감지' },
+    pf1Track: {
+      fast: '빠름',
+      medium: '중간',
+      slow: '느림',
+      sheet: '입력한 그대로의 시트 칸',
+    },
   },
   settings: {
     language: { label: '언어', desc: '채팅 카드와 핸드아웃에 쓰는 언어입니다.' },
@@ -100,6 +108,10 @@ export default {
     system: {
       label: '게임 시스템',
       desc: 'XP와 레벨이 들어 있는 시트 필드입니다. auto는 각 캐릭터의 시트에서 프로필을 고르고, custom은 사용자 지정 필드 설정을 사용합니다.',
+    },
+    pf1Track: {
+      label: 'Pathfinder 1E 진행 속도',
+      desc: 'Pathfinder 1E 레벨 업에 쓰는 XP 진행 속도: fast, medium, slow, 또는 레벨에 따라 바뀌는 진행 속도(예: fast 1-3, medium 4-13, slow 14+). 다음 레벨까지 필요한 XP는 시트의 칸에 기록됩니다. sheet: GM이 입력한 칸의 값을 그대로 사용합니다.',
     },
     roster: {
       label: '파티 출처',
@@ -398,7 +410,7 @@ export default {
         '시트는 게임 설정에 있는 이름으로 고릅니다. 목록에 없는 시트는 흔히 쓰는 필드 이름 experience, xp, level을 사용하며, 게임 시스템을 custom으로 설정할 수도 있습니다.',
         'Roll20에서 테스트함은 Jumpgate 게임에서 해당 시트에 XP를 기록했고, 시트 자체 계산이 실행되었으며, 처치한 크리처와 레벨 업 알림을 확인했다는 뜻입니다.',
         'D&D 2024 같은 Beacon 시트에는 Mod sandbox v1.5가 필요하며, Mod에서는 0 XP로 설정할 수 없습니다.',
-        'Pathfinder 1E와 Starfinder는 레벨 업 알림에 시트의 다음 레벨까지 필요한 XP 칸을 사용합니다. 비어 있으면 Pathfinder는 중간 진행 속도를, Starfinder는 자체 표를 사용합니다.',
+        'Pathfinder 1E는 Pathfinder 1E 진행 속도 설정(바꾸지 않으면 중간)을 따르며, 다음 레벨까지 필요한 XP를 시트의 칸에 기록합니다. 진행 속도는 레벨에 따라 바꿀 수 있습니다. 예를 들어 1~3레벨은 빠름, 13레벨까지는 중간, 그 뒤로는 느림입니다. Starfinder는 시트의 다음 레벨까지 필요한 XP 칸을 사용하고, 비어 있으면 자체 표를 사용합니다.',
         'WFRP 4E: 지급할 때마다 시트의 Experience 목록에 행이 하나씩 추가되지만, 테스트에서 시트가 XP 합계를 다시 계산하지 않았으므로 시트에서 확인하세요.',
         'Savage Worlds, 13th Age, Cosmere, Call of Cthulhu에는 Mod가 기록할 XP가 없습니다.',
       ],

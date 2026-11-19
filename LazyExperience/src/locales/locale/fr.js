@@ -62,12 +62,14 @@ export default {
     addKill: 'Ajouter {xp} PX',
     otherXp: 'Autre montant',
     ignore: 'Ignorer',
+    trackPlan: 'Mixte',
   },
   prompts: {
     xp: 'PX',
     reason: 'Raison (facultatif)',
     share: 'Part (1 = complète, 0,5 = moitié)',
     confirmEnd: 'Terminer la séance et distribuer les PX ?',
+    trackPlan: 'Progressions et le niveau où chacune commence',
   },
   options: {
     yesNo: { yes: 'Oui', no: 'Non' },
@@ -92,6 +94,12 @@ export default {
       off: 'Désactivé',
     },
     system: { auto: 'Détecter d’après la fiche' },
+    pf1Track: {
+      fast: 'Rapide',
+      medium: 'Moyenne',
+      slow: 'Lente',
+      sheet: 'Case de la fiche telle que saisie',
+    },
   },
   settings: {
     language: { label: 'Langue', desc: 'Langue des cartes de chat et des handouts.' },
@@ -106,6 +114,10 @@ export default {
     system: {
       label: 'Système de jeu',
       desc: 'Quels champs de la fiche contiennent les PX et le niveau. auto choisit le profil d’après la fiche de chaque personnage ; custom utilise les réglages de champs personnalisés.',
+    },
+    pf1Track: {
+      label: 'Progression Pathfinder 1E',
+      desc: 'La progression de PX pour les niveaux de Pathfinder 1E : fast, medium ou slow, ou des progressions qui changent selon le niveau, comme fast 1-3, medium 4-13, slow 14+. Les PX pour le niveau suivant sont écrits dans la case de la fiche. sheet : utiliser la case telle que le MJ la remplit.',
     },
     roster: {
       label: 'Groupe issu de',
@@ -411,7 +423,7 @@ export default {
         'Choisissez la fiche par son nom dans les Réglages de la partie. Les fiches non listées utilisent les noms de champ courants experience, xp et level, ou réglez le système de jeu sur custom.',
         'Testé dans Roll20 signifie que des PX ont été écrits sur cette fiche dans une partie Jumpgate, que les calculs propres à la fiche ont tourné, et que les créatures vaincues et les annonces de niveau ont été vérifiées.',
         'Les fiches Beacon comme D&D 2024 nécessitent Mod sandbox v1.5, et un Mod ne peut pas les mettre à 0 PX.',
-        'Pathfinder 1E et Starfinder utilisent la case de PX pour le niveau suivant de la fiche pour les annonces de niveau. Quand elle est vide, Pathfinder utilise la progression moyenne et Starfinder sa propre table.',
+        'Pathfinder 1E suit le paramètre Progression Pathfinder 1E (moyenne sauf si vous le changez) et écrit les PX pour le niveau suivant dans la case de la fiche. La progression peut changer selon le niveau, par exemple rapide pour les niveaux 1 à 3, moyenne jusqu’au 13 et lente ensuite. Starfinder utilise la case de PX pour le niveau suivant de la fiche, ou sa propre table quand elle est vide.',
         'WFRP 4E : chaque attribution est ajoutée comme une ligne dans la liste Experience de la fiche, mais lors des tests la fiche n’a pas recalculé ses totaux de PX ; vérifiez-les sur la fiche.',
         'Savage Worlds, 13th Age, Cosmere et Call of Cthulhu n’ont pas de PX qu’un Mod puisse écrire.',
       ],

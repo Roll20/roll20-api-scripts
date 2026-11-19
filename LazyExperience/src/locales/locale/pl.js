@@ -61,12 +61,14 @@ export default {
     addKill: 'Dodaj {xp} XP',
     otherXp: 'Inna wartość',
     ignore: 'Zignoruj',
+    trackPlan: 'Mieszane',
   },
   prompts: {
     xp: 'XP',
     reason: 'Powód (opcjonalnie)',
     share: 'Udział (1 = pełny, 0,5 = połowa)',
     confirmEnd: 'Zakończyć sesję i rozdać XP?',
+    trackPlan: 'Tempa i poziom, od którego każde obowiązuje',
   },
   options: {
     yesNo: { yes: 'Tak', no: 'Nie' },
@@ -91,6 +93,12 @@ export default {
       off: 'Wyłączone',
     },
     system: { auto: 'Wykryj z karty postaci' },
+    pf1Track: {
+      fast: 'Szybkie',
+      medium: 'Średnie',
+      slow: 'Wolne',
+      sheet: 'Pole karty, jak wpisano',
+    },
   },
   settings: {
     language: { label: 'Język', desc: 'Język kart na czacie i handoutów.' },
@@ -105,6 +113,10 @@ export default {
     system: {
       label: 'System gry',
       desc: 'Które pola karty zawierają XP i poziom. auto dobiera profil na podstawie karty każdej postaci; custom używa własnych ustawień pól.',
+    },
+    pf1Track: {
+      label: 'Tempo Pathfinder 1E',
+      desc: 'Tempo XP dla awansów w Pathfinder 1E: fast, medium lub slow, albo tempa zmieniające się z poziomem, np. fast 1-3, medium 4-13, slow 14+. XP do następnego poziomu jest wpisywane w pole karty. sheet: używa pola tak, jak wpisze je MG.',
     },
     roster: {
       label: 'Drużyna z',
@@ -400,7 +412,7 @@ export default {
         'Wybierz kartę po jej nazwie w Ustawieniach gry. Karty spoza listy używają popularnych nazw pól experience, xp i level, albo ustaw System gry na custom.',
         'Przetestowano w Roll20 oznacza, że w grze Jumpgate zapisano XP na tej karcie, zadziałały jej własne obliczenia oraz sprawdzono pokonane stworzenia i powiadomienia o awansie.',
         'Karty Beacon, takie jak D&D 2024, wymagają Mod sandbox v1.5, a Mod nie może ustawić na nich 0 XP.',
-        'Pathfinder 1E i Starfinder używają do powiadomień o awansie pola karty z XP do następnego poziomu. Gdy jest puste, Pathfinder korzysta ze średniego tempa, a Starfinder z własnej tabeli.',
+        'Pathfinder 1E korzysta z ustawienia Tempo Pathfinder 1E (średnie, jeśli go nie zmienisz) i wpisuje XP do następnego poziomu w pole karty. Tempo może zmieniać się z poziomem, np. szybkie na poziomach 1–3, średnie do 13, a potem wolne. Starfinder używa pola karty z XP do następnego poziomu albo własnej tabeli, gdy pole jest puste.',
         'WFRP 4E: każda nagroda jest dodawana jako wiersz na liście Experience na karcie, ale podczas testów karta nie przeliczyła swoich sum XP, więc sprawdź je na karcie.',
         'Savage Worlds, 13th Age, Cosmere i Call of Cthulhu nie mają XP, które mógłby zapisać Mod.',
       ],

@@ -61,12 +61,14 @@ export default {
     addKill: 'Tilføj {xp} XP',
     otherXp: 'Andet beløb',
     ignore: 'Ignorer',
+    trackPlan: 'Blandet',
   },
   prompts: {
     xp: 'XP',
     reason: 'Årsag (valgfri)',
     share: 'Andel (1 = hel, 0,5 = halv)',
     confirmEnd: 'Afslutte sessionen og dele XP ud?',
+    trackPlan: 'Forløb og det niveau, hvert starter på',
   },
   options: {
     yesNo: { yes: 'Ja', no: 'Nej' },
@@ -86,6 +88,12 @@ export default {
       off: 'Fra',
     },
     system: { auto: 'Find ud fra arket' },
+    pf1Track: {
+      fast: 'Hurtigt',
+      medium: 'Mellem',
+      slow: 'Langsomt',
+      sheet: 'Arkets felt som indtastet',
+    },
   },
   settings: {
     language: { label: 'Sprog', desc: 'Sprog til chatkort og handouts.' },
@@ -100,6 +108,10 @@ export default {
     system: {
       label: 'Spilsystem',
       desc: 'Hvilke arkfelter der indeholder XP og niveau. auto vælger profilen ud fra hver karakters ark; custom bruger indstillingerne for egne felter.',
+    },
+    pf1Track: {
+      label: 'Pathfinder 1E-forløb',
+      desc: "XP-forløbet for niveauer i Pathfinder 1E: fast, medium eller slow, eller forløb der skifter efter niveau, som fast 1-3, medium 4-13, slow 14+. XP til næste niveau skrives i arkets felt. sheet: brug feltet, som GM'en skriver det.",
     },
     roster: {
       label: 'Gruppe fra',
@@ -399,7 +411,7 @@ export default {
         'Vælg arket ud fra dets navn i spillets Indstillinger. Ark, der ikke er på listen, bruger de almindelige feltnavne experience, xp og level, eller sæt Spilsystem til custom.',
         'Testet i Roll20 betyder, at XP blev skrevet til det ark i et Jumpgate-spil, arkets egne beregninger kørte, og besejrede væsener og niveaumeddelelser blev kontrolleret.',
         'Beacon-ark som D&D 2024 kræver Mod sandbox v1.5, og et Mod kan ikke sætte dem til 0 XP.',
-        'Pathfinder 1E og Starfinder bruger arkets felt for XP til næste niveau til niveaumeddelelser. Når det er tomt, bruger Pathfinder det mellemste forløb, og Starfinder sin egen tabel.',
+        'Pathfinder 1E følger indstillingen Pathfinder 1E-forløb (mellem, medmindre du ændrer den) og skriver XP til næste niveau i arkets felt. Forløbet kan skifte efter niveau, for eksempel hurtigt for niveau 1 til 3, mellem til 13 og langsomt derefter. Starfinder bruger arkets felt for XP til næste niveau, eller sin egen tabel, når feltet er tomt.',
         'WFRP 4E: hver tildeling tilføjes som en række i arkets Experience-liste, men arket genberegnede ikke sine XP-totaler under test, så tjek dem på arket.',
         'Savage Worlds, 13th Age, Cosmere og Call of Cthulhu har ingen XP, som et Mod kan skrive.',
       ],

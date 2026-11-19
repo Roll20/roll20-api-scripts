@@ -61,12 +61,14 @@ export default {
     addKill: 'Aggiungi {xp} PE',
     otherXp: 'Altro importo',
     ignore: 'Ignora',
+    trackPlan: 'Mista',
   },
   prompts: {
     xp: 'PE',
     reason: 'Motivo (facoltativo)',
     share: 'Quota (1 = intera, 0,5 = metà)',
     confirmEnd: 'Terminare la sessione e distribuire i PE?',
+    trackPlan: 'Progressioni e il livello da cui parte ciascuna',
   },
   options: {
     yesNo: { yes: 'Sì', no: 'No' },
@@ -91,6 +93,12 @@ export default {
       off: 'Disattivato',
     },
     system: { auto: 'Rileva dalla scheda' },
+    pf1Track: {
+      fast: 'Veloce',
+      medium: 'Media',
+      slow: 'Lenta',
+      sheet: 'Casella della scheda come scritta',
+    },
   },
   settings: {
     language: { label: 'Lingua', desc: 'Lingua per le schede della chat e i handout.' },
@@ -105,6 +113,10 @@ export default {
     system: {
       label: 'Sistema di gioco',
       desc: 'Quali campi della scheda contengono PE e livello. auto sceglie il profilo dalla scheda di ciascun personaggio; custom usa le impostazioni dei campi personalizzati.',
+    },
+    pf1Track: {
+      label: 'Progressione Pathfinder 1E',
+      desc: 'La progressione dei PE per i livelli di Pathfinder 1E: fast, medium o slow, oppure progressioni che cambiano col livello, come fast 1-3, medium 4-13, slow 14+. I PE per il livello successivo vengono scritti nella casella della scheda. sheet: usa la casella come la scrive il GM.',
     },
     roster: {
       label: 'Gruppo da',
@@ -406,7 +418,7 @@ export default {
         'Scegli la scheda dal suo nome nelle Impostazioni della partita. Le schede non elencate usano i nomi di campo comuni experience, xp e level, oppure imposta il sistema di gioco su custom.',
         'Testato in Roll20 significa che i PE sono stati scritti su quella scheda in una partita Jumpgate, i calcoli propri della scheda sono stati eseguiti e sono state verificate le creature sconfitte e gli avvisi di salto di livello.',
         'Le schede Beacon come D&D 2024 richiedono Mod sandbox v1.5 e un Mod non può impostarle a 0 PE.',
-        'Pathfinder 1E e Starfinder usano la casella dei PE per il livello successivo della scheda per gli avvisi di salto di livello. Se è vuota, Pathfinder usa la progressione media e Starfinder una tabella propria.',
+        'Pathfinder 1E segue l’impostazione Progressione Pathfinder 1E (media se non la cambi) e scrive i PE per il livello successivo nella casella della scheda. La progressione può cambiare col livello, per esempio veloce per i livelli da 1 a 3, media fino al 13 e lenta dopo. Starfinder usa la casella dei PE per il livello successivo della scheda, o una tabella propria quando è vuota.',
         "WFRP 4E: ogni assegnazione viene aggiunta come riga nell'elenco Experience della scheda, ma nei test la scheda non ha ricalcolato i totali di PE, quindi controllali sulla scheda.",
         'Savage Worlds, 13th Age, Cosmere e Call of Cthulhu non hanno PE che un Mod possa scrivere.',
       ],

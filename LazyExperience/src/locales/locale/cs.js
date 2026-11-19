@@ -61,12 +61,14 @@ export default {
     addKill: 'Přidat {xp} XP',
     otherXp: 'Jiná hodnota',
     ignore: 'Ignorovat',
+    trackPlan: 'Smíšený',
   },
   prompts: {
     xp: 'XP',
     reason: 'Důvod (volitelný)',
     share: 'Podíl (1 = plný, 0,5 = poloviční)',
     confirmEnd: 'Ukončit seanci a rozdělit XP?',
+    trackPlan: 'Postupy a úroveň, od které každý platí',
   },
   options: {
     yesNo: { yes: 'Ano', no: 'Ne' },
@@ -86,6 +88,12 @@ export default {
       off: 'Vypnuto',
     },
     system: { auto: 'Zjistit z karty' },
+    pf1Track: {
+      fast: 'Rychlý',
+      medium: 'Střední',
+      slow: 'Pomalý',
+      sheet: 'Políčko karty, jak je zapsané',
+    },
   },
   settings: {
     language: { label: 'Jazyk', desc: 'Jazyk karet v chatu a handoutů.' },
@@ -100,6 +108,10 @@ export default {
     system: {
       label: 'Herní systém',
       desc: 'Která pole karty obsahují XP a úroveň. auto vybere profil podle karty každé postavy; custom použije vlastní nastavení polí.',
+    },
+    pf1Track: {
+      label: 'Postup Pathfinder 1E',
+      desc: 'Postup XP pro úrovně v Pathfinder 1E: fast, medium nebo slow, nebo postupy, které se mění podle úrovně, například fast 1-3, medium 4-13, slow 14+. XP do další úrovně se zapíší do políčka karty. sheet: použije políčko tak, jak ho vyplní GM.',
     },
     roster: {
       label: 'Družina z',
@@ -393,7 +405,7 @@ export default {
         'Kartu vyber podle jejího názvu v Nastavení hry. Karty, které nejsou na seznamu, používají běžné názvy polí experience, xp a level, nebo nastav Herní systém na custom.',
         'Otestováno v Roll20 znamená, že se XP zapsaly na tu kartu ve hře Jumpgate, proběhly vlastní výpočty karty a ověřilo se, jak fungují poražení tvorové a oznámení o postupu.',
         'Karty Beacon, například D&D 2024, vyžadují Mod sandbox v1.5 a Mod je nemůže nastavit na 0 XP.',
-        'Pathfinder 1E a Starfinder používají pro oznámení o postupu políčko karty s XP do další úrovně. Když je prázdné, Pathfinder použije střední postup a Starfinder vlastní tabulku.',
+        'Pathfinder 1E se řídí nastavením Postup Pathfinder 1E (střední, pokud ho nezměníte) a zapisuje XP do další úrovně do políčka karty. Postup se může měnit podle úrovně, například rychlý pro úrovně 1 až 3, střední do 13 a pak pomalý. Starfinder používá políčko karty s XP do další úrovně, nebo vlastní tabulku, když je prázdné.',
         'WFRP 4E: každá odměna se přidá jako řádek do seznamu Experience na kartě, ale karta si při testování nepřepočítala součty XP, proto je zkontroluj na kartě.',
         'Savage Worlds, 13th Age, Cosmere a Call of Cthulhu nemají žádné XP, které by Mod mohl zapsat.',
       ],

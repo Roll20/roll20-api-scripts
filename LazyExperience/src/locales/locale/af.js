@@ -61,12 +61,14 @@ export default {
     addKill: 'Voeg {xp} XP by',
     otherXp: 'Ander hoeveelheid',
     ignore: 'Ignoreer',
+    trackPlan: 'Gemeng',
   },
   prompts: {
     xp: 'XP',
     reason: 'Rede (opsioneel)',
     share: 'Aandeel (1 = volle, 0,5 = half)',
     confirmEnd: 'Die sessie beëindig en die XP uitdeel?',
+    trackPlan: 'Bane en die vlak waarop elkeen begin',
   },
   options: {
     yesNo: { yes: 'Ja', no: 'Nee' },
@@ -86,6 +88,12 @@ export default {
       off: 'Af',
     },
     system: { auto: 'Bespeur vanaf die blad' },
+    pf1Track: {
+      fast: 'Vinnig',
+      medium: 'Medium',
+      slow: 'Stadig',
+      sheet: 'Bladblokkie soos ingetik',
+    },
   },
   settings: {
     language: { label: 'Taal', desc: 'Taal vir klets-kaarte en handouts.' },
@@ -100,6 +108,10 @@ export default {
     system: {
       label: 'Speelstelsel',
       desc: 'Watter bladvelde XP en vlak bevat. auto kies die profiel vanaf elke karakter se blad; custom gebruik die instellings vir eie velde.',
+    },
+    pf1Track: {
+      label: 'Pathfinder 1E-baan',
+      desc: 'Die XP-baan vir Pathfinder 1E-vlakstygings: fast, medium of slow, of bane wat per vlak verander, soos fast 1-3, medium 4-13, slow 14+. Die XP vir die volgende vlak word in die blad se blokkie geskryf. sheet: gebruik die blokkie soos die SL dit intik.',
     },
     roster: {
       label: 'Groep vanaf',
@@ -395,7 +407,7 @@ export default {
         'Kies die blad volgens sy naam in die spel se Instellings. Blaaie wat nie gelys is nie, gebruik die algemene veldname experience, xp en level, of stel Speelstelsel op custom.',
         "Getoets in Roll20 beteken XP is in 'n Jumpgate-speletjie na daardie blad geskryf, die blad se eie berekeninge het gewerk, en verslane wesens en vlakstygingkennisgewings is nagegaan.",
         "Beacon-blaaie soos D&D 2024 het Mod sandbox v1.5 nodig, en 'n Mod kan hulle nie op 0 XP stel nie.",
-        'Pathfinder 1E en Starfinder gebruik die blad se XP-vir-volgende-vlak-blokkie vir vlakstygingkennisgewings. Wanneer dit leeg is, gebruik Pathfinder die medium-baan en Starfinder sy eie tabel.',
+        'Pathfinder 1E volg die Pathfinder 1E-baan-instelling (medium tensy jy dit verander) en skryf die XP vir die volgende vlak in die blad se blokkie. Die baan kan per vlak verander, soos vinnig vir vlakke 1 tot 3, medium tot 13 en stadig daarna. Starfinder gebruik die blad se XP-vir-volgende-vlak-blokkie, of sy eie tabel wanneer die blokkie leeg is.',
         "WFRP 4E: elke toekenning word as 'n ry by die blad se Experience-lys gevoeg, maar die blad het sy XP-totale nie tydens toetsing herbereken nie, so gaan dit op die blad na.",
         "Savage Worlds, 13th Age, Cosmere en Call of Cthulhu het geen XP vir 'n Mod om te skryf nie.",
       ],

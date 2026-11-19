@@ -61,12 +61,14 @@ export default {
     addKill: 'Añadir {xp} PX',
     otherXp: 'Otra cantidad',
     ignore: 'Ignorar',
+    trackPlan: 'Mixta',
   },
   prompts: {
     xp: 'PX',
     reason: 'Motivo (opcional)',
     share: 'Parte (1 = completa, 0,5 = mitad)',
     confirmEnd: '¿Terminar la sesión y repartir los PX?',
+    trackPlan: 'Progresiones y el nivel en que empieza cada una',
   },
   options: {
     yesNo: { yes: 'Sí', no: 'No' },
@@ -91,6 +93,12 @@ export default {
       off: 'Desactivado',
     },
     system: { auto: 'Detectar según la hoja' },
+    pf1Track: {
+      fast: 'Rápida',
+      medium: 'Media',
+      slow: 'Lenta',
+      sheet: 'Casilla de la hoja tal como se escribe',
+    },
   },
   settings: {
     language: { label: 'Idioma', desc: 'Idioma de las tarjetas de chat y los handouts.' },
@@ -105,6 +113,10 @@ export default {
     system: {
       label: 'Sistema de juego',
       desc: 'Qué campos de la hoja contienen los PX y el nivel. auto elige el perfil según la hoja de cada personaje; custom usa los ajustes de campos personalizados.',
+    },
+    pf1Track: {
+      label: 'Progresión de Pathfinder 1E',
+      desc: 'La progresión de PX para las subidas de nivel de Pathfinder 1E: fast, medium o slow, o progresiones que cambian según el nivel, como fast 1-3, medium 4-13, slow 14+. Los PX para el siguiente nivel se escriben en la casilla de la hoja. sheet: usa la casilla tal como la escribe el DJ.',
     },
     roster: {
       label: 'Grupo según',
@@ -408,7 +420,7 @@ export default {
         'Elige la hoja por su nombre en los Ajustes de la partida. Las hojas que no figuran usan los nombres de campo habituales experience, xp y level, o fija el sistema de juego en custom.',
         'Probado en Roll20 significa que se escribieron PX en esa hoja en una partida de Jumpgate, se ejecutaron los cálculos propios de la hoja y se comprobaron las criaturas derrotadas y los avisos de subida de nivel.',
         'Las hojas Beacon como D&D 2024 necesitan Mod sandbox v1.5, y un Mod no puede ponerlas a 0 PX.',
-        'Pathfinder 1E y Starfinder usan la casilla de PX para el siguiente nivel de la hoja en los avisos de subida de nivel. Si está vacía, Pathfinder usa la progresión media y Starfinder su propia tabla.',
+        'Pathfinder 1E sigue el ajuste Progresión de Pathfinder 1E (media si no lo cambias) y escribe los PX para el siguiente nivel en la casilla de la hoja. La progresión puede cambiar según el nivel, por ejemplo rápida para los niveles 1 a 3, media hasta el 13 y lenta después. Starfinder usa la casilla de PX para el siguiente nivel de la hoja, o su propia tabla si está vacía.',
         'WFRP 4E: cada concesión se añade como una fila en la lista Experience de la hoja, pero en las pruebas la hoja no recalculó sus totales de PX, así que compruébalos en la hoja.',
         'Savage Worlds, 13th Age, Cosmere y Call of Cthulhu no tienen PX que un Mod pueda escribir.',
       ],

@@ -61,12 +61,14 @@ export default {
     addKill: '{xp} XP を追加',
     otherXp: 'その他の数値',
     ignore: '無視',
+    trackPlan: '混合',
   },
   prompts: {
     xp: 'XP',
     reason: '理由(任意)',
     share: '配分(1 = 全額、0.5 = 半分)',
     confirmEnd: 'セッションを終了して XP を配布しますか?',
+    trackPlan: '成長曲線と、それぞれが始まるレベル',
   },
   options: {
     yesNo: { yes: 'はい', no: 'いいえ' },
@@ -86,6 +88,12 @@ export default {
       off: 'オフ',
     },
     system: { auto: 'シートから検出' },
+    pf1Track: {
+      fast: '高速',
+      medium: '中速',
+      slow: '低速',
+      sheet: '入力どおりのシート欄',
+    },
   },
   settings: {
     language: { label: '言語', desc: 'チャットカードとハンドアウトの言語。' },
@@ -100,6 +108,10 @@ export default {
     system: {
       label: 'ゲームシステム',
       desc: 'XP とレベルを保持するシートのフィールド。auto は各キャラクターのシートからプロファイルを選びます。custom はカスタムフィールド設定を使います。',
+    },
+    pf1Track: {
+      label: 'Pathfinder 1E 成長曲線',
+      desc: 'Pathfinder 1E のレベルアップに使う XP の成長曲線:fast、medium、slow、またはレベルで切り替わる曲線(例:fast 1-3, medium 4-13, slow 14+)。次のレベルまでの XP はシートの欄に書き込まれます。sheet:GM が入力した欄の値を使います。',
     },
     roster: {
       label: 'パーティの取得元',
@@ -399,7 +411,7 @@ export default {
         'シートは、ゲームの設定にある名前で選びます。一覧にないシートは、一般的なフィールド名 experience、xp、level を使います。または、ゲームシステムを custom に設定してください。',
         '「Roll20 でテスト済み」とは、Jumpgate のゲームでそのシートに XP が書き込まれ、シート自身の計算が実行され、撃破したクリーチャーとレベルアップ通知が確認されたことを意味します。',
         'D&D 2024 のような Beacon シートには Mod sandbox v1.5 が必要で、Mod から 0 XP に設定することはできません。',
-        'Pathfinder 1E と Starfinder は、レベルアップ通知にシートの「次のレベルまでの XP」欄を使います。空欄の場合、Pathfinder は中速の成長曲線を、Starfinder は独自の表を使います。',
+        'Pathfinder 1E は「Pathfinder 1E 成長曲線」設定(変更しない限り中速)に従い、次のレベルまでの XP をシートの欄に書き込みます。成長曲線はレベルによって切り替えられます。たとえばレベル 1〜3 は高速、13 までは中速、それ以降は低速です。Starfinder はシートの「次のレベルまでの XP」欄を使い、空欄の場合は独自の表を使います。',
         'WFRP 4E: 付与のたびにシートの Experience リストに1行追加されますが、テストではシートが XP の合計を再計算しなかったため、シートで確認してください。',
         'Savage Worlds、13th Age、Cosmere、Call of Cthulhu には Mod が書き込める XP がありません。',
       ],

@@ -61,12 +61,14 @@ export default {
     addKill: 'Lägg till {xp} XP',
     otherXp: 'Annat belopp',
     ignore: 'Ignorera',
+    trackPlan: 'Blandad',
   },
   prompts: {
     xp: 'XP',
     reason: 'Orsak (valfritt)',
     share: 'Andel (1 = hel, 0,5 = halv)',
     confirmEnd: 'Avsluta spelmötet och dela ut XP?',
+    trackPlan: 'Banor och nivån där varje bana börjar',
   },
   options: {
     yesNo: { yes: 'Ja', no: 'Nej' },
@@ -86,6 +88,12 @@ export default {
       off: 'Av',
     },
     system: { auto: 'Identifiera från bladet' },
+    pf1Track: {
+      fast: 'Snabb',
+      medium: 'Medelsnabb',
+      slow: 'Långsam',
+      sheet: 'Bladets ruta som den skrivits',
+    },
   },
   settings: {
     language: { label: 'Språk', desc: 'Språk för chattkort och handouts.' },
@@ -100,6 +108,10 @@ export default {
     system: {
       label: 'Spelsystem',
       desc: 'Vilka bladfält som innehåller XP och nivå. auto väljer profil från varje karaktärs blad; custom använder inställningarna för egna fält.',
+    },
+    pf1Track: {
+      label: 'Pathfinder 1E-bana',
+      desc: 'XP-banan för nivåer i Pathfinder 1E: fast, medium eller slow, eller banor som byts efter nivå, som fast 1-3, medium 4-13, slow 14+. XP till nästa nivå skrivs i bladets ruta. sheet: använd rutan som spelledaren skriver den.',
     },
     roster: {
       label: 'Grupp från',
@@ -397,7 +409,7 @@ export default {
         'Välj bladet efter dess namn i spelets Inställningar. Blad som inte finns i listan använder de vanliga fältnamnen experience, xp och level, eller sätt Spelsystem till custom.',
         'Testat i Roll20 betyder att XP skrevs till det bladet i ett Jumpgate-spel, bladets egna beräkningar kördes, och besegrade varelser och nivåmeddelanden kontrollerades.',
         'Beacon-blad som D&D 2024 kräver Mod sandbox v1.5, och en Mod kan inte sätta dem till 0 XP.',
-        'Pathfinder 1E och Starfinder använder bladets ruta för XP till nästa nivå för nivåmeddelanden. När den är tom använder Pathfinder den medelsnabba banan och Starfinder sin egen tabell.',
+        'Pathfinder 1E följer inställningen Pathfinder 1E-bana (medelsnabb om du inte ändrar den) och skriver XP till nästa nivå i bladets ruta. Banan kan bytas efter nivå, till exempel snabb för nivå 1 till 3, medelsnabb till 13 och långsam därefter. Starfinder använder bladets ruta för XP till nästa nivå, eller sin egen tabell när rutan är tom.',
         'WFRP 4E: varje tilldelning läggs till som en rad i bladets Experience-lista, men bladet räknade inte om sina XP-summor under testningen, så kontrollera dem på bladet.',
         'Savage Worlds, 13th Age, Cosmere och Call of Cthulhu har ingen XP som en Mod kan skriva.',
       ],

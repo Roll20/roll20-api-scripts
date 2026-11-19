@@ -61,12 +61,14 @@ export default {
     addKill: 'הוספת {xp} XP',
     otherXp: 'כמות אחרת',
     ignore: 'התעלמות',
+    trackPlan: 'משולב',
   },
   prompts: {
     xp: 'XP',
     reason: 'סיבה (לא חובה)',
     share: 'חלק (1 = מלא, 0.5 = חצי)',
     confirmEnd: 'לסיים את המפגש ולחלק את ה-XP?',
+    trackPlan: 'מסלולים והרמה שבה כל אחד מתחיל',
   },
   options: {
     yesNo: { yes: 'כן', no: 'לא' },
@@ -86,6 +88,12 @@ export default {
       off: 'כבוי',
     },
     system: { auto: 'זיהוי לפי הדף' },
+    pf1Track: {
+      fast: 'מהיר',
+      medium: 'בינוני',
+      slow: 'איטי',
+      sheet: 'התיבה בדף כפי שהוקלדה',
+    },
   },
   settings: {
     language: { label: 'שפה', desc: 'השפה של כרטיסי הצ׳אט וה-handouts.' },
@@ -100,6 +108,10 @@ export default {
     system: {
       label: 'מערכת משחק',
       desc: 'אילו שדות בדף מכילים XP ורמה. auto בוחר פרופיל לפי הדף של כל דמות; custom משתמש בשדות המותאמים.',
+    },
+    pf1Track: {
+      label: 'מסלול Pathfinder 1E',
+      desc: 'מסלול ה-XP לעליות רמה ב-Pathfinder 1E: fast, medium או slow, או מסלולים שמשתנים לפי רמה, כמו fast 1-3, medium 4-13, slow 14+. ה-XP לרמה הבאה נכתב בתיבה שבדף. sheet: שימוש בתיבה כפי שמנהל המשחק מקליד אותה.',
     },
     roster: {
       label: 'הקבוצה לפי',
@@ -392,7 +404,7 @@ export default {
         'בחרו את הדף לפי שמו בהגדרות של המשחק. דפים שאינם ברשימה משתמשים בשמות השדות הנפוצים experience, xp ו-level, או הגדירו מערכת משחק כ-custom.',
         'נבדק ב-Roll20 פירושו שנכתב XP לדף הזה במשחק Jumpgate, החישובים של הדף עצמו רצו, ויצורים שהובסו והודעות עלייה ברמה נבדקו.',
         'דפי Beacon כמו D&D 2024 דורשים Mod sandbox v1.5, ואי אפשר להגדיר אותם ל-0 XP מתוך Mod.',
-        'Pathfinder 1E ו-Starfinder משתמשים בתיבת ה-XP לרמה הבאה שבדף עבור הודעות עלייה ברמה. כשהיא ריקה, Pathfinder משתמש במסלול הבינוני ו-Starfinder בטבלה משלו.',
+        'Pathfinder 1E פועל לפי הגדרת מסלול Pathfinder 1E (בינוני, אלא אם תשנו אותה) וכותב את ה-XP לרמה הבאה בתיבה שבדף. המסלול יכול להשתנות לפי רמה, למשל מהיר לרמות 1 עד 3, בינוני עד 13 ואיטי אחר כך. Starfinder משתמש בתיבת ה-XP לרמה הבאה שבדף, או בטבלה משלו כשהיא ריקה.',
         'WFRP 4E: כל הענקה מתווספת כשורה ברשימת Experience שבדף, אבל בבדיקות הדף לא חישב מחדש את סכומי ה-XP שלו, לכן בדקו אותם בדף.',
         'ל-Savage Worlds, 13th Age, Cosmere ו-Call of Cthulhu אין XP ש-Mod יכול לכתוב.',
       ],

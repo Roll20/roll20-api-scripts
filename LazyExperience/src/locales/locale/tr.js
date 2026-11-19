@@ -61,12 +61,14 @@ export default {
     addKill: '{xp} XP Ekle',
     otherXp: 'Başka Miktar',
     ignore: 'Yoksay',
+    trackPlan: 'Karışık',
   },
   prompts: {
     xp: 'XP',
     reason: 'Neden (isteğe bağlı)',
     share: 'Pay (1 = tam, 0,5 = yarım)',
     confirmEnd: 'Oturum bitirilsin ve XP dağıtılsın mı?',
+    trackPlan: 'İlerleme hızları ve her birinin başladığı seviye',
   },
   options: {
     yesNo: { yes: 'Evet', no: 'Hayır' },
@@ -91,6 +93,12 @@ export default {
       off: 'Kapalı',
     },
     system: { auto: 'Karakter kâğıdından algıla' },
+    pf1Track: {
+      fast: 'Hızlı',
+      medium: 'Orta',
+      slow: 'Yavaş',
+      sheet: 'Yazıldığı gibi kâğıt kutusu',
+    },
   },
   settings: {
     language: { label: 'Dil', desc: 'Sohbet kartları ve handout’lar için dil.' },
@@ -105,6 +113,10 @@ export default {
     system: {
       label: 'Oyun sistemi',
       desc: 'Hangi kâğıt alanlarının XP ve seviyeyi tuttuğu. auto, her karakterin kâğıdına göre profil seçer; custom, özel alan ayarlarını kullanır.',
+    },
+    pf1Track: {
+      label: 'Pathfinder 1E ilerleme hızı',
+      desc: "Pathfinder 1E seviye atlamaları için XP ilerleme hızı: fast, medium veya slow ya da seviyeye göre değişen hızlar, örneğin fast 1-3, medium 4-13, slow 14+. Sonraki seviye için gereken XP kâğıdın kutusuna yazılır. sheet: kutuyu GM'in yazdığı gibi kullanır.",
     },
     roster: {
       label: 'Grubun kaynağı',
@@ -401,7 +413,7 @@ export default {
         'Kâğıdı, oyunun Ayarlar bölümündeki adıyla seç. Listede olmayan kâğıtlar yaygın alan adları olan experience, xp ve level’i kullanır; ya da Oyun sistemini custom yap.',
         'Roll20’de test edildi, XP’nin o kâğıda bir Jumpgate oyununda yazıldığı, kâğıdın kendi hesaplamalarının çalıştığı ve yenilen yaratıklarla seviye atlama bildirimlerinin kontrol edildiği anlamına gelir.',
         'D&D 2024 gibi Beacon kâğıtları Mod sandbox v1.5 gerektirir ve bir Mod tarafından 0 XP’ye ayarlanamaz.',
-        'Pathfinder 1E ve Starfinder, seviye atlama bildirimleri için kâğıdın sonraki seviye XP kutusunu kullanır. Boşsa Pathfinder orta ilerleme hızını, Starfinder ise kendi tablosunu kullanır.',
+        "Pathfinder 1E, Pathfinder 1E ilerleme hızı ayarını izler (değiştirmezseniz orta) ve sonraki seviye için gereken XP'yi kâğıdın kutusuna yazar. Hız seviyeye göre değişebilir; örneğin 1-3. seviyelerde hızlı, 13'e kadar orta, sonrasında yavaş. Starfinder kâğıdın sonraki seviye XP kutusunu, kutu boşsa kendi tablosunu kullanır.",
         'WFRP 4E: her ödül kâğıdın Experience listesine bir satır olarak eklenir, ancak testte kâğıt XP toplamlarını yeniden hesaplamadı; bu yüzden onları kâğıt üzerinden kontrol et.',
         'Savage Worlds, 13th Age, Cosmere ve Call of Cthulhu’da bir Mod’un yazabileceği XP yoktur.',
       ],

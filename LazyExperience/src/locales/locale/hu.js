@@ -61,12 +61,14 @@ export default {
     addKill: '{xp} XP hozzáadása',
     otherXp: 'Más mennyiség',
     ignore: 'Mellőzés',
+    trackPlan: 'Vegyes',
   },
   prompts: {
     xp: 'XP',
     reason: 'Indok (nem kötelező)',
     share: 'Rész (1 = teljes, 0,5 = fél)',
     confirmEnd: 'Lezárod az alkalmat és kiosztod az XP-t?',
+    trackPlan: 'Haladási ütemek és a szint, ahol mindegyik kezdődik',
   },
   options: {
     yesNo: { yes: 'Igen', no: 'Nem' },
@@ -91,6 +93,12 @@ export default {
       off: 'Ki',
     },
     system: { auto: 'Felismerés a karakterlapból' },
+    pf1Track: {
+      fast: 'Gyors',
+      medium: 'Közepes',
+      slow: 'Lassú',
+      sheet: 'A lap mezője beírt értékkel',
+    },
   },
   settings: {
     language: { label: 'Nyelv', desc: 'A csevegőkártyák és a handoutok nyelve.' },
@@ -105,6 +113,10 @@ export default {
     system: {
       label: 'Játékrendszer',
       desc: 'Mely lapmezők tartalmazzák az XP-t és a szintet. Az auto minden karakter lapja alapján választ profilt; a custom az egyéni mezőbeállításokat használja.',
+    },
+    pf1Track: {
+      label: 'Pathfinder 1E haladási ütem',
+      desc: 'Az XP haladási üteme a Pathfinder 1E szintlépéseihez: fast, medium vagy slow, vagy szintenként változó ütemek, például fast 1-3, medium 4-13, slow 14+. A következő szinthez kellő XP a lap mezőjébe kerül. sheet: a mezőt úgy használja, ahogy a KM beírja.',
     },
     roster: {
       label: 'Csapat forrása',
@@ -406,7 +418,7 @@ export default {
         'A lapot a neve alapján válaszd ki a játék Beállításaiban. A listán nem szereplő lapok a gyakori experience, xp és level mezőneveket használják, vagy állítsd a Játékrendszert custom-ra.',
         'A „Roll20-ban tesztelve” azt jelenti, hogy XP-t írtak arra a lapra egy Jumpgate-játékban, lefutottak a lap saját számításai, és ellenőrizték a legyőzött lényeket és a szintlépési értesítéseket.',
         'A Beacon lapokhoz, például a D&D 2024-hez, Mod sandbox v1.5 kell, és Modból nem lehet őket 0 XP-re állítani.',
-        'A Pathfinder 1E és a Starfinder a lap „XP a következő szintig” mezőjét használja a szintlépési értesítésekhez. Ha az üres, a Pathfinder a közepes haladási ütemet, a Starfinder a saját táblázatát használja.',
+        'A Pathfinder 1E a Pathfinder 1E haladási ütem beállítást követi (közepes, ha nem módosítod), és a következő szinthez kellő XP-t a lap mezőjébe írja. Az ütem szintenként változhat, például gyors az 1–3. szinten, közepes a 13.-ig, utána lassú. A Starfinder a lap „XP a következő szintig” mezőjét használja, vagy a saját táblázatát, ha a mező üres.',
         'WFRP 4E: minden jutalom egy sorként kerül a lap Experience listájára, de a lap tesztelés közben nem számolta újra az XP-összegeit, ezért ellenőrizd őket a lapon.',
         'A Savage Worlds, a 13th Age, a Cosmere és a Call of Cthulhu esetében nincs XP, amit egy Mod írhatna.',
       ],

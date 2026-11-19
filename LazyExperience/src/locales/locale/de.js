@@ -61,12 +61,14 @@ export default {
     addKill: '{xp} EP hinzufügen',
     otherXp: 'Anderer Betrag',
     ignore: 'Ignorieren',
+    trackPlan: 'Gemischt',
   },
   prompts: {
     xp: 'EP',
     reason: 'Grund (optional)',
     share: 'Anteil (1 = voll, 0,5 = halb)',
     confirmEnd: 'Die Sitzung beenden und die EP verteilen?',
+    trackPlan: 'Geschwindigkeiten und die Stufe, ab der jede gilt',
   },
   options: {
     yesNo: { yes: 'Ja', no: 'Nein' },
@@ -86,6 +88,12 @@ export default {
       off: 'Aus',
     },
     system: { auto: 'Aus dem Charakterbogen erkennen' },
+    pf1Track: {
+      fast: 'Schnell',
+      medium: 'Mittel',
+      slow: 'Langsam',
+      sheet: 'Bogenfeld wie eingetragen',
+    },
   },
   settings: {
     language: { label: 'Sprache', desc: 'Sprache für Chatkarten und Handouts.' },
@@ -100,6 +108,10 @@ export default {
     system: {
       label: 'Spielsystem',
       desc: 'Welche Bogenfelder EP und Stufe enthalten. auto wählt das Profil anhand des Bogens jedes Charakters; custom nutzt die eigenen Feldeinstellungen.',
+    },
+    pf1Track: {
+      label: 'Pathfinder-1E-Aufstieg',
+      desc: 'Die Aufstiegsgeschwindigkeit für Pathfinder-1E-Stufenaufstiege: fast, medium oder slow, oder Geschwindigkeiten, die je nach Stufe wechseln, etwa fast 1-3, medium 4-13, slow 14+. Die EP bis zur nächsten Stufe werden in das Feld des Bogens geschrieben. sheet: das Feld so verwenden, wie die SL es einträgt.',
     },
     roster: {
       label: 'Gruppe aus',
@@ -402,7 +414,7 @@ export default {
         'Wähle den Bogen über seinen Namen in den Einstellungen des Spiels. Nicht aufgeführte Bögen verwenden die gängigen Feldnamen experience, xp und level, oder stelle das Spielsystem auf custom.',
         'In Roll20 getestet heißt: In einem Jumpgate-Spiel wurden EP auf diesen Bogen geschrieben, die eigenen Berechnungen des Bogens liefen, und besiegte Kreaturen sowie Stufenaufstiegs-Hinweise wurden geprüft.',
         'Beacon-Bögen wie D&D 2024 benötigen Mod sandbox v1.5, und ein Mod kann sie nicht auf 0 EP setzen.',
-        'Pathfinder 1E und Starfinder nutzen für Stufenaufstiegs-Hinweise das Feld des Bogens für die EP bis zur nächsten Stufe. Ist es leer, verwendet Pathfinder die mittlere Aufstiegsgeschwindigkeit und Starfinder seine eigene Tabelle.',
+        'Pathfinder 1E folgt der Einstellung Pathfinder-1E-Aufstieg (mittel, solange du sie nicht änderst) und schreibt die EP bis zur nächsten Stufe in das Feld des Bogens. Die Geschwindigkeit kann je nach Stufe wechseln, etwa schnell für die Stufen 1 bis 3, mittel bis 13 und danach langsam. Starfinder nutzt das Feld des Bogens für die EP bis zur nächsten Stufe, oder seine eigene Tabelle, wenn es leer ist.',
         'WFRP 4E: Jede Vergabe wird als Zeile in die Experience-Liste des Bogens eingetragen, aber der Bogen hat seine EP-Summen beim Testen nicht neu berechnet; prüfe sie daher auf dem Bogen.',
         'Savage Worlds, 13th Age, Cosmere und Call of Cthulhu haben keine EP, die ein Mod schreiben könnte.',
       ],

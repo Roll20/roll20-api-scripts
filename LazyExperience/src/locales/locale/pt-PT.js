@@ -61,12 +61,14 @@ export default {
     addKill: 'Adicionar {xp} XP',
     otherXp: 'Outro valor',
     ignore: 'Ignorar',
+    trackPlan: 'Mista',
   },
   prompts: {
     xp: 'XP',
     reason: 'Motivo (opcional)',
     share: 'Quota (1 = inteira, 0,5 = metade)',
     confirmEnd: 'Terminar a sessão e distribuir o XP?',
+    trackPlan: 'Progressões e o nível em que cada uma começa',
   },
   options: {
     yesNo: { yes: 'Sim', no: 'Não' },
@@ -95,6 +97,12 @@ export default {
       off: 'Desligado',
     },
     system: { auto: 'Detetar pela ficha' },
+    pf1Track: {
+      fast: 'Rápida',
+      medium: 'Média',
+      slow: 'Lenta',
+      sheet: 'Caixa da ficha tal como escrita',
+    },
   },
   settings: {
     language: { label: 'Idioma', desc: 'Idioma dos cartões do chat e dos handouts.' },
@@ -109,6 +117,10 @@ export default {
     system: {
       label: 'Sistema de jogo',
       desc: 'Que campos da ficha guardam o XP e o nível. auto escolhe o perfil pela ficha de cada personagem; custom usa as definições de campos personalizados.',
+    },
+    pf1Track: {
+      label: 'Progressão do Pathfinder 1E',
+      desc: 'A progressão de XP para os níveis do Pathfinder 1E: fast, medium ou slow, ou progressões que mudam consoante o nível, como fast 1-3, medium 4-13, slow 14+. O XP para o nível seguinte é escrito na caixa da ficha. sheet: usa a caixa tal como o mestre a escreve.',
     },
     roster: {
       label: 'Grupo de',
@@ -412,7 +424,7 @@ export default {
         'Escolha a ficha pelo nome nas Definições do jogo. As fichas que não constam da lista usam os nomes de campo comuns experience, xp e level, ou defina o Sistema de jogo como custom.',
         'Testado no Roll20 significa que o XP foi escrito nessa ficha num jogo Jumpgate, os cálculos da própria ficha correram, e as criaturas derrotadas e os avisos de nível foram verificados.',
         'As fichas Beacon, como a de D&D 2024, exigem o Mod sandbox v1.5, e um Mod não as pode definir com 0 XP.',
-        'Pathfinder 1E e Starfinder usam a caixa de XP para o nível seguinte da ficha para os avisos de nível. Quando está vazia, o Pathfinder usa a progressão média e o Starfinder a sua própria tabela.',
+        'O Pathfinder 1E segue a definição Progressão do Pathfinder 1E (média, a não ser que a altere) e escreve o XP para o nível seguinte na caixa da ficha. A progressão pode mudar consoante o nível, por exemplo rápida nos níveis 1 a 3, média até ao 13 e lenta depois. O Starfinder usa a caixa de XP para o nível seguinte da ficha, ou a sua própria tabela quando está vazia.',
         'WFRP 4E: cada atribuição é adicionada como uma linha na lista Experience da ficha, mas nos testes a ficha não recalculou os totais de XP, por isso verifique-os na ficha.',
         'Savage Worlds, 13th Age, Cosmere e Call of Cthulhu não têm XP para um Mod escrever.',
       ],

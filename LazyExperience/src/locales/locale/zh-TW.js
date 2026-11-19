@@ -61,12 +61,14 @@ export default {
     addKill: '新增 {xp} XP',
     otherXp: '其他數值',
     ignore: '忽略',
+    trackPlan: '混合',
   },
   prompts: {
     xp: 'XP',
     reason: '原因(選填)',
     share: '份數(1 = 全額,0.5 = 一半)',
     confirmEnd: '要結束場次並發放 XP 嗎?',
+    trackPlan: '進度與各自開始的等級',
   },
   options: {
     yesNo: { yes: '是', no: '否' },
@@ -86,6 +88,12 @@ export default {
       off: '關閉',
     },
     system: { auto: '依角色卡偵測' },
+    pf1Track: {
+      fast: '快速',
+      medium: '中速',
+      slow: '慢速',
+      sheet: '照輸入使用角色卡欄位',
+    },
   },
   settings: {
     language: { label: '語言', desc: '聊天卡片與講義所使用的語言。' },
@@ -100,6 +108,10 @@ export default {
     system: {
       label: '遊戲系統',
       desc: '角色卡上存放 XP 與等級的欄位。auto 會依各角色的角色卡選擇設定檔;custom 則使用自訂欄位設定。',
+    },
+    pf1Track: {
+      label: 'Pathfinder 1E 進度',
+      desc: 'Pathfinder 1E 升級使用的 XP 進度:fast、medium 或 slow,或依等級切換的進度,例如 fast 1-3, medium 4-13, slow 14+。下一級所需 XP 會寫入角色卡的欄位。sheet:照 GM 輸入的欄位數值使用。',
     },
     roster: {
       label: '隊伍來源',
@@ -389,7 +401,7 @@ export default {
         '請在遊戲的設定中依名稱選擇角色卡。未列出的角色卡會使用常見的欄位名稱 experience、xp 與 level,或將遊戲系統設為 custom。',
         '已在 Roll20 測試表示曾在 Jumpgate 遊戲中將 XP 寫入該角色卡、角色卡本身的計算正常執行,並檢查過已擊敗的生物與升級通知。',
         '像 D&D 2024 這類 Beacon 角色卡需要 Mod sandbox v1.5,且 Mod 無法將它們設為 0 XP。',
-        'Pathfinder 1E 與 Starfinder 使用角色卡上的「下一級所需 XP」欄位來發出升級通知。該欄位空白時,Pathfinder 使用中速進度,Starfinder 使用自己的表格。',
+        'Pathfinder 1E 依照「Pathfinder 1E 進度」設定(未變更時為中速),並將下一級所需 XP 寫入角色卡的欄位。進度可依等級切換,例如 1 到 3 級快速、到 13 級中速、之後慢速。Starfinder 使用角色卡上的「下一級所需 XP」欄位,欄位空白時使用自己的表格。',
         'WFRP 4E:每次獎勵都會在角色卡的 Experience 清單中新增一列,但測試中角色卡並未重新計算 XP 總計,請在角色卡上自行檢查。',
         'Savage Worlds、13th Age、Cosmere 與 Call of Cthulhu 沒有可供 Mod 寫入的 XP。',
       ],

@@ -61,12 +61,14 @@ export default {
     addKill: 'Lisää {xp} XP',
     otherXp: 'Muu määrä',
     ignore: 'Ohita',
+    trackPlan: 'Sekoitettu',
   },
   prompts: {
     xp: 'XP',
     reason: 'Syy (valinnainen)',
     share: 'Osuus (1 = koko, 0,5 = puolikas)',
     confirmEnd: 'Päätetäänkö sessio ja jaetaanko XP?',
+    trackPlan: 'Etenemiset ja taso, jolta kukin alkaa',
   },
   options: {
     yesNo: { yes: 'Kyllä', no: 'Ei' },
@@ -91,6 +93,12 @@ export default {
       off: 'Pois',
     },
     system: { auto: 'Tunnista lomakkeesta' },
+    pf1Track: {
+      fast: 'Nopea',
+      medium: 'Keskinopea',
+      slow: 'Hidas',
+      sheet: 'Lomakkeen kenttä sellaisenaan',
+    },
   },
   settings: {
     language: { label: 'Kieli', desc: 'Chat-korttien ja handoutien kieli.' },
@@ -105,6 +113,10 @@ export default {
     system: {
       label: 'Pelijärjestelmä',
       desc: 'Mitkä lomakekentät sisältävät XP:n ja tason. auto valitsee profiilin kunkin hahmon lomakkeesta; custom käyttää omien kenttien asetuksia.',
+    },
+    pf1Track: {
+      label: 'Pathfinder 1E -eteneminen',
+      desc: 'XP-eteneminen Pathfinder 1E:n tasonnousuille: fast, medium tai slow, tai tason mukaan vaihtuvat etenemiset, kuten fast 1-3, medium 4-13, slow 14+. Seuraavan tason XP kirjoitetaan lomakkeen kenttään. sheet: käytä kenttää sellaisena kuin pelinjohtaja sen kirjoittaa.',
     },
     roster: {
       label: 'Seurue lähteestä',
@@ -399,7 +411,7 @@ export default {
         'Valitse lomake sen nimellä pelin Asetuksista. Luettelossa olemattomat lomakkeet käyttävät yleisiä kenttänimiä experience, xp ja level, tai aseta Pelijärjestelmä arvoon custom.',
         'Testattu Roll20:ssa tarkoittaa, että XP kirjoitettiin kyseiseen lomakkeeseen Jumpgate-pelissä, lomakkeen omat laskutoimitukset suoritettiin ja kukistetut olennot sekä tasonnousuilmoitukset tarkistettiin.',
         'Beacon-lomakkeet kuten D&D 2024 tarvitsevat Mod sandbox v1.5:n, eikä Modi voi asettaa niitä 0 XP:hen.',
-        'Pathfinder 1E ja Starfinder käyttävät tasonnousuilmoituksiin lomakkeen kenttää, jossa on XP seuraavaan tasoon. Kun se on tyhjä, Pathfinder käyttää keskinopeaa etenemistä ja Starfinder omaa taulukkoaan.',
+        'Pathfinder 1E noudattaa Pathfinder 1E -eteneminen-asetusta (keskinopea, ellet muuta sitä) ja kirjoittaa seuraavan tason XP:n lomakkeen kenttään. Eteneminen voi vaihtua tason mukaan, esimerkiksi nopea tasoilla 1–3, keskinopea tasolle 13 asti ja sen jälkeen hidas. Starfinder käyttää lomakkeen seuraavan tason XP-kenttää, tai omaa taulukkoaan, kun kenttä on tyhjä.',
         'WFRP 4E: jokainen palkinto lisätään riviksi lomakkeen Experience-luetteloon, mutta lomake ei laskenut XP-summiaan uudelleen testauksessa, joten tarkista ne lomakkeelta.',
         'Savage Worlds, 13th Age, Cosmere ja Call of Cthulhu eivät käytä XP:tä, jonka Modi voisi kirjoittaa.',
       ],

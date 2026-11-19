@@ -61,12 +61,14 @@ export default {
     addKill: '{xp} XP toevoegen',
     otherXp: 'Ander bedrag',
     ignore: 'Negeren',
+    trackPlan: 'Gemengd',
   },
   prompts: {
     xp: 'XP',
     reason: 'Reden (optioneel)',
     share: 'Aandeel (1 = volledig, 0,5 = half)',
     confirmEnd: 'De sessie afronden en de XP uitdelen?',
+    trackPlan: 'Trajecten en het niveau waarop elk begint',
   },
   options: {
     yesNo: { yes: 'Ja', no: 'Nee' },
@@ -86,6 +88,12 @@ export default {
       off: 'Uit',
     },
     system: { auto: 'Herkennen aan de sheet' },
+    pf1Track: {
+      fast: 'Snel',
+      medium: 'Gemiddeld',
+      slow: 'Langzaam',
+      sheet: 'Vak op de sheet zoals ingevuld',
+    },
   },
   settings: {
     language: { label: 'Taal', desc: 'Taal voor chatkaarten en handouts.' },
@@ -100,6 +108,10 @@ export default {
     system: {
       label: 'Spelsysteem',
       desc: 'Welke sheetvelden XP en niveau bevatten. auto kiest het profiel op basis van de sheet van elk personage; custom gebruikt de instellingen voor eigen velden.',
+    },
+    pf1Track: {
+      label: 'Pathfinder 1E-traject',
+      desc: 'Het XP-traject voor niveaus in Pathfinder 1E: fast, medium of slow, of trajecten die per niveau wisselen, zoals fast 1-3, medium 4-13, slow 14+. De XP tot het volgende niveau wordt in het vak op de sheet geschreven. sheet: gebruik het vak zoals de GM het invult.',
     },
     roster: {
       label: 'Groep uit',
@@ -398,7 +410,7 @@ export default {
         'Kies de sheet op naam in de Instellingen van het spel. Sheets die niet in de lijst staan, gebruiken de gangbare veldnamen experience, xp en level, of stel Spelsysteem in op custom.',
         'Getest in Roll20 betekent dat XP in een Jumpgate-spel naar die sheet is geschreven, de eigen berekeningen van de sheet zijn uitgevoerd, en verslagen wezens en niveaumeldingen zijn gecontroleerd.',
         'Beacon-sheets zoals D&D 2024 hebben Mod sandbox v1.5 nodig, en een Mod kan ze niet op 0 XP zetten.',
-        'Pathfinder 1E en Starfinder gebruiken het vak voor XP tot het volgende niveau op de sheet voor niveaumeldingen. Als het leeg is, gebruikt Pathfinder het gemiddelde traject en Starfinder een eigen tabel.',
+        'Pathfinder 1E volgt de instelling Pathfinder 1E-traject (gemiddeld, tenzij je die wijzigt) en schrijft de XP tot het volgende niveau in het vak op de sheet. Het traject kan per niveau wisselen, bijvoorbeeld snel voor niveau 1 tot 3, gemiddeld tot 13 en daarna langzaam. Starfinder gebruikt het vak voor XP tot het volgende niveau op de sheet, of een eigen tabel als het leeg is.',
         'WFRP 4E: elke toekenning wordt als rij toegevoegd aan de Experience-lijst van de sheet, maar de sheet herberekende zijn XP-totalen niet tijdens het testen, dus controleer ze op de sheet.',
         'Savage Worlds, 13th Age, Cosmere en Call of Cthulhu hebben geen XP die een Mod kan schrijven.',
       ],
