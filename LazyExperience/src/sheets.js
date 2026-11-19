@@ -80,6 +80,11 @@ export async function readField(character, names, access) {
       if (attr && toText(attr.get('current')) !== '') {
         return { name, value: attr.get('current') };
       }
+      // Roll20 keeps a sheet input named attr_<name>_max as the max of <name>.
+      const base = !attr && /_max$/i.test(name) ? findAttribute(id, name.slice(0, -4)) : null;
+      if (base && toText(base.get('max')) !== '') {
+        return { name, value: base.get('max') };
+      }
     }
   }
   return null;

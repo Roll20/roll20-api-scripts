@@ -229,8 +229,17 @@ export function createSandbox({
         archived: false,
         _charactersheetname: sheet,
       });
-      for (const [k, v] of Object.entries(attrs)) {
+      // As in Roll20, a sheet input named attr_xp_max is the max of the xp attribute,
+      // not an attribute of its own.
+      const entries = Object.entries(attrs);
+      for (const [k, v] of entries.filter(([k]) => !k.endsWith('_max'))) {
         api.add('attribute', { _characterid: c.id, name: k, current: v, max: '' });
+      }
+      for (const [k, v] of entries.filter(([k]) => k.endsWith('_max'))) {
+        const base = k.slice(0, -4);
+        const found = this.attr(c.id, base);
+        if (found) found.attrs.max = v;
+        else api.add('attribute', { _characterid: c.id, name: base, current: '', max: v });
       }
       return c;
     },
