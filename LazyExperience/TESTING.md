@@ -16,7 +16,9 @@ npm test
 - level-ups
 - the D&D 2024 and 2014 sheets, sandbox 1.0, migration from 0.1.14, settings, One-Click options, escaping and every card
 
-`tests/systems.test.mjs` covers each game-system profile.
+`tests/systems.test.mjs` covers each game-system profile, and `tests/tracks.test.mjs` the Pathfinder 1E track setting (single tracks, tracks by level, `sheet`, the next-level box on both Pathfinder 1E sheets, Starfinder's box, `show` and the settings card).
+
+The stub keeps an `attr_<name>_max` sheet field as the max of `<name>`, as Roll20 does.
 
 The tests run against a stubbed Roll20 API. Beacon sheets are faked, so check the live list below in a real game before release.
 
@@ -116,6 +118,21 @@ The option values in the Game Settings sheet list are the sheet names Mods see (
 - Characters made by a Mod with `createObj` report a blank `_charactersheetname`, so the game's sheet (`Campaign().sheetName`) is used.
 - The sandbox only learns the game's new sheet after it restarts.
 - After the game was switched to `pathfinder2eofficial`, saving Game Settings with another sheet (Cosmere, WFRP) left it on Pathfinder 2e.
+
+## Pathfinder 1E tracks — 19 November 2026, Jumpgate, sandbox v1.5
+
+Game "Mod Test Lab - LazyExperience PF1" (22232975, Pathfinder by Roll20 sheet, `pathfinderofficial`) with LazyExperience 1.1.0 and a probe that logged the character's attributes. Values were typed into the sheet's own boxes.
+
+| Step                                                                                   | Result                                                                             |
+| -------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| Type XP 1900 and next level 3000 on the sheet (Additional tab)                         | Saved as one attribute, `xp` = 1900 with max 3000. There is no `xp_max` attribute. |
+| `set pf1Track sheet`, `give 200`                                                       | 2100 XP, no level-up notice (the box says 3000); box left at 3000                  |
+| `give 1000`                                                                            | 3100 XP, "has enough XP for level 2"                                               |
+| `set pf1Track fast`, `give 100`                                                        | `xp` = 3200 / 1300; the reopened sheet shows Points 3200, Next Level 1300          |
+| Class level 4 on the sheet, `set pf1Track fast 1-3, medium 4-13, slow 14+`, `give 100` | `xp` = 3300 / 15000; `show` says "Level 4 • next level at 15,000"                  |
+| Settings card                                                                          | Pathfinder 1E track row: "Fast 1–3 · Medium 4–13 · Slow 14+" and a Mixed button    |
+
+Found while testing: a sheet opened straight after reloading the game showed blank boxes until the character's attributes had loaded. The values were saved; reopening the sheet showed them.
 
 ## Translations
 

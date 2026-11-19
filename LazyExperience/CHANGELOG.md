@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.1.0 - 2026-11-19
+
+### Added
+
+- The **Pathfinder 1E track** setting (`pf1Track`): fast, medium or slow, or tracks that change by level, such as `fast 1-3, medium 4-13, slow 14+`. A character advances on the track for the level they are on now. The XP for the next level is written to the sheet's next-level box after each award, so the sheet and the level-up notices agree. `sheet` reads the box as the GM types it instead. The settings card has a track button and a **Mixed** button for tracks by level, and there's a One-Click option.
+
+### Changed
+
+- On Pathfinder 1E sheets the next-level box is now written by the Mod, from the medium track unless the setting says otherwise. Set **Pathfinder 1E track** to `sheet` to keep typing it yourself.
+- `!lazyxp show` uses the same XP for the next level as the level-up notices.
+
+### Fixed
+
+- The next-level boxes on the Pathfinder 1E (both sheets) and Starfinder sheets were never read. Roll20 keeps them as the max of the XP attribute, not as attributes of their own, so the level tables were always used.
+
 ## 1.0.0 - 2026-11-19
 
 A rewrite of Robin Kuiper's 0.1.14. Existing games are upgraded automatically.

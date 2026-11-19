@@ -39,6 +39,8 @@ A quick reference for where to find each feature in the source.
 | Task                       | File             | Key function                                       |
 | -------------------------- | ---------------- | -------------------------------------------------- |
 | Profiles and detection     | `src/systems.js` | `PROFILES`, `detectProfile`, `profileForCharacter` |
+| Pathfinder 1E tracks       | `src/systems.js` | `parseTrackPlan`, `trackNextXp`, `withTrack`       |
+| Write the next-level box   | `src/sheets.js`  | `writeNextBox`                                     |
 | Read XP, level, next level | `src/sheets.js`  | `readProgress`, `readField`                        |
 | Write XP                   | `src/sheets.js`  | `addXp`, `writeXp`, `addLedgerRow`                 |
 | Creature XP                | `src/sheets.js`  | `readCreatureXp`                                   |

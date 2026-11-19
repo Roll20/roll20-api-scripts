@@ -60,6 +60,7 @@ Commands for characters use the selected tokens, or `--ids` followed by characte
 | `payout`           | `end`      | `end`: pay when the session ends. `instant`: split and pay every award at once.                 |
 | `updateSheets`     | `true`     | Write XP to the sheets. When off, the totals are only announced.                                |
 | `system`           | `auto`     | Game-system profile. `auto` picks one per character from its sheet; `custom` uses your fields.  |
+| `pf1Track`         | `medium`   | Pathfinder 1E XP track: `fast`, `medium`, `slow`, tracks by level, or `sheet`.                  |
 | `roster`           | `auto`     | `auto`, `party` (Roll20 party), `players` (characters controlled by players) or `manual`.       |
 | `absentShare`      | `0`        | Part of a share an absent character still gets, from 0 to 1 (or 0% to 100%).                    |
 | `extraShares`      | `0`        | Shares for companions not on a sheet. Their XP isn't paid to anyone.                            |
@@ -89,8 +90,8 @@ LazyExperience picks a game-system profile for each character from the sheet the
 | D&D Fifth Edition (5E & 5.5E)                       | `dnd2024byroll20`        | `experience` (Beacon)                                              | 5e table; the sheet shows its own Level Up button | `npc_xp` (450 for an Ogre), else CR          | Tested                                                  |
 | D&D 5E (Classic)                                    | `ogl5e`                  | `experience`                                                       | 5e table; the sheet turns on its Level Up button  | `npc_xp`, which the sheet fills from CR      | Tested                                                  |
 | D&D 5E (Shaped)                                     | `dnd5eshaped2`           | `xp`                                                               | `xp_next_level`, else the 5e table                | `xp`, which the sheet fills from `challenge` | Tested                                                  |
-| Pathfinder                                          | `pathfinderofficial`     | `xp`                                                               | `xp_max`, else the medium track                   | `npc_cr` (CR ½ = 200)                        | Tested                                                  |
-| Pathfinder Community                                | `pathfinderneceros`      | `experience`                                                       | `experience_max`, else the medium track           | `npc-xp`, else `npc-cr` (CR 1 = 400)         | Tested                                                  |
+| Pathfinder                                          | `pathfinderofficial`     | `xp`                                                               | `pf1Track` (medium); written to `xp_max`          | `npc_cr` (CR ½ = 200)                        | Tested                                                  |
+| Pathfinder Community                                | `pathfinderneceros`      | `experience`                                                       | `pf1Track` (medium); written to `experience_max`  | `npc-xp`, else `npc-cr` (CR 1 = 400)         | Tested                                                  |
 | Pathfinder 2e (Demiplane Optional)                  | `pathfinder2eofficial`   | `xp`                                                               | 1,000 XP (take 1,000 off when levelling)          | creature level vs party level (+2 = 80)      | Tested                                                  |
 | Starfinder                                          | `starfinder`             | `xp`                                                               | `xp_max`, else the Starfinder table               | CR in `character_level` (CR ½ = 200)         | Tested                                                  |
 | Old School Essentials by Necrotic Gnome             | `oldschoolessentialsaac` | `XP`                                                               | `Next`                                            | —                                            | Tested                                                  |
@@ -113,6 +114,20 @@ Notes:
 - Legacy sheets get XP as text through the sheet's own workers, as if a player had typed it.
 - Beacon sheets (D&D 2024) need **Mod sandbox v1.5**, and a Mod can't set them to 0 XP.
 - Sheets offered through Demiplane (`nexus_…`), such as Daggerheart and Starfinder 2e, keep their data outside Roll20's attributes. They aren't supported.
+
+## Pathfinder 1E tracks
+
+Pathfinder 1E has three XP tracks: fast, medium and slow. The **Pathfinder 1E track** setting (`pf1Track`) picks one for level-up notices, and it is medium unless you change it. Each time XP is written, the XP for the next level on that track is written to the sheet's next-level box too (the number after the slash beside XP), so the sheet and the notices agree.
+
+The track can change by level. List each track with the level it starts at:
+
+```
+!lazyxp set pf1Track fast 1-3, medium 4-13, slow 14+
+```
+
+A character advances on the track for the level they are on now, using that track's table. In the example, a level 4 character needs 15,000 XP for level 5 (medium), and a level 14 character needs 955,000 XP for level 15 (slow). Change the setting at any time; the next award uses it. On the settings card, the track button picks fast, medium, slow or the sheet's box, and **Mixed** asks for tracks by level.
+
+`sheet` uses the next-level box as you type it, and the Mod doesn't change it. When the box is blank, the medium track is used.
 
 ## Upgrading from 0.1
 

@@ -83,4 +83,5 @@ Add a test in `tests/systems.test.mjs`.
 - API changes raise no events, so changes made by other Mods are seen through TokenMod's `ObserveTokenChange` and DeathTracker's `onStatusChange`.
 - Values from sheets and names are passed through `escapeForChat` before they go to chat.
 - Legacy attributes are written as text with `setWithWorker`: the D&D 5E (Classic) sheet's `sanitizeXP` worker calls `.trim()` and fails on numbers.
-- Pathfinder and Starfinder only store `xp_max` when it differs from the sheet's default, so a profile's level table is a fallback for a blank next-level field.
+- A sheet input named `attr_xp_max` is saved as the **max of the `xp` attribute**, not as an attribute called `xp_max`. `readField` falls back to the base attribute's max for names ending in `_max`. Before 1.1.0 this was missed, so the Pathfinder 1E and Starfinder next-level boxes were never read and the level tables were always used.
+- Neither Pathfinder 1E sheet works out its next-level box (the official sheet starts it at 2000; the Community sheet leaves it blank). With a track or plan in `pf1Track`, `withTrack` swaps the profile's level table for one built from the plan, stops reading the box and makes `addXp` write it (`writeNextBox`) after each award. `pf1Track sheet` keeps reading the box.
