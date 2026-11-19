@@ -1,19 +1,84 @@
 {
-    "name": "InspirationTracker",
-    "script": "InspirationTracker.js",
-    "version": "0.1.4",
-    "previousversions": ["0.1.2"],
-    "description": "InspirationTracker keeps track of inspiration and adds a statusmarker to the characters token(s). You can also easily give an inspiration with the command `!inspiration` when you have token(s) selected.\nWorks great with my [StatusInfo](https://github.com/RobinKuiper/Roll20APIScripts/tree/master/StatusInfo) script.\n\n### Commands\n\n* **!inspiration** - Gives an inspiration to selected token(s), or shows the config menu when nothing is selected.\n* **!inspiration config** - Shows the config menu.",
-    "authors": "Robin Kuiper",
-    "roll20userid": "1226016",
-    "patreon": "https://www.patreon.com/robinkuiper",
-    "useroptions": [],
-    "dependencies": [],
-    "modifies": {
-        "state.INSPIRATIONTRACKER": "read,write",
-        "attribute": "read",
-        "attribute.current": "read,write",
-        "graphic.statusmarkers": "write"
+  "name": "InspirationTracker",
+  "script": "InspirationTracker.js",
+  "version": "1.0.0",
+  "previousversions": [
+    "0.1.2",
+    "0.1.4"
+  ],
+  "description": "# InspirationTracker\n\nKeeps inspiration on the character sheet, the token and the chat in step: D&D Inspiration and Heroic Inspiration, or a pool of points for any game. Works with the **D&D Fifth Edition (5E & 5.5E, 2024)** sheet, where it is called Heroic Inspiration, and the **D&D 5E by Roll20 (2014 OGL)** sheet.\n\n* Give, remove or spend inspiration from a chat menu, the Command Deck handout, the sheet itself or the token marker.\n* Every token for the character shows the marker you choose, including markers from custom marker sets.\n* Players spend it with a Spend button or the Inspiration token action; the GM is told, with an Undo button.\n* Party overview of who has it.\n* 2024 rules: a character who would gain Heroic Inspiration while having it can give it to another party member.\n* Points pools for any sheet: inspiration points, hero points, luck and the like that build up and are spent a few at a time, with Boost to spend points for a bonus to a roll. Kept in a sheet resource box or an attribute; the GM can add more pools.\n* Optional special effect when inspiration is gained.\n* Menus, messages and handouts in 24 languages.\n\nType `!inspiration` for the menu, or open the **InspirationTracker - Command Deck** handout. Full instructions are in the **InspirationTracker - Help** handout.\n\nUpgrading from 0.1.x keeps your marker and special effect, and your own command name if you chose one.",
+  "authors": "Robin Kuiper, MidNiteShadow7",
+  "roll20userid": "1226016",
+  "patreon": "https://www.patreon.com/robinkuiper",
+  "useroptions": [
+    {
+      "name": "language",
+      "displayname": "Language",
+      "type": "select",
+      "options": [
+        "af",
+        "ca",
+        "zh-TW",
+        "cs",
+        "da",
+        "nl",
+        "en-US",
+        "fi",
+        "fr",
+        "de",
+        "el",
+        "he",
+        "hu",
+        "it",
+        "ja",
+        "ko",
+        "pl",
+        "pt-PT",
+        "pt-BR",
+        "ru",
+        "es",
+        "sv",
+        "tr",
+        "uk"
+      ],
+      "default": "en-US",
+      "description": "Language for menus, messages and handouts."
     },
-    "conflicts": []
+    {
+      "name": "wording",
+      "displayname": "Wording",
+      "type": "select",
+      "options": [
+        "auto",
+        "2014",
+        "2024"
+      ],
+      "default": "auto",
+      "description": "auto uses each sheet's rules (Heroic Inspiration on 2024 rules); 2014 always says Inspiration; 2024 always says Heroic Inspiration."
+    },
+    {
+      "name": "playerOverview",
+      "displayname": "Players see the party overview",
+      "type": "checkbox",
+      "value": "true",
+      "checked": "",
+      "description": "Let players see who in the party has inspiration."
+    }
+  ],
+  "dependencies": [],
+  "modifies": {
+    "state.InspirationTracker": "read,write",
+    "state.INSPIRATIONTRACKER": "read",
+    "attribute.current": "read,write",
+    "attribute.name": "read",
+    "character.controlledby": "read",
+    "character.name": "read",
+    "graphic.statusmarkers": "read,write",
+    "graphic.represents": "read",
+    "campaign._token_markers": "read",
+    "handout.notes": "write",
+    "macro.action": "write",
+    "sheetitem.inspiration": "read,write"
+  },
+  "conflicts": []
 }

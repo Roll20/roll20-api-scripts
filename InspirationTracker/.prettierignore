@@ -1,0 +1,9 @@
+node_modules
+package-lock.json
+
+# Written by scripts/bump-version.mjs.
+script.json
+
+# Released versions by the original author; never edit them.
+0.1.2/
+0.1.4/
