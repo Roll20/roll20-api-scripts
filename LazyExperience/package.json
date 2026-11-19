@@ -1,6 +1,6 @@
 {
   "name": "lazyexperience-roll20",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Roll20 API Mod that keeps a session XP pool, splits it fairly between the party and writes it to any character sheet.",
   "private": true,
   "type": "module",

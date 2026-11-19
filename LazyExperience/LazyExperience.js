@@ -4,16 +4,16 @@
  * ------------------------------------------------
  * Name: LazyExperience
  * Script: LazyExperience.js
- * Version: 1.0.0
- * Built: 2026-11-13T20:01:12.897Z
+ * Version: 1.1.0
+ * Built: 2026-11-19T13:47:59.840Z
  */
 const LazyExperienceMod = (() => {
   'use strict';
 
   // Build-time placeholders replaced by rollup.config.js inject-build-metadata plugin.
   const SCRIPT_NAME = 'LazyExperience';
-  const SCRIPT_VERSION = '1.0.0';
-  const SCRIPT_LAST_UPDATED = '2026-11-13T20:01:12.897Z';
+  const SCRIPT_VERSION = '1.1.0';
+  const SCRIPT_LAST_UPDATED = '2026-11-19T13:47:59.840Z';
 
   const DEFAULT_LOCALE$1 = 'en-US';
 
@@ -70,6 +70,7 @@ const LazyExperienceMod = (() => {
     payout: 'end',
     updateSheets: true,
     system: 'auto',
+    pf1Track: 'medium',
     roster: 'auto',
     absentShare: 0,
     extraShares: 0,
@@ -94,6 +95,7 @@ const LazyExperienceMod = (() => {
     payout: PAYOUT_OPTIONS,
     updateSheets: 'boolean',
     system: 'system',
+    pf1Track: 'track',
     roster: ROSTER_OPTIONS,
     absentShare: 'share',
     extraShares: 'count',
@@ -747,12 +749,14 @@ const LazyExperienceMod = (() => {
       addKill: 'Voeg {xp} XP by',
       otherXp: 'Ander hoeveelheid',
       ignore: 'Ignoreer',
+      trackPlan: 'Gemeng',
     },
     prompts: {
       xp: 'XP',
       reason: 'Rede (opsioneel)',
       share: 'Aandeel (1 = volle, 0,5 = half)',
       confirmEnd: 'Die sessie beëindig en die XP uitdeel?',
+      trackPlan: 'Bane en die vlak waarop elkeen begin',
     },
     options: {
       yesNo: { yes: 'Ja', no: 'Nee' },
@@ -777,6 +781,12 @@ const LazyExperienceMod = (() => {
         off: 'Af',
       },
       system: { auto: 'Bespeur vanaf die blad' },
+      pf1Track: {
+        fast: 'Vinnig',
+        medium: 'Medium',
+        slow: 'Stadig',
+        sheet: 'Bladblokkie soos ingetik',
+      },
     },
     settings: {
       language: { label: 'Taal', desc: 'Taal vir klets-kaarte en handouts.' },
@@ -791,6 +801,10 @@ const LazyExperienceMod = (() => {
       system: {
         label: 'Speelstelsel',
         desc: 'Watter bladvelde XP en vlak bevat. auto kies die profiel vanaf elke karakter se blad; custom gebruik die instellings vir eie velde.',
+      },
+      pf1Track: {
+        label: 'Pathfinder 1E-baan',
+        desc: 'Die XP-baan vir Pathfinder 1E-vlakstygings: fast, medium of slow, of bane wat per vlak verander, soos fast 1-3, medium 4-13, slow 14+. Die XP vir die volgende vlak word in die blad se blokkie geskryf. sheet: gebruik die blokkie soos die SL dit intik.',
       },
       roster: {
         label: 'Groep vanaf',
@@ -1087,7 +1101,7 @@ const LazyExperienceMod = (() => {
           'Kies die blad volgens sy naam in die spel se Instellings. Blaaie wat nie gelys is nie, gebruik die algemene veldname experience, xp en level, of stel Speelstelsel op custom.',
           "Getoets in Roll20 beteken XP is in 'n Jumpgate-speletjie na daardie blad geskryf, die blad se eie berekeninge het gewerk, en verslane wesens en vlakstygingkennisgewings is nagegaan.",
           "Beacon-blaaie soos D&D 2024 het Mod sandbox v1.5 nodig, en 'n Mod kan hulle nie op 0 XP stel nie.",
-          'Pathfinder 1E en Starfinder gebruik die blad se XP-vir-volgende-vlak-blokkie vir vlakstygingkennisgewings. Wanneer dit leeg is, gebruik Pathfinder die medium-baan en Starfinder sy eie tabel.',
+          'Pathfinder 1E volg die Pathfinder 1E-baan-instelling (medium tensy jy dit verander) en skryf die XP vir die volgende vlak in die blad se blokkie. Die baan kan per vlak verander, soos vinnig vir vlakke 1 tot 3, medium tot 13 en stadig daarna. Starfinder gebruik die blad se XP-vir-volgende-vlak-blokkie, of sy eie tabel wanneer die blokkie leeg is.',
           "WFRP 4E: elke toekenning word as 'n ry by die blad se Experience-lys gevoeg, maar die blad het sy XP-totale nie tydens toetsing herbereken nie, so gaan dit op die blad na.",
           "Savage Worlds, 13th Age, Cosmere en Call of Cthulhu het geen XP vir 'n Mod om te skryf nie.",
         ],
@@ -1199,12 +1213,14 @@ const LazyExperienceMod = (() => {
       addKill: 'Afegeix {xp} XP',
       otherXp: 'Una altra quantitat',
       ignore: 'Ignora',
+      trackPlan: 'Mixta',
     },
     prompts: {
       xp: 'XP',
       reason: 'Motiu (opcional)',
       share: 'Part (1 = completa, 0,5 = meitat)',
       confirmEnd: "Vols acabar la sessió i repartir l'XP?",
+      trackPlan: 'Progressions i el nivell on comença cadascuna',
     },
     options: {
       yesNo: { yes: 'Sí', no: 'No' },
@@ -1229,6 +1245,12 @@ const LazyExperienceMod = (() => {
         off: 'Desactivat',
       },
       system: { auto: 'Detecta-ho per la fitxa' },
+      pf1Track: {
+        fast: 'Ràpida',
+        medium: 'Mitjana',
+        slow: 'Lenta',
+        sheet: "Casella de la fitxa tal com s'escriu",
+      },
     },
     settings: {
       language: { label: 'Llengua', desc: 'Llengua de les targetes del xat i dels handouts.' },
@@ -1243,6 +1265,10 @@ const LazyExperienceMod = (() => {
       system: {
         label: 'Sistema de joc',
         desc: "Quins camps de la fitxa contenen l'XP i el nivell. auto tria el perfil segons la fitxa de cada personatge; custom fa servir la configuració dels camps personalitzats.",
+      },
+      pf1Track: {
+        label: 'Progressió de Pathfinder 1E',
+        desc: "La progressió d'XP per als nivells de Pathfinder 1E: fast, medium o slow, o progressions que canvien segons el nivell, com fast 1-3, medium 4-13, slow 14+. Les XP per al nivell següent s'escriuen a la casella de la fitxa. sheet: fa servir la casella tal com l'escriu el DJ.",
       },
       roster: {
         label: 'Grup de',
@@ -1547,7 +1573,7 @@ const LazyExperienceMod = (() => {
           'Tria la fitxa pel seu nom a la Configuració de la partida. Les fitxes que no surten a la llista fan servir els noms de camp habituals experience, xp i level, o defineix el Sistema de joc com a custom.',
           "Provat a Roll20 vol dir que s'ha escrit XP en aquesta fitxa en una partida Jumpgate, que s'han executat els càlculs propis de la fitxa, i que s'han comprovat les criatures derrotades i els avisos de nivell.",
           'Les fitxes Beacon com la de D&D 2024 necessiten el Mod sandbox v1.5, i un Mod no les pot posar a 0 XP.',
-          "Pathfinder 1E i Starfinder fan servir la casella d'XP per al nivell següent de la fitxa per als avisos de nivell. Si està en blanc, Pathfinder usa la progressió mitjana i Starfinder la seva pròpia taula.",
+          "Pathfinder 1E segueix el paràmetre de progressió de Pathfinder 1E (mitjana si no el canvies) i escriu les XP per al nivell següent a la casella de la fitxa. La progressió pot canviar segons el nivell, per exemple ràpida per als nivells 1 a 3, mitjana fins al 13 i lenta després. Starfinder fa servir la casella d'XP per al nivell següent de la fitxa, o la seva pròpia taula si està en blanc.",
           "WFRP 4E: cada atorgament s'afegeix com a fila a la llista Experience de la fitxa, però en les proves la fitxa no va recalcular els seus totals d'XP, així que comprova'ls a la fitxa.",
           'Savage Worlds, 13th Age, Cosmere i Call of Cthulhu no tenen XP que un Mod pugui escriure.',
         ],
@@ -1659,12 +1685,14 @@ const LazyExperienceMod = (() => {
       addKill: '新增 {xp} XP',
       otherXp: '其他數值',
       ignore: '忽略',
+      trackPlan: '混合',
     },
     prompts: {
       xp: 'XP',
       reason: '原因(選填)',
       share: '份數(1 = 全額,0.5 = 一半)',
       confirmEnd: '要結束場次並發放 XP 嗎?',
+      trackPlan: '進度與各自開始的等級',
     },
     options: {
       yesNo: { yes: '是', no: '否' },
@@ -1684,6 +1712,12 @@ const LazyExperienceMod = (() => {
         off: '關閉',
       },
       system: { auto: '依角色卡偵測' },
+      pf1Track: {
+        fast: '快速',
+        medium: '中速',
+        slow: '慢速',
+        sheet: '照輸入使用角色卡欄位',
+      },
     },
     settings: {
       language: { label: '語言', desc: '聊天卡片與講義所使用的語言。' },
@@ -1698,6 +1732,10 @@ const LazyExperienceMod = (() => {
       system: {
         label: '遊戲系統',
         desc: '角色卡上存放 XP 與等級的欄位。auto 會依各角色的角色卡選擇設定檔;custom 則使用自訂欄位設定。',
+      },
+      pf1Track: {
+        label: 'Pathfinder 1E 進度',
+        desc: 'Pathfinder 1E 升級使用的 XP 進度:fast、medium 或 slow,或依等級切換的進度,例如 fast 1-3, medium 4-13, slow 14+。下一級所需 XP 會寫入角色卡的欄位。sheet:照 GM 輸入的欄位數值使用。',
       },
       roster: {
         label: '隊伍來源',
@@ -1987,7 +2025,7 @@ const LazyExperienceMod = (() => {
           '請在遊戲的設定中依名稱選擇角色卡。未列出的角色卡會使用常見的欄位名稱 experience、xp 與 level,或將遊戲系統設為 custom。',
           '已在 Roll20 測試表示曾在 Jumpgate 遊戲中將 XP 寫入該角色卡、角色卡本身的計算正常執行,並檢查過已擊敗的生物與升級通知。',
           '像 D&D 2024 這類 Beacon 角色卡需要 Mod sandbox v1.5,且 Mod 無法將它們設為 0 XP。',
-          'Pathfinder 1E 與 Starfinder 使用角色卡上的「下一級所需 XP」欄位來發出升級通知。該欄位空白時,Pathfinder 使用中速進度,Starfinder 使用自己的表格。',
+          'Pathfinder 1E 依照「Pathfinder 1E 進度」設定(未變更時為中速),並將下一級所需 XP 寫入角色卡的欄位。進度可依等級切換,例如 1 到 3 級快速、到 13 級中速、之後慢速。Starfinder 使用角色卡上的「下一級所需 XP」欄位,欄位空白時使用自己的表格。',
           'WFRP 4E:每次獎勵都會在角色卡的 Experience 清單中新增一列,但測試中角色卡並未重新計算 XP 總計,請在角色卡上自行檢查。',
           'Savage Worlds、13th Age、Cosmere 與 Call of Cthulhu 沒有可供 Mod 寫入的 XP。',
         ],
@@ -2098,12 +2136,14 @@ const LazyExperienceMod = (() => {
       addKill: 'Přidat {xp} XP',
       otherXp: 'Jiná hodnota',
       ignore: 'Ignorovat',
+      trackPlan: 'Smíšený',
     },
     prompts: {
       xp: 'XP',
       reason: 'Důvod (volitelný)',
       share: 'Podíl (1 = plný, 0,5 = poloviční)',
       confirmEnd: 'Ukončit seanci a rozdělit XP?',
+      trackPlan: 'Postupy a úroveň, od které každý platí',
     },
     options: {
       yesNo: { yes: 'Ano', no: 'Ne' },
@@ -2123,6 +2163,12 @@ const LazyExperienceMod = (() => {
         off: 'Vypnuto',
       },
       system: { auto: 'Zjistit z karty' },
+      pf1Track: {
+        fast: 'Rychlý',
+        medium: 'Střední',
+        slow: 'Pomalý',
+        sheet: 'Políčko karty, jak je zapsané',
+      },
     },
     settings: {
       language: { label: 'Jazyk', desc: 'Jazyk karet v chatu a handoutů.' },
@@ -2137,6 +2183,10 @@ const LazyExperienceMod = (() => {
       system: {
         label: 'Herní systém',
         desc: 'Která pole karty obsahují XP a úroveň. auto vybere profil podle karty každé postavy; custom použije vlastní nastavení polí.',
+      },
+      pf1Track: {
+        label: 'Postup Pathfinder 1E',
+        desc: 'Postup XP pro úrovně v Pathfinder 1E: fast, medium nebo slow, nebo postupy, které se mění podle úrovně, například fast 1-3, medium 4-13, slow 14+. XP do další úrovně se zapíší do políčka karty. sheet: použije políčko tak, jak ho vyplní GM.',
       },
       roster: {
         label: 'Družina z',
@@ -2430,7 +2480,7 @@ const LazyExperienceMod = (() => {
           'Kartu vyber podle jejího názvu v Nastavení hry. Karty, které nejsou na seznamu, používají běžné názvy polí experience, xp a level, nebo nastav Herní systém na custom.',
           'Otestováno v Roll20 znamená, že se XP zapsaly na tu kartu ve hře Jumpgate, proběhly vlastní výpočty karty a ověřilo se, jak fungují poražení tvorové a oznámení o postupu.',
           'Karty Beacon, například D&D 2024, vyžadují Mod sandbox v1.5 a Mod je nemůže nastavit na 0 XP.',
-          'Pathfinder 1E a Starfinder používají pro oznámení o postupu políčko karty s XP do další úrovně. Když je prázdné, Pathfinder použije střední postup a Starfinder vlastní tabulku.',
+          'Pathfinder 1E se řídí nastavením Postup Pathfinder 1E (střední, pokud ho nezměníte) a zapisuje XP do další úrovně do políčka karty. Postup se může měnit podle úrovně, například rychlý pro úrovně 1 až 3, střední do 13 a pak pomalý. Starfinder používá políčko karty s XP do další úrovně, nebo vlastní tabulku, když je prázdné.',
           'WFRP 4E: každá odměna se přidá jako řádek do seznamu Experience na kartě, ale karta si při testování nepřepočítala součty XP, proto je zkontroluj na kartě.',
           'Savage Worlds, 13th Age, Cosmere a Call of Cthulhu nemají žádné XP, které by Mod mohl zapsat.',
         ],
@@ -2541,12 +2591,14 @@ const LazyExperienceMod = (() => {
       addKill: 'Tilføj {xp} XP',
       otherXp: 'Andet beløb',
       ignore: 'Ignorer',
+      trackPlan: 'Blandet',
     },
     prompts: {
       xp: 'XP',
       reason: 'Årsag (valgfri)',
       share: 'Andel (1 = hel, 0,5 = halv)',
       confirmEnd: 'Afslutte sessionen og dele XP ud?',
+      trackPlan: 'Forløb og det niveau, hvert starter på',
     },
     options: {
       yesNo: { yes: 'Ja', no: 'Nej' },
@@ -2566,6 +2618,12 @@ const LazyExperienceMod = (() => {
         off: 'Fra',
       },
       system: { auto: 'Find ud fra arket' },
+      pf1Track: {
+        fast: 'Hurtigt',
+        medium: 'Mellem',
+        slow: 'Langsomt',
+        sheet: 'Arkets felt som indtastet',
+      },
     },
     settings: {
       language: { label: 'Sprog', desc: 'Sprog til chatkort og handouts.' },
@@ -2580,6 +2638,10 @@ const LazyExperienceMod = (() => {
       system: {
         label: 'Spilsystem',
         desc: 'Hvilke arkfelter der indeholder XP og niveau. auto vælger profilen ud fra hver karakters ark; custom bruger indstillingerne for egne felter.',
+      },
+      pf1Track: {
+        label: 'Pathfinder 1E-forløb',
+        desc: "XP-forløbet for niveauer i Pathfinder 1E: fast, medium eller slow, eller forløb der skifter efter niveau, som fast 1-3, medium 4-13, slow 14+. XP til næste niveau skrives i arkets felt. sheet: brug feltet, som GM'en skriver det.",
       },
       roster: {
         label: 'Gruppe fra',
@@ -2879,7 +2941,7 @@ const LazyExperienceMod = (() => {
           'Vælg arket ud fra dets navn i spillets Indstillinger. Ark, der ikke er på listen, bruger de almindelige feltnavne experience, xp og level, eller sæt Spilsystem til custom.',
           'Testet i Roll20 betyder, at XP blev skrevet til det ark i et Jumpgate-spil, arkets egne beregninger kørte, og besejrede væsener og niveaumeddelelser blev kontrolleret.',
           'Beacon-ark som D&D 2024 kræver Mod sandbox v1.5, og et Mod kan ikke sætte dem til 0 XP.',
-          'Pathfinder 1E og Starfinder bruger arkets felt for XP til næste niveau til niveaumeddelelser. Når det er tomt, bruger Pathfinder det mellemste forløb, og Starfinder sin egen tabel.',
+          'Pathfinder 1E følger indstillingen Pathfinder 1E-forløb (mellem, medmindre du ændrer den) og skriver XP til næste niveau i arkets felt. Forløbet kan skifte efter niveau, for eksempel hurtigt for niveau 1 til 3, mellem til 13 og langsomt derefter. Starfinder bruger arkets felt for XP til næste niveau, eller sin egen tabel, når feltet er tomt.',
           'WFRP 4E: hver tildeling tilføjes som en række i arkets Experience-liste, men arket genberegnede ikke sine XP-totaler under test, så tjek dem på arket.',
           'Savage Worlds, 13th Age, Cosmere og Call of Cthulhu har ingen XP, som et Mod kan skrive.',
         ],
@@ -2990,12 +3052,14 @@ const LazyExperienceMod = (() => {
       addKill: '{xp} XP toevoegen',
       otherXp: 'Ander bedrag',
       ignore: 'Negeren',
+      trackPlan: 'Gemengd',
     },
     prompts: {
       xp: 'XP',
       reason: 'Reden (optioneel)',
       share: 'Aandeel (1 = volledig, 0,5 = half)',
       confirmEnd: 'De sessie afronden en de XP uitdelen?',
+      trackPlan: 'Trajecten en het niveau waarop elk begint',
     },
     options: {
       yesNo: { yes: 'Ja', no: 'Nee' },
@@ -3020,6 +3084,12 @@ const LazyExperienceMod = (() => {
         off: 'Uit',
       },
       system: { auto: 'Herkennen aan de sheet' },
+      pf1Track: {
+        fast: 'Snel',
+        medium: 'Gemiddeld',
+        slow: 'Langzaam',
+        sheet: 'Vak op de sheet zoals ingevuld',
+      },
     },
     settings: {
       language: { label: 'Taal', desc: 'Taal voor chatkaarten en handouts.' },
@@ -3034,6 +3104,10 @@ const LazyExperienceMod = (() => {
       system: {
         label: 'Spelsysteem',
         desc: 'Welke sheetvelden XP en niveau bevatten. auto kiest het profiel op basis van de sheet van elk personage; custom gebruikt de instellingen voor eigen velden.',
+      },
+      pf1Track: {
+        label: 'Pathfinder 1E-traject',
+        desc: 'Het XP-traject voor niveaus in Pathfinder 1E: fast, medium of slow, of trajecten die per niveau wisselen, zoals fast 1-3, medium 4-13, slow 14+. De XP tot het volgende niveau wordt in het vak op de sheet geschreven. sheet: gebruik het vak zoals de GM het invult.',
       },
       roster: {
         label: 'Groep uit',
@@ -3332,7 +3406,7 @@ const LazyExperienceMod = (() => {
           'Kies de sheet op naam in de Instellingen van het spel. Sheets die niet in de lijst staan, gebruiken de gangbare veldnamen experience, xp en level, of stel Spelsysteem in op custom.',
           'Getest in Roll20 betekent dat XP in een Jumpgate-spel naar die sheet is geschreven, de eigen berekeningen van de sheet zijn uitgevoerd, en verslagen wezens en niveaumeldingen zijn gecontroleerd.',
           'Beacon-sheets zoals D&D 2024 hebben Mod sandbox v1.5 nodig, en een Mod kan ze niet op 0 XP zetten.',
-          'Pathfinder 1E en Starfinder gebruiken het vak voor XP tot het volgende niveau op de sheet voor niveaumeldingen. Als het leeg is, gebruikt Pathfinder het gemiddelde traject en Starfinder een eigen tabel.',
+          'Pathfinder 1E volgt de instelling Pathfinder 1E-traject (gemiddeld, tenzij je die wijzigt) en schrijft de XP tot het volgende niveau in het vak op de sheet. Het traject kan per niveau wisselen, bijvoorbeeld snel voor niveau 1 tot 3, gemiddeld tot 13 en daarna langzaam. Starfinder gebruikt het vak voor XP tot het volgende niveau op de sheet, of een eigen tabel als het leeg is.',
           'WFRP 4E: elke toekenning wordt als rij toegevoegd aan de Experience-lijst van de sheet, maar de sheet herberekende zijn XP-totalen niet tijdens het testen, dus controleer ze op de sheet.',
           'Savage Worlds, 13th Age, Cosmere en Call of Cthulhu hebben geen XP die een Mod kan schrijven.',
         ],
@@ -3443,12 +3517,14 @@ const LazyExperienceMod = (() => {
       addKill: 'Add {xp} XP',
       otherXp: 'Other Amount',
       ignore: 'Ignore',
+      trackPlan: 'Mixed',
     },
     prompts: {
       xp: 'XP',
       reason: 'Reason (optional)',
       share: 'Share (1 = full, 0.5 = half)',
       confirmEnd: 'End the session and hand out the XP?',
+      trackPlan: 'Tracks and the level each starts at',
     },
     options: {
       yesNo: { yes: 'Yes', no: 'No' },
@@ -3468,6 +3544,7 @@ const LazyExperienceMod = (() => {
         off: 'Off',
       },
       system: { auto: 'Detect from the sheet' },
+      pf1Track: { fast: 'Fast', medium: 'Medium', slow: 'Slow', sheet: 'Sheet box as typed' },
     },
     settings: {
       language: { label: 'Language', desc: 'Language for chat cards and handouts.' },
@@ -3482,6 +3559,10 @@ const LazyExperienceMod = (() => {
       system: {
         label: 'Game system',
         desc: 'Which sheet fields hold XP and level. auto picks the profile from each character’s sheet; custom uses the custom field settings.',
+      },
+      pf1Track: {
+        label: 'Pathfinder 1E track',
+        desc: 'The XP track for Pathfinder 1E level-ups: fast, medium or slow, or tracks that change by level, such as fast 1-3, medium 4-13, slow 14+. The XP for the next level is written to the sheet’s box. sheet: use the box as the GM types it.',
       },
       roster: {
         label: 'Party from',
@@ -3778,7 +3859,7 @@ const LazyExperienceMod = (() => {
           'Pick the sheet by its name in the game’s Settings. Sheets not listed use the common field names experience, xp and level, or set Game system to custom.',
           'Tested in Roll20 means XP was written to that sheet in a Jumpgate game, the sheet’s own calculations ran, and defeated creatures and level-up notices were checked.',
           'Beacon sheets such as D&D 2024 need Mod sandbox v1.5, and a Mod cannot set them to 0 XP.',
-          'Pathfinder 1E and Starfinder use the sheet’s XP-for-next-level box for level-up notices. When it is blank, Pathfinder uses the medium track and Starfinder its own table.',
+          'Pathfinder 1E follows the Pathfinder 1E track setting (medium unless you change it) and writes the XP for the next level to the sheet’s box. The track can change by level, such as fast for levels 1 to 3, medium to 13 and slow after. Starfinder uses the sheet’s XP-for-next-level box, or its own table when the box is blank.',
           'WFRP 4E: each award is added as a row in the sheet’s Experience list, but the sheet did not recalculate its XP totals in testing, so check them on the sheet.',
           'Savage Worlds, 13th Age, Cosmere and Call of Cthulhu have no XP for a Mod to write.',
         ],
@@ -3889,12 +3970,14 @@ const LazyExperienceMod = (() => {
       addKill: 'Lisää {xp} XP',
       otherXp: 'Muu määrä',
       ignore: 'Ohita',
+      trackPlan: 'Sekoitettu',
     },
     prompts: {
       xp: 'XP',
       reason: 'Syy (valinnainen)',
       share: 'Osuus (1 = koko, 0,5 = puolikas)',
       confirmEnd: 'Päätetäänkö sessio ja jaetaanko XP?',
+      trackPlan: 'Etenemiset ja taso, jolta kukin alkaa',
     },
     options: {
       yesNo: { yes: 'Kyllä', no: 'Ei' },
@@ -3919,6 +4002,12 @@ const LazyExperienceMod = (() => {
         off: 'Pois',
       },
       system: { auto: 'Tunnista lomakkeesta' },
+      pf1Track: {
+        fast: 'Nopea',
+        medium: 'Keskinopea',
+        slow: 'Hidas',
+        sheet: 'Lomakkeen kenttä sellaisenaan',
+      },
     },
     settings: {
       language: { label: 'Kieli', desc: 'Chat-korttien ja handoutien kieli.' },
@@ -3933,6 +4022,10 @@ const LazyExperienceMod = (() => {
       system: {
         label: 'Pelijärjestelmä',
         desc: 'Mitkä lomakekentät sisältävät XP:n ja tason. auto valitsee profiilin kunkin hahmon lomakkeesta; custom käyttää omien kenttien asetuksia.',
+      },
+      pf1Track: {
+        label: 'Pathfinder 1E -eteneminen',
+        desc: 'XP-eteneminen Pathfinder 1E:n tasonnousuille: fast, medium tai slow, tai tason mukaan vaihtuvat etenemiset, kuten fast 1-3, medium 4-13, slow 14+. Seuraavan tason XP kirjoitetaan lomakkeen kenttään. sheet: käytä kenttää sellaisena kuin pelinjohtaja sen kirjoittaa.',
       },
       roster: {
         label: 'Seurue lähteestä',
@@ -4231,7 +4324,7 @@ const LazyExperienceMod = (() => {
           'Valitse lomake sen nimellä pelin Asetuksista. Luettelossa olemattomat lomakkeet käyttävät yleisiä kenttänimiä experience, xp ja level, tai aseta Pelijärjestelmä arvoon custom.',
           'Testattu Roll20:ssa tarkoittaa, että XP kirjoitettiin kyseiseen lomakkeeseen Jumpgate-pelissä, lomakkeen omat laskutoimitukset suoritettiin ja kukistetut olennot sekä tasonnousuilmoitukset tarkistettiin.',
           'Beacon-lomakkeet kuten D&D 2024 tarvitsevat Mod sandbox v1.5:n, eikä Modi voi asettaa niitä 0 XP:hen.',
-          'Pathfinder 1E ja Starfinder käyttävät tasonnousuilmoituksiin lomakkeen kenttää, jossa on XP seuraavaan tasoon. Kun se on tyhjä, Pathfinder käyttää keskinopeaa etenemistä ja Starfinder omaa taulukkoaan.',
+          'Pathfinder 1E noudattaa Pathfinder 1E -eteneminen-asetusta (keskinopea, ellet muuta sitä) ja kirjoittaa seuraavan tason XP:n lomakkeen kenttään. Eteneminen voi vaihtua tason mukaan, esimerkiksi nopea tasoilla 1–3, keskinopea tasolle 13 asti ja sen jälkeen hidas. Starfinder käyttää lomakkeen seuraavan tason XP-kenttää, tai omaa taulukkoaan, kun kenttä on tyhjä.',
           'WFRP 4E: jokainen palkinto lisätään riviksi lomakkeen Experience-luetteloon, mutta lomake ei laskenut XP-summiaan uudelleen testauksessa, joten tarkista ne lomakkeelta.',
           'Savage Worlds, 13th Age, Cosmere ja Call of Cthulhu eivät käytä XP:tä, jonka Modi voisi kirjoittaa.',
         ],
@@ -4343,12 +4436,14 @@ const LazyExperienceMod = (() => {
       addKill: 'Ajouter {xp} PX',
       otherXp: 'Autre montant',
       ignore: 'Ignorer',
+      trackPlan: 'Mixte',
     },
     prompts: {
       xp: 'PX',
       reason: 'Raison (facultatif)',
       share: 'Part (1 = complète, 0,5 = moitié)',
       confirmEnd: 'Terminer la séance et distribuer les PX ?',
+      trackPlan: 'Progressions et le niveau où chacune commence',
     },
     options: {
       yesNo: { yes: 'Oui', no: 'Non' },
@@ -4373,6 +4468,12 @@ const LazyExperienceMod = (() => {
         off: 'Désactivé',
       },
       system: { auto: 'Détecter d’après la fiche' },
+      pf1Track: {
+        fast: 'Rapide',
+        medium: 'Moyenne',
+        slow: 'Lente',
+        sheet: 'Case de la fiche telle que saisie',
+      },
     },
     settings: {
       language: { label: 'Langue', desc: 'Langue des cartes de chat et des handouts.' },
@@ -4387,6 +4488,10 @@ const LazyExperienceMod = (() => {
       system: {
         label: 'Système de jeu',
         desc: 'Quels champs de la fiche contiennent les PX et le niveau. auto choisit le profil d’après la fiche de chaque personnage ; custom utilise les réglages de champs personnalisés.',
+      },
+      pf1Track: {
+        label: 'Progression Pathfinder 1E',
+        desc: 'La progression de PX pour les niveaux de Pathfinder 1E : fast, medium ou slow, ou des progressions qui changent selon le niveau, comme fast 1-3, medium 4-13, slow 14+. Les PX pour le niveau suivant sont écrits dans la case de la fiche. sheet : utiliser la case telle que le MJ la remplit.',
       },
       roster: {
         label: 'Groupe issu de',
@@ -4693,7 +4798,7 @@ const LazyExperienceMod = (() => {
           'Choisissez la fiche par son nom dans les Réglages de la partie. Les fiches non listées utilisent les noms de champ courants experience, xp et level, ou réglez le système de jeu sur custom.',
           'Testé dans Roll20 signifie que des PX ont été écrits sur cette fiche dans une partie Jumpgate, que les calculs propres à la fiche ont tourné, et que les créatures vaincues et les annonces de niveau ont été vérifiées.',
           'Les fiches Beacon comme D&D 2024 nécessitent Mod sandbox v1.5, et un Mod ne peut pas les mettre à 0 PX.',
-          'Pathfinder 1E et Starfinder utilisent la case de PX pour le niveau suivant de la fiche pour les annonces de niveau. Quand elle est vide, Pathfinder utilise la progression moyenne et Starfinder sa propre table.',
+          'Pathfinder 1E suit le paramètre Progression Pathfinder 1E (moyenne sauf si vous le changez) et écrit les PX pour le niveau suivant dans la case de la fiche. La progression peut changer selon le niveau, par exemple rapide pour les niveaux 1 à 3, moyenne jusqu’au 13 et lente ensuite. Starfinder utilise la case de PX pour le niveau suivant de la fiche, ou sa propre table quand elle est vide.',
           'WFRP 4E : chaque attribution est ajoutée comme une ligne dans la liste Experience de la fiche, mais lors des tests la fiche n’a pas recalculé ses totaux de PX ; vérifiez-les sur la fiche.',
           'Savage Worlds, 13th Age, Cosmere et Call of Cthulhu n’ont pas de PX qu’un Mod puisse écrire.',
         ],
@@ -4806,12 +4911,14 @@ const LazyExperienceMod = (() => {
       addKill: '{xp} EP hinzufügen',
       otherXp: 'Anderer Betrag',
       ignore: 'Ignorieren',
+      trackPlan: 'Gemischt',
     },
     prompts: {
       xp: 'EP',
       reason: 'Grund (optional)',
       share: 'Anteil (1 = voll, 0,5 = halb)',
       confirmEnd: 'Die Sitzung beenden und die EP verteilen?',
+      trackPlan: 'Geschwindigkeiten und die Stufe, ab der jede gilt',
     },
     options: {
       yesNo: { yes: 'Ja', no: 'Nein' },
@@ -4831,6 +4938,12 @@ const LazyExperienceMod = (() => {
         off: 'Aus',
       },
       system: { auto: 'Aus dem Charakterbogen erkennen' },
+      pf1Track: {
+        fast: 'Schnell',
+        medium: 'Mittel',
+        slow: 'Langsam',
+        sheet: 'Bogenfeld wie eingetragen',
+      },
     },
     settings: {
       language: { label: 'Sprache', desc: 'Sprache für Chatkarten und Handouts.' },
@@ -4845,6 +4958,10 @@ const LazyExperienceMod = (() => {
       system: {
         label: 'Spielsystem',
         desc: 'Welche Bogenfelder EP und Stufe enthalten. auto wählt das Profil anhand des Bogens jedes Charakters; custom nutzt die eigenen Feldeinstellungen.',
+      },
+      pf1Track: {
+        label: 'Pathfinder-1E-Aufstieg',
+        desc: 'Die Aufstiegsgeschwindigkeit für Pathfinder-1E-Stufenaufstiege: fast, medium oder slow, oder Geschwindigkeiten, die je nach Stufe wechseln, etwa fast 1-3, medium 4-13, slow 14+. Die EP bis zur nächsten Stufe werden in das Feld des Bogens geschrieben. sheet: das Feld so verwenden, wie die SL es einträgt.',
       },
       roster: {
         label: 'Gruppe aus',
@@ -5153,7 +5270,7 @@ const LazyExperienceMod = (() => {
           'Wähle den Bogen über seinen Namen in den Einstellungen des Spiels. Nicht aufgeführte Bögen verwenden die gängigen Feldnamen experience, xp und level, oder stelle das Spielsystem auf custom.',
           'In Roll20 getestet heißt: In einem Jumpgate-Spiel wurden EP auf diesen Bogen geschrieben, die eigenen Berechnungen des Bogens liefen, und besiegte Kreaturen sowie Stufenaufstiegs-Hinweise wurden geprüft.',
           'Beacon-Bögen wie D&D 2024 benötigen Mod sandbox v1.5, und ein Mod kann sie nicht auf 0 EP setzen.',
-          'Pathfinder 1E und Starfinder nutzen für Stufenaufstiegs-Hinweise das Feld des Bogens für die EP bis zur nächsten Stufe. Ist es leer, verwendet Pathfinder die mittlere Aufstiegsgeschwindigkeit und Starfinder seine eigene Tabelle.',
+          'Pathfinder 1E folgt der Einstellung Pathfinder-1E-Aufstieg (mittel, solange du sie nicht änderst) und schreibt die EP bis zur nächsten Stufe in das Feld des Bogens. Die Geschwindigkeit kann je nach Stufe wechseln, etwa schnell für die Stufen 1 bis 3, mittel bis 13 und danach langsam. Starfinder nutzt das Feld des Bogens für die EP bis zur nächsten Stufe, oder seine eigene Tabelle, wenn es leer ist.',
           'WFRP 4E: Jede Vergabe wird als Zeile in die Experience-Liste des Bogens eingetragen, aber der Bogen hat seine EP-Summen beim Testen nicht neu berechnet; prüfe sie daher auf dem Bogen.',
           'Savage Worlds, 13th Age, Cosmere und Call of Cthulhu haben keine EP, die ein Mod schreiben könnte.',
         ],
@@ -5266,12 +5383,14 @@ const LazyExperienceMod = (() => {
       addKill: 'Προσθήκη {xp} XP',
       otherXp: 'Άλλο ποσό',
       ignore: 'Παράβλεψη',
+      trackPlan: 'Μικτή',
     },
     prompts: {
       xp: 'XP',
       reason: 'Αιτία (προαιρετικά)',
       share: 'Μερίδιο (1 = πλήρες, 0.5 = μισό)',
       confirmEnd: 'Να λήξει η συνεδρία και να μοιραστούν τα XP;',
+      trackPlan: 'Ρυθμοί και το επίπεδο από το οποίο ξεκινά ο καθένας',
     },
     options: {
       yesNo: { yes: 'Ναι', no: 'Όχι' },
@@ -5296,6 +5415,12 @@ const LazyExperienceMod = (() => {
         off: 'Ανενεργό',
       },
       system: { auto: 'Ανίχνευση από το φύλλο' },
+      pf1Track: {
+        fast: 'Γρήγορος',
+        medium: 'Μέτριος',
+        slow: 'Αργός',
+        sheet: 'Πλαίσιο φύλλου όπως συμπληρώθηκε',
+      },
     },
     settings: {
       language: { label: 'Γλώσσα', desc: 'Γλώσσα για τις κάρτες συνομιλίας και τα handouts.' },
@@ -5310,6 +5435,10 @@ const LazyExperienceMod = (() => {
       system: {
         label: 'Σύστημα παιχνιδιού',
         desc: 'Ποια πεδία του φύλλου περιέχουν τα XP και το επίπεδο. Το auto επιλέγει προφίλ από το φύλλο κάθε χαρακτήρα· το custom χρησιμοποιεί τα προσαρμοσμένα πεδία.',
+      },
+      pf1Track: {
+        label: 'Ρυθμός Pathfinder 1E',
+        desc: 'Ο ρυθμός XP για τα νέα επίπεδα στο Pathfinder 1E: fast, medium ή slow, ή ρυθμοί που αλλάζουν ανά επίπεδο, όπως fast 1-3, medium 4-13, slow 14+. Τα XP για το επόμενο επίπεδο γράφονται στο πλαίσιο του φύλλου. sheet: χρήση του πλαισίου όπως το συμπληρώνει ο GM.',
       },
       roster: {
         label: 'Ομάδα από',
@@ -5615,7 +5744,7 @@ const LazyExperienceMod = (() => {
           'Επιλέξτε το φύλλο με το όνομά του στις Ρυθμίσεις του παιχνιδιού. Τα φύλλα που δεν αναφέρονται χρησιμοποιούν τα κοινά ονόματα πεδίων experience, xp και level, ή ορίστε το Σύστημα παιχνιδιού σε custom.',
           'Το «Δοκιμάστηκε στο Roll20» σημαίνει ότι γράφτηκαν XP σε εκείνο το φύλλο σε παιχνίδι Jumpgate, εκτελέστηκαν οι δικοί του υπολογισμοί και ελέγχθηκαν τα πλάσματα που νικήθηκαν και οι ειδοποιήσεις νέου επιπέδου.',
           'Τα φύλλα Beacon, όπως το D&D 2024, χρειάζονται Mod sandbox v1.5 και ένα Mod δεν μπορεί να τα ορίσει στα 0 XP.',
-          'Το Pathfinder 1E και το Starfinder χρησιμοποιούν το πλαίσιο XP για το επόμενο επίπεδο του φύλλου για τις ειδοποιήσεις νέου επιπέδου. Όταν είναι κενό, το Pathfinder χρησιμοποιεί τον μεσαίο ρυθμό και το Starfinder τον δικό του πίνακα.',
+          'Το Pathfinder 1E ακολουθεί τη ρύθμιση Ρυθμός Pathfinder 1E (μέτριος, αν δεν την αλλάξετε) και γράφει τα XP για το επόμενο επίπεδο στο πλαίσιο του φύλλου. Ο ρυθμός μπορεί να αλλάζει ανά επίπεδο, για παράδειγμα γρήγορος για τα επίπεδα 1 έως 3, μέτριος έως το 13 και αργός μετά. Το Starfinder χρησιμοποιεί το πλαίσιο XP για το επόμενο επίπεδο του φύλλου, ή τον δικό του πίνακα όταν είναι κενό.',
           'WFRP 4E: κάθε απονομή προστίθεται ως γραμμή στη λίστα Experience του φύλλου, αλλά στις δοκιμές το φύλλο δεν ξαναυπολόγισε τα σύνολα XP του, γι’ αυτό ελέγξτε τα στο φύλλο.',
           'Στα Savage Worlds, 13th Age, Cosmere και Call of Cthulhu δεν υπάρχουν XP για να γράψει ένα Mod.',
         ],
@@ -5726,12 +5855,14 @@ const LazyExperienceMod = (() => {
       addKill: 'הוספת {xp} XP',
       otherXp: 'כמות אחרת',
       ignore: 'התעלמות',
+      trackPlan: 'משולב',
     },
     prompts: {
       xp: 'XP',
       reason: 'סיבה (לא חובה)',
       share: 'חלק (1 = מלא, 0.5 = חצי)',
       confirmEnd: 'לסיים את המפגש ולחלק את ה-XP?',
+      trackPlan: 'מסלולים והרמה שבה כל אחד מתחיל',
     },
     options: {
       yesNo: { yes: 'כן', no: 'לא' },
@@ -5751,6 +5882,12 @@ const LazyExperienceMod = (() => {
         off: 'כבוי',
       },
       system: { auto: 'זיהוי לפי הדף' },
+      pf1Track: {
+        fast: 'מהיר',
+        medium: 'בינוני',
+        slow: 'איטי',
+        sheet: 'התיבה בדף כפי שהוקלדה',
+      },
     },
     settings: {
       language: { label: 'שפה', desc: 'השפה של כרטיסי הצ׳אט וה-handouts.' },
@@ -5765,6 +5902,10 @@ const LazyExperienceMod = (() => {
       system: {
         label: 'מערכת משחק',
         desc: 'אילו שדות בדף מכילים XP ורמה. auto בוחר פרופיל לפי הדף של כל דמות; custom משתמש בשדות המותאמים.',
+      },
+      pf1Track: {
+        label: 'מסלול Pathfinder 1E',
+        desc: 'מסלול ה-XP לעליות רמה ב-Pathfinder 1E: fast, medium או slow, או מסלולים שמשתנים לפי רמה, כמו fast 1-3, medium 4-13, slow 14+. ה-XP לרמה הבאה נכתב בתיבה שבדף. sheet: שימוש בתיבה כפי שמנהל המשחק מקליד אותה.',
       },
       roster: {
         label: 'הקבוצה לפי',
@@ -6057,7 +6198,7 @@ const LazyExperienceMod = (() => {
           'בחרו את הדף לפי שמו בהגדרות של המשחק. דפים שאינם ברשימה משתמשים בשמות השדות הנפוצים experience, xp ו-level, או הגדירו מערכת משחק כ-custom.',
           'נבדק ב-Roll20 פירושו שנכתב XP לדף הזה במשחק Jumpgate, החישובים של הדף עצמו רצו, ויצורים שהובסו והודעות עלייה ברמה נבדקו.',
           'דפי Beacon כמו D&D 2024 דורשים Mod sandbox v1.5, ואי אפשר להגדיר אותם ל-0 XP מתוך Mod.',
-          'Pathfinder 1E ו-Starfinder משתמשים בתיבת ה-XP לרמה הבאה שבדף עבור הודעות עלייה ברמה. כשהיא ריקה, Pathfinder משתמש במסלול הבינוני ו-Starfinder בטבלה משלו.',
+          'Pathfinder 1E פועל לפי הגדרת מסלול Pathfinder 1E (בינוני, אלא אם תשנו אותה) וכותב את ה-XP לרמה הבאה בתיבה שבדף. המסלול יכול להשתנות לפי רמה, למשל מהיר לרמות 1 עד 3, בינוני עד 13 ואיטי אחר כך. Starfinder משתמש בתיבת ה-XP לרמה הבאה שבדף, או בטבלה משלו כשהיא ריקה.',
           'WFRP 4E: כל הענקה מתווספת כשורה ברשימת Experience שבדף, אבל בבדיקות הדף לא חישב מחדש את סכומי ה-XP שלו, לכן בדקו אותם בדף.',
           'ל-Savage Worlds, 13th Age, Cosmere ו-Call of Cthulhu אין XP ש-Mod יכול לכתוב.',
         ],
@@ -6168,12 +6309,14 @@ const LazyExperienceMod = (() => {
       addKill: '{xp} XP hozzáadása',
       otherXp: 'Más mennyiség',
       ignore: 'Mellőzés',
+      trackPlan: 'Vegyes',
     },
     prompts: {
       xp: 'XP',
       reason: 'Indok (nem kötelező)',
       share: 'Rész (1 = teljes, 0,5 = fél)',
       confirmEnd: 'Lezárod az alkalmat és kiosztod az XP-t?',
+      trackPlan: 'Haladási ütemek és a szint, ahol mindegyik kezdődik',
     },
     options: {
       yesNo: { yes: 'Igen', no: 'Nem' },
@@ -6198,6 +6341,12 @@ const LazyExperienceMod = (() => {
         off: 'Ki',
       },
       system: { auto: 'Felismerés a karakterlapból' },
+      pf1Track: {
+        fast: 'Gyors',
+        medium: 'Közepes',
+        slow: 'Lassú',
+        sheet: 'A lap mezője beírt értékkel',
+      },
     },
     settings: {
       language: { label: 'Nyelv', desc: 'A csevegőkártyák és a handoutok nyelve.' },
@@ -6212,6 +6361,10 @@ const LazyExperienceMod = (() => {
       system: {
         label: 'Játékrendszer',
         desc: 'Mely lapmezők tartalmazzák az XP-t és a szintet. Az auto minden karakter lapja alapján választ profilt; a custom az egyéni mezőbeállításokat használja.',
+      },
+      pf1Track: {
+        label: 'Pathfinder 1E haladási ütem',
+        desc: 'Az XP haladási üteme a Pathfinder 1E szintlépéseihez: fast, medium vagy slow, vagy szintenként változó ütemek, például fast 1-3, medium 4-13, slow 14+. A következő szinthez kellő XP a lap mezőjébe kerül. sheet: a mezőt úgy használja, ahogy a KM beírja.',
       },
       roster: {
         label: 'Csapat forrása',
@@ -6514,7 +6667,7 @@ const LazyExperienceMod = (() => {
           'A lapot a neve alapján válaszd ki a játék Beállításaiban. A listán nem szereplő lapok a gyakori experience, xp és level mezőneveket használják, vagy állítsd a Játékrendszert custom-ra.',
           'A „Roll20-ban tesztelve” azt jelenti, hogy XP-t írtak arra a lapra egy Jumpgate-játékban, lefutottak a lap saját számításai, és ellenőrizték a legyőzött lényeket és a szintlépési értesítéseket.',
           'A Beacon lapokhoz, például a D&D 2024-hez, Mod sandbox v1.5 kell, és Modból nem lehet őket 0 XP-re állítani.',
-          'A Pathfinder 1E és a Starfinder a lap „XP a következő szintig” mezőjét használja a szintlépési értesítésekhez. Ha az üres, a Pathfinder a közepes haladási ütemet, a Starfinder a saját táblázatát használja.',
+          'A Pathfinder 1E a Pathfinder 1E haladási ütem beállítást követi (közepes, ha nem módosítod), és a következő szinthez kellő XP-t a lap mezőjébe írja. Az ütem szintenként változhat, például gyors az 1–3. szinten, közepes a 13.-ig, utána lassú. A Starfinder a lap „XP a következő szintig” mezőjét használja, vagy a saját táblázatát, ha a mező üres.',
           'WFRP 4E: minden jutalom egy sorként kerül a lap Experience listájára, de a lap tesztelés közben nem számolta újra az XP-összegeit, ezért ellenőrizd őket a lapon.',
           'A Savage Worlds, a 13th Age, a Cosmere és a Call of Cthulhu esetében nincs XP, amit egy Mod írhatna.',
         ],
@@ -6626,12 +6779,14 @@ const LazyExperienceMod = (() => {
       addKill: 'Aggiungi {xp} PE',
       otherXp: 'Altro importo',
       ignore: 'Ignora',
+      trackPlan: 'Mista',
     },
     prompts: {
       xp: 'PE',
       reason: 'Motivo (facoltativo)',
       share: 'Quota (1 = intera, 0,5 = metà)',
       confirmEnd: 'Terminare la sessione e distribuire i PE?',
+      trackPlan: 'Progressioni e il livello da cui parte ciascuna',
     },
     options: {
       yesNo: { yes: 'Sì', no: 'No' },
@@ -6656,6 +6811,12 @@ const LazyExperienceMod = (() => {
         off: 'Disattivato',
       },
       system: { auto: 'Rileva dalla scheda' },
+      pf1Track: {
+        fast: 'Veloce',
+        medium: 'Media',
+        slow: 'Lenta',
+        sheet: 'Casella della scheda come scritta',
+      },
     },
     settings: {
       language: { label: 'Lingua', desc: 'Lingua per le schede della chat e i handout.' },
@@ -6670,6 +6831,10 @@ const LazyExperienceMod = (() => {
       system: {
         label: 'Sistema di gioco',
         desc: 'Quali campi della scheda contengono PE e livello. auto sceglie il profilo dalla scheda di ciascun personaggio; custom usa le impostazioni dei campi personalizzati.',
+      },
+      pf1Track: {
+        label: 'Progressione Pathfinder 1E',
+        desc: 'La progressione dei PE per i livelli di Pathfinder 1E: fast, medium o slow, oppure progressioni che cambiano col livello, come fast 1-3, medium 4-13, slow 14+. I PE per il livello successivo vengono scritti nella casella della scheda. sheet: usa la casella come la scrive il GM.',
       },
       roster: {
         label: 'Gruppo da',
@@ -6975,7 +7140,7 @@ const LazyExperienceMod = (() => {
           'Scegli la scheda dal suo nome nelle Impostazioni della partita. Le schede non elencate usano i nomi di campo comuni experience, xp e level, oppure imposta il sistema di gioco su custom.',
           'Testato in Roll20 significa che i PE sono stati scritti su quella scheda in una partita Jumpgate, i calcoli propri della scheda sono stati eseguiti e sono state verificate le creature sconfitte e gli avvisi di salto di livello.',
           'Le schede Beacon come D&D 2024 richiedono Mod sandbox v1.5 e un Mod non può impostarle a 0 PE.',
-          'Pathfinder 1E e Starfinder usano la casella dei PE per il livello successivo della scheda per gli avvisi di salto di livello. Se è vuota, Pathfinder usa la progressione media e Starfinder una tabella propria.',
+          'Pathfinder 1E segue l’impostazione Progressione Pathfinder 1E (media se non la cambi) e scrive i PE per il livello successivo nella casella della scheda. La progressione può cambiare col livello, per esempio veloce per i livelli da 1 a 3, media fino al 13 e lenta dopo. Starfinder usa la casella dei PE per il livello successivo della scheda, o una tabella propria quando è vuota.',
           "WFRP 4E: ogni assegnazione viene aggiunta come riga nell'elenco Experience della scheda, ma nei test la scheda non ha ricalcolato i totali di PE, quindi controllali sulla scheda.",
           'Savage Worlds, 13th Age, Cosmere e Call of Cthulhu non hanno PE che un Mod possa scrivere.',
         ],
@@ -7087,12 +7252,14 @@ const LazyExperienceMod = (() => {
       addKill: '{xp} XP を追加',
       otherXp: 'その他の数値',
       ignore: '無視',
+      trackPlan: '混合',
     },
     prompts: {
       xp: 'XP',
       reason: '理由(任意)',
       share: '配分(1 = 全額、0.5 = 半分)',
       confirmEnd: 'セッションを終了して XP を配布しますか?',
+      trackPlan: '成長曲線と、それぞれが始まるレベル',
     },
     options: {
       yesNo: { yes: 'はい', no: 'いいえ' },
@@ -7112,6 +7279,12 @@ const LazyExperienceMod = (() => {
         off: 'オフ',
       },
       system: { auto: 'シートから検出' },
+      pf1Track: {
+        fast: '高速',
+        medium: '中速',
+        slow: '低速',
+        sheet: '入力どおりのシート欄',
+      },
     },
     settings: {
       language: { label: '言語', desc: 'チャットカードとハンドアウトの言語。' },
@@ -7126,6 +7299,10 @@ const LazyExperienceMod = (() => {
       system: {
         label: 'ゲームシステム',
         desc: 'XP とレベルを保持するシートのフィールド。auto は各キャラクターのシートからプロファイルを選びます。custom はカスタムフィールド設定を使います。',
+      },
+      pf1Track: {
+        label: 'Pathfinder 1E 成長曲線',
+        desc: 'Pathfinder 1E のレベルアップに使う XP の成長曲線:fast、medium、slow、またはレベルで切り替わる曲線(例:fast 1-3, medium 4-13, slow 14+)。次のレベルまでの XP はシートの欄に書き込まれます。sheet:GM が入力した欄の値を使います。',
       },
       roster: {
         label: 'パーティの取得元',
@@ -7426,7 +7603,7 @@ const LazyExperienceMod = (() => {
           'シートは、ゲームの設定にある名前で選びます。一覧にないシートは、一般的なフィールド名 experience、xp、level を使います。または、ゲームシステムを custom に設定してください。',
           '「Roll20 でテスト済み」とは、Jumpgate のゲームでそのシートに XP が書き込まれ、シート自身の計算が実行され、撃破したクリーチャーとレベルアップ通知が確認されたことを意味します。',
           'D&D 2024 のような Beacon シートには Mod sandbox v1.5 が必要で、Mod から 0 XP に設定することはできません。',
-          'Pathfinder 1E と Starfinder は、レベルアップ通知にシートの「次のレベルまでの XP」欄を使います。空欄の場合、Pathfinder は中速の成長曲線を、Starfinder は独自の表を使います。',
+          'Pathfinder 1E は「Pathfinder 1E 成長曲線」設定(変更しない限り中速)に従い、次のレベルまでの XP をシートの欄に書き込みます。成長曲線はレベルによって切り替えられます。たとえばレベル 1〜3 は高速、13 までは中速、それ以降は低速です。Starfinder はシートの「次のレベルまでの XP」欄を使い、空欄の場合は独自の表を使います。',
           'WFRP 4E: 付与のたびにシートの Experience リストに1行追加されますが、テストではシートが XP の合計を再計算しなかったため、シートで確認してください。',
           'Savage Worlds、13th Age、Cosmere、Call of Cthulhu には Mod が書き込める XP がありません。',
         ],
@@ -7537,12 +7714,14 @@ const LazyExperienceMod = (() => {
       addKill: '{xp} XP 추가',
       otherXp: '다른 수치',
       ignore: '무시',
+      trackPlan: '혼합',
     },
     prompts: {
       xp: 'XP',
       reason: '사유 (선택)',
       share: '몫 (1 = 전체, 0.5 = 절반)',
       confirmEnd: '세션을 종료하고 XP를 나눠 줄까요?',
+      trackPlan: '진행 속도와 각각 시작하는 레벨',
     },
     options: {
       yesNo: { yes: '예', no: '아니요' },
@@ -7562,6 +7741,12 @@ const LazyExperienceMod = (() => {
         off: '끔',
       },
       system: { auto: '시트에서 감지' },
+      pf1Track: {
+        fast: '빠름',
+        medium: '중간',
+        slow: '느림',
+        sheet: '입력한 그대로의 시트 칸',
+      },
     },
     settings: {
       language: { label: '언어', desc: '채팅 카드와 핸드아웃에 쓰는 언어입니다.' },
@@ -7576,6 +7761,10 @@ const LazyExperienceMod = (() => {
       system: {
         label: '게임 시스템',
         desc: 'XP와 레벨이 들어 있는 시트 필드입니다. auto는 각 캐릭터의 시트에서 프로필을 고르고, custom은 사용자 지정 필드 설정을 사용합니다.',
+      },
+      pf1Track: {
+        label: 'Pathfinder 1E 진행 속도',
+        desc: 'Pathfinder 1E 레벨 업에 쓰는 XP 진행 속도: fast, medium, slow, 또는 레벨에 따라 바뀌는 진행 속도(예: fast 1-3, medium 4-13, slow 14+). 다음 레벨까지 필요한 XP는 시트의 칸에 기록됩니다. sheet: GM이 입력한 칸의 값을 그대로 사용합니다.',
       },
       roster: {
         label: '파티 출처',
@@ -7874,7 +8063,7 @@ const LazyExperienceMod = (() => {
           '시트는 게임 설정에 있는 이름으로 고릅니다. 목록에 없는 시트는 흔히 쓰는 필드 이름 experience, xp, level을 사용하며, 게임 시스템을 custom으로 설정할 수도 있습니다.',
           'Roll20에서 테스트함은 Jumpgate 게임에서 해당 시트에 XP를 기록했고, 시트 자체 계산이 실행되었으며, 처치한 크리처와 레벨 업 알림을 확인했다는 뜻입니다.',
           'D&D 2024 같은 Beacon 시트에는 Mod sandbox v1.5가 필요하며, Mod에서는 0 XP로 설정할 수 없습니다.',
-          'Pathfinder 1E와 Starfinder는 레벨 업 알림에 시트의 다음 레벨까지 필요한 XP 칸을 사용합니다. 비어 있으면 Pathfinder는 중간 진행 속도를, Starfinder는 자체 표를 사용합니다.',
+          'Pathfinder 1E는 Pathfinder 1E 진행 속도 설정(바꾸지 않으면 중간)을 따르며, 다음 레벨까지 필요한 XP를 시트의 칸에 기록합니다. 진행 속도는 레벨에 따라 바꿀 수 있습니다. 예를 들어 1~3레벨은 빠름, 13레벨까지는 중간, 그 뒤로는 느림입니다. Starfinder는 시트의 다음 레벨까지 필요한 XP 칸을 사용하고, 비어 있으면 자체 표를 사용합니다.',
           'WFRP 4E: 지급할 때마다 시트의 Experience 목록에 행이 하나씩 추가되지만, 테스트에서 시트가 XP 합계를 다시 계산하지 않았으므로 시트에서 확인하세요.',
           'Savage Worlds, 13th Age, Cosmere, Call of Cthulhu에는 Mod가 기록할 XP가 없습니다.',
         ],
@@ -7985,12 +8174,14 @@ const LazyExperienceMod = (() => {
       addKill: 'Dodaj {xp} XP',
       otherXp: 'Inna wartość',
       ignore: 'Zignoruj',
+      trackPlan: 'Mieszane',
     },
     prompts: {
       xp: 'XP',
       reason: 'Powód (opcjonalnie)',
       share: 'Udział (1 = pełny, 0,5 = połowa)',
       confirmEnd: 'Zakończyć sesję i rozdać XP?',
+      trackPlan: 'Tempa i poziom, od którego każde obowiązuje',
     },
     options: {
       yesNo: { yes: 'Tak', no: 'Nie' },
@@ -8015,6 +8206,12 @@ const LazyExperienceMod = (() => {
         off: 'Wyłączone',
       },
       system: { auto: 'Wykryj z karty postaci' },
+      pf1Track: {
+        fast: 'Szybkie',
+        medium: 'Średnie',
+        slow: 'Wolne',
+        sheet: 'Pole karty, jak wpisano',
+      },
     },
     settings: {
       language: { label: 'Język', desc: 'Język kart na czacie i handoutów.' },
@@ -8029,6 +8226,10 @@ const LazyExperienceMod = (() => {
       system: {
         label: 'System gry',
         desc: 'Które pola karty zawierają XP i poziom. auto dobiera profil na podstawie karty każdej postaci; custom używa własnych ustawień pól.',
+      },
+      pf1Track: {
+        label: 'Tempo Pathfinder 1E',
+        desc: 'Tempo XP dla awansów w Pathfinder 1E: fast, medium lub slow, albo tempa zmieniające się z poziomem, np. fast 1-3, medium 4-13, slow 14+. XP do następnego poziomu jest wpisywane w pole karty. sheet: używa pola tak, jak wpisze je MG.',
       },
       roster: {
         label: 'Drużyna z',
@@ -8324,7 +8525,7 @@ const LazyExperienceMod = (() => {
           'Wybierz kartę po jej nazwie w Ustawieniach gry. Karty spoza listy używają popularnych nazw pól experience, xp i level, albo ustaw System gry na custom.',
           'Przetestowano w Roll20 oznacza, że w grze Jumpgate zapisano XP na tej karcie, zadziałały jej własne obliczenia oraz sprawdzono pokonane stworzenia i powiadomienia o awansie.',
           'Karty Beacon, takie jak D&D 2024, wymagają Mod sandbox v1.5, a Mod nie może ustawić na nich 0 XP.',
-          'Pathfinder 1E i Starfinder używają do powiadomień o awansie pola karty z XP do następnego poziomu. Gdy jest puste, Pathfinder korzysta ze średniego tempa, a Starfinder z własnej tabeli.',
+          'Pathfinder 1E korzysta z ustawienia Tempo Pathfinder 1E (średnie, jeśli go nie zmienisz) i wpisuje XP do następnego poziomu w pole karty. Tempo może zmieniać się z poziomem, np. szybkie na poziomach 1–3, średnie do 13, a potem wolne. Starfinder używa pola karty z XP do następnego poziomu albo własnej tabeli, gdy pole jest puste.',
           'WFRP 4E: każda nagroda jest dodawana jako wiersz na liście Experience na karcie, ale podczas testów karta nie przeliczyła swoich sum XP, więc sprawdź je na karcie.',
           'Savage Worlds, 13th Age, Cosmere i Call of Cthulhu nie mają XP, które mógłby zapisać Mod.',
         ],
@@ -8436,12 +8637,14 @@ const LazyExperienceMod = (() => {
       addKill: 'Adicionar {xp} XP',
       otherXp: 'Outro valor',
       ignore: 'Ignorar',
+      trackPlan: 'Mista',
     },
     prompts: {
       xp: 'XP',
       reason: 'Motivo (opcional)',
       share: 'Quota (1 = inteira, 0,5 = metade)',
       confirmEnd: 'Terminar a sessão e distribuir o XP?',
+      trackPlan: 'Progressões e o nível em que cada uma começa',
     },
     options: {
       yesNo: { yes: 'Sim', no: 'Não' },
@@ -8470,6 +8673,12 @@ const LazyExperienceMod = (() => {
         off: 'Desligado',
       },
       system: { auto: 'Detetar pela ficha' },
+      pf1Track: {
+        fast: 'Rápida',
+        medium: 'Média',
+        slow: 'Lenta',
+        sheet: 'Caixa da ficha tal como escrita',
+      },
     },
     settings: {
       language: { label: 'Idioma', desc: 'Idioma dos cartões do chat e dos handouts.' },
@@ -8484,6 +8693,10 @@ const LazyExperienceMod = (() => {
       system: {
         label: 'Sistema de jogo',
         desc: 'Que campos da ficha guardam o XP e o nível. auto escolhe o perfil pela ficha de cada personagem; custom usa as definições de campos personalizados.',
+      },
+      pf1Track: {
+        label: 'Progressão do Pathfinder 1E',
+        desc: 'A progressão de XP para os níveis do Pathfinder 1E: fast, medium ou slow, ou progressões que mudam consoante o nível, como fast 1-3, medium 4-13, slow 14+. O XP para o nível seguinte é escrito na caixa da ficha. sheet: usa a caixa tal como o mestre a escreve.',
       },
       roster: {
         label: 'Grupo de',
@@ -8788,7 +9001,7 @@ const LazyExperienceMod = (() => {
           'Escolha a ficha pelo nome nas Definições do jogo. As fichas que não constam da lista usam os nomes de campo comuns experience, xp e level, ou defina o Sistema de jogo como custom.',
           'Testado no Roll20 significa que o XP foi escrito nessa ficha num jogo Jumpgate, os cálculos da própria ficha correram, e as criaturas derrotadas e os avisos de nível foram verificados.',
           'As fichas Beacon, como a de D&D 2024, exigem o Mod sandbox v1.5, e um Mod não as pode definir com 0 XP.',
-          'Pathfinder 1E e Starfinder usam a caixa de XP para o nível seguinte da ficha para os avisos de nível. Quando está vazia, o Pathfinder usa a progressão média e o Starfinder a sua própria tabela.',
+          'O Pathfinder 1E segue a definição Progressão do Pathfinder 1E (média, a não ser que a altere) e escreve o XP para o nível seguinte na caixa da ficha. A progressão pode mudar consoante o nível, por exemplo rápida nos níveis 1 a 3, média até ao 13 e lenta depois. O Starfinder usa a caixa de XP para o nível seguinte da ficha, ou a sua própria tabela quando está vazia.',
           'WFRP 4E: cada atribuição é adicionada como uma linha na lista Experience da ficha, mas nos testes a ficha não recalculou os totais de XP, por isso verifique-os na ficha.',
           'Savage Worlds, 13th Age, Cosmere e Call of Cthulhu não têm XP para um Mod escrever.',
         ],
@@ -8899,12 +9112,14 @@ const LazyExperienceMod = (() => {
       addKill: 'Adicionar {xp} XP',
       otherXp: 'Outro valor',
       ignore: 'Ignorar',
+      trackPlan: 'Mista',
     },
     prompts: {
       xp: 'XP',
       reason: 'Motivo (opcional)',
       share: 'Cota (1 = inteira, 0,5 = metade)',
       confirmEnd: 'Encerrar a sessão e distribuir o XP?',
+      trackPlan: 'Progressões e o nível em que cada uma começa',
     },
     options: {
       yesNo: { yes: 'Sim', no: 'Não' },
@@ -8933,6 +9148,12 @@ const LazyExperienceMod = (() => {
         off: 'Desligado',
       },
       system: { auto: 'Detectar pela ficha' },
+      pf1Track: {
+        fast: 'Rápida',
+        medium: 'Média',
+        slow: 'Lenta',
+        sheet: 'Caixa da ficha como digitada',
+      },
     },
     settings: {
       language: { label: 'Idioma', desc: 'Idioma dos cartões do chat e dos handouts.' },
@@ -8947,6 +9168,10 @@ const LazyExperienceMod = (() => {
       system: {
         label: 'Sistema de jogo',
         desc: 'Quais campos da ficha guardam XP e nível. auto escolhe o perfil pela ficha de cada personagem; custom usa as configurações de campos personalizados.',
+      },
+      pf1Track: {
+        label: 'Progressão do Pathfinder 1E',
+        desc: 'A progressão de XP para os níveis do Pathfinder 1E: fast, medium ou slow, ou progressões que mudam conforme o nível, como fast 1-3, medium 4-13, slow 14+. O XP para o próximo nível é escrito na caixa da ficha. sheet: usa a caixa como o mestre a digita.',
       },
       roster: {
         label: 'Grupo de',
@@ -9248,7 +9473,7 @@ const LazyExperienceMod = (() => {
           'Escolha a ficha pelo nome nas Configurações do jogo. As fichas não listadas usam os nomes de campo comuns experience, xp e level, ou defina o Sistema de jogo como custom.',
           'Testado no Roll20 significa que o XP foi escrito nessa ficha em um jogo Jumpgate, os cálculos da própria ficha rodaram, e as criaturas derrotadas e os avisos de nível foram verificados.',
           'Fichas Beacon, como a de D&D 2024, exigem o Mod sandbox v1.5, e um Mod não pode defini-las com 0 XP.',
-          'Pathfinder 1E e Starfinder usam a caixa de XP para o próximo nível da ficha nos avisos de nível. Quando ela está vazia, o Pathfinder usa a progressão média e o Starfinder a sua própria tabela.',
+          'O Pathfinder 1E segue a configuração Progressão do Pathfinder 1E (média, a menos que você a mude) e escreve o XP para o próximo nível na caixa da ficha. A progressão pode mudar conforme o nível, por exemplo rápida nos níveis 1 a 3, média até o 13 e lenta depois. O Starfinder usa a caixa de XP para o próximo nível da ficha, ou a sua própria tabela quando ela está vazia.',
           'WFRP 4E: cada concessão é adicionada como uma linha na lista Experience da ficha, mas nos testes a ficha não recalculou os totais de XP, então confira-os na ficha.',
           'Savage Worlds, 13th Age, Cosmere e Call of Cthulhu não têm XP para um Mod escrever.',
         ],
@@ -9360,12 +9585,14 @@ const LazyExperienceMod = (() => {
       addKill: 'Добавить {xp} XP',
       otherXp: 'Другое количество',
       ignore: 'Игнорировать',
+      trackPlan: 'Смешанный',
     },
     prompts: {
       xp: 'XP',
       reason: 'Причина (необязательно)',
       share: 'Доля (1 = полная, 0.5 = половина)',
       confirmEnd: 'Завершить сессию и раздать XP?',
+      trackPlan: 'Темпы и уровень, с которого начинается каждый',
     },
     options: {
       yesNo: { yes: 'Да', no: 'Нет' },
@@ -9390,6 +9617,12 @@ const LazyExperienceMod = (() => {
         off: 'Выключено',
       },
       system: { auto: 'Определять по листу' },
+      pf1Track: {
+        fast: 'Быстрый',
+        medium: 'Средний',
+        slow: 'Медленный',
+        sheet: 'Поле листа, как введено',
+      },
     },
     settings: {
       language: { label: 'Язык', desc: 'Язык карточек в чате и хэндаутов.' },
@@ -9404,6 +9637,10 @@ const LazyExperienceMod = (() => {
       system: {
         label: 'Игровая система',
         desc: 'В каких полях листа хранятся XP и уровень. auto выбирает профиль по листу каждого персонажа; custom использует пользовательские поля.',
+      },
+      pf1Track: {
+        label: 'Темп Pathfinder 1E',
+        desc: 'Темп XP для новых уровней в Pathfinder 1E: fast, medium или slow, или темпы, меняющиеся с уровнем, например fast 1-3, medium 4-13, slow 14+. XP до следующего уровня записывается в поле листа. sheet: использовать поле так, как его заполнил ведущий.',
       },
       roster: {
         label: 'Состав группы',
@@ -9702,7 +9939,7 @@ const LazyExperienceMod = (() => {
           'Выберите лист по его названию в Настройках игры. Листы, которых нет в списке, используют распространённые поля experience, xp и level, или задайте игровую систему как custom.',
           '«Проверено в Roll20» означает, что XP записали в этот лист в игре Jumpgate, собственные расчёты листа сработали, а побеждённые существа и уведомления о новом уровне проверили.',
           'Листам Beacon, например D&D 2024, нужен Mod sandbox v1.5, а мод не может установить им 0 XP.',
-          'Pathfinder 1E и Starfinder берут для уведомлений о новом уровне поле листа с XP до следующего уровня. Если оно пусто, Pathfinder использует средний темп, а Starfinder — собственную таблицу.',
+          'Pathfinder 1E следует настройке «Темп Pathfinder 1E» (средний, если вы её не меняли) и записывает XP до следующего уровня в поле листа. Темп может меняться с уровнем, например быстрый на уровнях 1–3, средний до 13-го и медленный после. Starfinder берёт поле листа с XP до следующего уровня, а если оно пусто, использует свою таблицу.',
           'WFRP 4E: каждая награда добавляется строкой в список Experience листа, но при тестировании лист не пересчитал суммы XP, поэтому проверьте их на листе.',
           'В Savage Worlds, 13th Age, Cosmere и Call of Cthulhu нет XP, которые мог бы записать мод.',
         ],
@@ -9814,12 +10051,14 @@ const LazyExperienceMod = (() => {
       addKill: 'Añadir {xp} PX',
       otherXp: 'Otra cantidad',
       ignore: 'Ignorar',
+      trackPlan: 'Mixta',
     },
     prompts: {
       xp: 'PX',
       reason: 'Motivo (opcional)',
       share: 'Parte (1 = completa, 0,5 = mitad)',
       confirmEnd: '¿Terminar la sesión y repartir los PX?',
+      trackPlan: 'Progresiones y el nivel en que empieza cada una',
     },
     options: {
       yesNo: { yes: 'Sí', no: 'No' },
@@ -9844,6 +10083,12 @@ const LazyExperienceMod = (() => {
         off: 'Desactivado',
       },
       system: { auto: 'Detectar según la hoja' },
+      pf1Track: {
+        fast: 'Rápida',
+        medium: 'Media',
+        slow: 'Lenta',
+        sheet: 'Casilla de la hoja tal como se escribe',
+      },
     },
     settings: {
       language: { label: 'Idioma', desc: 'Idioma de las tarjetas de chat y los handouts.' },
@@ -9858,6 +10103,10 @@ const LazyExperienceMod = (() => {
       system: {
         label: 'Sistema de juego',
         desc: 'Qué campos de la hoja contienen los PX y el nivel. auto elige el perfil según la hoja de cada personaje; custom usa los ajustes de campos personalizados.',
+      },
+      pf1Track: {
+        label: 'Progresión de Pathfinder 1E',
+        desc: 'La progresión de PX para las subidas de nivel de Pathfinder 1E: fast, medium o slow, o progresiones que cambian según el nivel, como fast 1-3, medium 4-13, slow 14+. Los PX para el siguiente nivel se escriben en la casilla de la hoja. sheet: usa la casilla tal como la escribe el DJ.',
       },
       roster: {
         label: 'Grupo según',
@@ -10162,7 +10411,7 @@ const LazyExperienceMod = (() => {
           'Elige la hoja por su nombre en los Ajustes de la partida. Las hojas que no figuran usan los nombres de campo habituales experience, xp y level, o fija el sistema de juego en custom.',
           'Probado en Roll20 significa que se escribieron PX en esa hoja en una partida de Jumpgate, se ejecutaron los cálculos propios de la hoja y se comprobaron las criaturas derrotadas y los avisos de subida de nivel.',
           'Las hojas Beacon como D&D 2024 necesitan Mod sandbox v1.5, y un Mod no puede ponerlas a 0 PX.',
-          'Pathfinder 1E y Starfinder usan la casilla de PX para el siguiente nivel de la hoja en los avisos de subida de nivel. Si está vacía, Pathfinder usa la progresión media y Starfinder su propia tabla.',
+          'Pathfinder 1E sigue el ajuste Progresión de Pathfinder 1E (media si no lo cambias) y escribe los PX para el siguiente nivel en la casilla de la hoja. La progresión puede cambiar según el nivel, por ejemplo rápida para los niveles 1 a 3, media hasta el 13 y lenta después. Starfinder usa la casilla de PX para el siguiente nivel de la hoja, o su propia tabla si está vacía.',
           'WFRP 4E: cada concesión se añade como una fila en la lista Experience de la hoja, pero en las pruebas la hoja no recalculó sus totales de PX, así que compruébalos en la hoja.',
           'Savage Worlds, 13th Age, Cosmere y Call of Cthulhu no tienen PX que un Mod pueda escribir.',
         ],
@@ -10273,12 +10522,14 @@ const LazyExperienceMod = (() => {
       addKill: 'Lägg till {xp} XP',
       otherXp: 'Annat belopp',
       ignore: 'Ignorera',
+      trackPlan: 'Blandad',
     },
     prompts: {
       xp: 'XP',
       reason: 'Orsak (valfritt)',
       share: 'Andel (1 = hel, 0,5 = halv)',
       confirmEnd: 'Avsluta spelmötet och dela ut XP?',
+      trackPlan: 'Banor och nivån där varje bana börjar',
     },
     options: {
       yesNo: { yes: 'Ja', no: 'Nej' },
@@ -10298,6 +10549,12 @@ const LazyExperienceMod = (() => {
         off: 'Av',
       },
       system: { auto: 'Identifiera från bladet' },
+      pf1Track: {
+        fast: 'Snabb',
+        medium: 'Medelsnabb',
+        slow: 'Långsam',
+        sheet: 'Bladets ruta som den skrivits',
+      },
     },
     settings: {
       language: { label: 'Språk', desc: 'Språk för chattkort och handouts.' },
@@ -10312,6 +10569,10 @@ const LazyExperienceMod = (() => {
       system: {
         label: 'Spelsystem',
         desc: 'Vilka bladfält som innehåller XP och nivå. auto väljer profil från varje karaktärs blad; custom använder inställningarna för egna fält.',
+      },
+      pf1Track: {
+        label: 'Pathfinder 1E-bana',
+        desc: 'XP-banan för nivåer i Pathfinder 1E: fast, medium eller slow, eller banor som byts efter nivå, som fast 1-3, medium 4-13, slow 14+. XP till nästa nivå skrivs i bladets ruta. sheet: använd rutan som spelledaren skriver den.',
       },
       roster: {
         label: 'Grupp från',
@@ -10612,7 +10873,7 @@ const LazyExperienceMod = (() => {
           'Välj bladet efter dess namn i spelets Inställningar. Blad som inte finns i listan använder de vanliga fältnamnen experience, xp och level, eller sätt Spelsystem till custom.',
           'Testat i Roll20 betyder att XP skrevs till det bladet i ett Jumpgate-spel, bladets egna beräkningar kördes, och besegrade varelser och nivåmeddelanden kontrollerades.',
           'Beacon-blad som D&D 2024 kräver Mod sandbox v1.5, och en Mod kan inte sätta dem till 0 XP.',
-          'Pathfinder 1E och Starfinder använder bladets ruta för XP till nästa nivå för nivåmeddelanden. När den är tom använder Pathfinder den medelsnabba banan och Starfinder sin egen tabell.',
+          'Pathfinder 1E följer inställningen Pathfinder 1E-bana (medelsnabb om du inte ändrar den) och skriver XP till nästa nivå i bladets ruta. Banan kan bytas efter nivå, till exempel snabb för nivå 1 till 3, medelsnabb till 13 och långsam därefter. Starfinder använder bladets ruta för XP till nästa nivå, eller sin egen tabell när rutan är tom.',
           'WFRP 4E: varje tilldelning läggs till som en rad i bladets Experience-lista, men bladet räknade inte om sina XP-summor under testningen, så kontrollera dem på bladet.',
           'Savage Worlds, 13th Age, Cosmere och Call of Cthulhu har ingen XP som en Mod kan skriva.',
         ],
@@ -10724,12 +10985,14 @@ const LazyExperienceMod = (() => {
       addKill: '{xp} XP Ekle',
       otherXp: 'Başka Miktar',
       ignore: 'Yoksay',
+      trackPlan: 'Karışık',
     },
     prompts: {
       xp: 'XP',
       reason: 'Neden (isteğe bağlı)',
       share: 'Pay (1 = tam, 0,5 = yarım)',
       confirmEnd: 'Oturum bitirilsin ve XP dağıtılsın mı?',
+      trackPlan: 'İlerleme hızları ve her birinin başladığı seviye',
     },
     options: {
       yesNo: { yes: 'Evet', no: 'Hayır' },
@@ -10754,6 +11017,12 @@ const LazyExperienceMod = (() => {
         off: 'Kapalı',
       },
       system: { auto: 'Karakter kâğıdından algıla' },
+      pf1Track: {
+        fast: 'Hızlı',
+        medium: 'Orta',
+        slow: 'Yavaş',
+        sheet: 'Yazıldığı gibi kâğıt kutusu',
+      },
     },
     settings: {
       language: { label: 'Dil', desc: 'Sohbet kartları ve handout’lar için dil.' },
@@ -10768,6 +11037,10 @@ const LazyExperienceMod = (() => {
       system: {
         label: 'Oyun sistemi',
         desc: 'Hangi kâğıt alanlarının XP ve seviyeyi tuttuğu. auto, her karakterin kâğıdına göre profil seçer; custom, özel alan ayarlarını kullanır.',
+      },
+      pf1Track: {
+        label: 'Pathfinder 1E ilerleme hızı',
+        desc: "Pathfinder 1E seviye atlamaları için XP ilerleme hızı: fast, medium veya slow ya da seviyeye göre değişen hızlar, örneğin fast 1-3, medium 4-13, slow 14+. Sonraki seviye için gereken XP kâğıdın kutusuna yazılır. sheet: kutuyu GM'in yazdığı gibi kullanır.",
       },
       roster: {
         label: 'Grubun kaynağı',
@@ -11068,7 +11341,7 @@ const LazyExperienceMod = (() => {
           'Kâğıdı, oyunun Ayarlar bölümündeki adıyla seç. Listede olmayan kâğıtlar yaygın alan adları olan experience, xp ve level’i kullanır; ya da Oyun sistemini custom yap.',
           'Roll20’de test edildi, XP’nin o kâğıda bir Jumpgate oyununda yazıldığı, kâğıdın kendi hesaplamalarının çalıştığı ve yenilen yaratıklarla seviye atlama bildirimlerinin kontrol edildiği anlamına gelir.',
           'D&D 2024 gibi Beacon kâğıtları Mod sandbox v1.5 gerektirir ve bir Mod tarafından 0 XP’ye ayarlanamaz.',
-          'Pathfinder 1E ve Starfinder, seviye atlama bildirimleri için kâğıdın sonraki seviye XP kutusunu kullanır. Boşsa Pathfinder orta ilerleme hızını, Starfinder ise kendi tablosunu kullanır.',
+          "Pathfinder 1E, Pathfinder 1E ilerleme hızı ayarını izler (değiştirmezseniz orta) ve sonraki seviye için gereken XP'yi kâğıdın kutusuna yazar. Hız seviyeye göre değişebilir; örneğin 1-3. seviyelerde hızlı, 13'e kadar orta, sonrasında yavaş. Starfinder kâğıdın sonraki seviye XP kutusunu, kutu boşsa kendi tablosunu kullanır.",
           'WFRP 4E: her ödül kâğıdın Experience listesine bir satır olarak eklenir, ancak testte kâğıt XP toplamlarını yeniden hesaplamadı; bu yüzden onları kâğıt üzerinden kontrol et.',
           'Savage Worlds, 13th Age, Cosmere ve Call of Cthulhu’da bir Mod’un yazabileceği XP yoktur.',
         ],
@@ -11179,12 +11452,14 @@ const LazyExperienceMod = (() => {
       addKill: 'Додати {xp} XP',
       otherXp: 'Інша кількість',
       ignore: 'Ігнорувати',
+      trackPlan: 'Змішаний',
     },
     prompts: {
       xp: 'XP',
       reason: 'Причина (необов’язково)',
       share: 'Частка (1 = повна, 0.5 = половина)',
       confirmEnd: 'Завершити сесію та роздати XP?',
+      trackPlan: 'Темпи й рівень, з якого починається кожен',
     },
     options: {
       yesNo: { yes: 'Так', no: 'Ні' },
@@ -11204,6 +11479,12 @@ const LazyExperienceMod = (() => {
         off: 'Вимкнено',
       },
       system: { auto: 'Визначати за аркушем' },
+      pf1Track: {
+        fast: 'Швидкий',
+        medium: 'Середній',
+        slow: 'Повільний',
+        sheet: 'Поле аркуша, як введено',
+      },
     },
     settings: {
       language: { label: 'Мова', desc: 'Мова карток у чаті та хендаутів.' },
@@ -11218,6 +11499,10 @@ const LazyExperienceMod = (() => {
       system: {
         label: 'Ігрова система',
         desc: 'У яких полях аркуша зберігаються XP та рівень. auto вибирає профіль за аркушем кожного персонажа; custom використовує власні поля.',
+      },
+      pf1Track: {
+        label: 'Темп Pathfinder 1E',
+        desc: 'Темп XP для нових рівнів у Pathfinder 1E: fast, medium або slow, або темпи, що змінюються з рівнем, наприклад fast 1-3, medium 4-13, slow 14+. XP до наступного рівня записується в поле аркуша. sheet: використовувати поле так, як його заповнив ведучий.',
       },
       roster: {
         label: 'Склад групи',
@@ -11512,7 +11797,7 @@ const LazyExperienceMod = (() => {
           'Виберіть аркуш за його назвою в Налаштуваннях гри. Аркуші, яких немає в списку, використовують поширені поля experience, xp і level, або задайте ігрову систему як custom.',
           '«Перевірено в Roll20» означає, що XP записали в цей аркуш у грі Jumpgate, власні обчислення аркуша спрацювали, а переможених істот і сповіщення про новий рівень перевірили.',
           'Аркушам Beacon, наприклад D&D 2024, потрібен Mod sandbox v1.5, а мод не може встановити їм 0 XP.',
-          'Pathfinder 1E і Starfinder беруть для сповіщень про новий рівень поле аркуша з XP до наступного рівня. Якщо воно порожнє, Pathfinder використовує середній темп, а Starfinder — власну таблицю.',
+          'Pathfinder 1E дотримується налаштування «Темп Pathfinder 1E» (середній, якщо ви його не змінювали) і записує XP до наступного рівня в поле аркуша. Темп може змінюватися з рівнем, наприклад швидкий на рівнях 1–3, середній до 13-го і повільний після. Starfinder бере поле аркуша з XP до наступного рівня, а якщо воно порожнє, використовує свою таблицю.',
           'WFRP 4E: кожна нагорода додається рядком до списку Experience аркуша, але під час тестування аркуш не перерахував суми XP, тож перевірте їх на аркуші.',
           'У Savage Worlds, 13th Age, Cosmere і Call of Cthulhu немає XP, які міг би записати мод.',
         ],
@@ -12251,6 +12536,10 @@ const LazyExperienceMod = (() => {
 
   // Pathfinder 1e XP to reach each level, by advancement track.
   const PF1_LEVELS = {
+    slow: [
+      0, 3000, 7500, 14000, 23000, 35000, 53000, 77000, 115000, 160000, 235000, 330000, 475000,
+      665000, 955000, 1350000, 1900000, 2700000, 3850000, 5350000,
+    ],
     medium: [
       0, 2000, 5000, 9000, 15000, 23000, 35000, 51000, 75000, 105000, 155000, 220000, 315000,
       445000, 635000, 890000, 1300000, 1800000, 2550000, 3600000,
@@ -12260,6 +12549,80 @@ const LazyExperienceMod = (() => {
       425000, 600000, 850000, 1200000, 1700000, 2400000,
     ],
   };
+
+  // The Pathfinder 1E track setting: one of these, a plan that changes track by level,
+  // or 'sheet' for the XP-for-next-level box as the GM types it.
+  const PF1_TRACKS = ['fast', 'medium', 'slow'];
+  const TRACK_SHEET = 'sheet';
+
+  /**
+   * Parses the Pathfinder 1E track setting. A plan lists tracks with the level each
+   * starts at, such as "fast 1-3, medium 4-13, slow 14+" or "fast 1, medium 4, slow 14";
+   * only the first number of each part counts. A track without a level starts at 1.
+   *
+   * @param {string} text Setting text.
+   * @returns {{from: number, track: string}[]|null} Parts from level 1, or null when invalid.
+   */
+  function parseTrackPlan(text) {
+    const parts = toText(text)
+      .toLowerCase()
+      .split(/[,;]/)
+      .map((s) => s.trim())
+      .filter(Boolean);
+    if (parts.length === 0) return null;
+    const plan = [];
+    for (const part of parts) {
+      const m = /^([a-z]+)\s*(?:(?:from\s+)?(\d+)\s*(?:[-–]\s*\d+|\+)?)?$/.exec(part);
+      if (!m || !PF1_TRACKS.includes(m[1])) return null;
+      const from = m[2] === undefined ? 1 : Number(m[2]);
+      if (from < 1 || from > 20) return null;
+      plan.push({ from, track: m[1] });
+    }
+    plan.sort((a, b) => a.from - b.from);
+    if (plan[0].from !== 1 || plan.some((p, i) => i > 0 && p.from === plan[i - 1].from)) {
+      return null;
+    }
+    return plan;
+  }
+
+  /**
+   * Writes a track plan the way the setting stores it ("medium", "fast 1, medium 4").
+   *
+   * @param {{from: number, track: string}[]} plan Parsed plan.
+   * @returns {string} Setting text.
+   */
+  function formatTrackPlan(plan) {
+    if (plan.length === 1) return plan[0].track;
+    return plan.map((p) => `${p.track} ${p.from}`).join(', ');
+  }
+
+  /**
+   * The track a character on a level advances on.
+   *
+   * @param {{from: number, track: string}[]} plan Parsed plan.
+   * @param {number} level Current level.
+   * @returns {string} Track.
+   */
+  function trackForLevel(plan, level) {
+    let track = plan[0].track;
+    for (const p of plan) {
+      if (level >= p.from) track = p.track;
+    }
+    return track;
+  }
+
+  /**
+   * XP a Pathfinder 1E character needs for the next level: the total on the table of
+   * the track for the level they are on now.
+   *
+   * @param {{from: number, track: string}[]} plan Parsed plan.
+   * @param {number} level Current level.
+   * @returns {number|null} XP, or null at level 20 and above.
+   */
+  function trackNextXp(plan, level) {
+    if (!Number.isInteger(level) || level < 1 || level >= 20) return null;
+    return PF1_LEVELS[trackForLevel(plan, level)][level];
+  }
 
   // Pathfinder 1e XP by CR (also used by Starfinder 1e).
   const PF1_CR_XP = {
@@ -12397,8 +12760,10 @@ const LazyExperienceMod = (() => {
       access: 'legacy',
       pc: { xp: ['xp'], level: ['level'], next: ['xp_max'] },
       npc: { xp: ['xp'], cr: ['npc_cr'] },
-      // The sheet has no track setting, so the medium track is the fallback when xp_max is blank.
+      // The sheet has no track of its own: the next-level box (the max of xp) is typed by
+      // hand. The pf1Track setting picks the track, or 'sheet' reads that box.
       levels: PF1_LEVELS.medium,
+      tracks: true,
       crXp: (cr) => lookupCr(PF1_CR_XP, cr),
       verified: 'live',
     },
@@ -12412,6 +12777,7 @@ const LazyExperienceMod = (() => {
       pc: { xp: ['experience'], level: ['level'], next: ['experience_max'] },
       npc: { xp: ['npc-xp'], cr: ['npc-cr'] },
       levels: PF1_LEVELS.medium,
+      tracks: true,
       crXp: (cr) => lookupCr(PF1_CR_XP, cr),
       verified: 'live',
     },
@@ -12699,10 +13065,37 @@ const LazyExperienceMod = (() => {
       const beaconSheet = detectProfile(sheetName, character).access === 'beacon';
       return customProfile(config, beaconSheet && beaconAvailable ? 'beacon' : 'legacy');
     }
-    if (config.system && config.system !== 'auto') {
-      return getProfileById(config.system) || detectProfile(sheetName, character);
-    }
-    return detectProfile(sheetName, character);
+    const profile =
+      config.system && config.system !== 'auto'
+        ? getProfileById(config.system) || detectProfile(sheetName, character)
+        : detectProfile(sheetName, character);
+    return withTrack(profile, config.pf1Track);
+  }
+
+  /**
+   * Applies the Pathfinder 1E track setting to a profile that has tracks. With a track
+   * or plan, the level table and the XP for the next level come from it, and the sheet's
+   * next-level box is written rather than read. 'sheet' (or an unusable value) leaves
+   * the profile reading that box, with the medium track when it is blank.
+   *
+   * @param {object} profile Profile.
+   * @param {string} setting The pf1Track setting.
+   * @returns {object} Profile.
+   */
+  function withTrack(profile, setting) {
+    if (!profile?.tracks || toText(setting).toLowerCase() === TRACK_SHEET) return profile;
+    const plan = parseTrackPlan(setting);
+    if (!plan) return profile;
+    const levels = [0];
+    for (let level = 1; level < 20; level++) levels.push(trackNextXp(plan, level));
+    return {
+      ...profile,
+      pc: { ...profile.pc, next: [] },
+      levels,
+      nextXp: (level) => trackNextXp(plan, level),
+      trackPlan: plan,
+      nextBox: toText(profile.pc?.next?.[0]),
+    };
   }
 
   /**
@@ -13291,6 +13684,11 @@ const LazyExperienceMod = (() => {
         if (attr && toText(attr.get('current')) !== '') {
           return { name, value: attr.get('current') };
         }
+        // Roll20 keeps a sheet input named attr_<name>_max as the max of <name>.
+        const base = !attr && /_max$/i.test(name) ? findAttribute(id, name.slice(0, -4)) : null;
+        if (base && toText(base.get('max')) !== '') {
+          return { name, value: base.get('max') };
+        }
       }
     }
     return null;
@@ -13358,6 +13756,31 @@ const LazyExperienceMod = (() => {
       setLegacy(character, totalAttr, total, Math.max(0, current + amount));
     }
     return { ok: true };
+  }
+
+  /**
+   * Writes the XP for the next level into the sheet's next-level box, for profiles whose
+   * track comes from the pf1Track setting (Pathfinder 1E). The box is the max of the XP
+   * attribute, so the sheet shows the same goal the level-up notices use.
+   *
+   * @param {object} character Roll20 character.
+   * @param {object} profile Profile.
+   * @param {number|null} level Level on the sheet.
+   * @returns {void}
+   */
+  function writeNextBox(character, profile, level) {
+    if (!profile.trackPlan || !/_max$/i.test(profile.nextBox || '')) return;
+    const next = profile.nextXp(level);
+    if (!Number.isFinite(next)) return;
+    const name = profile.nextBox.slice(0, -4);
+    const attr = findAttribute(character.id, name);
+    if (!attr || parseXpText(attr.get('max')) === next) return;
+    const text = String(next);
+    if (typeof attr.setWithWorker === 'function') {
+      attr.setWithWorker({ max: text });
+    } else {
+      attr.set('max', text);
+    }
   }
 
   /**
@@ -13453,6 +13876,7 @@ const LazyExperienceMod = (() => {
         after,
         after - before
       );
+      if (result.ok) writeNextBox(character, progress.profile, progress.level);
       return {
         ...result,
         before,
@@ -14453,6 +14877,28 @@ const LazyExperienceMod = (() => {
   }
 
   /**
+   * Describes the Pathfinder 1E track setting for the settings card, such as
+   * "Fast 1–3 · Medium 4–13 · Slow 14+".
+   *
+   * @param {string} value Setting value.
+   * @param {Function} tr Translate shortcut.
+   * @returns {string} Label.
+   */
+  function trackLabel(value, tr) {
+    if (value === TRACK_SHEET) return tr('options.pf1Track.sheet');
+    const plan = parseTrackPlan(value);
+    if (!plan) return String(value);
+    if (plan.length === 1) return tr(`options.pf1Track.${plan[0].track}`);
+    return plan
+      .map((p, i) => {
+        const to = plan[i + 1] ? plan[i + 1].from - 1 : null;
+        const range = to === null ? `${p.from}+` : to === p.from ? `${p.from}` : `${p.from}–${to}`;
+        return `${tr(`options.pf1Track.${p.track}`)} ${range}`;
+      })
+      .join(' · ');
+  }
+
+  /**
    * Builds the edit button for one setting.
    *
    * @param {string} key Setting name.
@@ -14492,6 +14938,20 @@ const LazyExperienceMod = (() => {
         value === 'auto' ? tr('options.system.auto') : getProfileById(value)?.label || value;
       return buildSecondaryButton(label, cmd(`?{${tr('settings.system.label')}|${query}}`));
     }
+    if (type === 'track') {
+      const query = ['fast', 'medium', 'slow', TRACK_SHEET]
+        .map((v) => `${tr(`options.pf1Track.${v}`).replace(/[,|}]/g, ' ')},${v}`)
+        .join('|');
+      const plan =
+        value === TRACK_SHEET || !value.includes(',') ? 'fast 1, medium 4, slow 14' : value;
+      return (
+        buildSecondaryButton(
+          trackLabel(value, tr),
+          cmd(`?{${tr('settings.pf1Track.label')}|${query}}`)
+        ) +
+        buildSecondaryButton(tr('buttons.trackPlan'), cmd(`?{${tr('prompts.trackPlan')}|${plan}}`))
+      );
+    }
     if (type === 'locale') {
       const locale = LOCALE_DEFINITIONS.find((d) => d.code === getLocale(value));
       return buildSecondaryButton(
@@ -14528,6 +14988,9 @@ const LazyExperienceMod = (() => {
       ],
       ['menu.groupSheet', ['system']],
     ];
+    if (['auto', 'pf1', 'pf1community'].includes(config.system)) {
+      groups[3][1].push('pf1Track');
+    }
     if (config.system === 'custom') {
       groups[3][1].push('customXp', 'customLevel', 'customNpcXp', 'customNpcCr', 'customLevels');
     }
@@ -14747,6 +15210,12 @@ const LazyExperienceMod = (() => {
       return Number.isInteger(n) && n >= 0 && n <= MAX_EXTRA_SHARES ? n : undefined;
     }
     if (type === 'marker') return resolveMarker(value);
+    if (type === 'track') {
+      const text = toText(value).toLowerCase();
+      if (text === TRACK_SHEET) return TRACK_SHEET;
+      const plan = parseTrackPlan(text);
+      return plan ? formatTrackPlan(plan) : undefined;
+    }
     if (type === 'levels') {
       const text = toText(value);
       return text === '' || parseLevelTable(text) ? text : undefined;
@@ -14839,7 +15308,7 @@ const LazyExperienceMod = (() => {
     for (const c of roster) {
       const p = await readProgress(c);
       const level = p.level ?? levelForXp(p.profile.levels, p.xp ?? 0);
-      const next = level ? xpForNextLevel(p.profile.levels, level) : null;
+      const next = p.next ?? (level ? xpForNextLevel(p.profile.levels, level) : null);
       const parts = [
         p.xp === null ? t('show.noXp', lang) : `${formatNumber(p.xp)} XP`,
         level ? t('menu.levelTag', lang, { level }) : '',
