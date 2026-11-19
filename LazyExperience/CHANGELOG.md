@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.0.0 - 2026-11-05
+## 1.0.0 - 2026-11-19
 
 A rewrite of Robin Kuiper's 0.1.14. Existing games are upgraded automatically.
 
