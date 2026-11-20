@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Documentation
+
+- New [recipes folder](recipes/README.md): ready-made effects grouped by setting (fantasy, science fiction, horror and modern), and a guide to effects that cross the map, such as beams fired in a fixed direction and custom FX particles that fly like missiles.
+
 ## 2.0.0 (2026-11-07)
 
 A full rewrite by MidNiteShadow7 of Ada Lindberg's PageFX 1.3, which had not changed since 2017. Version 1 tokens keep working, and `!pageFX on` and `!pageFX off` still work.

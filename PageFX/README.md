@@ -49,6 +49,10 @@ A preset gives an effect a set of ready-made layers. Changing a layer afterwards
 | Water           | Cave drips (`drips`), Steam vents (`steam`), Geyser (`geyser`), Waterfall spray (`spray`), Bubbles (`bubbles`)                                                                       |
 | Magic and eerie | Fireflies (`fireflies`), Arcane motes (`arcane-motes`), Necrotic mist (`necrotic-mist`), Holy glimmer (`holy-glimmer`), Swamp gas (`swamp-gas`)                                      |
 
+## Recipes
+
+The [recipes folder](recipes/README.md) has ready-made effects to copy, grouped by setting: a ballista bolt or a dart trap for fantasy, two starships firing at each other for science fiction, a haunted room for horror, tracer fire for modern games, and more. It also explains how to make effects that cross the map.
+
 ## Triggers
 
 A trigger starts, stops, switches or fires an effect when something happens. Add them from the effect's card, or with `!pagefx trigger add`.
