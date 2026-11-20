@@ -1,22 +1,241 @@
 {
-    "name": "LazyExperience",
-    "script": "LazyExperience.js",
-    "version": "0.1.14",
-    "previousversions": ["0.1.11","0.1.12","0.1.13"],
-    "description": "LazyExperience is a script to record experience during a game (the idea comes from [EasyExperience](https://app.roll20.net/forum/post/3309609/script-easy-experience/?pageforid=3506293#post-3506293)).\nBiggest difference is that it has an option to reward experience directly, and keeps track on statusmarker changes on tokens.\n\n### Config\n\nThe first time you add this script you get a first time config menu in chat.\n\n![Config Menu](https://i.imgur.com/sx8JMgU.png \"Config Menu\")\n\n* **Command** - The command you want to use with this script, eg. !xp.\n* **Marker** - The \"dead\" marker you want to use to give an option to reward experience when something dies.\n* **Player XP Attribute** - The player's experience attribute in the sheet you are using, this is defaulted to the 5e OGL sheet (experience).\n* **NPC XP Attribute** - The npc's experience attribute in the sheet you are using, this is defaulted to the 5e OGL sheet (npc_xp).\n* **Extra Players** - This can be used to add to the experience divisors (eg. for npc under no one's control, etc).\n* **Give XP Instant** - If you want to instantly give experience to the players when you reward it, otherwise it will be rewarded at the end of the session.\n* **Update Sheets** - If you want to update the characters sheets when experience is rewarded.\n* **Refresh Players** - Refresh the player list (eg. when a new player joins or someone leaves).\n* **Reset Experience** - Resets the experience back to 0.\n* **Reset Config** - Resets the config options to default.\n\n#### Player Config\n[Player Config](https://i.imgur.com/1ldnSc2.png \"Player Config\")\n\n* **Active Toggles** - Sets the player/character active (or not). A player/character who is not active will not be rewarded xp at the end of the session and will not be in the LazyExperience menu list.\n* **Add Experience** - Reward experience to (one of) the player's character(s).\n* **Back** - Back to the config menu.\n* **Remove** - Removes the player entirely from the LazyExperience config.\n\n### Commands\n\n* **!xp help** - Shows the help menu.\n* **!xp config** - Shows the config menu.\n* **!xp menu** - Shows the LazyExperience menu (more below).\n* **!xp add session [XP]** - Adds (or gives if you want to give instantly) experience to the session experience threshold, where [XP] is the amount of experience.\n* **!xp add [characterid] [XP]** - Adds (or gives if you want to give instantly) experience to the character experience threshold, where [characterid] is the character's id and [XP] is the amount of experience.\n* **!xp end** - Ends the session, reset experience, and rewards experience to the players (if you didn't reward it instantly).\n\n#### LazyExperience Menu\n![Menu](https://i.imgur.com/2EwXsCf.png \"Menu\")\n\nThis menu shows the current experience in the session threshold. It also show the amount it will be divised with when rewarded.\nA list of active players with there active characters is also shown here, and experience can be rewarded.\n\n#### Statusmarker Dead\n![Dead](https://i.imgur.com/5bpZgHj.png `Dead`)\n\nWhen a token is given the statusmarker you have set up in the config (`dead` by default), you will get the question if you want to add the experience to the session experience threshold.\nThis works great with [TokenMod](https://app.roll20.net/forum/post/4225825/script-update-tokenmod-an-interface-to-adjusting-properties-of-a-token-from-a-macro-or-the-chat-area/?pageforid=4225825#post-4225825) statusmarker changes and with my [DeathTracker](https://github.com/RobinKuiper/Roll20APIScripts/tree/master/DeathTracker) script.\n\nRoll20 Thread: https://app.roll20.net/forum/post/6275681/script-lazyexperience/?pageforid=6275681#post-6275681",
-    "authors": "Robin Kuiper",
-    "roll20userid": "1226016",
-    "patreon": "https://www.patreon.com/robinkuiper",
-    "useroptions": [],
-    "dependencies": [],
-    "modifies": {
-        "state.LAZYEXPERIENCE": "read,write",
-        "attribute.name": "read,write",
-        "attribute.current": "read,write",
-        "character.name": "read",
-        "character.id": "read",
-        "player.id": "read",
-        "player.displayname": "read"
+  "name": "LazyExperience",
+  "script": "LazyExperience.js",
+  "version": "1.1.0",
+  "previousversions": [
+    "0.1.11",
+    "0.1.12",
+    "0.1.13",
+    "0.1.14",
+    "1.0.0"
+  ],
+  "description": "LazyExperience collects the experience points (XP) a party earns during a session, splits them fairly and writes them to the character sheets. It works with the D&D 2024 sheet and many other sheets.\n\n- **Many sheets, tested in Roll20.** D&D 5E 2024 (Beacon), D&D 5E Classic and Shaped, Pathfinder 1E, Community and 2E, Starfinder, Old School Essentials, Dungeon Crawl Classics, Dungeon World, Shadowrun 5E and 6E (karma) and Cypher. WFRP 4E is partly supported. Other sheets work through common field names, or fields you name yourself. See **Supported sheets**.\n- **Roll20's own party.** Characters ticked as **Party Member** share the XP. Without a party, the characters controlled by players do.\n- **Defeated creatures.** A creature dropping to 0 HP, getting the defeated marker, or being marked dead by DeathTracker adds its XP to the session. By default you're asked first. The XP comes from the sheet's XP value or challenge rating.\n- **Fair splits.** Absent players can get nothing or part of a share, and characters can have their own share. There's bonus XP for one character and extra shares for companions. XP that doesn't divide evenly carries over to the next session.\n- **Two ways to pay.** XP can be paid at the end of the session (the default) or straight away.\n- **Level-ups** are announced when a character has enough XP.\n- **Session Log handout.** Every session is recorded, newest first.\n- Help and Command Deck handouts, in 24 languages.\n\n## Quick start\n\n1. Install LazyExperience. A **LazyExperience - Help** and a **LazyExperience - Command Deck** handout appear in the journal.\n2. In Jumpgate, tick **Party Member** on each player character (open the character, then its settings). You can also select their tokens and use **Add Selected to Party** on the Party card. Without a party, every character controlled by a player shares the XP.\n3. Type `!lazyxp` to open the menu.\n4. When a creature's HP bar reaches 0, you are asked whether to add its XP. You can also select defeated tokens and press **Defeated: Selected**.\n5. Use **Add XP** for anything else (quests, role-play), and **Bonus: Selected** for one character.\n6. Mark players who missed the session as **Absent**.\n7. Press **End Session**. Each character's XP is written to their sheet, announced, whispered to its player and added to the **LazyExperience - Session Log** handout.\n\n## Commands\n\nEvery command starts with `!lazyxp`. `!lazyexperience` also works, and so does `!xp` unless EasyExperience or ExperienceTracker is installed (both use it). Only the GM can use the commands. Other Mods, such as ScriptCards, can send them too.\n\nCommands for characters use the selected tokens, or `--ids` followed by character or token IDs separated by commas.\n\n| Command                               | What it does                                                         |\n| ------------------------------------- | -------------------------------------------------------------------- |\n| `!lazyxp`                             | Main menu.                                                           |\n| `!lazyxp add <xp> [reason]`           | Add XP to the session.                                               |\n| `!lazyxp bonus <xp> [reason] [--ids]` | Bonus XP for the selected characters, on top of their share.         |\n| `!lazyxp give <xp> [reason] [--ids]`  | Pay XP to the selected characters now. A negative amount corrects.   |\n| `!lazyxp kill [--xp <n>]`             | Count the selected tokens as defeated and add their XP.              |\n| `!lazyxp kill confirm <token> [xp]`   | Add a defeated creature's XP (the prompt's buttons).                 |\n| `!lazyxp absent` / `present`          | Mark the selected characters absent (this session) or present.       |\n| `!lazyxp share <n>`                   | Give the selected characters a different share, such as 0.5.         |\n| `!lazyxp exclude` / `include`         | Leave characters out of the party, or include them again.            |\n| `!lazyxp undo`                        | Take back the last award that hasn't been paid.                      |\n| `!lazyxp end`                         | End the session: pay, announce and log.                              |\n| `!lazyxp reset session`               | Clear the session XP without paying it.                              |\n| `!lazyxp show`                        | Each party member's XP and level from the sheet, and the next level. |\n| `!lazyxp roster`                      | The Party card: who shares, shares, absence.                         |\n| `!lazyxp party add` / `remove`        | Tick or untick Roll20's Party Member for the selected characters.    |\n| `!lazyxp settings`                    | Settings card.                                                       |\n| `!lazyxp set <setting> <value>`       | Change a setting.                                                    |\n| `!lazyxp lang [code]`                 | Choose the language.                                                 |\n| `!lazyxp status`                      | Sandbox, commands and game systems in use.                           |\n| `!lazyxp log`                         | Link to the Session Log handout.                                     |\n| `!lazyxp journal`                     | Rebuild the handouts.                                                |\n| `!lazyxp help`                        | Short help.                                                          |\n\n## Settings\n\n| Setting            | Default    | What it does                                                                                    |\n| ------------------ | ---------- | ----------------------------------------------------------------------------------------------- |\n| `language`         | `en-US`    | Language for chat cards and handouts.                                                           |\n| `payout`           | `end`      | `end`: pay when the session ends. `instant`: split and pay every award at once.                 |\n| `updateSheets`     | `true`     | Write XP to the sheets. When off, the totals are only announced.                                |\n| `system`           | `auto`     | Game-system profile. `auto` picks one per character from its sheet; `custom` uses your fields.  |\n| `pf1Track`         | `medium`   | Pathfinder 1E XP track: `fast`, `medium`, `slow`, tracks by level, or `sheet`.                  |\n| `roster`           | `auto`     | `auto`, `party` (Roll20 party), `players` (characters controlled by players) or `manual`.       |\n| `absentShare`      | `0`        | Part of a share an absent character still gets, from 0 to 1 (or 0% to 100%).                    |\n| `extraShares`      | `0`        | Shares for companions not on a sheet. Their XP isn't paid to anyone.                            |\n| `killMode`         | `prompt`   | `prompt` asks before adding a defeated creature's XP; `auto` adds it; `off` stops watching.     |\n| `killBar`          | `true`     | A creature is defeated when its HP bar drops to 0 or below.                                     |\n| `hpBar`            | `1`        | The token bar (1, 2 or 3) that holds hit points.                                                |\n| `killMarker`       | `true`     | A creature is defeated when the defeated marker goes on.                                        |\n| `marker`           | `dead`     | The defeated marker: a built-in name, or a custom marker's name.                                |\n| `killDeathTracker` | `true`     | Use DeathTracker 1.0's dead status.                                                             |\n| `announce`         | `public`   | Who sees XP awards and the session summary: `public`, `whisper`, `gm` or `off`.                 |\n| `levelNotice`      | `public`   | Who sees level-up notices: `public`, `whisper` (player and GM), `gm` or `off`.                  |\n| `customXp` …       | (see Help) | With `system custom`: XP, level, creature XP and challenge fields, and an optional level table. |\n\nAll settings can also be set on install from the One-Click options.\n\n## Supported sheets\n\nLazyExperience picks a game-system profile for each character from the sheet the game uses. That is the **Character Sheet Template** in the game's Settings. Every sheet below was tested in a Jumpgate game on 5 November 2026. Each test filled in a PC and a creature through the sheet itself, then:\n\n- paid XP with **End Session**;\n- checked the value saved on the sheet and that the sheet's own calculations ran;\n- dropped the creature's HP to 0;\n- checked for the level-up notice.\n\n| Sheet in Roll20's settings                          | Sheet name (Mods)        | XP written to                                                      | Level-up notice from                              | Defeated creature's XP                       | Result                                                  |\n| --------------------------------------------------- | ------------------------ | ------------------------------------------------------------------ | ------------------------------------------------- | -------------------------------------------- | ------------------------------------------------------- |\n| D&D Fifth Edition (5E & 5.5E)                       | `dnd2024byroll20`        | `experience` (Beacon)                                              | 5e table; the sheet shows its own Level Up button | `npc_xp` (450 for an Ogre), else CR          | Tested                                                  |\n| D&D 5E (Classic)                                    | `ogl5e`                  | `experience`                                                       | 5e table; the sheet turns on its Level Up button  | `npc_xp`, which the sheet fills from CR      | Tested                                                  |\n| D&D 5E (Shaped)                                     | `dnd5eshaped2`           | `xp`                                                               | `xp_next_level`, else the 5e table                | `xp`, which the sheet fills from `challenge` | Tested                                                  |\n| Pathfinder                                          | `pathfinderofficial`     | `xp`                                                               | `pf1Track` (medium); written to `xp_max`          | `npc_cr` (CR ½ = 200)                        | Tested                                                  |\n| Pathfinder Community                                | `pathfinderneceros`      | `experience`                                                       | `pf1Track` (medium); written to `experience_max`  | `npc-xp`, else `npc-cr` (CR 1 = 400)         | Tested                                                  |\n| Pathfinder 2e (Demiplane Optional)                  | `pathfinder2eofficial`   | `xp`                                                               | 1,000 XP (take 1,000 off when levelling)          | creature level vs party level (+2 = 80)      | Tested                                                  |\n| Starfinder                                          | `starfinder`             | `xp`                                                               | `xp_max`, else the Starfinder table               | CR in `character_level` (CR ½ = 200)         | Tested                                                  |\n| Old School Essentials by Necrotic Gnome             | `oldschoolessentialsaac` | `XP`                                                               | `Next`                                            | —                                            | Tested                                                  |\n| Dungeon Crawl Classics by Goodman Games             | `dccofficial`, `dcc`     | `xp`                                                               | DCC table (level 0 funnel to level 1 at 10 XP)    | —                                            | Tested                                                  |\n| Dungeon World by Roll20                             | `dungeonworldofficial`   | `xp`                                                               | level + 7                                         | —                                            | Tested                                                  |\n| Shadowrun 5th Edition                               | `shadowrun5thedition`    | `karma` and `total karma`                                          | —                                                 | —                                            | Tested                                                  |\n| Shadowrun, Sixth World                              | `shadowrun6world`        | `karma` and `total_karma`                                          | —                                                 | —                                            | Tested                                                  |\n| Cypher Systems                                      | `cypherstemsr20`         | `xp`                                                               | —                                                 | —                                            | Tested                                                  |\n| Warhammer Fantasy Roleplay 4e Official by Cubicle 7 | `wfrp4official`          | a new row in the Experience list                                   | —                                                 | —                                            | Partly: the sheet did not recalculate its XP totals     |\n| Official Savage Worlds by Pinnacle                  | `savageworldsofficial`   | nothing: the sheet counts Advances                                 | —                                                 | —                                            | Tested (XP refused with a warning)                      |\n| 13th Age                                            | `official13thage`        | nothing: no XP on the sheet                                        | —                                                 | —                                            | Tested (XP refused with a warning)                      |\n| Call of Cthulhu 7th Edition                         | `coc7e`, `callofcthulu`  | nothing: no XP on the sheet                                        | —                                                 | —                                            | Tested (XP refused with a warning)                      |\n| Cosmere RPG (Demiplane Optional)                    | `cosmereofficial`        | nothing: no XP on the sheet                                        | —                                                 | —                                            | Not tested: Roll20 would not switch the test game to it |\n| Any other sheet                                     | —                        | `experience`, `xp`, `exp` or `experience_points`, whichever exists | custom level table                                | `npc_xp`, `xp` or `experience`, else CR      | Use **Game system: custom** to name the fields          |\n\nNotes:\n\n- Sheets that aren't listed but are copies of a listed one are recognised by attributes only that sheet has.\n- Characters made by another Mod (not in the journal) report no sheet name, so the game's sheet is used.\n- Legacy sheets get XP as text through the sheet's own workers, as if a player had typed it.\n- Beacon sheets (D&D 2024) need **Mod sandbox v1.5**, and a Mod can't set them to 0 XP.\n- Sheets offered through Demiplane (`nexus_…`), such as Daggerheart and Starfinder 2e, keep their data outside Roll20's attributes. They aren't supported.\n\n## Pathfinder 1E tracks\n\nPathfinder 1E has three XP tracks: fast, medium and slow. The **Pathfinder 1E track** setting (`pf1Track`) picks one for level-up notices, and it is medium unless you change it. Each time XP is written, the XP for the next level on that track is written to the sheet's next-level box too (the number after the slash beside XP), so the sheet and the notices agree.\n\nThe track can change by level. List each track with the level it starts at:\n\n```\n!lazyxp set pf1Track fast 1-3, medium 4-13, slow 14+\n```\n\nA character advances on the track for the level they are on now, using that track's table. In the example, a level 4 character needs 15,000 XP for level 5 (medium), and a level 14 character needs 955,000 XP for level 15 (slow). Change the setting at any time; the next award uses it. On the settings card, the track button picks fast, medium, slow or the sheet's box, and **Mixed** asks for tracks by level.\n\n`sheet` uses the next-level box as you type it, and the Mod doesn't change it. When the box is blank, the medium track is used.\n\n## Upgrading from 0.1\n\nSettings, session XP and each character's extra XP are brought across the first time 1.0 starts. Players or characters that weren't active are left out of the party. A custom command name keeps working, and so do the old subcommands: `add session <xp>`, `add <characterid> <xp>`, `end`, `resetxp`, `config`, `refresh`.",
+  "authors": "Robin Kuiper, MidNiteShadow7",
+  "roll20userid": "1226016, 16506286",
+  "patreon": "https://www.patreon.com/robinkuiper",
+  "useroptions": [
+    {
+      "name": "payout",
+      "displayname": "Pay XP",
+      "description": "end: XP collects in the session pool and is handed out when the session ends. instant: every award is split and paid straight away.",
+      "type": "select",
+      "options": [
+        "end",
+        "instant"
+      ],
+      "default": "end"
     },
-    "conflicts": []
+    {
+      "name": "updateSheets",
+      "displayname": "Update sheets",
+      "description": "Write the XP to the character sheets. When off, the totals are only announced.",
+      "type": "checkbox",
+      "value": "true",
+      "checked": "checked"
+    },
+    {
+      "name": "system",
+      "displayname": "Game system",
+      "description": "Which sheet fields hold XP and level. auto picks the profile from each character’s sheet; custom uses the custom field settings.",
+      "type": "select",
+      "options": [
+        "auto",
+        "dnd2024",
+        "dnd2014",
+        "shaped5e",
+        "pf1",
+        "pf1community",
+        "pf2",
+        "sf1",
+        "ose",
+        "dcc",
+        "dungeonworld",
+        "wfrp4",
+        "shadowrun5",
+        "shadowrun6",
+        "cypher",
+        "swade",
+        "levelonly",
+        "cthulhu",
+        "generic",
+        "custom"
+      ],
+      "default": "auto"
+    },
+    {
+      "name": "pf1Track",
+      "displayname": "Pathfinder 1E track",
+      "description": "The XP track for Pathfinder 1E level-ups: fast, medium or slow, or tracks that change by level, such as fast 1-3, medium 4-13, slow 14+. The XP for the next level is written to the sheet’s box. sheet: use the box as the GM types it.",
+      "type": "text",
+      "default": "medium"
+    },
+    {
+      "name": "roster",
+      "displayname": "Party from",
+      "description": "auto: the Roll20 party if anyone is in it, otherwise characters controlled by players. party, players or manual pick one.",
+      "type": "select",
+      "options": [
+        "auto",
+        "party",
+        "players",
+        "manual"
+      ],
+      "default": "auto"
+    },
+    {
+      "name": "absentShare",
+      "displayname": "Absent share",
+      "description": "Part of a share an absent character still gets, from 0% (none) to 100% (full).",
+      "type": "text",
+      "default": "0"
+    },
+    {
+      "name": "extraShares",
+      "displayname": "Extra shares",
+      "description": "Shares for companions or hirelings who are not on a sheet. Their XP is not paid to anyone.",
+      "type": "text",
+      "default": "0"
+    },
+    {
+      "name": "killMode",
+      "displayname": "Defeated creatures",
+      "description": "prompt: ask the GM before adding a creature’s XP. auto: add it straight away. off: do not watch tokens.",
+      "type": "select",
+      "options": [
+        "prompt",
+        "auto",
+        "off"
+      ],
+      "default": "prompt"
+    },
+    {
+      "name": "killBar",
+      "displayname": "Watch HP bar",
+      "description": "Count a creature as defeated when its HP bar drops to 0 or below.",
+      "type": "checkbox",
+      "value": "true",
+      "checked": "checked"
+    },
+    {
+      "name": "hpBar",
+      "displayname": "HP bar",
+      "description": "Which token bar (1, 2 or 3) holds hit points.",
+      "type": "select",
+      "options": [
+        "1",
+        "2",
+        "3"
+      ],
+      "default": "1"
+    },
+    {
+      "name": "killMarker",
+      "displayname": "Watch marker",
+      "description": "Count a creature as defeated when the defeated marker is put on its token.",
+      "type": "checkbox",
+      "value": "true",
+      "checked": "checked"
+    },
+    {
+      "name": "marker",
+      "displayname": "Defeated marker",
+      "description": "The marker that means defeated: a built-in name such as dead, or a custom marker’s name.",
+      "type": "text",
+      "default": "dead"
+    },
+    {
+      "name": "killDeathTracker",
+      "displayname": "Use DeathTracker",
+      "description": "Count a creature as defeated when DeathTracker 1.0 or later marks it dead.",
+      "type": "checkbox",
+      "value": "true",
+      "checked": "checked"
+    },
+    {
+      "name": "announce",
+      "displayname": "XP messages",
+      "description": "Who sees XP awards and the end-of-session summary: public, whisper (players concerned and GM), gm or off.",
+      "type": "select",
+      "options": [
+        "public",
+        "whisper",
+        "gm",
+        "off"
+      ],
+      "default": "public"
+    },
+    {
+      "name": "levelNotice",
+      "displayname": "Level-up notices",
+      "description": "Who sees level-up notices: public, whisper (the player and GM), gm or off.",
+      "type": "select",
+      "options": [
+        "public",
+        "whisper",
+        "gm",
+        "off"
+      ],
+      "default": "public"
+    },
+    {
+      "name": "customXp",
+      "displayname": "Custom XP field",
+      "description": "Sheet field for a character’s XP when Game system is custom. A list tries each name in turn.",
+      "type": "text",
+      "default": "experience"
+    },
+    {
+      "name": "customLevel",
+      "displayname": "Custom level field",
+      "description": "Sheet field for a character’s level.",
+      "type": "text",
+      "default": "level"
+    },
+    {
+      "name": "customNpcXp",
+      "displayname": "Custom creature XP field",
+      "description": "Sheet field for the XP a creature is worth.",
+      "type": "text",
+      "default": "npc_xp"
+    },
+    {
+      "name": "customNpcCr",
+      "displayname": "Custom challenge field",
+      "description": "Sheet field for a creature’s challenge rating, used when it has no XP value.",
+      "type": "text",
+      "default": "npc_challenge"
+    },
+    {
+      "name": "customLevels",
+      "displayname": "Custom level table",
+      "description": "XP needed for each level, from level 1, such as 0,300,900,2700. Blank turns level-up notices off for custom sheets.",
+      "type": "text",
+      "default": ""
+    }
+  ],
+  "dependencies": [],
+  "modifies": {
+    "state.LazyExperience": "read,write",
+    "state.LAZYEXPERIENCE": "read",
+    "attribute.name": "read,write",
+    "attribute.current": "read,write",
+    "character.name": "read",
+    "character.controlledby": "read",
+    "character.inParty": "read,write",
+    "character.archived": "read",
+    "graphic.represents": "read",
+    "graphic.name": "read",
+    "graphic.bar1_value": "read",
+    "graphic.bar2_value": "read",
+    "graphic.bar3_value": "read",
+    "graphic.bar1_link": "read",
+    "graphic.bar2_link": "read",
+    "graphic.bar3_link": "read",
+    "graphic.statusmarkers": "read",
+    "handout.name": "read,write",
+    "handout.notes": "write",
+    "player.displayname": "read",
+    "Campaign.token_markers": "read"
+  },
+  "conflicts": []
 }
