@@ -5,7 +5,7 @@
  * Name: Concentration
  * Script: Concentration.js
  * Version: 1.1.0
- * Built: 2026-11-10T00:57:19.293Z
+ * Built: 2026-11-21T12:35:48.034Z
  */
 const ConcentrationMod = (() => {
   'use strict';
@@ -13,7 +13,7 @@ const ConcentrationMod = (() => {
   // Build-time placeholders replaced by rollup.config.js inject-build-metadata plugin.
   const SCRIPT_NAME = 'Concentration';
   const SCRIPT_VERSION = '1.1.0';
-  const SCRIPT_LAST_UPDATED = '2026-11-10T00:57:19.293Z';
+  const SCRIPT_LAST_UPDATED = '2026-11-21T12:35:48.034Z';
 
   const DEFAULT_LOCALE$1 = 'en-US';
 
@@ -103,6 +103,10 @@ const ConcentrationMod = (() => {
   // Linked bars change every token of a character at once; damage seen again
   // for the same character within this time is the same hit.
   const DAMAGE_DEBOUNCE_MS = 1000;
+
+  // Roll20 reports no bar change another Mod makes, so hit points are checked
+  // this long after each Mod command (AlterBars sets the bar after a dice roll).
+  const BAR_CHECK_DELAYS_MS = [500, 2000];
 
   // Limits on text typed into commands.
   const MAX_SPELL_LENGTH = 80;
@@ -968,7 +972,7 @@ const ConcentrationMod = (() => {
       troubleshooting: {
         heading: 'Probleemoplossing',
         points: [
-          'Geen stoor wanneer trefpunte daal nie: maak seker dat die teken die merker het en dat HP Bar die balk is wat jy verander het. Veranderinge wat deur ander Mods deur die API gemaak word, veroorsaak nie gebeurtenisse nie, dus word hulle nie gesien nie.',
+          'Geen stoor wanneer trefpunte daal nie: maak seker dat die teken die merker het en dat HP Bar die balk is wat jy verander het. Skade van ander Mods, soos AlterBars, word binne 2 sekondes ná hul opdrag opgemerk.',
           'Die wysiger is 0: kontroleer die bonuskenmerk teen die karakter se blad.',
           'Spele wat uit die blad gegooi word, word nie bespeur nie: skakel Ontfoutmodus aan, spel weer uit en lees die API-konsole.',
           "Twee karakters deel 'n naam: opsporing gebruik die eerste pasmaat. Gee karakters unieke name.",
@@ -1264,7 +1268,7 @@ const ConcentrationMod = (() => {
       troubleshooting: {
         heading: 'Resolució de problemes',
         points: [
-          "No hi ha cap desa quan baixen els punts de vida: comproveu que la fitxa tingui el marcador i que la barra d'HP sigui la barra que heu canviat. Els canvis fets per altres mods mitjançant l'API no generen esdeveniments, de manera que no es veuen.",
+          "No hi ha cap desa quan baixen els punts de vida: comproveu que la fitxa tingui el marcador i que la barra d'HP sigui la barra que heu canviat. El dany d'altres mods, com AlterBars, es detecta en un màxim de 2 segons després de la seva ordre.",
           "El modificador és 0: comproveu l'atribut de bonificació amb el full del personatge.",
           "Els encanteris llançats des del full no es detecten: activeu el mode de depuració, torneu a fer l'encanteri i llegiu la consola de l'API.",
           'Dos personatges comparteixen un nom: la detecció utilitza la primera coincidència. Doneu als personatges noms únics.',
@@ -1549,7 +1553,7 @@ const ConcentrationMod = (() => {
       troubleshooting: {
         heading: '故障排除',
         points: [
-          '生命值下降時不儲存：檢查令牌是否有標記，HP條是否是您更改的條。其他 Mod 透過 API 所做的變更不會引發事件，因此不會被看到。',
+          '生命值下降時不儲存：檢查令牌是否有標記，HP條是否是您更改的條。其他 Mod（例如 AlterBars）造成的傷害，會在其指令後 2 秒內被偵測到。',
           '修正值為 0：對照角色表檢查獎勵屬性。',
           '未偵測到從工作表施放的咒語：開啟偵錯模式，再次施放咒語並讀取 API 控制台。',
           '兩個字元共享一個名稱：檢測使用第一個匹配項。給角色取獨特的名字。',
@@ -1841,7 +1845,7 @@ const ConcentrationMod = (() => {
       troubleshooting: {
         heading: 'Odstraňování problémů',
         points: [
-          'Žádné uložení při poklesu životů: zkontrolujte, že žeton má značku a že pruh HP je pruh, který jste změnili. Změny provedené jinými mody prostřednictvím API nevyvolávají události, takže nejsou vidět.',
+          'Žádné uložení při poklesu životů: zkontrolujte, že žeton má značku a že pruh HP je pruh, který jste změnili. Zranění způsobené jinými mody, například AlterBars, se zachytí do 2 sekund od jejich příkazu.',
           'Modifikátor je 0: zkontrolujte bonusový atribut proti listu postavy.',
           'Kouzla seslaná z listu nejsou detekována: zapněte režim ladění, sešlete kouzlo znovu a přečtěte si konzolu API.',
           'Dva znaky sdílejí jméno: detekce používá první shodu. Dejte postavám jedinečná jména.',
@@ -2136,7 +2140,7 @@ const ConcentrationMod = (() => {
       troubleshooting: {
         heading: 'Fejlfinding',
         points: [
-          "Ingen lagring, når hitpoint falder: Tjek, at tokenet har markøren, og at HP Bar er den bjælke, du har ændret. Ændringer foretaget af andre Mods gennem API'et rejser ikke begivenheder, så de bliver ikke set.",
+          'Ingen lagring, når hitpoint falder: Tjek, at tokenet har markøren, og at HP Bar er den bjælke, du har ændret. Skade fra andre Mods, såsom AlterBars, opdages inden for 2 sekunder efter deres kommando.',
           'Modifikatoren er 0: Tjek bonusattributten mod karakterens ark.',
           'Besværgelser, der kastes fra arket, registreres ikke: Aktiver Fejlretningstilstand, cast trylleformularen igen, og læs API-konsollen.',
           'To tegn deler et navn: Detektion bruger det første match. Giv karakterer unikke navne.',
@@ -2432,7 +2436,7 @@ const ConcentrationMod = (() => {
       troubleshooting: {
         heading: 'Problemen oplossen',
         points: [
-          'Geen opslag als de hitpoints vallen: controleer of het token de markering heeft en dat HP Bar de balk is die je hebt gewijzigd. Wijzigingen die door andere Mods via de API zijn aangebracht, veroorzaken geen gebeurtenissen en worden dus niet gezien.',
+          'Geen opslag als de hitpoints vallen: controleer of het token de markering heeft en dat HP Bar de balk is die je hebt gewijzigd. Schade van andere Mods, zoals AlterBars, wordt binnen 2 seconden na hun opdracht opgemerkt.',
           'De modifier is 0: controleer het bonuskenmerk op het blad van het personage.',
           'Spreuken uit het blad worden niet gedetecteerd: schakel de foutopsporingsmodus in, spreek de spreuk opnieuw uit en lees de API-console.',
           'Twee karakters delen een naam: detectie gebruikt de eerste match. Geef karakters unieke namen.',
@@ -2723,7 +2727,7 @@ const ConcentrationMod = (() => {
       troubleshooting: {
         heading: 'Troubleshooting',
         points: [
-          'No save when hit points drop: check that the token has the marker and that HP Bar is the bar you changed. Changes made by other Mods through the API do not raise events, so they are not seen.',
+          'No save when hit points drop: check that the token has the marker and that HP Bar is the bar you changed. Damage from other Mods, such as AlterBars, is noticed within 2 seconds of their command.',
           'The modifier is 0: check the Bonus Attribute against the character’s sheet.',
           'Spells cast from the sheet are not detected: turn on Debug Mode, cast the spell again and read the API console.',
           'Two characters share a name: detection uses the first match. Give characters unique names.',
@@ -3017,7 +3021,7 @@ const ConcentrationMod = (() => {
       troubleshooting: {
         heading: 'Vianetsintä',
         points: [
-          'Ei tallennusta, kun osumapisteet putoavat: tarkista, että tunnuksessa on merkintä ja että HP Bar on se palkki, jonka muutit. Muiden modien API:n kautta tekemät muutokset eivät aiheuta tapahtumia, joten niitä ei näytetä.',
+          'Ei tallennusta, kun osumapisteet putoavat: tarkista, että tunnuksessa on merkintä ja että HP Bar on se palkki, jonka muutit. Muiden modien, kuten AlterBarsin, aiheuttama vahinko huomataan 2 sekunnin kuluessa niiden komennosta.',
           'Muutos on 0: tarkista bonusominaisuus hahmon arkkia vastaan.',
           'Arkista lähetettyjä loitsuja ei havaita: ota virheenkorjaustila käyttöön, loitsu uudelleen ja lue API-konsoli.',
           'Kahdella hahmolla on yhteinen nimi: tunnistus käyttää ensimmäistä vastaavuutta. Anna hahmoille yksilölliset nimet.',
@@ -3313,7 +3317,7 @@ const ConcentrationMod = (() => {
       troubleshooting: {
         heading: 'Dépannage',
         points: [
-          "Pas de sauvegarde lorsque les points de vie chutent : vérifiez que le jeton porte le marqueur et que la barre HP est bien la barre que vous avez modifiée. Les modifications apportées par d'autres mods via l'API ne déclenchent pas d'événements, elles ne sont donc pas visibles.",
+          "Pas de sauvegarde lorsque les points de vie chutent : vérifiez que le jeton porte le marqueur et que la barre HP est bien la barre que vous avez modifiée. Les dégâts infligés par d'autres mods, comme AlterBars, sont détectés dans les 2 secondes suivant leur commande.",
           'Le modificateur est 0 : vérifiez l’attribut bonus par rapport à la feuille du personnage.',
           'Les sorts lancés depuis la feuille ne sont pas détectés : activez le mode débogage, lancez à nouveau le sort et lisez la console API.',
           'Deux personnages partagent un nom : la détection utilise la première correspondance. Donnez aux personnages des noms uniques.',
@@ -3611,7 +3615,7 @@ const ConcentrationMod = (() => {
       troubleshooting: {
         heading: 'Fehlerbehebung',
         points: [
-          'Kein Speichern, wenn Trefferpunkte sinken: Überprüfen Sie, ob der Marker die Markierung hat und ob der HP-Balken der Balken ist, den Sie geändert haben. Von anderen Mods über die API vorgenommene Änderungen lösen keine Ereignisse aus und werden daher nicht angezeigt.',
+          'Kein Speichern, wenn Trefferpunkte sinken: Überprüfen Sie, ob der Marker die Markierung hat und ob der HP-Balken der Balken ist, den Sie geändert haben. Schaden durch andere Mods wie AlterBars wird innerhalb von 2 Sekunden nach deren Befehl erkannt.',
           'Der Modifikator ist 0: Vergleichen Sie das Bonusattribut mit dem Blatt des Charakters.',
           'Vom Blatt aus gewirkte Zauber werden nicht erkannt: Aktivieren Sie den Debug-Modus, wirken Sie den Zauber erneut und lesen Sie die API-Konsole.',
           'Zwei Zeichen teilen sich einen Namen: Bei der Erkennung wird die erste Übereinstimmung verwendet. Geben Sie den Charakteren eindeutige Namen.',
@@ -3909,7 +3913,7 @@ const ConcentrationMod = (() => {
       troubleshooting: {
         heading: 'Αντιμετώπιση προβλημάτων',
         points: [
-          'Χωρίς αποθήκευση όταν πέφτουν τα σημεία επιτυχίας: ελέγξτε ότι το διακριτικό έχει τον δείκτη και ότι η γραμμή HP είναι η γραμμή που αλλάξατε. Οι αλλαγές που γίνονται από άλλα Mods μέσω του API δεν δημιουργούν συμβάντα, επομένως δεν εμφανίζονται.',
+          'Χωρίς αποθήκευση όταν πέφτουν τα σημεία επιτυχίας: ελέγξτε ότι το διακριτικό έχει τον δείκτη και ότι η γραμμή HP είναι η γραμμή που αλλάξατε. Η ζημιά από άλλα Mods, όπως το AlterBars, εντοπίζεται μέσα σε 2 δευτερόλεπτα από την εντολή τους.',
           'Ο τροποποιητής είναι 0: ελέγξτε το Χαρακτηριστικό Μπόνους στο φύλλο του χαρακτήρα.',
           'Τα ξόρκια από το φύλλο δεν εντοπίζονται: ενεργοποιήστε τη λειτουργία εντοπισμού σφαλμάτων, κάντε ξανά το ξόρκι και διαβάστε την κονσόλα API.',
           'Δύο χαρακτήρες μοιράζονται ένα όνομα: η ανίχνευση χρησιμοποιεί την πρώτη αντιστοίχιση. Δώστε στους χαρακτήρες μοναδικά ονόματα.',
@@ -4198,7 +4202,7 @@ const ConcentrationMod = (() => {
       troubleshooting: {
         heading: 'פתרון בעיות',
         points: [
-          'אין שמירה כאשר נקודות הפגיעה יורדות: בדוק שלאסימון יש את הסמן וש-HP Bar הוא הסרגל ששינית. שינויים שבוצעו על ידי מודים אחרים דרך ה-API לא מעלים אירועים, ולכן הם לא נראים.',
+          'אין שמירה כאשר נקודות הפגיעה יורדות: בדוק שלאסימון יש את הסמן וש-HP Bar הוא הסרגל ששינית. נזק ממודים אחרים, כמו AlterBars, מזוהה תוך 2 שניות מהפקודה שלהם.',
           'השינוי הוא 0: בדוק את תכונת הבונוס מול הגיליון של הדמות.',
           'קסמים שהוטלו מהגיליון אינם מזוהים: הפעל את מצב ניפוי באגים, הטיל את הלחש שוב וקרא את מסוף ה-API.',
           'שתי תווים חולקים שם: זיהוי משתמש בהתאמה הראשונה. תן לדמויות שמות ייחודיים.',
@@ -4494,7 +4498,7 @@ const ConcentrationMod = (() => {
       troubleshooting: {
         heading: 'Hibaelhárítás',
         points: [
-          'Nincs mentés, ha a találati pontok csökkennek: ellenőrizze, hogy a tokenben van-e a jelölő, és hogy a HP Bar az a sáv, amelyet megváltoztatott. Más Modok által az API-n keresztül végrehajtott módosítások nem okoznak eseményeket, így nem láthatók.',
+          'Nincs mentés, ha a találati pontok csökkennek: ellenőrizze, hogy a tokenben van-e a jelölő, és hogy a HP Bar az a sáv, amelyet megváltoztatott. Más Modok, például az AlterBars által okozott sebzést a parancsuk után 2 másodpercen belül észleli.',
           'A módosító 0: ellenőrizze a bónusz attribútumot a karakter lapjával.',
           'A lapról leadott varázslatok nem észlelhetők: kapcsolja be a hibakeresési módot, hajtsa végre újra a varázslatot, és olvassa el az API-konzolt.',
           'Két karakternek közös a neve: az észlelés az első egyezést használja. Adjon egyedi neveket a karaktereknek.',
@@ -4790,7 +4794,7 @@ const ConcentrationMod = (() => {
       troubleshooting: {
         heading: 'Risoluzione dei problemi',
         points: [
-          "Nessun salvataggio quando i punti ferita scendono: controlla che il gettone abbia il segnalino e che la Barra HP sia la barra che hai modificato. Le modifiche apportate da altri Mod tramite l'API non generano eventi, quindi non vengono visualizzate.",
+          'Nessun salvataggio quando i punti ferita scendono: controlla che il gettone abbia il segnalino e che la Barra HP sia la barra che hai modificato. I danni inflitti da altri Mod, come AlterBars, vengono rilevati entro 2 secondi dal loro comando.',
           'Il modificatore è 0: controlla l’Attributo Bonus sulla scheda del personaggio.',
           "Gli incantesimi lanciati dal foglio non vengono rilevati: attiva la modalità Debug, lancia nuovamente l'incantesimo e leggi la console API.",
           'Due caratteri condividono un nome: il rilevamento utilizza la prima corrispondenza. Assegna nomi univoci ai personaggi.',
@@ -5085,7 +5089,7 @@ const ConcentrationMod = (() => {
       troubleshooting: {
         heading: 'トラブルシューティング',
         points: [
-          'ヒット ポイントが低下すると保存されません。トークンにマーカーがあること、および HP バーが変更したバーであることを確認してください。 API を介して他の Mod によって行われた変更はイベントを発生させないため、表示されません。',
+          'ヒット ポイントが低下すると保存されません。トークンにマーカーがあること、および HP バーが変更したバーであることを確認してください。 AlterBars など他の Mod によるダメージは、そのコマンドから 2 秒以内に検出されます。',
           '修飾子は 0 です。キャラクターのシートに対してボーナス属性を確認します。',
           'シートから唱えた呪文は検出されません。デバッグ モードをオンにして、もう一度呪文を唱え、API コンソールを読み取ります。',
           '2 つの文字は名前を共有します。検出では最初の一致が使用されます。キャラクターに一意の名前を付けます。',
@@ -5377,7 +5381,7 @@ const ConcentrationMod = (() => {
       troubleshooting: {
         heading: '문제 해결',
         points: [
-          '체력이 떨어지면 저장되지 않습니다. 토큰에 마커가 있고 HP 바가 변경한 바인지 확인하세요. API를 통해 다른 Mod에 의해 변경된 사항은 이벤트를 발생시키지 않으므로 표시되지 않습니다.',
+          '체력이 떨어지면 저장되지 않습니다. 토큰에 마커가 있고 HP 바가 변경한 바인지 확인하세요. AlterBars 같은 다른 Mod가 준 피해는 해당 명령 후 2초 이내에 감지됩니다.',
           '수정자는 0입니다. 캐릭터 시트와 비교하여 보너스 속성을 확인하세요.',
           '시트에서 시전된 주문은 감지되지 않습니다. 디버그 모드를 켜고 다시 주문을 시전한 후 API 콘솔을 읽으세요.',
           '두 문자가 이름을 공유합니다. 감지에서는 첫 번째 일치 항목을 사용합니다. 캐릭터에게 고유한 이름을 부여하세요.',
@@ -5672,7 +5676,7 @@ const ConcentrationMod = (() => {
       troubleshooting: {
         heading: 'Rozwiązywanie problemów',
         points: [
-          'Brak zapisu po spadku punktów wytrzymałości: sprawdź, czy żeton ma znacznik i czy pasek HP to pasek, który zmieniłeś. Zmiany dokonane przez innych Modów za pośrednictwem API nie wywołują zdarzeń, więc nie są widoczne.',
+          'Brak zapisu po spadku punktów wytrzymałości: sprawdź, czy żeton ma znacznik i czy pasek HP to pasek, który zmieniłeś. Obrażenia zadane przez inne Mody, takie jak AlterBars, są wykrywane w ciągu 2 sekund od ich polecenia.',
           'Modyfikator wynosi 0: sprawdź atrybut bonusowy na karcie postaci.',
           'Czary rzucane z arkusza nie są wykrywane: włącz tryb debugowania, rzuć zaklęcie ponownie i przeczytaj konsolę API.',
           'Dwie postacie mają wspólną nazwę: wykrywanie wykorzystuje pierwsze dopasowanie. Nadaj postaciom unikalne imiona.',
@@ -5967,7 +5971,7 @@ const ConcentrationMod = (() => {
       troubleshooting: {
         heading: 'Solução de problemas',
         points: [
-          'Não é possível guardar quando os pontos de vida caem: verifique se o token tem o marcador e se a Barra de HP é a barra que alterou. As alterações efetuadas por outros Mods através da API não geram eventos, pelo que não são visualizadas.',
+          'Não é possível guardar quando os pontos de vida caem: verifique se o token tem o marcador e se a Barra de HP é a barra que alterou. O dano de outros Mods, como o AlterBars, é detetado até 2 segundos após o respetivo comando.',
           'O modificador é 0: compare o Atributo Bónus com a ficha da personagem.',
           'Os feitiços lançados a partir da folha de cálculo não são detetados: ative o modo de depuração, lance o feitiço novamente e leia a consola da API.',
           'Dois caracteres partilham um nome: a deteção utiliza a primeira correspondência. Dê nomes únicos às personagens.',
@@ -6261,7 +6265,7 @@ const ConcentrationMod = (() => {
       troubleshooting: {
         heading: 'Solução de problemas',
         points: [
-          'Não é possível salvar quando os pontos de vida caem: verifique se o token possui o marcador e se a Barra de HP é a barra que você alterou. Alterações feitas por outros Mods através da API não geram eventos, portanto não são visualizadas.',
+          'Não é possível salvar quando os pontos de vida caem: verifique se o token possui o marcador e se a Barra de HP é a barra que você alterou. O dano de outros Mods, como o AlterBars, é detectado em até 2 segundos após o comando deles.',
           'O modificador é 0: compare o Atributo Bônus com a ficha do personagem.',
           'Os feitiços lançados da planilha não são detectados: ative o modo de depuração, lance o feitiço novamente e leia o console da API.',
           'Dois caracteres compartilham um nome: a detecção usa a primeira correspondência. Dê nomes exclusivos aos personagens.',
@@ -6557,7 +6561,7 @@ const ConcentrationMod = (() => {
       troubleshooting: {
         heading: 'Поиск неисправностей',
         points: [
-          'Нет сохранения, когда очки жизни падают: убедитесь, что на жетоне есть маркер и что полоса HP — это полоска, которую вы изменили. Изменения, внесенные другими модами через API, не вызывают событий, поэтому они не видны.',
+          'Нет сохранения, когда очки жизни падают: убедитесь, что на жетоне есть маркер и что полоса HP — это полоска, которую вы изменили. Урон от других модов, например AlterBars, замечается в течение 2 секунд после их команды.',
           'Модификатор равен 0: проверьте бонусный атрибут на листе персонажа.',
           'Заклинания, произнесенные с листа, не обнаруживаются: включите Режим отладки, произнесите заклинание еще раз и прочитайте консоль API.',
           'Два символа имеют одно и то же имя: при обнаружении используется первое совпадение. Дайте персонажам уникальные имена.',
@@ -6852,7 +6856,7 @@ const ConcentrationMod = (() => {
       troubleshooting: {
         heading: 'Solución de problemas',
         points: [
-          'No guardar cuando los puntos de vida caen: verifica que la ficha tenga el marcador y que la barra de HP sea la barra que cambiaste. Los cambios realizados por otros Mods a través de la API no generan eventos, por lo que no se ven.',
+          'No guardar cuando los puntos de vida caen: verifica que la ficha tenga el marcador y que la barra de HP sea la barra que cambiaste. El daño de otros Mods, como AlterBars, se detecta en un máximo de 2 segundos tras su comando.',
           'El modificador es 0: compara el Atributo de Bonificación con la hoja del personaje.',
           'Los hechizos lanzados desde la hoja no se detectan: active el modo de depuración, vuelva a lanzar el hechizo y lea la consola API.',
           'Dos personajes comparten un nombre: la detección utiliza la primera coincidencia. Dale a los personajes nombres únicos.',
@@ -7146,7 +7150,7 @@ const ConcentrationMod = (() => {
       troubleshooting: {
         heading: 'Felsökning',
         points: [
-          'Ingen räddning när träffpunkterna faller: kontrollera att token har markören och att HP Bar är stapeln du ändrade. Ändringar som görs av andra Mods via API:n skapar inga händelser, så de syns inte.',
+          'Ingen räddning när träffpunkterna faller: kontrollera att token har markören och att HP Bar är stapeln du ändrade. Skada från andra Mods, som AlterBars, upptäcks inom 2 sekunder efter deras kommando.',
           'Modifieraren är 0: kontrollera bonusattributet mot karaktärens ark.',
           'Besvärjelser som kastas från arket upptäcks inte: aktivera felsökningsläge, trollformel igen och läs API-konsolen.',
           'Två tecken delar ett namn: detektion använder den första matchningen. Ge karaktärer unika namn.',
@@ -7442,7 +7446,7 @@ const ConcentrationMod = (() => {
       troubleshooting: {
         heading: 'Sorun giderme',
         points: [
-          'Can puanları düştüğünde kaydetme yok: jetonda işaret bulunduğunu ve HP Çubuğunun değiştirdiğiniz çubuk olup olmadığını kontrol edin. API aracılığıyla diğer Modlar tarafından yapılan değişiklikler olayları artırmaz, dolayısıyla görülmezler.',
+          'Can puanları düştüğünde kaydetme yok: jetonda işaret bulunduğunu ve HP Çubuğunun değiştirdiğiniz çubuk olup olmadığını kontrol edin. AlterBars gibi diğer Modların verdiği hasar, komutlarından sonraki 2 saniye içinde fark edilir.',
           "Değiştirici 0'dır: Bonus Niteliğini karakterin sayfasına göre kontrol edin.",
           'Sayfadan yapılan büyüler algılanmıyor: Hata Ayıklama Modunu açın, büyüyü tekrar yapın ve API konsolunu okuyun.',
           'İki karakter aynı adı paylaşır: algılama ilk eşleşmeyi kullanır. Karakterlere benzersiz adlar verin.',
@@ -7737,7 +7741,7 @@ const ConcentrationMod = (() => {
       troubleshooting: {
         heading: 'Усунення несправностей',
         points: [
-          'Немає збереження при падінні життєвих очок: перевірте, чи маркер має маркер і чи змінена панель HP. Зміни, внесені іншими модами через API, не викликають подій, тому їх не видно.',
+          'Немає збереження при падінні життєвих очок: перевірте, чи маркер має маркер і чи змінена панель HP. Шкоду від інших модів, як-от AlterBars, буде помічено протягом 2 секунд після їхньої команди.',
           'Модифікатор дорівнює 0: перевірте бонусний атрибут на аркуші персонажа.',
           'Заклинання, зроблені з аркуша, не розпізнаються: увімкніть режим налагодження, повторіть заклинання та прочитайте консоль API.',
           'Два символи мають спільну назву: для виявлення використовується перший збіг. Дайте персонажам унікальні імена.',
@@ -9817,12 +9821,13 @@ const ConcentrationMod = (() => {
    *
    * @param {object} token Roll20 graphic.
    * @param {object} prev Previous attributes.
+   * @param {string|number} [current] New hit points, when the bar may not show them yet.
    * @returns {Promise<void>}
    */
-  async function handleDamage(token, prev) {
+  async function handleDamage(token, prev, current) {
     const bar = `bar${getConfig().bar}_value`;
     const before = parseNumber(prev?.[bar]);
-    const after = parseNumber(token.get(bar));
+    const after = parseNumber(current ?? token.get(bar));
     if (before === null || after === null || after >= before) {
       return;
     }
@@ -10449,6 +10454,139 @@ const ConcentrationMod = (() => {
     }
   }
 
+  // Catches hit point damage that Roll20 never reports. Roll20 raises no
+  // change:graphic event when another Mod (AlterBars, for example) sets a token
+  // bar, so Concentration remembers the hit points of everyone concentrating and
+  // looks again shortly after each Mod command, and when a linked attribute changes.
+
+  /** Last hit points seen for each concentrating token: token ID → bar value. */
+  const seen = new Map();
+
+  /**
+   * Returns the name of the hit point bar's value property.
+   *
+   * @returns {string} For example 'bar1_value'.
+   */
+  function barValue() {
+    return `bar${getConfig().bar}_value`;
+  }
+
+  /**
+   * Returns every token on the map for someone concentrating.
+   *
+   * @returns {object[]} Tokens.
+   */
+  function concentratingTokens() {
+    return Object.keys(getRecords()).flatMap((key) => tokensFor(key));
+  }
+
+  /**
+   * Treats a drop in hit points as damage, logging any error.
+   *
+   * @param {object} token Roll20 graphic.
+   * @param {string} before Hit points before.
+   * @param {string} after Hit points now.
+   * @returns {void}
+   */
+  function damage(token, before, after) {
+    handleDamage(token, { [barValue()]: before }, after).catch((err) => {
+      log(`${SCRIPT_NAME} ERROR checking hit points: ${err?.message || err}`);
+    });
+  }
+
+  /**
+   * Remembers a token's hit points as seen.
+   *
+   * @param {object} token Roll20 graphic.
+   * @returns {void}
+   */
+  function noteBar(token) {
+    if (isToken(token)) {
+      seen.set(token.id, toText(token.get(barValue())));
+    }
+  }
+
+  /**
+   * Remembers the hit points of concentrating tokens not seen yet.
+   *
+   * @returns {void}
+   */
+  function noteUnseen() {
+    for (const token of concentratingTokens()) {
+      if (!seen.has(token.id)) {
+        noteBar(token);
+      }
+    }
+  }
+
+  /**
+   * Looks for hit points that dropped without an event and treats each drop as
+   * damage. Forgets tokens no longer concentrating.
+   *
+   * @returns {void}
+   */
+  function checkBars() {
+    const live = new Set();
+    for (const token of concentratingTokens()) {
+      live.add(token.id);
+      const before = seen.get(token.id);
+      noteBar(token);
+      const after = seen.get(token.id);
+      if (before !== undefined && before !== after) {
+        damage(token, before, after);
+      }
+    }
+    for (const id of seen.keys()) {
+      if (!live.has(id)) {
+        seen.delete(id);
+      }
+    }
+  }
+
+  /**
+   * After a Mod command, looks again once other Mods have had time to act
+   * (AlterBars waits for a dice roll before it sets the bar).
+   *
+   * @param {object} msg Roll20 chat message.
+   * @returns {void}
+   */
+  function handleApiCommand(msg) {
+    if (msg?.type !== 'api') {
+      return;
+    }
+    noteUnseen();
+    for (const delay of BAR_CHECK_DELAYS_MS) {
+      setTimeout(checkBars, delay);
+    }
+  }
+
+  /**
+   * A linked hit point attribute changed (by a Mod, a sheet or a person): treats a
+   * drop as damage to the tokens that show it.
+   *
+   * @param {object} attr Roll20 attribute.
+   * @param {object} prev Previous attribute values.
+   * @returns {void}
+   */
+  function handleAttributeChange(attr, prev) {
+    const characterId = toText(attr.get('characterid'));
+    const before = toText(prev?.current);
+    if (!characterId || before === toText(attr.get('current'))) {
+      return;
+    }
+    const link = `bar${getConfig().bar}_link`;
+    const records = getRecords();
+    for (const token of tokensFor(characterId)) {
+      if (toText(token.get(link)) !== attr.id || !records[keyOf(token)]) {
+        continue;
+      }
+      // The bar may not show the new value yet; the attribute is the truth.
+      const after = toText(attr.get('current'));
+      seen.set(token.id, after);
+      damage(token, before, after);
+    }
+  }
+
   let ready = false;
 
   /**
@@ -10502,6 +10640,7 @@ const ConcentrationMod = (() => {
     }
     const bar = `bar${getConfig().bar}_value`;
     if (String(prev?.[bar]) !== String(obj.get(bar))) {
+      noteBar(obj);
       return handleDamage(obj, prev);
     }
     return undefined;
@@ -10623,6 +10762,9 @@ const ConcentrationMod = (() => {
       }
     });
     on('chat:message', guarded('chat:message', handleInput));
+    // Other Mods change bars without an event (see watch.js).
+    on('chat:message', guarded('chat:message', handleApiCommand));
+    on('change:attribute', guarded('change:attribute', handleAttributeChange));
     on('change:graphic', guarded('change:graphic', handleGraphicChange));
     on('destroy:graphic', guarded('destroy:graphic', handleTokenDestroyed));
     // Roll20 fills in a new token's properties just after add:graphic, so wait a moment.
