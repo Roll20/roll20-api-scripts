@@ -273,7 +273,7 @@ const TRANSLATION = {
     troubleshooting: {
       heading: 'Fehlerbehebung',
       points: [
-        'Kein Speichern, wenn Trefferpunkte sinken: Überprüfen Sie, ob der Marker die Markierung hat und ob der HP-Balken der Balken ist, den Sie geändert haben. Von anderen Mods über die API vorgenommene Änderungen lösen keine Ereignisse aus und werden daher nicht angezeigt.',
+        'Kein Speichern, wenn Trefferpunkte sinken: Überprüfen Sie, ob der Marker die Markierung hat und ob der HP-Balken der Balken ist, den Sie geändert haben. Schaden durch andere Mods wie AlterBars wird innerhalb von 2 Sekunden nach deren Befehl erkannt.',
         'Der Modifikator ist 0: Vergleichen Sie das Bonusattribut mit dem Blatt des Charakters.',
         'Vom Blatt aus gewirkte Zauber werden nicht erkannt: Aktivieren Sie den Debug-Modus, wirken Sie den Zauber erneut und lesen Sie die API-Konsole.',
         'Zwei Zeichen teilen sich einen Namen: Bei der Erkennung wird die erste Übereinstimmung verwendet. Geben Sie den Charakteren eindeutige Namen.',

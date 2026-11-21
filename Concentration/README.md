@@ -34,7 +34,7 @@ Install **Concentration** from the Roll20 Mod Library (One-Click), or paste `Con
 - A failed save ends concentration. With **End at 0 HP** on, dropping to 0 hit points ends it without a save.
 - The **Advantage Menu** gives a character advantage on automatic saves, as the War Caster feat does.
 
-Only changes made in Roll20 itself (bar bubbles, the token settings, sheet changes on linked bars) are seen. Changes other Mods make through the API raise no events.
+Damage from other Mods counts too. Roll20 does not tell Mods when another Mod changes a token bar, so Concentration checks the hit points of everyone concentrating 0.5 and 2 seconds after each Mod command (AlterBars, for example, sets the bar only after rolling the amount), and whenever a linked hit point attribute changes.
 
 ## Spells Cast from a Sheet
 
@@ -111,7 +111,7 @@ Concentration is translated into 24 languages: Afrikaans, Catalan, Chinese (Trad
 
 ## Troubleshooting
 
-- **No save when hit points drop**: check that the token has the marker and that HP Bar is the bar you changed.
+- **No save when hit points drop**: check that the token has the marker and that HP Bar is the bar you changed. Damage from other Mods, such as AlterBars, is noticed within 2 seconds of their command.
 - **The modifier is 0**: check the Bonus Attribute against the character's sheet.
 - **Sheet spells are not detected**: turn on Debug Mode and read the API console. D&D 2024 sheets may need the Experimental API server.
 - **Two characters share a name**: detection uses the first exact match (and logs a warning in Debug Mode). Give characters unique names.

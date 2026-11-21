@@ -270,7 +270,7 @@ const TRANSLATION = {
     troubleshooting: {
       heading: 'Sorun giderme',
       points: [
-        'Can puanları düştüğünde kaydetme yok: jetonda işaret bulunduğunu ve HP Çubuğunun değiştirdiğiniz çubuk olup olmadığını kontrol edin. API aracılığıyla diğer Modlar tarafından yapılan değişiklikler olayları artırmaz, dolayısıyla görülmezler.',
+        'Can puanları düştüğünde kaydetme yok: jetonda işaret bulunduğunu ve HP Çubuğunun değiştirdiğiniz çubuk olup olmadığını kontrol edin. AlterBars gibi diğer Modların verdiği hasar, komutlarından sonraki 2 saniye içinde fark edilir.',
         "Değiştirici 0'dır: Bonus Niteliğini karakterin sayfasına göre kontrol edin.",
         'Sayfadan yapılan büyüler algılanmıyor: Hata Ayıklama Modunu açın, büyüyü tekrar yapın ve API konsolunu okuyun.',
         'İki karakter aynı adı paylaşır: algılama ilk eşleşmeyi kullanır. Karakterlere benzersiz adlar verin.',

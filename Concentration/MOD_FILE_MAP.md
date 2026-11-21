@@ -40,15 +40,16 @@ A quick reference for where to find each feature in the source.
 
 ## Saves
 
-| Task                    | File           | Key function                                          |
-| ----------------------- | -------------- | ----------------------------------------------------- |
-| Damage on the HP bar    | `src/saves.js` | `handleDamage`                                        |
-| DC                      | `src/saves.js` | `saveDc`                                              |
-| Modifier from the sheet | `src/saves.js` | `getSaveModifier`                                     |
-| Roll and report         | `src/saves.js` | `rollSave`, `buildSaveBody`                           |
-| Reminder with buttons   | `src/saves.js` | `sendReminder`                                        |
-| Pending buttons         | `src/state.js` | `addPendingRoll`, `getPendingRoll`, `takePendingRoll` |
-| Advantage list          | `src/state.js` | `hasAdvantage`, `toggleAdvantage`                     |
+| Task                    | File           | Key function                                             |
+| ----------------------- | -------------- | -------------------------------------------------------- |
+| Damage on the HP bar    | `src/saves.js` | `handleDamage`                                           |
+| Damage from other Mods  | `src/watch.js` | `handleApiCommand`, `checkBars`, `handleAttributeChange` |
+| DC                      | `src/saves.js` | `saveDc`                                                 |
+| Modifier from the sheet | `src/saves.js` | `getSaveModifier`                                        |
+| Roll and report         | `src/saves.js` | `rollSave`, `buildSaveBody`                              |
+| Reminder with buttons   | `src/saves.js` | `sendReminder`                                           |
+| Pending buttons         | `src/state.js` | `addPendingRoll`, `getPendingRoll`, `takePendingRoll`    |
+| Advantage list          | `src/state.js` | `hasAdvantage`, `toggleAdvantage`                        |
 
 ## Spell Detection
 

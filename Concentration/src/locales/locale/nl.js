@@ -270,7 +270,7 @@ const TRANSLATION = {
     troubleshooting: {
       heading: 'Problemen oplossen',
       points: [
-        'Geen opslag als de hitpoints vallen: controleer of het token de markering heeft en dat HP Bar de balk is die je hebt gewijzigd. Wijzigingen die door andere Mods via de API zijn aangebracht, veroorzaken geen gebeurtenissen en worden dus niet gezien.',
+        'Geen opslag als de hitpoints vallen: controleer of het token de markering heeft en dat HP Bar de balk is die je hebt gewijzigd. Schade van andere Mods, zoals AlterBars, wordt binnen 2 seconden na hun opdracht opgemerkt.',
         'De modifier is 0: controleer het bonuskenmerk op het blad van het personage.',
         'Spreuken uit het blad worden niet gedetecteerd: schakel de foutopsporingsmodus in, spreek de spreuk opnieuw uit en lees de API-console.',
         'Twee karakters delen een naam: detectie gebruikt de eerste match. Geef karakters unieke namen.',

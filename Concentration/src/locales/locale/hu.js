@@ -270,7 +270,7 @@ const TRANSLATION = {
     troubleshooting: {
       heading: 'Hibaelhárítás',
       points: [
-        'Nincs mentés, ha a találati pontok csökkennek: ellenőrizze, hogy a tokenben van-e a jelölő, és hogy a HP Bar az a sáv, amelyet megváltoztatott. Más Modok által az API-n keresztül végrehajtott módosítások nem okoznak eseményeket, így nem láthatók.',
+        'Nincs mentés, ha a találati pontok csökkennek: ellenőrizze, hogy a tokenben van-e a jelölő, és hogy a HP Bar az a sáv, amelyet megváltoztatott. Más Modok, például az AlterBars által okozott sebzést a parancsuk után 2 másodpercen belül észleli.',
         'A módosító 0: ellenőrizze a bónusz attribútumot a karakter lapjával.',
         'A lapról leadott varázslatok nem észlelhetők: kapcsolja be a hibakeresési módot, hajtsa végre újra a varázslatot, és olvassa el az API-konzolt.',
         'Két karakternek közös a neve: az észlelés az első egyezést használja. Adjon egyedi neveket a karaktereknek.',

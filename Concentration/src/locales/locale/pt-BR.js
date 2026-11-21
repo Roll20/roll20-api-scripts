@@ -269,7 +269,7 @@ const TRANSLATION = {
     troubleshooting: {
       heading: 'Solução de problemas',
       points: [
-        'Não é possível salvar quando os pontos de vida caem: verifique se o token possui o marcador e se a Barra de HP é a barra que você alterou. Alterações feitas por outros Mods através da API não geram eventos, portanto não são visualizadas.',
+        'Não é possível salvar quando os pontos de vida caem: verifique se o token possui o marcador e se a Barra de HP é a barra que você alterou. O dano de outros Mods, como o AlterBars, é detectado em até 2 segundos após o comando deles.',
         'O modificador é 0: compare o Atributo Bônus com a ficha do personagem.',
         'Os feitiços lançados da planilha não são detectados: ative o modo de depuração, lance o feitiço novamente e leia o console da API.',
         'Dois caracteres compartilham um nome: a detecção usa a primeira correspondência. Dê nomes exclusivos aos personagens.',

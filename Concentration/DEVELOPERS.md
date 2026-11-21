@@ -29,21 +29,22 @@ The build writes `Concentration.js` and `<version>/Concentration.js`; keep them 
 
 ## Module Responsibilities
 
-| Module         | Responsibility                                                                                        |
-| -------------- | ----------------------------------------------------------------------------------------------------- |
-| `index.js`     | Event registration, startup (`checkInstall`), public `Concentration` API.                             |
-| `commands.js`  | Chat input: spell-card detection hand-off, `!concentration` routing, settings, status, advantage.     |
-| `tracker.js`   | Concentration records and markers: start, switch, end, hand-made marker changes, reconcile, audience. |
-| `saves.js`     | Damage detection, DC, save modifier lookup, rolling, reminders and Roll/Advantage buttons.            |
-| `detect.js`    | Finds concentration spells in 5e OGL (`spell` template) and D&D 2024 (`advancedroll`) chat output.    |
-| `state.js`     | Persistent state, settings validation, version 1.0 migration, One-Click useroptions, pending rolls.   |
-| `journals.js`  | Help and Command Deck handouts.                                                                       |
-| `chat.js`      | Chat cards, buttons, whispers, warnings and errors; keeps every message on one line.                  |
-| `text.js`      | Translation helpers bound to the Language setting (`tr`, `rich`, `dirStyle`).                         |
-| `debug.js`     | Debug Mode notes in the API console (English only), in Basic or Detailed form.                        |
-| `i18n.js`      | Translation lookup (`t`, `tRaw`), locale normalisation and text direction. Shared with other Mods.    |
-| `constants.js` | Build placeholders, defaults, limits, help table, default marker list and colours.                    |
-| `utils.js`     | Small helpers: HTML escaping, parsing, markers, controllers.                                          |
+| Module         | Responsibility                                                                                          |
+| -------------- | ------------------------------------------------------------------------------------------------------- |
+| `index.js`     | Event registration, startup (`checkInstall`), public `Concentration` API.                               |
+| `commands.js`  | Chat input: spell-card detection hand-off, `!concentration` routing, settings, status, advantage.       |
+| `tracker.js`   | Concentration records and markers: start, switch, end, hand-made marker changes, reconcile, audience.   |
+| `saves.js`     | Damage detection, DC, save modifier lookup, rolling, reminders and Roll/Advantage buttons.              |
+| `watch.js`     | Damage Roll20 never reports: hit points changed by other Mods (AlterBars) or through linked attributes. |
+| `detect.js`    | Finds concentration spells in 5e OGL (`spell` template) and D&D 2024 (`advancedroll`) chat output.      |
+| `state.js`     | Persistent state, settings validation, version 1.0 migration, One-Click useroptions, pending rolls.     |
+| `journals.js`  | Help and Command Deck handouts.                                                                         |
+| `chat.js`      | Chat cards, buttons, whispers, warnings and errors; keeps every message on one line.                    |
+| `text.js`      | Translation helpers bound to the Language setting (`tr`, `rich`, `dirStyle`).                           |
+| `debug.js`     | Debug Mode notes in the API console (English only), in Basic or Detailed form.                          |
+| `i18n.js`      | Translation lookup (`t`, `tRaw`), locale normalisation and text direction. Shared with other Mods.      |
+| `constants.js` | Build placeholders, defaults, limits, help table, default marker list and colours.                      |
+| `utils.js`     | Small helpers: HTML escaping, parsing, markers, controllers.                                            |
 
 `detect.js` and `state.js` only touch Roll20 globals inside functions, so `tests/detect.test.mjs` and `tests/state.test.mjs` import them directly. There are no circular imports.
 

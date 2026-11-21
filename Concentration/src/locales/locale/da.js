@@ -269,7 +269,7 @@ const TRANSLATION = {
     troubleshooting: {
       heading: 'Fejlfinding',
       points: [
-        "Ingen lagring, når hitpoint falder: Tjek, at tokenet har markøren, og at HP Bar er den bjælke, du har ændret. Ændringer foretaget af andre Mods gennem API'et rejser ikke begivenheder, så de bliver ikke set.",
+        'Ingen lagring, når hitpoint falder: Tjek, at tokenet har markøren, og at HP Bar er den bjælke, du har ændret. Skade fra andre Mods, såsom AlterBars, opdages inden for 2 sekunder efter deres kommando.',
         'Modifikatoren er 0: Tjek bonusattributten mod karakterens ark.',
         'Besværgelser, der kastes fra arket, registreres ikke: Aktiver Fejlretningstilstand, cast trylleformularen igen, og læs API-konsollen.',
         'To tegn deler et navn: Detektion bruger det første match. Giv karakterer unikke navne.',

@@ -19,6 +19,7 @@ Brings Concentration up to the standard of the other Mods maintained by MidNiteS
 - A failed save on one goblin took the marker off every token made from the same sheet. Unlinked tokens now concentrate on their own.
 - Send Reminder To `character` whispered to the first word of the token's name. Whispers now go to the character by its full name, with a copy to the GM.
 - 5e OGL spell cards that list `charname` before `name` gave the caster's name as the spell.
+- Damage dealt by other Mods, such as AlterBars, called for no save, because Roll20 raises no event when a Mod changes a token bar. Concentration now checks the hit points of everyone concentrating shortly after each Mod command, and when a linked hit point attribute changes.
 
 ### Added
 

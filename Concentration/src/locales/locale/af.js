@@ -269,7 +269,7 @@ const TRANSLATION = {
     troubleshooting: {
       heading: 'Probleemoplossing',
       points: [
-        'Geen stoor wanneer trefpunte daal nie: maak seker dat die teken die merker het en dat HP Bar die balk is wat jy verander het. Veranderinge wat deur ander Mods deur die API gemaak word, veroorsaak nie gebeurtenisse nie, dus word hulle nie gesien nie.',
+        'Geen stoor wanneer trefpunte daal nie: maak seker dat die teken die merker het en dat HP Bar die balk is wat jy verander het. Skade van ander Mods, soos AlterBars, word binne 2 sekondes ná hul opdrag opgemerk.',
         'Die wysiger is 0: kontroleer die bonuskenmerk teen die karakter se blad.',
         'Spele wat uit die blad gegooi word, word nie bespeur nie: skakel Ontfoutmodus aan, spel weer uit en lees die API-konsole.',
         "Twee karakters deel 'n naam: opsporing gebruik die eerste pasmaat. Gee karakters unieke name.",

@@ -270,7 +270,7 @@ const TRANSLATION = {
     troubleshooting: {
       heading: 'Solución de problemas',
       points: [
-        'No guardar cuando los puntos de vida caen: verifica que la ficha tenga el marcador y que la barra de HP sea la barra que cambiaste. Los cambios realizados por otros Mods a través de la API no generan eventos, por lo que no se ven.',
+        'No guardar cuando los puntos de vida caen: verifica que la ficha tenga el marcador y que la barra de HP sea la barra que cambiaste. El daño de otros Mods, como AlterBars, se detecta en un máximo de 2 segundos tras su comando.',
         'El modificador es 0: compara el Atributo de Bonificación con la hoja del personaje.',
         'Los hechizos lanzados desde la hoja no se detectan: active el modo de depuración, vuelva a lanzar el hechizo y lea la consola API.',
         'Dos personajes comparten un nombre: la detección utiliza la primera coincidencia. Dale a los personajes nombres únicos.',

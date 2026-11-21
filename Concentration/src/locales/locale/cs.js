@@ -266,7 +266,7 @@ const TRANSLATION = {
     troubleshooting: {
       heading: 'Odstraňování problémů',
       points: [
-        'Žádné uložení při poklesu životů: zkontrolujte, že žeton má značku a že pruh HP je pruh, který jste změnili. Změny provedené jinými mody prostřednictvím API nevyvolávají události, takže nejsou vidět.',
+        'Žádné uložení při poklesu životů: zkontrolujte, že žeton má značku a že pruh HP je pruh, který jste změnili. Zranění způsobené jinými mody, například AlterBars, se zachytí do 2 sekund od jejich příkazu.',
         'Modifikátor je 0: zkontrolujte bonusový atribut proti listu postavy.',
         'Kouzla seslaná z listu nejsou detekována: zapněte režim ladění, sešlete kouzlo znovu a přečtěte si konzolu API.',
         'Dva znaky sdílejí jméno: detekce používá první shodu. Dejte postavám jedinečná jména.',

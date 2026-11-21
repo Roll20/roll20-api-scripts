@@ -269,7 +269,7 @@ const TRANSLATION = {
     troubleshooting: {
       heading: 'Rozwiązywanie problemów',
       points: [
-        'Brak zapisu po spadku punktów wytrzymałości: sprawdź, czy żeton ma znacznik i czy pasek HP to pasek, który zmieniłeś. Zmiany dokonane przez innych Modów za pośrednictwem API nie wywołują zdarzeń, więc nie są widoczne.',
+        'Brak zapisu po spadku punktów wytrzymałości: sprawdź, czy żeton ma znacznik i czy pasek HP to pasek, który zmieniłeś. Obrażenia zadane przez inne Mody, takie jak AlterBars, są wykrywane w ciągu 2 sekund od ich polecenia.',
         'Modyfikator wynosi 0: sprawdź atrybut bonusowy na karcie postaci.',
         'Czary rzucane z arkusza nie są wykrywane: włącz tryb debugowania, rzuć zaklęcie ponownie i przeczytaj konsolę API.',
         'Dwie postacie mają wspólną nazwę: wykrywanie wykorzystuje pierwsze dopasowanie. Nadaj postaciom unikalne imiona.',

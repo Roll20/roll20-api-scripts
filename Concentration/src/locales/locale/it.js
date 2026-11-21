@@ -271,7 +271,7 @@ const TRANSLATION = {
     troubleshooting: {
       heading: 'Risoluzione dei problemi',
       points: [
-        "Nessun salvataggio quando i punti ferita scendono: controlla che il gettone abbia il segnalino e che la Barra HP sia la barra che hai modificato. Le modifiche apportate da altri Mod tramite l'API non generano eventi, quindi non vengono visualizzate.",
+        'Nessun salvataggio quando i punti ferita scendono: controlla che il gettone abbia il segnalino e che la Barra HP sia la barra che hai modificato. I danni inflitti da altri Mod, come AlterBars, vengono rilevati entro 2 secondi dal loro comando.',
         'Il modificatore è 0: controlla l’Attributo Bonus sulla scheda del personaggio.',
         "Gli incantesimi lanciati dal foglio non vengono rilevati: attiva la modalità Debug, lancia nuovamente l'incantesimo e leggi la console API.",
         'Due caratteri condividono un nome: il rilevamento utilizza la prima corrispondenza. Assegna nomi univoci ai personaggi.',

@@ -271,7 +271,7 @@ const TRANSLATION = {
     troubleshooting: {
       heading: 'Resolució de problemes',
       points: [
-        "No hi ha cap desa quan baixen els punts de vida: comproveu que la fitxa tingui el marcador i que la barra d'HP sigui la barra que heu canviat. Els canvis fets per altres mods mitjançant l'API no generen esdeveniments, de manera que no es veuen.",
+        "No hi ha cap desa quan baixen els punts de vida: comproveu que la fitxa tingui el marcador i que la barra d'HP sigui la barra que heu canviat. El dany d'altres mods, com AlterBars, es detecta en un màxim de 2 segons després de la seva ordre.",
         "El modificador és 0: comproveu l'atribut de bonificació amb el full del personatge.",
         "Els encanteris llançats des del full no es detecten: activeu el mode de depuració, torneu a fer l'encanteri i llegiu la consola de l'API.",
         'Dos personatges comparteixen un nom: la detecció utilitza la primera coincidència. Doneu als personatges noms únics.',

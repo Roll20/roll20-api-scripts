@@ -266,7 +266,7 @@ const TRANSLATION = {
     troubleshooting: {
       heading: 'Troubleshooting',
       points: [
-        'No save when hit points drop: check that the token has the marker and that HP Bar is the bar you changed. Changes made by other Mods through the API do not raise events, so they are not seen.',
+        'No save when hit points drop: check that the token has the marker and that HP Bar is the bar you changed. Damage from other Mods, such as AlterBars, is noticed within 2 seconds of their command.',
         'The modifier is 0: check the Bonus Attribute against the character’s sheet.',
         'Spells cast from the sheet are not detected: turn on Debug Mode, cast the spell again and read the API console.',
         'Two characters share a name: detection uses the first match. Give characters unique names.',

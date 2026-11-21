@@ -271,7 +271,7 @@ const TRANSLATION = {
     troubleshooting: {
       heading: 'Dépannage',
       points: [
-        "Pas de sauvegarde lorsque les points de vie chutent : vérifiez que le jeton porte le marqueur et que la barre HP est bien la barre que vous avez modifiée. Les modifications apportées par d'autres mods via l'API ne déclenchent pas d'événements, elles ne sont donc pas visibles.",
+        "Pas de sauvegarde lorsque les points de vie chutent : vérifiez que le jeton porte le marqueur et que la barre HP est bien la barre que vous avez modifiée. Les dégâts infligés par d'autres mods, comme AlterBars, sont détectés dans les 2 secondes suivant leur commande.",
         'Le modificateur est 0 : vérifiez l’attribut bonus par rapport à la feuille du personnage.',
         'Les sorts lancés depuis la feuille ne sont pas détectés : activez le mode débogage, lancez à nouveau le sort et lisez la console API.',
         'Deux personnages partagent un nom : la détection utilise la première correspondance. Donnez aux personnages des noms uniques.',

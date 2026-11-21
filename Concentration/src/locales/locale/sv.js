@@ -269,7 +269,7 @@ const TRANSLATION = {
     troubleshooting: {
       heading: 'Felsökning',
       points: [
-        'Ingen räddning när träffpunkterna faller: kontrollera att token har markören och att HP Bar är stapeln du ändrade. Ändringar som görs av andra Mods via API:n skapar inga händelser, så de syns inte.',
+        'Ingen räddning när träffpunkterna faller: kontrollera att token har markören och att HP Bar är stapeln du ändrade. Skada från andra Mods, som AlterBars, upptäcks inom 2 sekunder efter deras kommando.',
         'Modifieraren är 0: kontrollera bonusattributet mot karaktärens ark.',
         'Besvärjelser som kastas från arket upptäcks inte: aktivera felsökningsläge, trollformel igen och läs API-konsolen.',
         'Två tecken delar ett namn: detektion använder den första matchningen. Ge karaktärer unika namn.',

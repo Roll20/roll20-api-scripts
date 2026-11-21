@@ -268,7 +268,7 @@ const TRANSLATION = {
     troubleshooting: {
       heading: 'Vianetsintä',
       points: [
-        'Ei tallennusta, kun osumapisteet putoavat: tarkista, että tunnuksessa on merkintä ja että HP Bar on se palkki, jonka muutit. Muiden modien API:n kautta tekemät muutokset eivät aiheuta tapahtumia, joten niitä ei näytetä.',
+        'Ei tallennusta, kun osumapisteet putoavat: tarkista, että tunnuksessa on merkintä ja että HP Bar on se palkki, jonka muutit. Muiden modien, kuten AlterBarsin, aiheuttama vahinko huomataan 2 sekunnin kuluessa niiden komennosta.',
         'Muutos on 0: tarkista bonusominaisuus hahmon arkkia vastaan.',
         'Arkista lähetettyjä loitsuja ei havaita: ota virheenkorjaustila käyttöön, loitsu uudelleen ja lue API-konsoli.',
         'Kahdella hahmolla on yhteinen nimi: tunnistus käyttää ensimmäistä vastaavuutta. Anna hahmoille yksilölliset nimet.',
