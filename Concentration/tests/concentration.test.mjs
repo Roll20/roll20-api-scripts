@@ -565,3 +565,85 @@ test('the handouts get the Concentration journal icon, also handouts made before
     assert.equal(handout.get('avatar'), icon, handout.get('name'));
   }
 });
+
+/**
+ * Installs a stand-in for AlterBars: `!alter --target|id --bar|1 --amount|-5`
+ * rolls the amount, then sets the bar from the API, which raises no event.
+ *
+ * @param {object} api Sandbox API.
+ * @returns {void}
+ */
+function installAlterBars(api) {
+  api.sandbox.on('chat:message', (msg) => {
+    if (msg.type !== 'api' || !msg.content.startsWith('!alter ')) {
+      return;
+    }
+    const target = msg.content.match(/--target\|(\S+)/)[1];
+    const amount = Number(msg.content.match(/--amount\|(\S+)/)[1]);
+    api.sandbox.sendChat('', '/r 1d20', () => {
+      const token = api.sandbox.getObj('graphic', target);
+      token.set('bar1_value', Number(token.get('bar1_value')) + amount);
+    });
+  });
+}
+
+test('damage set by another Mod (AlterBars) calls for a save on a linked token', async () => {
+  const api = await game({ dice: [12, 3] });
+  installAlterBars(api);
+  const { token } = caster(api);
+  await api.command('!concentration Web', [token]);
+  api.clearChat();
+  await api.command(`!alter --target|${token.id} --bar|1 --amount|-5`);
+  assert.equal(token.get('bar1_value'), 15);
+  assert.equal(api.messages().length, 1);
+  assert.match(api.lastText(), /Concentration Save/);
+  assert.match(api.lastText(), /DC 10/);
+  assertNoErrors(api);
+});
+
+test('damage set by another Mod calls for a save on an unlinked token', async () => {
+  const api = await game({ dice: [12, 3] });
+  installAlterBars(api);
+  const goblin = api.token({ name: 'Goblin 1' });
+  await api.command('!concentration Hex', [goblin]);
+  api.clearChat();
+  await api.command(`!alter --target|${goblin.id} --bar|1 --amount|-12`);
+  assert.equal(api.messages().length, 1);
+  assert.match(api.lastText(), /DC 10/);
+  await api.command(`!alter --target|${goblin.id} --bar|1 --amount|3`);
+  assert.equal(api.messages().length, 1);
+  assertNoErrors(api);
+});
+
+test('a linked hit point attribute that drops calls for one save', async () => {
+  const api = await game({ dice: [12, 3] });
+  const { character, token } = caster(api);
+  const hp = api.add('attribute', {
+    _id: '-attr1',
+    _characterid: character.id,
+    name: 'hp',
+    current: 20,
+  });
+  await api.command('!concentration Web', [token]);
+  api.clearChat();
+  await api.edit(hp, { current: 14 });
+  assert.equal(api.messages().length, 1);
+  assert.match(api.lastText(), /Concentration Save/);
+  // Roll20 then updates the bar too: the same hit, not a second one.
+  await api.edit(token, { bar1_value: 14 });
+  await api.command('!concentration status');
+  assert.equal(api.messages().filter((m) => /Concentration Save/.test(m.text)).length, 1);
+  assertNoErrors(api);
+});
+
+test('a bar edited by hand is not counted again after the next Mod command', async () => {
+  const api = await game({ dice: [12, 3, 12, 3] });
+  const { token } = caster(api);
+  await api.command('!concentration Web', [token]);
+  api.clearChat();
+  await api.edit(token, { bar1_value: 15 });
+  api.advance(5000);
+  await api.command('!concentration status');
+  assert.equal(api.messages().filter((m) => /Concentration Save/.test(m.text)).length, 1);
+  assertNoErrors(api);
+});

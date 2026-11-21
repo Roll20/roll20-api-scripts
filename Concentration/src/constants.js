@@ -92,6 +92,10 @@ export const MAX_PENDING_ROLLS = 100;
 // for the same character within this time is the same hit.
 export const DAMAGE_DEBOUNCE_MS = 1000;
 
+// Roll20 reports no bar change another Mod makes, so hit points are checked
+// this long after each Mod command (AlterBars sets the bar after a dice roll).
+export const BAR_CHECK_DELAYS_MS = [500, 2000];
+
 // Limits on text typed into commands.
 export const MAX_SPELL_LENGTH = 80;
 export const MAX_ATTRIBUTE_LENGTH = 80;

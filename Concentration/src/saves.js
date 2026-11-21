@@ -204,12 +204,13 @@ function sendReminder(details, token) {
  *
  * @param {object} token Roll20 graphic.
  * @param {object} prev Previous attributes.
+ * @param {string|number} [current] New hit points, when the bar may not show them yet.
  * @returns {Promise<void>}
  */
-export async function handleDamage(token, prev) {
+export async function handleDamage(token, prev, current) {
   const bar = `bar${getConfig().bar}_value`;
   const before = parseNumber(prev?.[bar]);
-  const after = parseNumber(token.get(bar));
+  const after = parseNumber(current ?? token.get(bar));
   if (before === null || after === null || after >= before) {
     return;
   }

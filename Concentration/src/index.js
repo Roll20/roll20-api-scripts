@@ -24,6 +24,7 @@ import {
   syncToken,
 } from './tracker.js';
 import { cleanSpellName, escapeHtml, isToken } from './utils.js';
+import { handleApiCommand, handleAttributeChange, noteBar } from './watch.js';
 
 let ready = false;
 
@@ -78,6 +79,7 @@ function handleGraphicChange(obj, prev) {
   }
   const bar = `bar${getConfig().bar}_value`;
   if (String(prev?.[bar]) !== String(obj.get(bar))) {
+    noteBar(obj);
     return handleDamage(obj, prev);
   }
   return undefined;
@@ -199,6 +201,9 @@ function registerEventHandlers() {
     }
   });
   on('chat:message', guarded('chat:message', handleInput));
+  // Other Mods change bars without an event (see watch.js).
+  on('chat:message', guarded('chat:message', handleApiCommand));
+  on('change:attribute', guarded('change:attribute', handleAttributeChange));
   on('change:graphic', guarded('change:graphic', handleGraphicChange));
   on('destroy:graphic', guarded('destroy:graphic', handleTokenDestroyed));
   // Roll20 fills in a new token's properties just after add:graphic, so wait a moment.
