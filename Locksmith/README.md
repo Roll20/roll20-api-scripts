@@ -47,6 +47,8 @@ Everything else - setting a DC, marking a lock Unpickable/Magic, granting or loo
 
 ## Changelog
 
+**1.0.2** - Fixed the "Pick." token action reporting "No Token Found".
+
 **1.0.1** - Added the "Pick." token action.
 
 **1.0.0** - Debut release.
