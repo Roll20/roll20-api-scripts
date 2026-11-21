@@ -1,0 +1,19 @@
+{
+  "name": "LightMeter",
+  "script": "LightMeter.js",
+  "version": "1.0.0",
+  "description": "# LightMeter\n\nLightMeter shows how well lit a token is by adding a moon to the end of its name. The moon updates each time the token moves.\n\n- 🌑 Dark\n- 🌗 Dim\n- 🌕 Bright\n\nIt uses **checkLightLevel** to read the light level, so it only works on pages with dynamic lighting turned on. Only tokens on the Objects layer are updated.\n\n---\n\n## Making a token light sensitive\n\nEither:\n\n- Add ` **` (a space and two asterisks) to the end of the token's name, or\n- Select one or more tokens and click **Selected: On** in the `!lightmeter` menu.\n\nA token turned on from the menu shows its moon right away. A token marked by hand shows its moon the next time it moves. **Selected: Off** removes the moon from the name.\n\n---\n\n## Commands (GM only)\n\n- `!lightmeter` — Shows the menu with the current light ranges.\n- `!lightmeter --dark N` — Sets the darkness threshold (0–100). Light at or below this shows 🌑.\n- `!lightmeter --dim N` — Sets the dim light threshold (0–100). Light above the darkness threshold and at or below this shows 🌗. Anything higher shows 🌕.\n- `!lightmeter --reset` — Restores the defaults (dark 20, dim 50).\n- `!lightmeter --on` / `--off` — Turns light sensitivity on or off for the selected tokens. Both also accept `--ids id1,id2`.\n\nThe darkness threshold must be lower than the dim threshold. Settings are saved with the game.\n\n---\n\n## Requirements\n\n- checkLightLevel\n- Path Math (required by checkLightLevel)\n",
+  "authors": "Keith Curtis",
+  "roll20userid": "162065",
+  "dependencies": [
+    "checkLightLevel",
+    "Path Math"
+  ],
+  "patreon": "https://www.patreon.com/c/KeithCurtis",
+  "modifies": {
+    "graphic": "read,write",
+    "page": "read"
+  },
+  "conflicts": [],
+  "previousversions": []
+}
