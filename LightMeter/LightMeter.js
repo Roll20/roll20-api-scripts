@@ -16,11 +16,7 @@
 //                                (--on/--off also accept --ids id1,id2)
 //
 // Changelog
-// 1.0.0-dev-02  Added --on / --off for selected tokens and menu buttons for
-//               them. Set Dark button now comes before Set Dim.
-// 1.0.0-dev-01  Cleanup: wrapped in a module, uses the token's own page,
-//               anchored suffix matching, Objects layer only, adjustable
-//               thresholds stored in state.
+// 1.0.0 Initial Version
 
 const LightMeter = (() => {
   'use strict';
