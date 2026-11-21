@@ -5,8 +5,9 @@
 var Locksmith = Locksmith || (function() {
     'use strict';
 
-    var VERSION = '1.0.1';
+    var VERSION = '1.0.2';
     //Changelog
+    // 1.0.2 Pick. token action rolls are matched to their token by character name
     // 1.0.1 Added "Pick." token action (Add Pick. Token Action button, !lock --pick-action)
     // 1.0.0 Debut
     var SCRIPT_NAME = 'Locksmith';
@@ -2310,7 +2311,10 @@ var Locksmith = Locksmith || (function() {
                 return;
             }
 
-            var tokens = TokenUtils.findTokensForCharacter(pageId, rollData.characterId);
+            // A roll started from a token action or macro carries no
+            // character id, so fall back to the name on the roll card
+            var characterId = rollData.characterId || TokenUtils.findCharacterIdByName(rollData.charname);
+            var tokens = TokenUtils.findTokensForCharacter(pageId, characterId);
             if (tokens.length === 0) {
                 Chat.whisperNoToken(rollData);
                 return;
