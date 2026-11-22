@@ -8,12 +8,6 @@
 //
 // GM command:
 //   !lightmeter                  Show current thresholds
-//   !lightmeter --dim N          Set the dim light threshold (0-100)
-//   !lightmeter --dark N         Set the darkness threshold (0-100)
-//   !lightmeter --reset          Restore defaults (dim 50, dark 20)
-//   !lightmeter --on             Make selected tokens light sensitive
-//   !lightmeter --off            Remove light sensitivity from selected tokens
-//                                (--on/--off also accept --ids id1,id2)
 //
 // Changelog
 // 1.0.0 Initial Version
@@ -35,7 +29,8 @@ const LightMeter = (() => {
     dim: ' 🌗',
     bright: ' 🌕'
   };
-  const MARKER_RE = / (\*\*|🌑|🌗|🌕)$/u;
+  // Matched anywhere in the name, so other scripts can add text after it
+  const MARKER_RE = / (\*\*|🌑|🌗|🌕)/u;
 
   const CSS = {
     box: 'background-color:#1e1e1e;border:1px solid #555;border-radius:4px;padding:6px;color:#ddd;font-size:13px;',
@@ -194,7 +189,7 @@ const LightMeter = (() => {
     const name = obj.get('name') || '';
     const marker = currentMarker(obj);
     if (!marker) return;
-    const newName = name.replace(MARKER_RE, '') + marker;
+    const newName = name.replace(MARKER_RE, marker);
     if (newName !== name) obj.set('name', newName);
   };
 
