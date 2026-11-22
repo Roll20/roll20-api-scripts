@@ -1,7 +1,10 @@
 // Duration.js
 // A Roll20 API script for tracking timed effects on tokens in the turn order.
 // Base command: !duration  (shows active effects + Add button)
-// Version: 1.0.1
+// Version: 1.0.2-dev-01
+// 1.0.2         Token names are rebuilt from the token's current name, so
+//               renames and text added by other scripts (such as
+//               LightMeter) are kept while effects are running.
 
 var Duration = Duration || (function () {
     'use strict';
@@ -11,7 +14,7 @@ var Duration = Duration || (function () {
     // ─────────────────────────────────────────────
 
     const SCRIPT_NAME    = 'Track Duration';
-    const VERSION        = '1.0.1';
+    const VERSION        = '1.0.2';
     const STATE_KEY      = 'Duration';
 
     const ALLOWED_EMOJIS = [
@@ -176,6 +179,20 @@ var Duration = Duration || (function () {
         buildName(base, effectList) {
             if (!effectList || effectList.length === 0) return base;
             return base + effectList.map(e => ` ${e.emoji}${e.current}`).join('');
+        },
+
+        // Base name taken from the token's current name: everything except this
+        // script's effect segments. Keeps renames and text other scripts add.
+        // The segment pattern is built from ALLOWED_EMOJIS, with the emoji
+        // variation selector optional, so every allowed emoji is recognized.
+        liveBase(token, fallback) {
+            if (!token) return fallback;
+            const rawName = token.get('name') || '';
+            const emojis = [...new Set(ALLOWED_EMOJIS.map(e => e.replace(/\uFE0F/g, '')))];
+            const segRe = new RegExp(` (?:${emojis.join('|')})\uFE0F?\\d+`, 'gu');
+            const first = rawName.search(segRe);
+            if (first === -1) return rawName;
+            return rawName.substring(0, first) + rawName.substring(first).replace(segRe, '');
         },
 
         applyName(token, name)  { token.set('name', name); },
@@ -496,6 +513,7 @@ var Duration = Duration || (function () {
             if (!entry) {
                 entry = { characterId, baseTokenName: base, imgSrc, effects: [] };
             }
+            entry.baseTokenName = TokenUtils.liveBase(token, entry.baseTokenName);
 
             const effectObj   = { emoji, name: effectName, current: rounds, max: rounds };
             const existingIdx = entry.effects.findIndex(e => e.name === effectName);
@@ -521,6 +539,7 @@ var Duration = Duration || (function () {
             const token = TokenUtils.getToken(tokenId);
             if (!token) return;
 
+            entry.baseTokenName = TokenUtils.liveBase(token, entry.baseTokenName);
             const tokenBaseName = entry.baseTokenName;
             const characterId   = entry.characterId;
             let   changed       = false;
@@ -572,6 +591,7 @@ var Duration = Duration || (function () {
             }
 
             const token = TokenUtils.getToken(tokenId);
+            if (token) entry.baseTokenName = TokenUtils.liveBase(token, entry.baseTokenName);
 
             if (newValue <= 0) {
                 // Remove the effect entirely
@@ -645,6 +665,7 @@ var Duration = Duration || (function () {
             if (!entry) {
                 entry = { characterId, baseTokenName: base, imgSrc, effects: [] };
             }
+            entry.baseTokenName = TokenUtils.liveBase(token, entry.baseTokenName);
 
             effects.forEach(effect => {
                 const idx = entry.effects.findIndex(e => e.name === effect.name);
@@ -681,6 +702,7 @@ var Duration = Duration || (function () {
                 const token = TokenUtils.getToken(tokenId);
                 if (token) {
                     imgSrc = TokenUtils.getImgSrc(token);
+                    entry.baseTokenName = TokenUtils.liveBase(token, entry.baseTokenName);
                     TokenUtils.applyName(token, entry.baseTokenName);
                 }
 
